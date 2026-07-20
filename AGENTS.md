@@ -32,7 +32,7 @@ Coding guidelines for Centesimo. Project-local agent instructions override or ex
 - Repositories return domain types or Application models, never external-library types.
 - Name resource identifiers `{Resource}Id` (for example, `OrderId`), never `Id{Resource}`.
 - Use the Result Pattern for expected errors instead of exceptions.
-- Register library services inline in `Program.cs`; do not add thin wrappers around library APIs.
+- Prefer project-owned `IServiceCollection` extensions for dependency injection registration. Application entry points should compose these project resolvers and keep only app-specific setup inline.
 
 ## EF Core
 
