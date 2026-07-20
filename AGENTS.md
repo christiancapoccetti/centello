@@ -16,13 +16,13 @@ Coding guidelines for Centesimo. Project-local agent instructions override or ex
 ## Coding style (C#)
 
 - Prefer `var` for local variables.
-- Always use early returns to reduce nesting. Put every `if` body on a new line.
+- Always use early returns to reduce nesting. For an `if` with exactly one statement, omit braces and put the statement on the following line. Use braces for multi-statement bodies.
 - Use `=>` when a method body contains a single return.
 - Do not use `async`/`await` when directly returning a `Task`. Do use them when an early-return guard precedes the return; never use `Task.FromResult` as a workaround.
 - Do not append `Async` to method names unless a non-async variant exists.
 - Use `Task.WhenAll` for independent operations; await sequentially only for real dependencies.
 - Prefer `""` to `string.Empty`; prefer `string` with a default `""` to `string?`.
-- Use `HasValue()` / `IsNullOrEmpty()` extensions for string checks and prefer C# 12 collection expressions (`[]`).
+- Use `HasValue()` / `IsEmpty()` extensions for string checks and prefer C# 12 collection expressions (`[]`).
 - Format chained calls vertically, with one call per line. Never align columns with multiple spaces.
 - Place an interface in the same file as its implementation, with the interface first. Name the file after the implementation class.
 
