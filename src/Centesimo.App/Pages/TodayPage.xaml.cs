@@ -62,7 +62,7 @@ public partial class TodayPage : ContentPage
 
     private void OnSpeechPressed(object? sender, EventArgs e)
     {
-        if (!_viewModel.IsSpeechAvailable)
+        if (!_viewModel.IsSpeechAvailable || _viewModel.IsSpeechProcessing)
             return;
 
         var session = ++_speechSession;
@@ -88,7 +88,6 @@ public partial class TodayPage : ContentPage
             _viewModel.SpeechErrorMessage = "";
             _viewModel.IsSpeechListening = true;
             _viewModel.IsSpeechProcessing = false;
-            _viewModel.SpeechTranscription = "Tieni premuto il microfono e rilascia per elaborare.";
             return result;
         }
         catch
@@ -115,48 +114,77 @@ public partial class TodayPage : ContentPage
 
     private async void OnSpeechReleased(object? sender, EventArgs e)
     {
+        var start = _speechStart;
+        if (start is null)
+            return;
+
+        _speechStart = null;
         try
         {
-            var session = _speechSession;
-            var start = _speechStart;
-            if (start is null)
-                return;
-
             var startResult = await start;
             _viewModel.IsSpeechListening = false;
             _viewModel.IsSpeechProcessing = true;
             _viewModel.IsSpeechSheetVisible = true;
             if (startResult.IsFailure)
             {
-                _viewModel.IsSpeechProcessing = false;
-                _viewModel.SpeechErrorMessage = $"Non ho capito bene. {startResult.Error.Message}";
+                _viewModel.SpeechErrorMessage = startResult.Error.Message;
                 return;
             }
 
             var result = await _speechDraftService.StopAndPrepare();
-            _viewModel.IsSpeechProcessing = false;
             _viewModel.SpeechTranscription = _speechDraftService.LastTranscription;
-            if (result.IsFailure)
-            {
-                _viewModel.SpeechErrorMessage = $"Non ho capito bene. {result.Error.Message}";
-                return;
-            }
-
-            _viewModel.IsSpeechSheetVisible = false;
-            await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+            await OpenEditorOrShowError(result);
         }
         catch
         {
-            _viewModel.IsSpeechProcessing = false;
             _viewModel.SpeechErrorMessage = "Non riesco a elaborare il comando vocale.";
         }
         finally
         {
-            _speechStart = null;
             _viewModel.IsSpeechListening = false;
+            _viewModel.IsSpeechProcessing = false;
             if (_viewModel.HasSpeechError)
                 _viewModel.IsSpeechSheetVisible = true;
         }
+    }
+
+    private void OnTypeExpenseClicked(object? sender, EventArgs e) =>
+        _viewModel.IsSpeechSheetVisible = true;
+
+    private async void OnUseSpeechTextClicked(object? sender, EventArgs e)
+    {
+        if (_viewModel.IsSpeechProcessing)
+            return;
+
+        _viewModel.SpeechErrorMessage = "";
+        _viewModel.IsSpeechProcessing = true;
+        try
+        {
+            var result = await _speechDraftService.PrepareFromText(_viewModel.SpeechTranscription);
+            await OpenEditorOrShowError(result);
+        }
+        catch
+        {
+            _viewModel.SpeechErrorMessage = "Non riesco a elaborare il testo.";
+        }
+        finally
+        {
+            _viewModel.IsSpeechProcessing = false;
+        }
+    }
+
+    // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
+    private async Task OpenEditorOrShowError(Result result)
+    {
+        if (result.IsFailure)
+        {
+            _viewModel.SpeechErrorMessage = result.Error.Message;
+            return;
+        }
+
+        _viewModel.IsSpeechSheetVisible = false;
+        _viewModel.SpeechTranscription = "";
+        await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
     }
 
     private void OnCloseSpeechClicked(object? sender, EventArgs e)
@@ -164,13 +192,8 @@ public partial class TodayPage : ContentPage
         _viewModel.IsSpeechListening = false;
         _viewModel.IsSpeechProcessing = false;
         _viewModel.IsSpeechSheetVisible = false;
+        _viewModel.SpeechTranscription = "";
         _viewModel.SpeechErrorMessage = "";
-    }
-
-    private void OnRetrySpeechClicked(object? sender, EventArgs e)
-    {
-        OnCloseSpeechClicked(sender, e);
-        _viewModel.SpeechTranscription = "Tieni premuto il microfono per riprovare.";
     }
 
     private async void OnInactiveSpeechClicked(object? sender, EventArgs e)

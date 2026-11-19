@@ -22,7 +22,7 @@ public sealed class TodayViewModel : ObservableObject
     private bool _isSpeechListening;
     private bool _isSpeechProcessing;
     private bool _isSpeechAvailable;
-    private string _speechTranscription = "Parla ora, poi premi Ferma registrazione.";
+    private string _speechTranscription = "";
     private string _speechErrorMessage = "";
 
     public TodayViewModel(IServiceScopeFactory scopeFactory)
@@ -70,7 +70,19 @@ public sealed class TodayViewModel : ObservableObject
         : MonthlyNavigation.CanGoNext(_selectedMonth, CurrentMonth));
     public bool IsSpeechSheetVisible { get => _isSpeechSheetVisible; set => SetProperty(ref _isSpeechSheetVisible, value); }
     public bool IsSpeechListening { get => _isSpeechListening; set => SetProperty(ref _isSpeechListening, value); }
-    public bool IsSpeechProcessing { get => _isSpeechProcessing; set => SetProperty(ref _isSpeechProcessing, value); }
+    public bool IsSpeechProcessing
+    {
+        get => _isSpeechProcessing;
+        set
+        {
+            if (!SetProperty(ref _isSpeechProcessing, value))
+                return;
+
+            OnPropertyChanged(nameof(IsSpeechIdle));
+            OnPropertyChanged(nameof(CanUseSpeechText));
+        }
+    }
+    public bool IsSpeechIdle => !IsSpeechProcessing;
     public bool IsSpeechAvailable
     {
         get => _isSpeechAvailable;
@@ -81,7 +93,16 @@ public sealed class TodayViewModel : ObservableObject
         }
     }
     public bool IsSpeechUnavailable => !IsSpeechAvailable;
-    public string SpeechTranscription { get => _speechTranscription; set => SetProperty(ref _speechTranscription, value); }
+    public string SpeechTranscription
+    {
+        get => _speechTranscription;
+        set
+        {
+            if (SetProperty(ref _speechTranscription, value))
+                OnPropertyChanged(nameof(CanUseSpeechText));
+        }
+    }
+    public bool CanUseSpeechText => !IsSpeechProcessing && SpeechTranscription.HasValue();
     public string SpeechErrorMessage { get => _speechErrorMessage; set { if (SetProperty(ref _speechErrorMessage, value)) OnPropertyChanged(nameof(HasSpeechError)); } }
     public bool HasSpeechError => SpeechErrorMessage.HasValue();
 
