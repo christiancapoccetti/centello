@@ -101,7 +101,7 @@ internal static class FontFiles
         throw new InvalidOperationException($"The font has no '{tag}' table.");
     }
 
-    private static string RepoRoot()
+    public static string RepoRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Centesimo.slnx")))
