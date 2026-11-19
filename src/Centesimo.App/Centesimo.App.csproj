@@ -12,6 +12,8 @@
     <ApplicationDisplayVersion>1.1</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>
     <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
+    <!-- Leaves CS8509 on: an enum switch with no discard arm fails the build when a member has no arm. -->
+    <NoWarn>$(NoWarn);CS8524</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
