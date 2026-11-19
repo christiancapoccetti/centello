@@ -12,6 +12,7 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         services.AddInfrastructure(Path.Combine(Path.GetTempPath(), "centesimo-di-test.db3"));
         services.AddSingleton<IOpenAiApiKeyStore, InMemoryOpenAiApiKeyStore>();
         services.AddSingleton<ISpeechRecorder, SilentSpeechRecorder>();
+        services.AddSingleton<IInternetAccess, AlwaysOnlineInternetAccess>();
         return services.BuildServiceProvider();
     }
 
@@ -46,6 +47,11 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         using var provider = BuildProvider();
 
         Assert.Same(provider.GetRequiredService<OpenAiClient>(), provider.GetRequiredService<OpenAiClient>());
+    }
+
+    private sealed class AlwaysOnlineInternetAccess : IInternetAccess
+    {
+        public bool IsAvailable => true;
     }
 
     private sealed class SilentSpeechRecorder : ISpeechRecorder

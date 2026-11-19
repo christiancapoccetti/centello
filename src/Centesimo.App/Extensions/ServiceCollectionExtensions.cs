@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LicensePage>();
         services.AddSingleton<RecurringPaymentAutomation>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
+        services.AddSingleton<IInternetAccess, MauiInternetAccess>();
 #if ANDROID
         services.AddSingleton<ISpeechRecorder, AndroidAudioRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();

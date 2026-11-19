@@ -8,6 +8,7 @@ public sealed class SpeechExpenseDraftService(
     ISpeechTranscriber transcriber,
     IExpenseTextInterpreter interpreter,
     OpenAiSettings settings,
+    IInternetAccess internet,
     IServiceScopeFactory scopeFactory,
     IPendingExpenseSpeechDraft pendingDraft)
 {
@@ -16,10 +17,13 @@ public sealed class SpeechExpenseDraftService(
 
     public Task<bool> IsAvailable() => settings.HasApiKey();
 
-    public Task<Result> Start(CancellationToken cancellationToken = default)
+    public async Task<Result> Start(CancellationToken cancellationToken = default)
     {
         LastTranscription = "";
-        return recorder.Start(cancellationToken);
+        if (!internet.IsAvailable)
+            return Result.Failure(SpeechErrors.NoInternet);
+
+        return await recorder.Start(cancellationToken);
     }
 
     public Task Cancel() => recorder.Cancel();
@@ -29,6 +33,9 @@ public sealed class SpeechExpenseDraftService(
         var audio = await recorder.Stop(cancellationToken);
         if (audio.IsFailure)
             return Result.Failure(audio.Error);
+
+        if (!internet.IsAvailable)
+            return Result.Failure(SpeechErrors.NoInternet);
 
         var categories = await LoadCategories(cancellationToken);
         if (categories.IsFailure)
@@ -45,6 +52,9 @@ public sealed class SpeechExpenseDraftService(
 
     public async Task<Result> PrepareFromText(string text, CancellationToken cancellationToken = default)
     {
+        if (!internet.IsAvailable)
+            return Result.Failure(SpeechErrors.NoInternet);
+
         var categories = await LoadCategories(cancellationToken);
         if (categories.IsFailure)
             return Result.Failure(categories.Error);

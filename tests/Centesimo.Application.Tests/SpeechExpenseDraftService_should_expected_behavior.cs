@@ -13,6 +13,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     private readonly FakeCategoryRepository _categories = new();
     private readonly FakeTagRepository _tags = new();
     private readonly FakeApiKeyStore _keys = new();
+    private readonly FakeInternetAccess _internet = new();
     private readonly FakeSpeechRecorder _recorder = new();
     private readonly FakeSpeechTranscriber _transcriber = new();
     private readonly FakeExpenseTextInterpreter _interpreter = new();
@@ -36,6 +37,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
             _transcriber,
             _interpreter,
             new OpenAiSettings(_keys),
+            _internet,
             _scopes,
             _pending);
     }
@@ -154,6 +156,46 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Not_start_recording_without_internet()
+    {
+        _internet.IsAvailable = false;
+
+        var result = await _service.Start();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(SpeechErrors.NoInternet, result.Error);
+        Assert.Equal(0, _recorder.StartCount);
+    }
+
+    [Fact]
+    public async Task Stop_the_recording_but_not_call_openai_when_the_connection_was_lost()
+    {
+        _recorder.Audio = Audio;
+        _internet.IsAvailable = false;
+
+        var result = await _service.StopAndPrepare();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(SpeechErrors.NoInternet, result.Error);
+        Assert.Equal(1, _recorder.StopCount);
+        Assert.Equal(0, _transcriber.CallCount);
+        Assert.Equal(0, _interpreter.CallCount);
+    }
+
+    [Fact]
+    public async Task Not_interpret_typed_text_without_internet()
+    {
+        _internet.IsAvailable = false;
+
+        var result = await _service.PrepareFromText("caffè");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(SpeechErrors.NoInternet, result.Error);
+        Assert.Equal(0, _interpreter.CallCount);
+        Assert.Null(_pending.Take());
+    }
+
+    [Fact]
     public async Task Forget_the_previous_transcription_when_a_new_recording_starts()
     {
         _recorder.Audio = Audio;
@@ -173,6 +215,11 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         public Task<string> GetApiKey() => Task.FromResult(Key);
         public Task SetApiKey(string apiKey) => Task.CompletedTask;
         public void ClearApiKey() => Key = "";
+    }
+
+    private sealed class FakeInternetAccess : IInternetAccess
+    {
+        public bool IsAvailable { get; set; } = true;
     }
 
     private sealed class FakeSpeechRecorder : ISpeechRecorder
