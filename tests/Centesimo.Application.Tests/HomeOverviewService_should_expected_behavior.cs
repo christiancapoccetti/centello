@@ -469,6 +469,160 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_chart_one_bar_per_day_with_today_highlighted_and_future_days_as_stubs()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 7_450, new DateOnly(2026, 11, 1)),
+            Spend(category, 2_700, Today),
+            Spend(category, 99_900, new DateOnly(2026, 11, 25))
+        };
+
+        var chart = (await Overview([category], expenses)).Chart;
+
+        Assert.Equal(30, chart.Bars.Count);
+        Assert.All(chart.Bars.Take(18), bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
+        Assert.Equal(SpendBarKind.Current, chart.Bars[18].Kind);
+        Assert.All(chart.Bars.Skip(19), bar => Assert.Equal(new SpendBar(0, SpendBarKind.Future), bar));
+        Assert.Equal(1.0, chart.Bars[0].Fraction, 6);
+        Assert.Equal(2_700d / 7_450, chart.Bars[18].Fraction, 6);
+        Assert.Equal(0, chart.Bars[1].Fraction);
+        Assert.Equal("1 nov", chart.StartLabel);
+        Assert.Equal("30 nov", chart.EndLabel);
+        Assert.True(chart.HasHighlight);
+        Assert.Equal("oggi 27,00 €", chart.HighlightLabel);
+        Assert.Equal(18.5 / 30, chart.HighlightPosition, 6);
+    }
+
+    [Fact]
+    public async Task Should_chart_every_day_of_a_past_month_as_past()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 2_000, new DateOnly(2026, 9, 10)),
+            Spend(category, 4_000, new DateOnly(2026, 9, 30))
+        };
+
+        var chart = (await Overview([category], expenses, Period.Month(2026, 9))).Chart;
+
+        Assert.Equal(30, chart.Bars.Count);
+        Assert.All(chart.Bars, bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
+        Assert.Equal(1.0, chart.Bars[29].Fraction, 6);
+        Assert.Equal(0.5, chart.Bars[9].Fraction, 6);
+        Assert.False(chart.HasHighlight);
+        Assert.Equal("", chart.HighlightLabel);
+        Assert.Equal("1 set", chart.StartLabel);
+        Assert.Equal("30 set", chart.EndLabel);
+    }
+
+    [Fact]
+    public async Task Should_draw_one_bar_per_day_of_a_leap_february()
+    {
+        var chart = (await Overview(period: Period.Month(2028, 2))).Chart;
+
+        Assert.Equal(29, chart.Bars.Count);
+        Assert.Equal("29 feb", chart.EndLabel);
+    }
+
+    [Fact]
+    public async Task Should_scale_the_pace_line_to_the_daily_budget()
+    {
+        var category = NewCategory("Spesa", budgetCents: 300_000);
+        var calm = new[] { Spend(category, 7_500, new DateOnly(2026, 11, 1)) };
+        var heavy = new[] { Spend(category, 20_000, new DateOnly(2026, 11, 1)) };
+
+        var belowPace = (await Overview([category], calm)).Chart;
+        var abovePace = (await Overview([category], heavy)).Chart;
+
+        Assert.True(belowPace.HasPace);
+        Assert.Equal(1.0, belowPace.PaceFraction!.Value, 6);
+        Assert.Equal(0.75, belowPace.Bars[0].Fraction, 6);
+        Assert.Equal(0.5, abovePace.PaceFraction!.Value, 6);
+        Assert.Equal(1.0, abovePace.Bars[0].Fraction, 6);
+    }
+
+    [Fact]
+    public async Task Should_hide_the_pace_line_without_a_budget()
+    {
+        var category = NewCategory("Spesa");
+
+        var chart = (await Overview([category], [Spend(category, 1_000, Today)])).Chart;
+
+        Assert.False(chart.HasPace);
+        Assert.Null(chart.PaceFraction);
+    }
+
+    [Fact]
+    public async Task Should_draw_empty_bars_when_nothing_was_spent()
+    {
+        var chart = (await Overview()).Chart;
+
+        Assert.All(chart.Bars, bar => Assert.Equal(0, bar.Fraction));
+        Assert.Null(chart.PaceFraction);
+    }
+
+    [Fact]
+    public async Task Should_chart_twelve_months_in_year_mode_with_the_annual_pace()
+    {
+        var category = NewCategory("Spesa", budgetCents: 100_000);
+        var expenses = new[]
+        {
+            Spend(category, 50_000, new DateOnly(2026, 1, 5)),
+            Spend(category, 25_000, new DateOnly(2026, 1, 20)),
+            Spend(category, 40_000, new DateOnly(2026, 11, 2)),
+            Spend(category, 990_000, new DateOnly(2026, 12, 2))
+        };
+
+        var chart = (await Overview([category], expenses, Period.Year(2026))).Chart;
+
+        Assert.Equal(12, chart.Bars.Count);
+        Assert.All(chart.Bars.Take(10), bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
+        Assert.Equal(SpendBarKind.Current, chart.Bars[10].Kind);
+        Assert.Equal(new SpendBar(0, SpendBarKind.Future), chart.Bars[11]);
+        Assert.Equal(1.0, chart.PaceFraction!.Value, 6);
+        Assert.Equal(0.75, chart.Bars[0].Fraction, 6);
+        Assert.Equal("gen", chart.StartLabel);
+        Assert.Equal("dic", chart.EndLabel);
+        Assert.Equal("nov 400,00 €", chart.HighlightLabel);
+        Assert.Equal(10.5 / 12, chart.HighlightPosition, 6);
+    }
+
+    [Fact]
+    public async Task Should_describe_the_chart_for_screen_readers()
+    {
+        var category = NewCategory("Spesa", budgetCents: 160_000);
+        var expenses = new[]
+        {
+            Spend(category, 7_450, new DateOnly(2026, 11, 1)),
+            Spend(category, 2_700, Today)
+        };
+
+        var chart = (await Overview([category], expenses)).Chart;
+        var year = (await Overview([category], expenses, Period.Year(2026))).Chart;
+
+        Assert.Equal(
+            "Spesa giornaliera di novembre 2026. Giorno più alto: 1 novembre, 74,50 €. Oggi: 27,00 €. " +
+            "Media per restare nel budget: 53,33 € al giorno.",
+            chart.Description);
+        Assert.Equal(
+            "Spesa mensile del 2026. Mese più alto: novembre, 101,50 €. Questo mese: 101,50 €. " +
+            "Media per restare nel budget: 1.600,00 € al mese.",
+            year.Description);
+    }
+
+    [Fact]
+    public async Task Should_describe_a_chart_without_spending_or_budget()
+    {
+        var past = (await Overview(period: Period.Month(2026, 9))).Chart;
+        var current = (await Overview()).Chart;
+
+        Assert.Equal("Spesa giornaliera di settembre 2026. Nessuna spesa registrata.", past.Description);
+        Assert.Equal("Spesa giornaliera di novembre 2026. Nessuna spesa registrata. Oggi: 0,00 €.", current.Description);
+    }
+
+    [Fact]
     public async Task Should_return_the_repository_failure()
     {
         var failingCategories = new FakeCategoryRepository { Failure = Failed };

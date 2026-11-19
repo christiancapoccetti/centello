@@ -11,7 +11,8 @@ public sealed record HomeOverview(
     string Total,                    // "1.284,60" (the page draws "€")
     BudgetSummary Budget,
     PeriodComparison? Comparison,
-    CategoryLine Categories)
+    CategoryLine Categories,
+    SpendChart Chart)
 {
     public bool HasComparison => Comparison is not null;
 }
@@ -38,6 +39,24 @@ public sealed record CategoryLine(IReadOnlyList<CategorySegment> Segments, IRead
 public sealed record CategorySegment(string ColorKey, long Cents);
 
 public sealed record CategoryKeyItem(string Text, string ColorKey, bool IsOverBudget);
+
+public enum SpendBarKind { Past, Current, Future }
+
+/// <summary>Fraction is 0..1 of the chart height. Future bars carry 0: the chart draws them as a stub.</summary>
+public sealed record SpendBar(double Fraction, SpendBarKind Kind);
+
+public sealed record SpendChart(
+    IReadOnlyList<SpendBar> Bars,      // days of the month, or 12 months
+    double? PaceFraction,              // null when no budget is set
+    string StartLabel,                 // "1 nov" | "gen"
+    string EndLabel,                   // "30 nov" | "dic"
+    string HighlightLabel,             // "oggi 27,00 €" | "nov 1.284,60 €" | "" outside the current period
+    double HighlightPosition,          // centre of the Current bar, 0..1
+    string Description)                // screen-reader text alternative
+{
+    public bool HasPace => PaceFraction.HasValue;
+    public bool HasHighlight => HighlightLabel.HasValue();
+}
 
 public sealed class HomeOverviewService(ICategoryRepository categories, IExpenseRepository expenses,
     Func<DateOnly>? today = null)
@@ -74,9 +93,10 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
         var (title, subtitle) = period.Kind == PeriodKind.Month
             ? (ItalianFormat.MonthTitle(period.Start.Month), year)
             : ("Anno", year);
+        var budget = BudgetOf(period, categories);
         return new HomeOverview(period, Navigate(period, today), title, subtitle, ItalianFormat.Amount(spent),
-            Summarize(spent, BudgetOf(period, categories)), Compare(period, window, expenses),
-            Line(period, categories, periodExpenses, spent));
+            Summarize(spent, budget), Compare(period, window, expenses),
+            Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget));
     }
 
     private static long SpentBetween(IReadOnlyList<Expense> expenses, DateOnly from, DateOnly to) => expenses
@@ -200,6 +220,70 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
 
         public CategoryKeyItem ToKeyItem() =>
             new(IsOverBudget ? $"{Category.Name} oltre" : Category.Name, ColorKey, IsOverBudget);
+    }
+
+    // One bar per day (month) or per month (year). Today's bar and those before it are drawn; later ones are stubs,
+    // so they must not stretch the scale. The scale also covers the pace line, which keeps it on the chart.
+    private static SpendChart Chart(Period period, DateOnly today, IReadOnlyList<Expense> periodExpenses, long? budget)
+    {
+        var isMonth = period.Kind == PeriodKind.Month;
+        var count = isMonth ? period.End.Day : 12;
+        var buckets = new long[count];
+        foreach (var expense in periodExpenses)
+            buckets[BucketOf(period, expense.OccurredOn)] += expense.Amount.Cents;
+
+        // Index of today's bucket: before the period it is -1, after the period it is count.
+        var current = today < period.Start ? -1 : today > period.End ? count : BucketOf(period, today);
+        var kinds = Enumerable.Range(0, count)
+            .Select(index => index < current ? SpendBarKind.Past : index == current ? SpendBarKind.Current : SpendBarKind.Future)
+            .ToList();
+        double? pace = budget.HasValue ? (double)budget.Value / count : null;
+        var visibleMaximum = buckets.Where((_, index) => kinds[index] != SpendBarKind.Future).DefaultIfEmpty(0).Max();
+        var scale = Math.Max(visibleMaximum, pace ?? 0);
+        var bars = buckets
+            .Select((cents, index) => new SpendBar(
+                kinds[index] == SpendBarKind.Future || scale == 0 ? 0 : cents / scale, kinds[index]))
+            .ToList();
+
+        var hasToday = current >= 0 && current < count;
+        var highlight = !hasToday ? "" : isMonth
+            ? $"oggi {ItalianFormat.Money(buckets[current])}"
+            : $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(buckets[current])}";
+        return new SpendChart(bars, pace / scale,
+            isMonth ? ItalianFormat.ShortDate(period.Start) : ItalianFormat.ShortMonth(1),
+            isMonth ? ItalianFormat.ShortDate(period.End) : ItalianFormat.ShortMonth(12),
+            highlight, hasToday ? (current + 0.5) / count : 0, DescribeChart(period, buckets, current, pace));
+    }
+
+    private static int BucketOf(Period period, DateOnly day) => (period.Kind == PeriodKind.Month ? day.Day : day.Month) - 1;
+
+    private static string DescribeChart(Period period, long[] buckets, int current, double? pace)
+    {
+        var isMonth = period.Kind == PeriodKind.Month;
+        var year = period.Start.Year;
+        var parts = new List<string>
+        {
+            isMonth
+                ? $"Spesa giornaliera di {ItalianFormat.MonthName(period.Start.Month)} {year}."
+                : $"Spesa mensile del {year}."
+        };
+
+        var visible = buckets.Take(Math.Min(current + 1, buckets.Length)).ToList();
+        var peak = visible.DefaultIfEmpty(0).Max();
+        if (peak == 0)
+            parts.Add("Nessuna spesa registrata.");
+        else if (isMonth)
+            parts.Add($"Giorno più alto: {ItalianFormat.LongDate(period.Start.AddDays(visible.IndexOf(peak)))}, {ItalianFormat.Money(peak)}.");
+        else
+            parts.Add($"Mese più alto: {ItalianFormat.MonthName(visible.IndexOf(peak) + 1)}, {ItalianFormat.Money(peak)}.");
+
+        if (current >= 0 && current < buckets.Length)
+            parts.Add($"{(isMonth ? "Oggi" : "Questo mese")}: {ItalianFormat.Money(buckets[current])}.");
+
+        if (pace.HasValue)
+            parts.Add($"Media per restare nel budget: {ItalianFormat.Money((long)Math.Round(pace.Value, MidpointRounding.AwayFromZero))} {(isMonth ? "al giorno" : "al mese")}.");
+
+        return string.Join(" ", parts);
     }
 
     /// <summary>The current period compares to date with the same position in the previous one, clamped to its

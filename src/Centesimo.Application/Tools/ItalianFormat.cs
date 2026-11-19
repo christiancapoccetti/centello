@@ -12,6 +12,9 @@ internal static class ItalianFormat
         "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"
     ];
 
+    private static readonly string[] ShortMonthNames =
+        ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+
     /// <summary>"1.284,60"</summary>
     public static string Amount(long cents) => $"{Grouped(cents / 100)},{cents % 100:00}";
 
@@ -26,6 +29,15 @@ internal static class ItalianFormat
 
     /// <summary>"Novembre"</summary>
     public static string MonthTitle(int month) => char.ToUpperInvariant(MonthName(month)[0]) + MonthName(month)[1..];
+
+    /// <summary>"nov"</summary>
+    public static string ShortMonth(int month) => ShortMonthNames[month - 1];
+
+    /// <summary>"12 nov"</summary>
+    public static string ShortDate(DateOnly date) => $"{date.Day} {ShortMonth(date.Month)}";
+
+    /// <summary>"12 novembre"</summary>
+    public static string LongDate(DateOnly date) => $"{date.Day} {MonthName(date.Month)}";
 
     /// <summary>"6%"</summary>
     public static string Percent(int percent) => $"{percent}%";
