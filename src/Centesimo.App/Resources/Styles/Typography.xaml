@@ -12,9 +12,6 @@
         <Setter Property="FontSize" Value="68" />
         <Setter Property="LineHeight" Value="1" />
     </Style>
-    <Style x:Key="TotalCurrency" TargetType="Label" BasedOn="{StaticResource TotalDisplay}">
-        <Setter Property="FontSize" Value="38" />
-    </Style>
     <Style x:Key="DisplaySmall" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
         <Setter Property="FontSize" Value="40" />

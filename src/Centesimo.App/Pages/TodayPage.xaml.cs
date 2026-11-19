@@ -1,5 +1,4 @@
 using Centesimo.App.ViewModels;
-using Centesimo.App.Controls;
 using Centesimo.Application;
 
 namespace Centesimo.App.Pages;
@@ -40,16 +39,21 @@ public partial class TodayPage : ContentPage
         _viewModel.IsSpeechSheetVisible = false;
     }
 
-    private async void OnPreviousMonthClicked(object? sender, EventArgs e) =>
-        await _viewModel.PreviousMonth();
+    private async void OnPreviousClicked(object? sender, EventArgs e) =>
+        await _viewModel.ShowPrevious();
 
-    private async void OnNextMonthClicked(object? sender, EventArgs e) =>
-        await _viewModel.NextMonth();
+    private async void OnNextClicked(object? sender, EventArgs e) =>
+        await _viewModel.ShowNext();
 
-    private async void OnCategoryClicked(object? sender, CategoryBreakdownItemClickedEventArgs e)
+    private async void OnPeriodTitleTapped(object? sender, TappedEventArgs e) =>
+        await _viewModel.TogglePeriod();
+
+    private async void OnLatestExpenseClicked(object? sender, EventArgs e)
     {
-        var period = _viewModel.IsYearlyOverview ? "&period=year" : "";
-        await Shell.Current.GoToAsync($"{nameof(CategorySpendingPage)}?categoryId={e.Category.CategoryId}&year={_viewModel.SelectedYear}&month={_viewModel.SelectedMonth}{period}");
+        if (sender is not Button { CommandParameter: LatestExpense expense })
+            return;
+
+        await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expense.ExpenseId}");
     }
 
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>

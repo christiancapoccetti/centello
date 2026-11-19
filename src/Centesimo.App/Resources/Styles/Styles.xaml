@@ -60,11 +60,6 @@
         <Setter Property="MinimumHeightRequest" Value="48" />
         <Setter Property="Padding" Value="12,8" />
     </Style>
-    <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource TextActionButton}">
-        <Setter Property="FontSize" Value="22" />
-        <Setter Property="MinimumWidthRequest" Value="48" />
-        <Setter Property="Padding" Value="8" />
-    </Style>
     <Style x:Key="IconGlyphButton" TargetType="Button">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Icons}" />
         <Setter Property="FontSize" Value="24" />
@@ -85,19 +80,6 @@
                 </VisualStateGroup>
             </VisualStateGroupList>
         </Setter>
-    </Style>
-    <Style x:Key="VoiceActionButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
-        <Setter Property="TextColor" Value="{t:Theme Ink}" />
-        <Setter Property="WidthRequest" Value="56" />
-        <Setter Property="HeightRequest" Value="56" />
-        <Setter Property="MinimumWidthRequest" Value="56" />
-        <Setter Property="MinimumHeightRequest" Value="56" />
-        <Setter Property="MaximumWidthRequest" Value="56" />
-        <Setter Property="MaximumHeightRequest" Value="56" />
-        <Setter Property="CornerRadius" Value="28" />
-        <Setter Property="BorderWidth" Value="0" />
-        <Setter Property="Padding" Value="14" />
     </Style>
     <Style x:Key="SurfaceCard" TargetType="Border">
         <Setter Property="BackgroundColor" Value="{t:Theme Ground}" />
