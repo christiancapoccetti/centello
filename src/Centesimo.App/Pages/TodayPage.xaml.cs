@@ -8,30 +8,24 @@ public partial class TodayPage : ContentPage
 {
     private readonly TodayViewModel _viewModel;
     private readonly SpeechExpenseDraftService _speechDraftService;
-    private readonly IItalianSpeechModelProvisioner _modelProvisioner;
     private Task<Result>? _speechStart;
-    private Task? _speechPreparation;
-    private bool _hasAskedToPrepareSpeech;
     private int _speechSession;
 
-    public TodayPage(TodayViewModel viewModel, SpeechExpenseDraftService speechDraftService, IItalianSpeechModelProvisioner modelProvisioner)
+    public TodayPage(TodayViewModel viewModel, SpeechExpenseDraftService speechDraftService)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _speechDraftService = speechDraftService;
-        _modelProvisioner = modelProvisioner;
-        _speechDraftService.TranscriptionUpdated += OnTranscriptionUpdated;
         BindingContext = viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await _viewModel.Load();
-        if (await _modelProvisioner.IsAvailable())
-            StartSpeechPreparation();
-        else if (!_hasAskedToPrepareSpeech)
-            await AskToPrepareSpeech();
+        var load = _viewModel.Load();
+        var availability = _speechDraftService.IsAvailable();
+        await Task.WhenAll(load, availability);
+        _viewModel.IsSpeechAvailable = await availability;
     }
 
     protected override async void OnDisappearing()
@@ -68,7 +62,7 @@ public partial class TodayPage : ContentPage
 
     private void OnSpeechPressed(object? sender, EventArgs e)
     {
-        if (!_viewModel.IsSpeechReady)
+        if (!_viewModel.IsSpeechAvailable || _viewModel.IsSpeechProcessing)
             return;
 
         var session = ++_speechSession;
@@ -79,12 +73,9 @@ public partial class TodayPage : ContentPage
     {
         try
         {
-            if (!_viewModel.IsSpeechReady)
-                return Result.Failure(new Centesimo.Application.Error("Speech.Preparing", "Il riconoscimento vocale è ancora in preparazione."));
-
             var permission = await RequestMicrophonePermission();
             if (permission != PermissionStatus.Granted)
-                return Result.Failure(new Centesimo.Application.Error("Speech.MicrophoneDenied", "Consenti l'accesso al microfono per usare i comandi vocali."));
+                return Result.Failure(SpeechErrors.MicrophoneDenied);
 
             var result = await _speechDraftService.Start();
             if (session != _speechSession || result.IsFailure)
@@ -97,7 +88,6 @@ public partial class TodayPage : ContentPage
             _viewModel.SpeechErrorMessage = "";
             _viewModel.IsSpeechListening = true;
             _viewModel.IsSpeechProcessing = false;
-            _viewModel.SpeechTranscription = "Tieni premuto il microfono e rilascia per elaborare.";
             return result;
         }
         catch
@@ -114,7 +104,7 @@ public partial class TodayPage : ContentPage
 
         var accepted = await DisplayAlertAsync(
             "Microfono",
-            "Centesimo usa il microfono solo mentre tieni premuto il pulsante dei comandi vocali. L'audio viene elaborato sul dispositivo e non viene inviato online.",
+            "Centesimo usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.",
             "Consenti",
             "Non ora");
         return accepted
@@ -124,45 +114,44 @@ public partial class TodayPage : ContentPage
 
     private async void OnSpeechReleased(object? sender, EventArgs e)
     {
+        var start = _speechStart;
+        if (start is null)
+            return;
+
+        _speechStart = null;
         try
         {
-            var session = _speechSession;
-            var start = _speechStart;
-            if (start is null)
-                return;
-
             var startResult = await start;
             _viewModel.IsSpeechListening = false;
             _viewModel.IsSpeechProcessing = true;
             _viewModel.IsSpeechSheetVisible = true;
             if (startResult.IsFailure)
             {
-                _viewModel.IsSpeechProcessing = false;
-                _viewModel.SpeechErrorMessage = $"Non ho capito bene. {startResult.Error.Message}";
+                _viewModel.SpeechErrorMessage = startResult.Error.Message;
                 return;
             }
 
             var result = await _speechDraftService.StopAndPrepare();
-            _viewModel.IsSpeechProcessing = false;
             _viewModel.SpeechTranscription = _speechDraftService.LastTranscription;
             if (result.IsFailure)
             {
-                _viewModel.SpeechErrorMessage = $"Non ho capito bene. {result.Error.Message}";
+                _viewModel.SpeechErrorMessage = result.Error.Message;
                 return;
             }
 
+            // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
             _viewModel.IsSpeechSheetVisible = false;
+            _viewModel.SpeechTranscription = "";
             await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
         }
         catch
         {
-            _viewModel.IsSpeechProcessing = false;
             _viewModel.SpeechErrorMessage = "Non riesco a elaborare il comando vocale.";
         }
         finally
         {
-            _speechStart = null;
             _viewModel.IsSpeechListening = false;
+            _viewModel.IsSpeechProcessing = false;
             if (_viewModel.HasSpeechError)
                 _viewModel.IsSpeechSheetVisible = true;
         }
@@ -173,96 +162,18 @@ public partial class TodayPage : ContentPage
         _viewModel.IsSpeechListening = false;
         _viewModel.IsSpeechProcessing = false;
         _viewModel.IsSpeechSheetVisible = false;
+        _viewModel.SpeechTranscription = "";
         _viewModel.SpeechErrorMessage = "";
     }
 
-    private void OnRetrySpeechClicked(object? sender, EventArgs e)
+    private async void OnInactiveSpeechClicked(object? sender, EventArgs e)
     {
-        OnCloseSpeechClicked(sender, e);
-        _viewModel.SpeechTranscription = "Tieni premuto il microfono per riprovare.";
+        var openSettings = await DisplayAlertAsync(
+            "Inserimento rapido",
+            "Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.",
+            "Apri impostazioni",
+            "Annulla");
+        if (openSettings)
+            await Shell.Current.GoToAsync($"//{nameof(SettingsPage)}");
     }
-
-    private async void OnRetrySpeechPreparationClicked(object? sender, EventArgs e) =>
-        await AskToPrepareSpeech();
-
-    private async void OnInactiveSpeechClicked(object? sender, EventArgs e) =>
-        await AskToPrepareSpeech();
-
-    private void StartSpeechPreparation()
-    {
-        if (_viewModel.IsSpeechReady || _speechPreparation is { IsCompleted: false })
-            return;
-
-        _speechPreparation = PrepareSpeech();
-    }
-
-    private async Task PrepareSpeech()
-    {
-        _viewModel.IsSpeechReady = false;
-        _viewModel.IsSpeechPreparing = true;
-        _viewModel.IsSpeechPreparationFailed = false;
-        _viewModel.SpeechAvailabilityMessage = "Preparazione del riconoscimento vocale…";
-        try
-        {
-            var progress = new Progress<double>(value =>
-                _viewModel.SpeechAvailabilityMessage = $"Download del riconoscimento vocale: {value:P0}");
-            var provision = await _modelProvisioner.Prepare(progress);
-            if (provision.IsFailure)
-            {
-                _viewModel.SpeechAvailabilityMessage = $"Riconoscimento vocale non disponibile. {provision.Error.Message}";
-                _viewModel.IsSpeechPreparationFailed = true;
-                _viewModel.SpeechPreparationActionText = "Riprova";
-                return;
-            }
-
-            _viewModel.SpeechAvailabilityMessage = "Caricamento del riconoscimento vocale…";
-            var warmUp = await _speechDraftService.WarmUp();
-            if (warmUp.IsFailure)
-            {
-                _viewModel.SpeechAvailabilityMessage = $"Riconoscimento vocale non disponibile. {warmUp.Error.Message}";
-                _viewModel.IsSpeechPreparationFailed = true;
-                _viewModel.SpeechPreparationActionText = "Riprova";
-                return;
-            }
-
-            _viewModel.SpeechAvailabilityMessage = "";
-            _viewModel.IsSpeechReady = true;
-        }
-        catch
-        {
-            _viewModel.SpeechAvailabilityMessage = "Riconoscimento vocale non disponibile. Tocca Riprova.";
-            _viewModel.IsSpeechPreparationFailed = true;
-            _viewModel.SpeechPreparationActionText = "Riprova";
-        }
-        finally
-        {
-            _viewModel.IsSpeechPreparing = false;
-        }
-    }
-
-    private async Task AskToPrepareSpeech()
-    {
-        if (_viewModel.IsSpeechReady || _viewModel.IsSpeechPreparing)
-            return;
-
-        _hasAskedToPrepareSpeech = true;
-
-        var accepted = await DisplayAlertAsync(
-            "Comandi vocali",
-            "Vuoi scaricare il modello per usare i comandi vocali? Occupa circa 181 MB ed elabora l'audio solo sul dispositivo.",
-            "Sì, scarica",
-            "No");
-        if (accepted)
-        {
-            StartSpeechPreparation();
-            return;
-        }
-
-        _viewModel.IsSpeechPreparationFailed = true;
-        _viewModel.SpeechPreparationActionText = "Attiva";
-        _viewModel.SpeechAvailabilityMessage = "Comandi vocali non attivati.";
-    }
-
-    private void OnTranscriptionUpdated(object? sender, string transcription) =>
-        MainThread.BeginInvokeOnMainThread(() => _viewModel.SpeechTranscription = transcription);
 }

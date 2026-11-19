@@ -8,14 +8,18 @@
         <VerticalStackLayout Padding="22,16" Spacing="20">
             <VerticalStackLayout Spacing="2">
                 <Label Text="Impostazioni" Style="{StaticResource HeadlineLarge}" />
-                <Label Text="Gestisci dati e automazioni locali." Style="{StaticResource BodyMedium}" />
+                <Label Text="Gestisci dati, automazioni e inserimento rapido." Style="{StaticResource BodyMedium}" />
             </VerticalStackLayout>
-            <Label Text="COMANDI VOCALI" Style="{StaticResource LabelLarge}" TextColor="{StaticResource PrimaryLight}" />
+            <Label Text="INSERIMENTO RAPIDO" Style="{StaticResource LabelLarge}" TextColor="{StaticResource PrimaryLight}" />
             <Border Style="{StaticResource SurfaceCard}" Padding="16">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Riconoscimento vocale offline" Style="{StaticResource TitleLarge}" />
-                    <Label Text="{Binding SpeechPreparation.Message}" Style="{StaticResource BodyMedium}" />
-                    <ProgressBar Progress="{Binding SpeechPreparation.Progress}" IsVisible="{Binding SpeechPreparation.IsPreparing}" HeightRequest="6" ProgressColor="{StaticResource PrimaryLight}" />
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Inserimento rapido con OpenAI" Style="{StaticResource TitleLarge}" />
+                    <Label Text="Detta una spesa con parole tue. L'audio e il testo vengono inviati a OpenAI; le spese restano sul dispositivo." Style="{StaticResource BodyMedium}" />
+                    <Label Text="{Binding ApiKeyStatus}" Style="{StaticResource LabelLarge}" />
+                    <Entry Text="{Binding ApiKeyInput}" IsPassword="True" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" Placeholder="Chiave API OpenAI" MinimumHeightRequest="48" SemanticProperties.Description="Chiave API OpenAI" />
+                    <Label Text="{Binding ApiKeyError}" IsVisible="{Binding HasApiKeyError}" TextColor="{StaticResource ErrorLight}" />
+                    <Button Text="Salva chiave" Style="{StaticResource PrimaryActionButton}" Clicked="OnSaveApiKeyClicked" IsEnabled="{Binding CanSaveApiKey}" />
+                    <Button Text="Rimuovi chiave" Style="{StaticResource TextActionButton}" Clicked="OnRemoveApiKeyClicked" IsVisible="{Binding HasApiKey}" />
                 </VerticalStackLayout>
             </Border>
             <Label Text="AUTOMAZIONI" Style="{StaticResource LabelLarge}" TextColor="{StaticResource PrimaryLight}" />

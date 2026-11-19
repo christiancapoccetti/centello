@@ -2,27 +2,10 @@ CENTESIMO — THIRD-PARTY NOTICES
 
 This application includes open-source components. Their licenses apply to the respective components.
 
-Microsoft .NET, .NET MAUI, Entity Framework Core and Microsoft Recognizers Text
+Microsoft .NET, .NET MAUI and Entity Framework Core
 Copyright (c) Microsoft Corporation.
 License: MIT License.
 https://github.com/dotnet/maui
-https://github.com/microsoft/Recognizers-Text
-
-Whisper.net 1.9.1
-Copyright (c) Sandro Hanea and contributors.
-License: MIT License.
-https://github.com/sandrohanea/whisper.net
-
-whisper.cpp runtime
-Copyright (c) The ggml authors.
-License: MIT License.
-https://github.com/ggml-org/whisper.cpp
-
-OpenAI Whisper model
-Copyright (c) 2022 OpenAI.
-License: MIT License.
-The optional Italian speech model is downloaded from the ggerganov/whisper.cpp repository.
-https://github.com/openai/whisper
 
 SQLite
 SQLite is in the public domain.

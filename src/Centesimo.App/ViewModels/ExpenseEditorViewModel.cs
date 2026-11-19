@@ -151,7 +151,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         if (draft is null)
             return;
 
-        Amount = (draft.AmountCents / 100m).ToString("0.00", ItalianCulture);
+        Amount = draft.AmountCents is { } cents ? (cents / 100m).ToString("0.00", ItalianCulture) : "";
         OccurredOn = draft.OccurredOn?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
         Note = draft.Note;
         if (!draft.CategoryId.HasValue)
@@ -217,13 +217,14 @@ public sealed class ExpenseEditorViewModel : ObservableObject
             var created = await _expenseService.Create(request);
             result = created.IsSuccess ? Result.Success() : Result.Failure(created.Error);
         }
-        IsSaving = false;
         if (result.IsFailure)
         {
+            IsSaving = false;
             ErrorMessage = result.Error.Message;
             return;
         }
 
+        // Stays true after success so the save button cannot fire again while the page is popping.
         Saved?.Invoke(this, EventArgs.Empty);
     }
 

@@ -1,16 +1,18 @@
 using Centesimo.Application;
-using Centesimo.App;
 using Centesimo.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App.ViewModels;
 
-public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, SpeechPreparationStatus speechPreparation) : ObservableObject
+public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiSettings openAiSettings) : ObservableObject
 {
     private bool _isBusy;
     private string _message = "";
     private bool _hasError;
     private MoneyManagerImportPreview? _preview;
+    private bool _hasApiKey;
+    private string _apiKeyInput = "";
+    private string _apiKeyError = "";
 
     public bool IsBusy
     {
@@ -35,7 +37,59 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, SpeechP
         }
     }
     public bool HasPreview => PreviewResult is not null;
-    public SpeechPreparationStatus SpeechPreparation => speechPreparation;
+    public bool HasApiKey
+    {
+        get => _hasApiKey;
+        private set
+        {
+            if (SetProperty(ref _hasApiKey, value))
+                OnPropertyChanged(nameof(ApiKeyStatus));
+        }
+    }
+    public string ApiKeyStatus => HasApiKey ? "Chiave API configurata." : "Nessuna chiave API configurata.";
+    public string ApiKeyInput
+    {
+        get => _apiKeyInput;
+        set
+        {
+            if (SetProperty(ref _apiKeyInput, value))
+                OnPropertyChanged(nameof(CanSaveApiKey));
+        }
+    }
+    public bool CanSaveApiKey => ApiKeyInput.HasValue();
+    public string ApiKeyError
+    {
+        get => _apiKeyError;
+        private set
+        {
+            if (SetProperty(ref _apiKeyError, value))
+                OnPropertyChanged(nameof(HasApiKeyError));
+        }
+    }
+    public bool HasApiKeyError => ApiKeyError.HasValue();
+
+    public async Task LoadApiKeyStatus() => HasApiKey = await openAiSettings.HasApiKey();
+
+    public async Task SaveApiKey(bool consentAccepted)
+    {
+        var result = await openAiSettings.SaveApiKey(ApiKeyInput, consentAccepted);
+        if (result.IsFailure)
+        {
+            ApiKeyError = result.Error.Message;
+            return;
+        }
+
+        ApiKeyInput = "";
+        ApiKeyError = "";
+        HasApiKey = true;
+    }
+
+    public void RemoveApiKey()
+    {
+        openAiSettings.ClearApiKey();
+        ApiKeyError = "";
+        HasApiKey = false;
+    }
 
     public async Task<Result<MoneyManagerImportPreview>> Preview(Stream backup,
         CancellationToken cancellationToken = default)

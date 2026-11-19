@@ -1,3 +1,4 @@
+using Centesimo.Application;
 using Centesimo.App.Pages;
 using Centesimo.App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,17 +20,13 @@ public static class ServiceCollectionExtensions
         services.AddTransient<OpenSourceLicensesPage>();
         services.AddTransient<LicensePage>();
         services.AddSingleton<RecurringPaymentAutomation>();
+        services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
+        services.AddSingleton<IInternetAccess, MauiInternetAccess>();
 #if ANDROID
-        services.AddSingleton<IOfflineSpeechRecognizer, WhisperOfflineSpeechRecognizer>();
-#else
-        services.AddSingleton<IOfflineSpeechRecognizer, UnavailableOfflineSpeechRecognizer>();
-#endif
-        services.AddSingleton<SpeechExpenseDraftService>();
-        services.AddSingleton<SpeechPreparationStatus>();
-        services.AddSingleton<IItalianSpeechModelProvisioner, ItalianSpeechModelProvisioner>();
-#if ANDROID
+        services.AddSingleton<ISpeechRecorder, AndroidAudioRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
 #else
+        services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
 #endif
         services.AddSingleton<AppShell>();

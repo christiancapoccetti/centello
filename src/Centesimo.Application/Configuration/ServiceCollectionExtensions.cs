@@ -17,9 +17,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<MoneyManagerImportService>();
         services.AddScoped<RecurringPaymentService>();
         services.AddScoped<UpcomingRecurringPaymentService>();
-        services.AddSingleton<ExpenseSpeechCommandParser>();
-        services.AddSingleton<ExpenseSpeechDraftResolver>();
+        services.AddSingleton<OpenAiSettings>();
+        services.AddSingleton<IOpenAiApiKeyProvider>(provider => provider.GetRequiredService<OpenAiSettings>());
         services.AddSingleton<IPendingExpenseSpeechDraft, PendingExpenseSpeechDraft>();
+        services.AddSingleton<SpeechExpenseDraftService>();
         return services;
     }
 }
