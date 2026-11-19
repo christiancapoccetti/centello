@@ -15,9 +15,9 @@ public sealed class CategoryIcons_should_expected_behavior
         Assert.All(StoredKeys, key => Assert.Equal(key, CategoryIcons.Resolve(key).Key));
 
     [Fact]
-    public void Should_offer_thirty_one_icons_with_the_fallback_last()
+    public void Should_offer_thirty_two_icons_with_the_fallback_last()
     {
-        Assert.Equal(31, CategoryIcons.All.Count);
+        Assert.Equal(32, CategoryIcons.All.Count);
         Assert.Same(CategoryIcons.Fallback, CategoryIcons.All[^1]);
     }
 

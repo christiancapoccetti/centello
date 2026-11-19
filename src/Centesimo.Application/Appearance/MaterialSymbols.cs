@@ -62,6 +62,7 @@ public static class MaterialSymbols
     public const string ShoppingBag = "\uF1CC";
     public const string ShoppingCart = "\uE8CC";
     public const string Smartphone = "\uE32C";
+    public const string SmokingRooms = "\uEB4B";
     public const string SouthEast = "\uF1E4";
     public const string SportsSoccer = "\uEA2F";
     public const string Subscriptions = "\uE064";

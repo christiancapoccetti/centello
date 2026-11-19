@@ -39,6 +39,7 @@ public static class CategoryIcons
         new("kids", "Bambini", MaterialSymbols.ChildFriendly),
         new("taxes", "Tasse", MaterialSymbols.ReceiptLong),
         new("books", "Libri", MaterialSymbols.MenuBook),
+        new("smoking", "Sigarette", MaterialSymbols.SmokingRooms),
         Fallback
     ];
 
