@@ -188,6 +188,9 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     }
     private async Task Save()
     {
+        if (IsSaving)
+            return;
+
         var amountResult = MoneyInputParser.ParseOptional(Amount, ItalianCulture);
         if (amountResult.IsFailure || amountResult.Value is null || amountResult.Value.Value.Cents <= 0)
         {
