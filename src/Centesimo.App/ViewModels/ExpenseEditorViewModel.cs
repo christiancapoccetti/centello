@@ -188,9 +188,6 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     }
     private async Task Save()
     {
-        if (IsSaving)
-            return;
-
         var amountResult = MoneyInputParser.ParseOptional(Amount, ItalianCulture);
         if (amountResult.IsFailure || amountResult.Value is null || amountResult.Value.Value.Cents <= 0)
         {
@@ -220,13 +217,14 @@ public sealed class ExpenseEditorViewModel : ObservableObject
             var created = await _expenseService.Create(request);
             result = created.IsSuccess ? Result.Success() : Result.Failure(created.Error);
         }
-        IsSaving = false;
         if (result.IsFailure)
         {
+            IsSaving = false;
             ErrorMessage = result.Error.Message;
             return;
         }
 
+        // Stays true after success so the save button cannot fire again while the page is popping.
         Saved?.Invoke(this, EventArgs.Empty);
     }
 
