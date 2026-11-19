@@ -69,5 +69,32 @@ public sealed class ExpenseService_should_expected_behavior
         Assert.Equal("Tag.Archived", archivedTag.Error.Code);
         Assert.Equal("Category.Archived", archivedCategory.Error.Code);
     }
+
+    [Fact]
+    public async Task Create_assigns_a_time_ordered_id()
+    {
+        var categories = new FakeCategoryRepository();
+        var category = new Category(Guid.NewGuid(), "Food", "cart", "#123456");
+        categories.Items.Add(category);
+        var service = new ExpenseService(categories, new FakeTagRepository(), new FakeExpenseRepository());
+
+        var created = await service.Create(new(category.CategoryId, 100, new DateOnly(2026, 7, 1)));
+
+        Assert.Equal(7, created.Value.ExpenseId.Version);
+    }
+
+    [Fact]
+    public async Task Create_takes_the_id_from_the_given_source()
+    {
+        var categories = new FakeCategoryRepository();
+        var category = new Category(Guid.NewGuid(), "Food", "cart", "#123456");
+        categories.Items.Add(category);
+        var id = Guid.CreateVersion7();
+        var service = new ExpenseService(categories, new FakeTagRepository(), new FakeExpenseRepository(), () => id);
+
+        var created = await service.Create(new(category.CategoryId, 100, new DateOnly(2026, 7, 1)));
+
+        Assert.Equal(id, created.Value.ExpenseId);
+    }
 }
 

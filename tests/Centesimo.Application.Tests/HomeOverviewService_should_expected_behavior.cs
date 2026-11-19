@@ -702,6 +702,24 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_list_expenses_entered_in_sequence_newest_first_within_a_day()
+    {
+        var category = NewCategory("Spesa");
+        var categories = new FakeCategoryRepository();
+        categories.Items.Add(category);
+        var expenses = new FakeExpenseRepository();
+        var entered = 0;
+        var service = new ExpenseService(categories, new FakeTagRepository(), expenses,
+            () => Guid.CreateVersion7(new DateTimeOffset(2026, 11, 19, 9, 0, 0, TimeSpan.Zero).AddSeconds(entered++)));
+        foreach (var note in new[] { "primo", "secondo", "terzo" })
+            await service.Create(new SaveExpenseRequest(category.CategoryId, 100, Today, Note: note));
+
+        var overview = await new HomeOverviewService(categories, expenses, () => Today).Get();
+
+        Assert.Equal(["terzo", "secondo", "primo"], overview.Value.Latest.Select(item => item.Title));
+    }
+
+    [Fact]
     public async Task Should_list_nothing_when_the_period_has_no_expenses()
     {
         var overview = await Overview([NewCategory("Spesa")]);

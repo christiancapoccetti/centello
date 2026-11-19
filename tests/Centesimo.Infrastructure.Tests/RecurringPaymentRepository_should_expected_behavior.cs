@@ -11,7 +11,7 @@ public sealed class RecurringPaymentRepository_should_expected_behavior
         var repository = new RecurringPaymentRepository(database.Context);
         var categoryId = Guid.NewGuid();
         await new CategoryRepository(database.Context).Add(
-            new Category(categoryId, "Bills", "receipt", "#123456"));
+            new Category(categoryId, "Bills", "receipt", "#123456"), []);
         var completed = new RecurringPayment(Guid.NewGuid(), categoryId, new Money(100),
             RecurrenceFrequency.Monthly, new DateOnly(2026, 8, 1));
         completed.End(new DateOnly(2026, 7, 1));

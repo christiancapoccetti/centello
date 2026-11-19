@@ -15,8 +15,12 @@ public sealed class CategoryRepository(CentesimoDbContext context)
         UseContext<IReadOnlyList<Category>>(async (db, token) => await db.Categories.AsNoTracking()
             .OrderBy(category => category.Name).ToListAsync(token), cancellationToken);
 
-    public Task<Result> Add(Category category, CancellationToken cancellationToken = default) =>
-        SaveContext(db => db.Categories.Add(category), cancellationToken);
+    public Task<Result> Add(Category category, IReadOnlyList<Tag> tags, CancellationToken cancellationToken = default) =>
+        SaveContext(db =>
+        {
+            db.Categories.Add(category);
+            db.Tags.AddRange(tags);
+        }, cancellationToken);
 
     public Task<Result> Update(Category category, CancellationToken cancellationToken = default) =>
         SaveContext(async (db, token) =>

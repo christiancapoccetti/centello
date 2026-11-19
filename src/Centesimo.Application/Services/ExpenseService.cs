@@ -8,8 +8,13 @@ public sealed record SaveExpenseRequest(Guid CategoryId, long AmountCents, DateO
 public sealed class ExpenseService(
     ICategoryRepository categories,
     ITagRepository tags,
-    IExpenseRepository expenses)
+    IExpenseRepository expenses,
+    Func<Guid>? newExpenseId = null)
 {
+    // Version 7 ids sort by creation time. The repository records no creation time, so the id is what keeps
+    // two expenses of the same day in the order they were entered.
+    private readonly Func<Guid> _newExpenseId = newExpenseId ?? (() => Guid.CreateVersion7());
+
     public Task<Result<Expense?>> Get(Guid expenseId, CancellationToken cancellationToken = default) =>
         expenses.Get(expenseId, cancellationToken);
 
@@ -20,7 +25,7 @@ public sealed class ExpenseService(
         if (validation.IsFailure)
             return Result<Expense>.Failure(validation.Error);
 
-        var expense = request.ToExpense(Guid.NewGuid());
+        var expense = request.ToExpense(_newExpenseId());
         var saved = await expenses.Add(expense, cancellationToken);
         return saved.IsFailure ? Result<Expense>.Failure(saved.Error) : Result<Expense>.Success(expense);
     }

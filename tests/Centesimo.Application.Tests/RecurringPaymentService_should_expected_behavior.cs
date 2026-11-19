@@ -25,6 +25,22 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Create_occurrence_expenses_with_time_ordered_ids()
+    {
+        var categories = new FakeCategoryRepository();
+        var category = new Category(Guid.NewGuid(), "Bills", "receipt", "#123456");
+        categories.Items.Add(category);
+        var expenses = new FakeExpenseRepository();
+        var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
+            new FakeRecurringPaymentRepository(), new FakeRecurringOccurrenceProcessor(expenses));
+        await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Monthly, new DateOnly(2026, 5, 1)));
+
+        await service.ProcessDue(new DateOnly(2026, 7, 20));
+
+        Assert.All(expenses.Items, expense => Assert.Equal(7, expense.ExpenseId.Version));
+    }
+
+    [Fact]
     public async Task Suspend_update_and_end_payment()
     {
         var categories = new FakeCategoryRepository();
@@ -82,5 +98,102 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
 
         Assert.True(result.IsSuccess);
         Assert.Equal(new DateOnly(2026, 8, 1), result.Value[0].NextDueOn);
+    }
+
+    [Fact]
+    public async Task Preview_ending_a_payment_on_its_next_due_date()
+    {
+        var (service, payment) = await ServiceWithPayment(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        Assert.True(preview.IsSuccess);
+        Assert.Equal(new DateOnly(2026, 12, 5), preview.Value.LastExpenseOn);
+        Assert.Equal("L'ultima spesa sarà quella del 5 dicembre, poi non ne verranno create altre.", preview.Value.Message);
+    }
+
+    [Theory]
+    [InlineData(2026, 8, 8, "L'ultima spesa sarà quella dell'8 agosto, poi non ne verranno create altre.")]
+    [InlineData(2026, 11, 11, "L'ultima spesa sarà quella dell'11 novembre, poi non ne verranno create altre.")]
+    [InlineData(2027, 1, 1, "L'ultima spesa sarà quella del 1 gennaio, poi non ne verranno create altre.")]
+    [InlineData(2026, 3, 18, "L'ultima spesa sarà quella del 18 marzo, poi non ne verranno create altre.")]
+    public async Task Elide_the_article_before_a_date_that_starts_with_a_vowel(int year, int month, int day, string expected)
+    {
+        var (service, payment) = await ServiceWithPayment(RecurrenceFrequency.Weekly, new DateOnly(year, month, day));
+
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        Assert.Equal(expected, preview.Value.Message);
+    }
+
+    [Fact]
+    public async Task Preview_ending_ignores_a_later_end_date_the_payment_already_has()
+    {
+        var (service, payment) = await ServiceWithPayment(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5),
+            endsOn: new DateOnly(2027, 12, 5));
+
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        Assert.Equal(new DateOnly(2026, 12, 5), preview.Value.LastExpenseOn);
+    }
+
+    [Fact]
+    public async Task Preview_the_last_expense_ending_does_create()
+    {
+        var (service, payment, expenses) = await ServiceWithPaymentAndExpenses(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        await service.End(payment.RecurringPaymentId, preview.Value.LastExpenseOn);
+        await service.ProcessDue(new DateOnly(2027, 6, 1));
+
+        Assert.Equal([preview.Value.LastExpenseOn], expenses.Items.Select(expense => expense.OccurredOn));
+    }
+
+    [Fact]
+    public async Task Refuse_to_preview_ending_a_payment_that_has_already_ended()
+    {
+        var (service, payment) = await ServiceWithPayment(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5),
+            endsOn: new DateOnly(2026, 12, 5));
+        payment.MoveToNextOccurrence();
+
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        Assert.Equal("RecurringPayment.AlreadyEnded", preview.Error.Code);
+    }
+
+    [Fact]
+    public async Task Refuse_to_preview_ending_a_missing_payment_and_propagate_repository_failure()
+    {
+        var payments = new FakeRecurringPaymentRepository();
+        var expenses = new FakeExpenseRepository();
+        var service = new RecurringPaymentService(new FakeCategoryRepository(), new FakeTagRepository(), expenses,
+            payments, new FakeRecurringOccurrenceProcessor(expenses));
+
+        var missing = await service.PreviewEnd(Guid.NewGuid());
+        payments.Failure = InfrastructureErrors.Unexpected;
+        var failed = await service.PreviewEnd(Guid.NewGuid());
+
+        Assert.Equal("RecurringPayment.NotFound", missing.Error.Code);
+        Assert.Equal("Infrastructure.Unexpected", failed.Error.Code);
+    }
+
+    private static async Task<(RecurringPaymentService Service, RecurringPayment Payment)> ServiceWithPayment(
+        RecurrenceFrequency frequency, DateOnly nextDueOn, DateOnly? endsOn = null)
+    {
+        var (service, payment, _) = await ServiceWithPaymentAndExpenses(frequency, nextDueOn, endsOn);
+        return (service, payment);
+    }
+
+    private static async Task<(RecurringPaymentService Service, RecurringPayment Payment, FakeExpenseRepository Expenses)>
+        ServiceWithPaymentAndExpenses(RecurrenceFrequency frequency, DateOnly nextDueOn, DateOnly? endsOn = null)
+    {
+        var categories = new FakeCategoryRepository();
+        var category = new Category(Guid.NewGuid(), "Svago", "leisure", "lilac");
+        categories.Items.Add(category);
+        var expenses = new FakeExpenseRepository();
+        var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
+            new FakeRecurringPaymentRepository(), new FakeRecurringOccurrenceProcessor(expenses));
+        var created = await service.Create(new(category.CategoryId, 1_599, frequency, nextDueOn, EndsOn: endsOn));
+        return (service, created.Value, expenses);
     }
 }

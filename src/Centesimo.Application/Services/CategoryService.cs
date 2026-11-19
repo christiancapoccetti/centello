@@ -31,8 +31,15 @@ public sealed class CategoryService(ICategoryRepository categories)
             .ToList();
         return Result<IReadOnlyList<Category>>.Success(archived);
     }
+
+    public Task<Result<Category>> Create(string name, string icon, string color,
+        Money? budget = null, CancellationToken cancellationToken = default) =>
+        Create(name, icon, color, budget, [], cancellationToken);
+
+    /// <summary>Creates the category and its tags as one operation. Tag names are trimmed, blank ones are ignored and
+    /// names that differ only by case collapse into the first spelling.</summary>
     public async Task<Result<Category>> Create(string name, string icon, string color,
-        Money? budget = null, CancellationToken cancellationToken = default)
+        Money? budget, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
     {
         if (name.IsEmpty())
             return Result<Category>.Failure(ApplicationErrors.InvalidName);
@@ -42,10 +49,44 @@ public sealed class CategoryService(ICategoryRepository categories)
             return Result<Category>.Failure(availability.Error);
 
         var category = new Category(Guid.NewGuid(), name, icon, color, budget);
-        var saved = await categories.Add(category, cancellationToken);
+        var saved = await categories.Add(category, NewTags(category.CategoryId, tags), cancellationToken);
         return saved.IsFailure
             ? Result<Category>.Failure(saved.Error)
             : Result<Category>.Success(category);
+    }
+
+    public Task<Result<IReadOnlyList<Category>>> CreateSuggested(CancellationToken cancellationToken = default) =>
+        CreateSuggested(SuggestedCategories.All.Select(suggestion => suggestion.Name).ToList(), cancellationToken);
+
+    /// <summary>Creates the suggested categories named in <paramref name="names"/>, in catalog order, and returns the
+    /// ones it created. A name that already belongs to a category, archived or not, is skipped, and so is a name the
+    /// catalog does not know, so a second call creates nothing. A failure stops at the category that could not be
+    /// stored: the ones before it stay and calling again creates the rest.</summary>
+    public async Task<Result<IReadOnlyList<Category>>> CreateSuggested(IReadOnlyList<string> names,
+        CancellationToken cancellationToken = default)
+    {
+        var existing = await categories.GetAll(cancellationToken);
+        if (existing.IsFailure)
+            return Result<IReadOnlyList<Category>>.Failure(existing.Error);
+
+        var taken = existing.Value
+            .Select(category => category.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var created = new List<Category>();
+        foreach (var suggestion in SuggestedCategories.All.Where(item => names.Contains(item.Name, StringComparer.OrdinalIgnoreCase)))
+        {
+            if (!taken.Add(suggestion.Name))
+                continue;
+
+            var category = new Category(Guid.NewGuid(), suggestion.Name, suggestion.IconKey, suggestion.ColorKey);
+            var saved = await categories.Add(category, [], cancellationToken);
+            if (saved.IsFailure)
+                return Result<IReadOnlyList<Category>>.Failure(saved.Error);
+
+            created.Add(category);
+        }
+
+        return Result<IReadOnlyList<Category>>.Success(created);
     }
 
     public async Task<Result> Update(Guid categoryId, string name, string icon, string color,
@@ -121,4 +162,12 @@ public sealed class CategoryService(ICategoryRepository categories)
         return duplicateExists
             ? Result.Failure(ApplicationErrors.CategoryNameAlreadyExists)
             : Result.Success();
-    }}
+    }
+
+    private static List<Tag> NewTags(Guid categoryId, IReadOnlyList<string> names) => names
+        .Where(name => name.HasValue())
+        .Select(name => name.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Select(name => new Tag(Guid.NewGuid(), categoryId, name))
+        .ToList();
+}

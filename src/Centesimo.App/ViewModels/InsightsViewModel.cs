@@ -102,7 +102,7 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
 
         var current = overview.To.ToDateTime(TimeOnly.MinValue);
         var change = $"{(overview.ChangePercentage >= 0 ? "+" : "")}{overview.ChangePercentage:P0}";
-        if (overview.Period == InsightPeriod.Month)
+        if (overview.Period.Kind == PeriodKind.Month)
             return $"{current.ToString("MMMM", ItalianCulture)} rispetto a {current.AddMonths(-1).ToString("MMMM", ItalianCulture)}: {change}";
 
         return $"gennaio–{current.ToString("MMMM", ItalianCulture)} {current.Year} rispetto allo stesso periodo del {current.Year - 1}: {change}";

@@ -15,6 +15,9 @@ internal static class ItalianFormat
     private static readonly string[] ShortMonthNames =
         ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
 
+    // Indexed by DayOfWeek, which starts on Sunday.
+    private static readonly string[] ShortWeekdayNames = ["dom", "lun", "mar", "mer", "gio", "ven", "sab"];
+
     /// <summary>"1.284,60"</summary>
     public static string Amount(long cents) => $"{Grouped(cents / 100)},{cents % 100:00}";
 
@@ -39,13 +42,39 @@ internal static class ItalianFormat
     /// <summary>"12 novembre"</summary>
     public static string LongDate(DateOnly date) => $"{date.Day} {MonthName(date.Month)}";
 
+    /// <summary>"del 5 dicembre", or "dell'8 agosto" and "dell'11 novembre" where the article elides</summary>
+    public static string OfLongDate(DateOnly date) => $"{(date.Day is 8 or 11 ? "dell'" : "del ")}{LongDate(date)}";
+
+    /// <summary>"lun 17 nov"</summary>
+    public static string WeekdayDate(DateOnly date) => $"{ShortWeekdayNames[(int)date.DayOfWeek]} {ShortDate(date)}";
+
     /// <summary>"Oggi", "Ieri" or "12 nov"</summary>
-    public static string RelativeDay(DateOnly date, DateOnly today) => date == today
-        ? "Oggi"
-        : date == today.AddDays(-1) ? "Ieri" : ShortDate(date);
+    public static string RelativeDay(DateOnly date, DateOnly today) => RelativeDay(date, today, ShortDate);
+
+    /// <summary>"Oggi", "Ieri" or "lun 17 nov"</summary>
+    public static string DayHeader(DateOnly date, DateOnly today) => RelativeDay(date, today, WeekdayDate);
+
+    /// <summary>"Novembre 2026" or "Anno 2026"</summary>
+    public static string PeriodTitle(Period period) => period.Kind == PeriodKind.Month
+        ? $"{MonthTitle(period.Start.Month)} {period.Start.Year}"
+        : $"Anno {period.Start.Year}";
+
+    /// <summary>"a novembre", "ad aprile" or "nel 2026"</summary>
+    public static string InPeriod(Period period)
+    {
+        if (period.Kind == PeriodKind.Year)
+            return $"nel {period.Start.Year}";
+
+        var month = MonthName(period.Start.Month);
+        return month[0] == 'a' ? $"ad {month}" : $"a {month}";
+    }
 
     /// <summary>"6%"</summary>
     public static string Percent(int percent) => $"{percent}%";
+
+    private static string RelativeDay(DateOnly date, DateOnly today, Func<DateOnly, string> otherwise) => date == today
+        ? "Oggi"
+        : date == today.AddDays(-1) ? "Ieri" : otherwise(date);
 
     private static string Grouped(long units) => units.ToString("N0", CultureInfo.InvariantCulture).Replace(',', '.');
 }

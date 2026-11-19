@@ -14,6 +14,9 @@ public sealed class RecurringPayment
     public int AnchorMonth { get; private set; }
     public int AnchorDay { get; private set; }
 
+    /// <summary>True once the next occurrence falls after the end date, so no further expense will be created.</summary>
+    public bool IsEnded => EndsOn.HasValue && NextDueOn > EndsOn.Value;
+
     public RecurringPayment(Guid recurringPaymentId, Guid categoryId, Money amount,
         RecurrenceFrequency frequency, DateOnly nextDueOn, Guid? tagId = null,
         string note = "", DateOnly? endsOn = null)

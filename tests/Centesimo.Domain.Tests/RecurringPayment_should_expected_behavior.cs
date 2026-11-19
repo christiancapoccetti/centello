@@ -29,6 +29,21 @@ public sealed class RecurringPayment_should_expected_behavior
         Assert.Equal(new DateOnly(2028, 2, 29), payment.NextDueOn);
     }
 
+    [Fact]
+    public void Be_ended_only_once_the_next_occurrence_falls_after_the_end_date()
+    {
+        var open = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        var lastOccurrencePending = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        lastOccurrencePending.End(new DateOnly(2026, 12, 5));
+        var ended = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        ended.End(new DateOnly(2026, 12, 5));
+        ended.MoveToNextOccurrence();
+
+        Assert.False(open.IsEnded);
+        Assert.False(lastOccurrencePending.IsEnded);
+        Assert.True(ended.IsEnded);
+    }
+
     private static RecurringPayment Create(RecurrenceFrequency frequency, DateOnly nextDueOn) =>
         new(Guid.NewGuid(), Guid.NewGuid(), new Money(100), frequency, nextDueOn);
 }
