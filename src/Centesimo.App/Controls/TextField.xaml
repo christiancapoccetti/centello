@@ -11,17 +11,19 @@
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnBoxTapped" />
             </Border.GestureRecognizers>
-            <!-- The entry is as high as its line and sits in the middle: a tap anywhere else in the box reaches it too. -->
-            <c:PlainEntry x:Name="Input"
-                          Text="{Binding Text, Source={x:Reference Root}}"
-                          Placeholder="{Binding Placeholder, Source={x:Reference Root}}"
-                          MaxLength="{Binding MaxLength, Source={x:Reference Root}}"
-                          IsReadOnly="{Binding IsReadOnly, Source={x:Reference Root}}"
-                          FontSize="16"
-                          VerticalOptions="Center"
-                          Focused="OnFocusChanged"
-                          Unfocused="OnFocusChanged"
-                          SemanticProperties.Description="{Binding Label, Source={x:Reference Root}}" />
+            <Grid x:Name="Row" ColumnDefinitions="*,Auto">
+                <!-- The entry is as high as its line and sits in the middle: a tap anywhere else in the box reaches it too. -->
+                <c:PlainEntry x:Name="Input"
+                              Text="{Binding Text, Source={x:Reference Root}}"
+                              Placeholder="{Binding Placeholder, Source={x:Reference Root}}"
+                              MaxLength="{Binding MaxLength, Source={x:Reference Root}}"
+                              IsReadOnly="{Binding IsReadOnly, Source={x:Reference Root}}"
+                              FontSize="16"
+                              VerticalOptions="Center"
+                              Focused="OnFocusChanged"
+                              Unfocused="OnFocusChanged"
+                              SemanticProperties.Description="{Binding Label, Source={x:Reference Root}}" />
+            </Grid>
         </Border>
         <Label x:Name="Caption"
                Text="{Binding Label, Source={x:Reference Root}}"
