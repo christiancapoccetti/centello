@@ -13,8 +13,8 @@ public sealed class DailySpendChartView : ContentView
     private const double BarsHeight = 104;
     // The pace label starts this far above its line. The plot keeps the same room above the tallest bar, so the
     // label fits even when the line is at the top of the scale.
-    private const double PaceLabelRise = 20;
-    private const double AxisGap = 8;
+    private const double PaceLabelRise = 22;
+    private const double AxisGap = 5;
     private const double LabelClearance = 8;
 
     private readonly BarsCanvas _bars = new();

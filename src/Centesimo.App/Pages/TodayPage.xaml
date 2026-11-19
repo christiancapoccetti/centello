@@ -27,13 +27,15 @@
         </Grid>
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24,16,24,24">
-                <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16" IsVisible="{Binding HasError}">
+            <VerticalStackLayout Padding="24,0,24,24">
+                <Border Style="{StaticResource SurfaceCard}" Margin="0,16,0,0" IsVisible="{Binding HasError}">
                     <Label Text="{Binding ErrorMessage}" TextColor="{t:Theme Alert}" />
                 </Border>
 
                 <VerticalStackLayout IsVisible="{Binding HasOverview}">
-                    <Label Style="{StaticResource TotalDisplay}">
+                    <!-- Android keeps the font ascent above a 68sp line and the descent below it, about 20dp each.
+                         The negative margins here and on the next label take that room back. -->
+                    <Label Style="{StaticResource TotalDisplay}" Margin="0,-3,0,0">
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="{Binding Overview.Total}" />
@@ -42,7 +44,7 @@
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
-                    <Label Style="{StaticResource BodyLarge}" Margin="0,8,0,0">
+                    <Label Style="{StaticResource BodyLarge}" Margin="0,-12,0,0">
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="{Binding Overview.Budget.Lead}" />
@@ -51,13 +53,13 @@
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
-                    <Border Margin="0,10,0,0" Padding="6,4,10,4" HorizontalOptions="Start" StrokeThickness="0" BackgroundColor="{t:Theme SurfaceRaised}" IsVisible="{Binding Overview.HasComparison}" SemanticProperties.Description="{Binding Overview.Comparison.Description}">
+                    <Border Margin="0,6,0,0" Padding="6,0,10,0" HeightRequest="26" HorizontalOptions="Start" StrokeThickness="0" BackgroundColor="{t:Theme SurfaceRaised}" IsVisible="{Binding Overview.HasComparison}" SemanticProperties.Description="{Binding Overview.Comparison.Description}">
                         <Border.Triggers>
                             <DataTrigger TargetType="Border" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
                                 <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
                             </DataTrigger>
                         </Border.Triggers>
-                        <HorizontalStackLayout Spacing="4">
+                        <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
                             <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.East}">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
@@ -80,10 +82,11 @@
                     </Border>
 
                     <c:CategoryLineView Margin="0,24,0,0" HeightRequest="14" Segments="{Binding Overview.Categories.Segments}" IsVisible="{Binding Overview.Categories.HasSegments}" SemanticProperties.Description="{Binding Overview.Categories.Description}" />
-                    <FlexLayout Margin="0,10,0,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Overview.Categories.Key}">
+                    <FlexLayout Margin="0,6,0,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Overview.Categories.Key}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
-                                <HorizontalStackLayout Margin="0,0,14,6" Spacing="6">
+                                <!-- The gap between items is padding: FlexLayout counts an item margin twice. -->
+                                <HorizontalStackLayout Padding="0,0,14,6" Spacing="6">
                                     <c:PaletteSwatch ColorKey="{Binding ColorKey}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
                                     <Label Text="{Binding Text}" Style="{StaticResource Caption}">
                                         <Label.Triggers>
@@ -98,9 +101,9 @@
                         </BindableLayout.ItemTemplate>
                     </FlexLayout>
 
-                    <c:DailySpendChartView Margin="0,4,0,0" Chart="{Binding Overview.Chart}" />
+                    <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
 
-                    <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,28,0,4" SemanticProperties.HeadingLevel="Level2" />
+                    <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Overview.Latest}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
