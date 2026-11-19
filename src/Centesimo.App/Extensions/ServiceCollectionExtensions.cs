@@ -27,7 +27,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IOfflineSpeechRecognizer, UnavailableOfflineSpeechRecognizer>();
 #endif
         services.AddSingleton<SpeechExpenseDraftService>();
-        services.AddSingleton<SpeechPreparationStatus>();
         services.AddSingleton<IItalianSpeechModelProvisioner, ItalianSpeechModelProvisioner>();
 #if ANDROID
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();

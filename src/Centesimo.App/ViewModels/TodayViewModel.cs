@@ -21,11 +21,7 @@ public sealed class TodayViewModel : ObservableObject
     private bool _isSpeechSheetVisible;
     private bool _isSpeechListening;
     private bool _isSpeechProcessing;
-    private bool _isSpeechPreparing;
-    private bool _isSpeechReady;
-    private bool _isSpeechPreparationFailed;
-    private string _speechAvailabilityMessage = "Preparazione del riconoscimento vocale…";
-    private string _speechPreparationActionText = "Riprova";
+    private bool _isSpeechAvailable;
     private string _speechTranscription = "Parla ora, poi premi Ferma registrazione.";
     private string _speechErrorMessage = "";
 
@@ -75,11 +71,16 @@ public sealed class TodayViewModel : ObservableObject
     public bool IsSpeechSheetVisible { get => _isSpeechSheetVisible; set => SetProperty(ref _isSpeechSheetVisible, value); }
     public bool IsSpeechListening { get => _isSpeechListening; set => SetProperty(ref _isSpeechListening, value); }
     public bool IsSpeechProcessing { get => _isSpeechProcessing; set => SetProperty(ref _isSpeechProcessing, value); }
-    public bool IsSpeechPreparing { get => _isSpeechPreparing; set => SetProperty(ref _isSpeechPreparing, value); }
-    public bool IsSpeechReady { get => _isSpeechReady; set => SetProperty(ref _isSpeechReady, value); }
-    public bool IsSpeechPreparationFailed { get => _isSpeechPreparationFailed; set => SetProperty(ref _isSpeechPreparationFailed, value); }
-    public string SpeechAvailabilityMessage { get => _speechAvailabilityMessage; set => SetProperty(ref _speechAvailabilityMessage, value); }
-    public string SpeechPreparationActionText { get => _speechPreparationActionText; set => SetProperty(ref _speechPreparationActionText, value); }
+    public bool IsSpeechAvailable
+    {
+        get => _isSpeechAvailable;
+        set
+        {
+            if (SetProperty(ref _isSpeechAvailable, value))
+                OnPropertyChanged(nameof(IsSpeechUnavailable));
+        }
+    }
+    public bool IsSpeechUnavailable => !IsSpeechAvailable;
     public string SpeechTranscription { get => _speechTranscription; set => SetProperty(ref _speechTranscription, value); }
     public string SpeechErrorMessage { get => _speechErrorMessage; set { if (SetProperty(ref _speechErrorMessage, value)) OnPropertyChanged(nameof(HasSpeechError)); } }
     public bool HasSpeechError => SpeechErrorMessage.HasValue();

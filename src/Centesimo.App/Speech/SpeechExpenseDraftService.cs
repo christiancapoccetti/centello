@@ -7,10 +7,10 @@ public sealed class SpeechExpenseDraftService(
     IOfflineSpeechRecognizer recognizer,
     IServiceScopeFactory scopeFactory,
     IExpenseTextInterpreter interpreter,
+    OpenAiSettings settings,
     IPendingExpenseSpeechDraft pendingDraft)
 {
-    public Task<Result> WarmUp(CancellationToken cancellationToken = default) =>
-        recognizer.WarmUp(cancellationToken);
+    public Task<bool> IsAvailable() => settings.HasApiKey();
 
     public bool IsListening => recognizer.IsListening;
     public string LastTranscription { get; private set; } = "";
