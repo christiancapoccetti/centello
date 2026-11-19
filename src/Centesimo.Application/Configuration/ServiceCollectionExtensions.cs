@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<YearlyOverviewService>();
         services.AddScoped<HomeOverviewService>();
         services.AddScoped<ExpenseHistoryService>();
+        services.AddScoped<CategoryDetailService>();
         services.AddScoped<IInsightsService, InsightsService>();
         services.AddScoped<CategorySpendingService>();
         services.AddScoped<MoneyManagerImportService>();

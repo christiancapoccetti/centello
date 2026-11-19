@@ -60,6 +60,15 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     }
 
     [Fact]
+    public void Build_the_category_detail_service_with_the_system_clock()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<CategoryDetailService>());
+    }
+
+    [Fact]
     public void Build_the_expense_service_with_the_default_id_source()
     {
         using var provider = BuildProvider();

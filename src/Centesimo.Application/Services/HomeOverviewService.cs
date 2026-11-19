@@ -24,6 +24,17 @@ public sealed record HomeOverview(
 public sealed record HomeNavigation(Period Previous, Period? Next, Period Toggle)
 {
     public bool HasNext => Next is not null;
+
+    internal static HomeNavigation For(Period period, DateOnly today) =>
+        new(period.Previous(), period.End >= today ? null : period.Next(), ToggleOf(period, today));
+
+    private static Period ToggleOf(Period period, DateOnly today)
+    {
+        if (period.Kind == PeriodKind.Month)
+            return Period.Year(period.Start.Year);
+
+        return period.Contains(today) ? Period.MonthOf(today) : Period.Month(period.Start.Year, 12);
+    }
 }
 
 /// <summary>Three runs so the amount can be bold: Lead + Emphasis + Tail.</summary>
@@ -103,7 +114,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
             ? (ItalianFormat.MonthTitle(period.Start.Month), year)
             : ("Anno", year);
         var budget = BudgetOf(period, categories);
-        return new HomeOverview(period, Navigate(period, today), title, subtitle, ItalianFormat.Amount(spent),
+        return new HomeOverview(period, HomeNavigation.For(period, today), title, subtitle, ItalianFormat.Amount(spent),
             Summarize(spent, budget), Compare(period, window, expenses),
             Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget),
             Latest(periodExpenses, categories, today));
@@ -121,17 +132,6 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
             .Sum(category => category.MonthlyBudget?.Cents ?? 0);
         var total = period.Kind == PeriodKind.Year ? monthly * 12 : monthly;
         return total > 0 ? total : null;
-    }
-
-    private static HomeNavigation Navigate(Period period, DateOnly today) =>
-        new(period.Previous(), period.End >= today ? null : period.Next(), Toggle(period, today));
-
-    private static Period Toggle(Period period, DateOnly today)
-    {
-        if (period.Kind == PeriodKind.Month)
-            return Period.Year(period.Start.Year);
-
-        return period.Contains(today) ? Period.MonthOf(today) : Period.Month(period.Start.Year, 12);
     }
 
     private static BudgetSummary Summarize(long spent, long? budget)
@@ -232,40 +232,23 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
             new(IsOverBudget ? $"{Category.Name} oltre" : Category.Name, ColorKey, IsOverBudget);
     }
 
-    // One bar per day (month) or per month (year). Today's bar and those before it are drawn; later ones are stubs,
-    // so they must not stretch the scale. The scale also covers the pace line, which keeps it on the chart.
+    // One bar per day (month) or per month (year). The scale also covers the pace line, which keeps it on the chart.
     private static SpendChart Chart(Period period, DateOnly today, IReadOnlyList<Expense> periodExpenses, long? budget)
     {
         var isMonth = period.Kind == PeriodKind.Month;
-        var count = isMonth ? period.End.Day : 12;
-        var buckets = new long[count];
-        foreach (var expense in periodExpenses)
-            buckets[BucketOf(period, expense.OccurredOn)] += expense.Amount.Cents;
+        var buckets = SpendBuckets.Of(period, today, periodExpenses);
+        double? pace = budget.HasValue ? (double)budget.Value / buckets.Count : null;
+        var scale = buckets.Scale(pace ?? 0);
 
-        // Index of today's bucket: before the period it is -1, after the period it is count.
-        var current = today < period.Start ? -1 : today > period.End ? count : BucketOf(period, today);
-        var kinds = Enumerable.Range(0, count)
-            .Select(index => index < current ? SpendBarKind.Past : index == current ? SpendBarKind.Current : SpendBarKind.Future)
-            .ToList();
-        double? pace = budget.HasValue ? (double)budget.Value / count : null;
-        var visibleMaximum = buckets.Where((_, index) => kinds[index] != SpendBarKind.Future).DefaultIfEmpty(0).Max();
-        var scale = Math.Max(visibleMaximum, pace ?? 0);
-        var bars = buckets
-            .Select((cents, index) => new SpendBar(
-                kinds[index] == SpendBarKind.Future || scale == 0 ? 0 : cents / scale, kinds[index]))
-            .ToList();
-
-        var hasToday = current >= 0 && current < count;
-        var highlight = !hasToday ? "" : isMonth
-            ? $"oggi {ItalianFormat.Money(buckets[current])}"
-            : $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(buckets[current])}";
-        return new SpendChart(bars, pace / scale,
+        var highlight = !buckets.HasToday ? "" : isMonth
+            ? $"oggi {ItalianFormat.Money(buckets.Cents[buckets.Current])}"
+            : $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(buckets.Cents[buckets.Current])}";
+        return new SpendChart(buckets.Bars(scale), pace / scale,
             isMonth ? ItalianFormat.ShortDate(period.Start) : ItalianFormat.ShortMonth(1),
             isMonth ? ItalianFormat.ShortDate(period.End) : ItalianFormat.ShortMonth(12),
-            highlight, hasToday ? (current + 0.5) / count : 0, DescribeChart(period, buckets, current, pace));
+            highlight, buckets.HasToday ? (buckets.Current + 0.5) / buckets.Count : 0,
+            DescribeChart(period, buckets.Cents, buckets.Current, pace));
     }
-
-    private static int BucketOf(Period period, DateOnly day) => (period.Kind == PeriodKind.Month ? day.Day : day.Month) - 1;
 
     private static string DescribeChart(Period period, long[] buckets, int current, double? pace)
     {
