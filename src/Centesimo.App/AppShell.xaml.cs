@@ -1,5 +1,6 @@
 using Centesimo.App.Pages;
 using Centesimo.App.Theming;
+using Centesimo.Application;
 
 namespace Centesimo.App;
 
@@ -19,10 +20,10 @@ public partial class AppShell : Shell
         {
             Items =
             {
-                CreateTab("Oggi", "TodayPage", "⌂", todayPage),
-                CreateTab("Insight", "InsightsPage", "〽", insightsPage),
-                CreateTab("Categorie", "CategoriesPage", "▦", categoriesPage),
-                CreateTab("Impostazioni", "SettingsPage", "⚙", settingsPage)
+                CreateTab("Oggi", "TodayPage", MaterialSymbols.Today, todayPage),
+                CreateTab("Insight", "InsightsPage", MaterialSymbols.BarChart, insightsPage),
+                CreateTab("Categorie", "CategoriesPage", MaterialSymbols.Category, categoriesPage),
+                CreateTab("Impostazioni", "SettingsPage", MaterialSymbols.Settings, settingsPage)
             }
         });
     }
@@ -31,7 +32,7 @@ public partial class AppShell : Shell
     {
         Title = title,
         Route = route,
-        Icon = new FontImageSource { Glyph = glyph, FontFamily = Fonts.SemiBold, Size = 24 },
+        Icon = new FontImageSource { Glyph = glyph, FontFamily = Fonts.Icons, Size = 24 },
         Content = page
     };
 }
