@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CategorySpendingService>();
         services.AddScoped<MoneyManagerImportService>();
         services.AddScoped<RecurringPaymentService>();
+        services.AddScoped<RecurringPaymentListService>();
         services.AddScoped<UpcomingRecurringPaymentService>();
         services.AddSingleton<OpenAiSettings>();
         services.AddSingleton<IOpenAiApiKeyProvider>(provider => provider.GetRequiredService<OpenAiSettings>());

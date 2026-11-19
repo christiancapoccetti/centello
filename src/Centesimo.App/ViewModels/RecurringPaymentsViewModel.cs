@@ -1,78 +1,46 @@
-using System.Collections.ObjectModel;
-using System.Globalization;
 using Centesimo.Application;
-using Centesimo.Domain;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App.ViewModels;
 
-public sealed class RecurringPaymentsViewModel(RecurringPaymentService service,
-    RecurringPaymentAutomation automation) : ObservableObject
+public sealed class RecurringPaymentsViewModel(IServiceScopeFactory scopeFactory) : ObservableObject
 {
-    private static readonly CultureInfo ItalianCulture = CultureInfo.GetCultureInfo("it-IT");
-    private bool _isLoading;
+    private RecurringPaymentList? _list;
     private string _errorMessage = "";
+    private bool _isEndedOpen;
 
-    public ObservableCollection<RecurringPaymentItemViewModel> Payments { get; } = [];
-    public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
-    public string ErrorMessage { get => _errorMessage; private set { if (SetProperty(ref _errorMessage, value)) OnPropertyChanged(nameof(HasError)); } }
-    public bool HasError => ErrorMessage.HasValue();
-    public bool IsEmpty => !IsLoading && !HasError && Payments.Count == 0;
+    public RecurringPaymentList? List
+    {
+        get => _list;
+        private set
+        {
+            if (!SetProperty(ref _list, value))
+                return;
+
+            OnPropertyChanged(nameof(HasPayments));
+            OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(EndedCount));
+        }
+    }
+    public bool HasPayments => List is { IsEmpty: false };
+    public bool IsEmpty => List is { IsEmpty: true };
+    public string EndedCount => (List?.Ended.Count ?? 0).ToString();
+    /// <summary>The terminated payments start folded away: they are history, not something to act on.</summary>
+    public bool IsEndedOpen { get => _isEndedOpen; private set => SetProperty(ref _isEndedOpen, value); }
+    public string ErrorMessage { get => _errorMessage; private set => SetProperty(ref _errorMessage, value); }
 
     public async Task Load()
     {
-        IsLoading = true;
         ErrorMessage = "";
-        Payments.Clear();
-        var result = await service.GetAll();
+        Result<RecurringPaymentList> result;
+        using (var scope = scopeFactory.CreateScope())
+            result = await scope.ServiceProvider.GetRequiredService<RecurringPaymentListService>().Get();
+
         if (result.IsFailure)
             ErrorMessage = result.Error.Message;
         else
-            foreach (var payment in result.Value)
-                Payments.Add(RecurringPaymentItemViewModel.From(payment));
-        IsLoading = false;
-        OnPropertyChanged(nameof(IsEmpty));
+            List = result.Value;
     }
 
-    public async Task<Result> SuspendOrResume(RecurringPaymentItemViewModel payment)
-    {
-        var result = payment.IsSuspended
-            ? await service.Resume(payment.RecurringPaymentId)
-            : await service.Suspend(payment.RecurringPaymentId);
-        if (result.IsSuccess)
-        {
-            await automation.ProcessDue();
-            await Load();
-        }
-        return result;
-    }
-
-    public async Task<Result> End(RecurringPaymentItemViewModel payment)
-    {
-        var result = await service.End(payment.RecurringPaymentId, payment.NextDueOn);
-        if (result.IsSuccess)
-        {
-            await automation.ProcessDue();
-            await Load();
-        }
-        return result;
-    }
-
-    public sealed record RecurringPaymentItemViewModel(Guid RecurringPaymentId, string Amount,
-        string Schedule, DateOnly NextDueOn, string NextDue, string Status, bool IsSuspended, bool IsEnded)
-    {
-        public string SuspendResumeText => IsSuspended ? "Riprendi" : "Sospendi";
-        public bool CanChangeState => !IsEnded;
-        public static RecurringPaymentItemViewModel From(RecurringPayment payment) => new(
-            payment.RecurringPaymentId,
-            payment.Amount.ToDecimal().ToString("C", ItalianCulture),
-            payment.Frequency switch { RecurrenceFrequency.Weekly => "Ogni settimana", RecurrenceFrequency.Monthly => "Ogni mese", _ => "Ogni anno" },
-            payment.NextDueOn,
-            payment.EndsOn.HasValue && payment.NextDueOn > payment.EndsOn.Value
-                ? "Pagamento terminato"
-                : $"Prossima scadenza: {payment.NextDueOn:dd/MM/yyyy}",
-            payment.EndsOn.HasValue && payment.NextDueOn > payment.EndsOn.Value
-                ? "Terminato"
-                : payment.IsSuspended ? "Sospeso" : "Attivo", payment.IsSuspended,
-            payment.EndsOn.HasValue && payment.NextDueOn > payment.EndsOn.Value);
-    }
+    public void ToggleEnded() => IsEndedOpen = !IsEndedOpen;
 }

@@ -21,6 +21,10 @@ internal static class RowLabels
     /// <summary>"Ieri · Svago · automatica": the parts that say something, in the order given.</summary>
     public static string Detail(params string[] parts) => Join(" · ", parts);
 
+    /// <summary>"Ogni mese · prossima il 1 dic": a detail that lost its leading category still starts like a sentence.</summary>
+    public static string Sentence(string text) =>
+        text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+
     /// <summary>What a screen reader says for the row: "Netflix, Ieri · Svago · automatica, 15,99 €".</summary>
     public static string Description(params string[] parts) => Join(", ", parts);
 

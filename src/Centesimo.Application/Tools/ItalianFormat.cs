@@ -39,6 +39,10 @@ public static class ItalianFormat
     /// <summary>"12 nov"</summary>
     public static string ShortDate(DateOnly date) => $"{date.Day} {ShortMonth(date.Month)}";
 
+    /// <summary>"12 nov", or "12 nov 2027" when the date is in another year than today</summary>
+    public static string ShortDate(DateOnly date, DateOnly today) =>
+        date.Year == today.Year ? ShortDate(date) : $"{ShortDate(date)} {date.Year}";
+
     /// <summary>"12 novembre"</summary>
     public static string LongDate(DateOnly date) => $"{date.Day} {MonthName(date.Month)}";
 
