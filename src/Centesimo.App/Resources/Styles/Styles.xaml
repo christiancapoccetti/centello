@@ -145,12 +145,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <Style x:Key="CategoryIconImage" TargetType="Image">
-        <Setter Property="HeightRequest" Value="22" />
-        <Setter Property="WidthRequest" Value="22" />
-        <Setter Property="HorizontalOptions" Value="Center" />
-        <Setter Property="VerticalOptions" Value="Center" />
-    </Style>
     <Style x:Key="Hairline" TargetType="BoxView">
         <Setter Property="Color" Value="{t:Theme Hairline}" />
         <Setter Property="HeightRequest" Value="1" />

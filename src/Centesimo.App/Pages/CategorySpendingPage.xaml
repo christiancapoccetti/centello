@@ -2,6 +2,7 @@
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:c="clr-namespace:Centesimo.App.Controls"
     x:Class="Centesimo.App.Pages.CategorySpendingPage"
     Title="{Binding Title}"
     Shell.TabBarIsVisible="False"
@@ -17,9 +18,7 @@
                     <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" MinimumHeightRequest="48" />
                     <Border Style="{StaticResource TonalCard}">
                         <Grid ColumnDefinitions="52,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="14">
-                            <Border Grid.RowSpan="5" HeightRequest="52" WidthRequest="52" BackgroundColor="{Binding CategoryColor}" StrokeThickness="0" StrokeShape="RoundRectangle 16">
-                                <Image Source="{Binding CategoryIcon, Converter={StaticResource CategoryIconSourceConverter}}" HeightRequest="26" WidthRequest="26" HorizontalOptions="Center" VerticalOptions="Center" />
-                            </Border>
+                            <c:CategoryTile Grid.RowSpan="5" IconKey="{Binding CategoryIcon}" ColorKey="{Binding CategoryColor}" Size="52" AutomationProperties.IsInAccessibleTree="False" />
                             <Label Grid.Column="1" Text="{Binding MonthTitle}" Style="{StaticResource BodyMedium}" />
                             <Label Grid.Row="1" Grid.Column="1" Text="{Binding Total}" Style="{StaticResource DisplaySmall}" />
                             <Label Grid.Row="2" Grid.Column="1" Text="{Binding BudgetSummary}" Style="{StaticResource BodyMedium}" />

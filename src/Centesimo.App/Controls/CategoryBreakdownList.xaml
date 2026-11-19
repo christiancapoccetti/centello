@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
              x:Class="Centesimo.App.Controls.CategoryBreakdownList"
              x:Name="Root">
   <VerticalStackLayout BindableLayout.ItemsSource="{Binding ItemsSource, Source={x:Reference Root}}" Spacing="10">
@@ -8,9 +9,7 @@
       <DataTemplate>
         <Border Style="{StaticResource SurfaceCard}" SemanticProperties.Description="{Binding Description}">
           <Grid ColumnDefinitions="44,*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10">
-            <Border Grid.RowSpan="3" Style="{StaticResource CategoryIconContainer}" BackgroundColor="{Binding Color}">
-              <Image Source="{Binding Icon, Converter={StaticResource CategoryIconSourceConverter}}" Style="{StaticResource CategoryIconImage}" />
-            </Border>
+            <c:CategoryTile Grid.RowSpan="3" IconKey="{Binding Icon}" ColorKey="{Binding Color}" Size="44" AutomationProperties.IsInAccessibleTree="False" />
             <Label Grid.Column="1" Text="{Binding Name}" Style="{StaticResource TitleMedium}" />
             <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource TitleMedium}" />
             <ProgressBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Progress="{Binding Progress}" ProgressColor="{StaticResource PrimaryLight}" HeightRequest="6" />

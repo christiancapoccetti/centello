@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="Centesimo.App.Pages.CategoryEditorPage" Title="{Binding Title}" Shell.NavBarIsVisible="False" Shell.TabBarIsVisible="False" SafeAreaEdges="All">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:t="clr-namespace:Centesimo.App.Theming" xmlns:c="clr-namespace:Centesimo.App.Controls" x:Class="Centesimo.App.Pages.CategoryEditorPage" x:Name="Root" Title="{Binding Title}" Shell.NavBarIsVisible="False" Shell.TabBarIsVisible="False" SafeAreaEdges="All">
     <Grid Padding="20" RowDefinitions="*,Auto" RowSpacing="16">
         <ScrollView>
             <VerticalStackLayout Spacing="16">
@@ -7,15 +7,32 @@
                 <Entry Text="{Binding Name}" Placeholder="Nome" MinimumHeightRequest="48" SemanticProperties.Description="Nome della categoria" />
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Icona" Style="{StaticResource LabelLarge}" />
-                    <CollectionView ItemsSource="{Binding Icons}" SelectionMode="None" HeightRequest="180" VerticalScrollBarVisibility="Never">
-                        <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="5" HorizontalItemSpacing="8" VerticalItemSpacing="8" /></CollectionView.ItemsLayout>
-                        <CollectionView.ItemTemplate><DataTemplate><Border WidthRequest="52" HeightRequest="52" BackgroundColor="{StaticResource PrimaryLight}" Stroke="{StaticResource OutlineLight}" StrokeThickness="1" StrokeShape="RoundRectangle 16" SemanticProperties.Description="{Binding Icon, Converter={StaticResource CategoryIconConverter}}"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnIconTapped" /></Border.GestureRecognizers><Border.Triggers><DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True"><Setter Property="BackgroundColor" Value="{StaticResource PrimaryDark}" /><Setter Property="Stroke" Value="{StaticResource SecondaryLight}" /><Setter Property="StrokeThickness" Value="3" /></DataTrigger></Border.Triggers><Image Source="{Binding Icon, Converter={StaticResource CategoryIconSourceConverter}}" Style="{StaticResource CategoryIconImage}" /></Border></DataTemplate></CollectionView.ItemTemplate>
-                    </CollectionView>
+                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Icons}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,8,8" Padding="2" Stroke="Transparent" StrokeThickness="2" StrokeShape="Rectangle">
+                                    <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnIconTapped" /></Border.GestureRecognizers>
+                                    <Border.Triggers><DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True"><Setter Property="Stroke" Value="{t:Theme Ink}" /></DataTrigger></Border.Triggers>
+                                    <c:CategoryTile IconKey="{Binding Icon}" ColorKey="{Binding BindingContext.SelectedColor, Source={x:Reference Root}}" Size="48" />
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
                 </VerticalStackLayout>
                 <Entry Text="{Binding Budget}" Placeholder="Budget mensile opzionale" Keyboard="Numeric" MinimumHeightRequest="48" SemanticProperties.Description="Budget mensile in euro" />
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Colore" Style="{StaticResource LabelLarge}" />
-                    <CollectionView ItemsSource="{Binding Colors}" SelectionMode="None" HeightRequest="60" HorizontalScrollBarVisibility="Never"><CollectionView.ItemsLayout><LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" /></CollectionView.ItemsLayout><CollectionView.ItemTemplate><DataTemplate><Border WidthRequest="52" HeightRequest="52" BackgroundColor="Transparent" Stroke="Transparent" StrokeThickness="3" StrokeShape="RoundRectangle 17" SemanticProperties.Description="{Binding Color, Converter={StaticResource CategoryColorNameConverter}}"><Border.GestureRecognizers><TapGestureRecognizer Tapped="OnColorTapped" /></Border.GestureRecognizers><Border.Triggers><DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True"><Setter Property="Stroke" Value="{StaticResource PrimaryLight}" /><Setter Property="StrokeThickness" Value="3" /></DataTrigger></Border.Triggers><Border Margin="4" BackgroundColor="{Binding Color}" Stroke="White" StrokeThickness="2" StrokeShape="RoundRectangle 12" /></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Colors}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,8,8" Padding="2" Stroke="Transparent" StrokeThickness="2" StrokeShape="Rectangle">
+                                    <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnColorTapped" /></Border.GestureRecognizers>
+                                    <Border.Triggers><DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True"><Setter Property="Stroke" Value="{t:Theme Ink}" /></DataTrigger></Border.Triggers>
+                                    <c:PaletteSwatch ColorKey="{Binding Color}" WidthRequest="44" HeightRequest="44" />
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
                 </VerticalStackLayout>
                 <BoxView HeightRequest="1" Margin="0,8" Color="{StaticResource OutlineLight}" />
                 <VerticalStackLayout Spacing="12">
