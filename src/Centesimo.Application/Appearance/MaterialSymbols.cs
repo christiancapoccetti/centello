@@ -7,6 +7,7 @@ namespace Centesimo.Application;
 public static class MaterialSymbols
 {
     public const string Add = "\uE145";
+    public const string Autorenew = "\uE863";
     public const string BarChart = "\uE26B";
     public const string BeachAccess = "\uEB3E";
     public const string Bolt = "\uEA0B";
@@ -31,6 +32,7 @@ public static class MaterialSymbols
     public const string Flight = "\uE539";
     public const string Handyman = "\uF10B";
     public const string Home = "\uE88A";
+    public const string Info = "\uE88E";
     public const string LocalCafe = "\uE541";
     public const string LocalGasStation = "\uE546";
     public const string Medication = "\uF033";

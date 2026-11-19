@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:t="clr-namespace:Centesimo.App.Theming" xmlns:c="clr-namespace:Centesimo.App.Controls" x:Class="Centesimo.App.Pages.CategoryEditorPage" x:Name="Root" Title="{Binding Title}" Shell.NavBarIsVisible="False" Shell.TabBarIsVisible="False" SafeAreaEdges="All">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:t="clr-namespace:Centesimo.App.Theming" xmlns:c="clr-namespace:Centesimo.App.Controls" xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application" x:Class="Centesimo.App.Pages.CategoryEditorPage" x:Name="Root" Title="{Binding Title}" Shell.NavBarIsVisible="False" Shell.TabBarIsVisible="False" SafeAreaEdges="All">
     <Grid Padding="20" RowDefinitions="*,Auto" RowSpacing="16">
         <ScrollView>
             <VerticalStackLayout Spacing="16">
@@ -34,20 +34,20 @@
                         </BindableLayout.ItemTemplate>
                     </FlexLayout>
                 </VerticalStackLayout>
-                <BoxView HeightRequest="1" Margin="0,8" Color="{StaticResource OutlineLight}" />
+                <BoxView Style="{StaticResource Hairline}" Margin="0,8" />
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Tag" Style="{StaticResource TitleLarge}" SemanticProperties.HeadingLevel="Level2" />
                     <Label Text="Salva prima la categoria per aggiungere tag." Style="{StaticResource BodyMedium}" IsVisible="{Binding CannotManageTags}" />
                     <VerticalStackLayout IsVisible="{Binding CanManageTags}" Spacing="12">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><Entry Text="{Binding NewTagName}" Placeholder="Nuovo tag" MinimumHeightRequest="48" ReturnType="Done" ReturnCommand="{Binding AddTagCommand}" /><Button Grid.Column="1" Text="Aggiungi" Command="{Binding AddTagCommand}" MinimumHeightRequest="48" /></Grid>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><Entry Text="{Binding NewTagName}" Placeholder="Nuovo tag" MinimumHeightRequest="48" ReturnType="Done" ReturnCommand="{Binding AddTagCommand}" /><Button Grid.Column="1" Text="Aggiungi" Command="{Binding AddTagCommand}" Style="{StaticResource TextActionButton}" BackgroundColor="{t:Theme SurfaceRaised}" /></Grid>
                         <ActivityIndicator IsRunning="{Binding IsTagBusy}" IsVisible="{Binding IsTagBusy}" />
                         <Label Text="Nessun tag in questa categoria." Style="{StaticResource BodyMedium}" IsVisible="{Binding IsTagEmpty}" />
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Tags}" Spacing="8"><BindableLayout.ItemTemplate><DataTemplate><Border Style="{StaticResource SurfaceCard}" Padding="12"><Grid ColumnDefinitions="*,48" ColumnSpacing="8"><Label Text="{Binding Name}" VerticalOptions="Center" Style="{StaticResource TitleMedium}" /><Button Grid.Column="1" Text="×" Style="{StaticResource IconButton}" FontSize="22" MinimumHeightRequest="48" MinimumWidthRequest="48" CommandParameter="{Binding .}" Clicked="OnArchiveTagClicked" SemanticProperties.Description="Rimuovi tag" /></Grid></Border></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Tags}" Spacing="8"><BindableLayout.ItemTemplate><DataTemplate><Border Style="{StaticResource SurfaceCard}" Padding="12"><Grid ColumnDefinitions="*,48" ColumnSpacing="8"><Label Text="{Binding Name}" VerticalOptions="Center" Style="{StaticResource TitleMedium}" /><Button Grid.Column="1" Text="{x:Static app:MaterialSymbols.Close}" Style="{StaticResource IconGlyphButton}" CommandParameter="{Binding .}" Clicked="OnArchiveTagClicked" SemanticProperties.Description="Rimuovi tag" /></Grid></Border></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
-                <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="#BA1A1A" Style="{StaticResource BodyMedium}" />
+                <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{t:Theme Alert}" Style="{StaticResource BodyMedium}" />
             </VerticalStackLayout>
         </ScrollView>
-        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12"><Button Text="Annulla" Style="{StaticResource TextActionButton}" BorderColor="{StaticResource OutlineLight}" BorderWidth="1" CornerRadius="20" MinimumHeightRequest="48" Clicked="OnCancelClicked" /><Button Grid.Column="1" Text="Salva" Style="{StaticResource PrimaryActionButton}" Command="{Binding SaveCommand}" /></Grid>
+        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12"><Button Text="Annulla" Style="{StaticResource TextActionButton}" BorderColor="{t:Theme Outline}" BorderWidth="1" CornerRadius="20" MinimumHeightRequest="48" Clicked="OnCancelClicked" /><Button Grid.Column="1" Text="Salva" Style="{StaticResource PrimaryActionButton}" Command="{Binding SaveCommand}" /></Grid>
     </Grid>
 </ContentPage>

@@ -135,13 +135,14 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <Style x:Key="CategoryIconContainer" TargetType="Border">
+    <Style x:Key="GlyphTile" TargetType="Border">
         <Setter Property="WidthRequest" Value="44" />
         <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
         <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="StrokeShape">
             <Setter.Value>
-                <RoundRectangle CornerRadius="14" />
+                <Rectangle />
             </Setter.Value>
         </Setter>
     </Style>
