@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
              xmlns:controls="clr-namespace:Centesimo.App.Controls"
              x:Class="Centesimo.App.Pages.RecurringPaymentEditorPage"
              Shell.NavBarIsVisible="False"
@@ -15,7 +16,7 @@
             <VerticalStackLayout Spacing="22" Padding="0,14,0,8">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Quanto vuoi pianificare?" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
-                    <Entry Text="{Binding Amount}" Placeholder="0,00 €" Keyboard="Numeric" FontFamily="OpenSansSemibold" FontSize="44" HorizontalTextAlignment="Center" />
+                    <Entry Text="{Binding Amount}" Placeholder="0,00 €" Keyboard="Numeric" FontFamily="{x:Static t:Fonts.SemiBold}" FontSize="44" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
                 <BoxView HeightRequest="1" Color="{StaticResource OutlineLight}" />
                 <VerticalStackLayout Spacing="8">

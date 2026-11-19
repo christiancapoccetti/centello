@@ -1,3 +1,4 @@
+using Centesimo.App.Theming;
 using Centesimo.Application;
 using Centesimo.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,10 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .ConfigureFonts(fonts =>
-            {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-            });
+            .ConfigureFonts(fonts => fonts.AddCentesimoFonts());
+#if ANDROID
+        TabularFigures.Register();
+#endif
 
         var databasePath = Path.Combine(FileSystem.AppDataDirectory, "centesimo.db3");
         builder.Services

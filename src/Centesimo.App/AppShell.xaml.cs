@@ -1,4 +1,5 @@
 using Centesimo.App.Pages;
+using Centesimo.App.Theming;
 
 namespace Centesimo.App;
 
@@ -30,7 +31,7 @@ public partial class AppShell : Shell
     {
         Title = title,
         Route = route,
-        Icon = new FontImageSource { Glyph = glyph, FontFamily = "OpenSansSemibold", Size = 24 },
+        Icon = new FontImageSource { Glyph = glyph, FontFamily = Fonts.SemiBold, Size = 24 },
         Content = page
     };
 }
