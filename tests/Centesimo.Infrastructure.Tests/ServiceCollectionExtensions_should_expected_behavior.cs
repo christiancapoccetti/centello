@@ -11,6 +11,7 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         services.AddApplicationServices();
         services.AddInfrastructure(Path.Combine(Path.GetTempPath(), "centesimo-di-test.db3"));
         services.AddSingleton<IOpenAiApiKeyStore, InMemoryOpenAiApiKeyStore>();
+        services.AddSingleton<ISpeechRecorder, SilentSpeechRecorder>();
         return services.BuildServiceProvider();
     }
 
@@ -32,11 +33,28 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     }
 
     [Fact]
+    public void Build_the_speech_draft_service_from_the_registered_providers()
+    {
+        using var provider = BuildProvider();
+
+        Assert.NotNull(provider.GetRequiredService<SpeechExpenseDraftService>());
+    }
+
+    [Fact]
     public void Share_one_openai_client_between_transcriber_and_interpreter()
     {
         using var provider = BuildProvider();
 
         Assert.Same(provider.GetRequiredService<OpenAiClient>(), provider.GetRequiredService<OpenAiClient>());
+    }
+
+    private sealed class SilentSpeechRecorder : ISpeechRecorder
+    {
+        public bool IsListening => false;
+        public Task<Result> Start(CancellationToken cancellationToken = default) => Task.FromResult(Result.Success());
+        public Task<Result<RecordedAudio>> Stop(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Result<RecordedAudio>.Success(new RecordedAudio(ReadOnlyMemory<byte>.Empty)));
+        public Task Cancel() => Task.CompletedTask;
     }
 
     private sealed class InMemoryOpenAiApiKeyStore : IOpenAiApiKeyStore
