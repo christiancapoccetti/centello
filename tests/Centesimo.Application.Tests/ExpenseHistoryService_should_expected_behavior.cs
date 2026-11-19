@@ -284,6 +284,20 @@ public sealed class ExpenseHistoryService_should_expected_behavior
         Assert.Equal(Failed, expenseFailure.Error);
     }
 
+    [Fact]
+    public async Task Should_say_where_the_arrows_lead_and_stop_at_the_period_of_today()
+    {
+        var category = NewCategory("Spesa");
+
+        var current = await History(Period.Month(2026, 11), ExpenseFilter.All, [category]);
+        var past = await History(Period.Month(2026, 9), ExpenseFilter.All, [category]);
+
+        Assert.Equal(Period.Month(2026, 10), current.Navigation.Previous);
+        Assert.Null(current.Navigation.Next);
+        Assert.Equal(Period.Month(2026, 8), past.Navigation.Previous);
+        Assert.Equal(Period.Month(2026, 10), past.Navigation.Next);
+    }
+
     private static async Task<ExpenseHistory> History(Period period, ExpenseFilter filter,
         IEnumerable<Category> categories, IEnumerable<Expense>? expenses = null, IEnumerable<Tag>? tags = null,
         DateOnly? today = null)

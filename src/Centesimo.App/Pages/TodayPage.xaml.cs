@@ -39,21 +39,22 @@ public partial class TodayPage : ContentPage
         _viewModel.IsSpeechSheetVisible = false;
     }
 
-    private async void OnPreviousClicked(object? sender, EventArgs e) =>
+    private async void OnPreviousTapped(object? sender, EventArgs e) =>
         await _viewModel.ShowPrevious();
 
-    private async void OnNextClicked(object? sender, EventArgs e) =>
+    private async void OnNextTapped(object? sender, EventArgs e) =>
         await _viewModel.ShowNext();
 
-    private async void OnPeriodTitleTapped(object? sender, TappedEventArgs e) =>
+    private async void OnPeriodToggled(object? sender, EventArgs e) =>
         await _viewModel.TogglePeriod();
 
-    private async void OnLatestExpenseClicked(object? sender, EventArgs e)
-    {
-        if (sender is not Button { CommandParameter: LatestExpense expense })
-            return;
+    private async void OnExpenseOpened(object? sender, Guid expenseId) =>
+        await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expenseId}");
 
-        await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expense.ExpenseId}");
+    private async void OnAllExpensesTapped(object? sender, EventArgs e)
+    {
+        if (_viewModel.HistoryMonth is { } month)
+            await Shell.Current.GoToAsync(ExpensesPage.Route(month));
     }
 
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>

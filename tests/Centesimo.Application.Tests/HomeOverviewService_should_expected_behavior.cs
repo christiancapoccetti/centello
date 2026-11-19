@@ -13,8 +13,6 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview();
 
         Assert.Equal(Period.Month(2026, 11), overview.Period);
-        Assert.Equal("Novembre", overview.Title);
-        Assert.Equal("2026", overview.Subtitle);
         Assert.Null(overview.Navigation.Next);
     }
 
@@ -23,7 +21,7 @@ public sealed class HomeOverviewService_should_expected_behavior
     {
         var overview = await Overview(today: new DateOnly(2026, 12, 1));
 
-        Assert.Equal("Dicembre", overview.Title);
+        Assert.Equal(Period.Month(2026, 12), overview.Period);
     }
 
     [Fact]
@@ -120,8 +118,6 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         var overview = await Overview([category], [Spend(category, 20_000, Today)], Period.Year(2026));
 
-        Assert.Equal("Anno", overview.Title);
-        Assert.Equal("2026", overview.Subtitle);
         Assert.Equal(new BudgetSummary("Ne restano ", "1.000,00 €", " su 1.200 di budget"), overview.Budget);
     }
 

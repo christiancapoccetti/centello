@@ -58,6 +58,7 @@ public static class MaterialSymbols
     public const string Repeat = "\uE040";
     public const string Restaurant = "\uE56C";
     public const string School = "\uE80C";
+    public const string SearchOff = "\uEA76";
     public const string Settings = "\uE8B8";
     public const string ShoppingBag = "\uF1CC";
     public const string ShoppingCart = "\uE8CC";

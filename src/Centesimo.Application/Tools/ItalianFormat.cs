@@ -61,10 +61,12 @@ public static class ItalianFormat
     /// <summary>"Oggi", "Ieri" or "lun 17 nov"</summary>
     public static string DayHeader(DateOnly date, DateOnly today) => RelativeDay(date, today, WeekdayDate);
 
+    /// <summary>"Novembre" or "Anno": the period without its year</summary>
+    public static string PeriodName(Period period) =>
+        period.Kind == PeriodKind.Month ? MonthTitle(period.Start.Month) : "Anno";
+
     /// <summary>"Novembre 2026" or "Anno 2026"</summary>
-    public static string PeriodTitle(Period period) => period.Kind == PeriodKind.Month
-        ? $"{MonthTitle(period.Start.Month)} {period.Start.Year}"
-        : $"Anno {period.Start.Year}";
+    public static string PeriodTitle(Period period) => $"{PeriodName(period)} {period.Start.Year}";
 
     /// <summary>"a novembre", "ad aprile" or "nel 2026"</summary>
     public static string InPeriod(Period period)

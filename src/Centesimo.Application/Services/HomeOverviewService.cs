@@ -6,8 +6,6 @@ namespace Centesimo.Application;
 public sealed record HomeOverview(
     Period Period,
     HomeNavigation Navigation,
-    string Title,                    // "Novembre" | "Anno"
-    string Subtitle,                 // "2026"
     string Total,                    // "1.284,60" (the page draws "€")
     BudgetSummary Budget,
     PeriodComparison? Comparison,
@@ -110,12 +108,8 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
     {
         var periodExpenses = expenses.Where(expense => period.Contains(expense.OccurredOn)).ToList();
         var spent = periodExpenses.Sum(expense => expense.Amount.Cents);
-        var year = period.Start.Year.ToString();
-        var (title, subtitle) = period.Kind == PeriodKind.Month
-            ? (ItalianFormat.MonthTitle(period.Start.Month), year)
-            : ("Anno", year);
         var budget = BudgetOf(period, categories);
-        return new HomeOverview(period, HomeNavigation.For(period, today), title, subtitle, ItalianFormat.Amount(spent),
+        return new HomeOverview(period, HomeNavigation.For(period, today), ItalianFormat.Amount(spent),
             Summarize(spent, budget), Compare(period, window, expenses),
             Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget),
             Latest(periodExpenses, categories, today));

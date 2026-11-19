@@ -46,6 +46,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CategoryTagPicker>();
         services.AddTransient<ExpenseEditorViewModel>();
         services.AddTransient<ExpenseEditorPage>();
+        services.AddTransient<ExpensesViewModel>();
+        services.AddTransient<ExpensesPage>();
         services.AddTransient<RecurringPaymentsViewModel>();
         services.AddTransient<RecurringPaymentsPage>();
         services.AddTransient<RecurringPaymentEditorViewModel>();

@@ -31,6 +31,9 @@ public sealed class TodayViewModel : ObservableObject
         }
     }
     public bool HasOverview => Overview is not null;
+    /// <summary>The month the expense history opens on: the month in view or, from a year, the month a tap on the
+    /// title leads to.</summary>
+    public Period? HistoryMonth => Overview?.Period.Kind == PeriodKind.Month ? Overview.Period : Overview?.Navigation.Toggle;
     public string ErrorMessage
     {
         get => _errorMessage;
