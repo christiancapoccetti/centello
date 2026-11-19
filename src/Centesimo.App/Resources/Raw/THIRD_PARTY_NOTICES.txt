@@ -26,6 +26,11 @@ Copyright 2020 The Open Sans Project Authors.
 License: Apache License 2.0.
 https://github.com/googlefonts/opensans
 
+Material Symbols Rounded icon font (static subset)
+Copyright 2026 Google LLC.
+License: Apache License 2.0.
+https://github.com/google/material-design-icons
+
 MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
