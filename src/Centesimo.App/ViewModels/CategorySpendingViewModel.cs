@@ -16,8 +16,8 @@ public sealed class CategorySpendingViewModel(CategorySpendingService spendingSe
     private string _title = "Dettaglio categoria";
     private string _monthTitle = "";
     private string _total = FormatMoney(0);
-    private string _categoryIcon = "more";
-    private string _categoryColor = "#6F7975";
+    private string _categoryIcon = CategoryIcons.Fallback.Key;
+    private string _categoryColor = CategoryPalette.Fallback.Key;
     private string _errorMessage = "";
     private string _budgetSummary = "Nessun budget impostato";
     private double _budgetProgress;

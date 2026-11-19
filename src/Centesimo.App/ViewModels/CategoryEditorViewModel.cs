@@ -13,8 +13,8 @@ public sealed class CategoryEditorViewModel : ObservableObject
     private readonly TagService _tagService;
     private Guid? _categoryId;
     private string _name = "";
-    private string _selectedIcon = "cart";
-    private string _selectedColor = "#176B5B";
+    private string _selectedIcon = CategoryIcons.All[0].Key;
+    private string _selectedColor = CategoryPalette.All[0].Key;
     private string _budget = "";
     private string _errorMessage = "";
     private string _newTagName = "";
@@ -24,14 +24,9 @@ public sealed class CategoryEditorViewModel : ObservableObject
     public event EventHandler? Saved;
 
     public IReadOnlyList<CategoryIconOption> Icons { get; } =
-    [
-        new("cart"), new("home"), new("car"), new("heart"), new("more"), new("sport"), new("shopping-bag"), new("food"),
-        new("gift"), new("beach"), new("tech"), new("school"), new("family"), new("gym"), new("gear")
-    ];
+        [.. CategoryIcons.All.Select(icon => new CategoryIconOption(icon.Key))];
     public IReadOnlyList<CategoryColorOption> Colors { get; } =
-    [
-        new("#176B5B"), new("#8B4A5D"), new("#725C00"), new("#4F5F7A"), new("#6A4F88")
-    ];
+        [.. CategoryPalette.All.Select(color => new CategoryColorOption(color.Key))];
     public ObservableCollection<CategoryTagItemViewModel> Tags { get; } = [];
     public ICommand SaveCommand { get; }
     public ICommand ClearBudgetCommand { get; }
@@ -103,8 +98,8 @@ public sealed class CategoryEditorViewModel : ObservableObject
     {
         _categoryId = category.CategoryId;
         Name = category.Name;
-        SelectedIcon = category.Icon;
-        SelectedColor = category.Color;
+        SelectedIcon = CategoryIcons.Resolve(category.Icon).Key;
+        SelectedColor = CategoryPalette.Resolve(category.Color).Key;
         Budget = category.BudgetInput;
         ErrorMessage = "";
         ResetTags();
