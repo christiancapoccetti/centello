@@ -6,8 +6,17 @@ internal sealed class FakeCategoryRepository : ICategoryRepository
 {
     public List<Category> Items { get; } = [];
     public Error? Failure { get; set; }
+    public Error? AddFailure { get; set; }
     public List<Tag> AddedTags { get; } = [];
-    public Task<Result> Add(Category value, IReadOnlyList<Tag> tags, CancellationToken token = default) { Items.Add(value); AddedTags.AddRange(tags); return Task.FromResult(Operation()); }
+    public Task<Result> Add(Category value, IReadOnlyList<Tag> tags, CancellationToken token = default)
+    {
+        if (AddFailure is not null)
+            return Task.FromResult(Result.Failure(AddFailure));
+
+        Items.Add(value);
+        AddedTags.AddRange(tags);
+        return Task.FromResult(Operation());
+    }
     public Task<Result<Category?>> Get(Guid id, CancellationToken token = default) => Task.FromResult(Failure is null ? Result<Category?>.Success(Items.SingleOrDefault(x => x.CategoryId == id)) : Result<Category?>.Failure(Failure));
     public Task<Result<IReadOnlyList<Category>>> GetAll(CancellationToken token = default) => Task.FromResult(Failure is null ? Result<IReadOnlyList<Category>>.Success(Items) : Result<IReadOnlyList<Category>>.Failure(Failure));
     public Task<Result> Update(Category value, CancellationToken token = default) => Task.FromResult(Operation());

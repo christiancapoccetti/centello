@@ -166,6 +166,93 @@ public sealed class CategoryService_should_expected_behavior
 
         Assert.Equal("Infrastructure.Unexpected", result.Error.Code);
     }
+
+    [Fact]
+    public async Task Create_the_suggested_categories_without_budgets()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        var result = await service.CreateSuggested();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(["Spesa", "Casa", "Trasporti", "Ristoranti", "Salute", "Svago"], result.Value.Select(category => category.Name));
+        Assert.Equal(result.Value, repository.Items);
+        Assert.Equal(["cart", "home", "car", "food", "health", "leisure"], repository.Items.Select(category => category.Icon));
+        Assert.Equal(["coral", "peri", "butter", "mint", "sky", "lilac"], repository.Items.Select(category => category.Color));
+        Assert.All(repository.Items, category => Assert.Null(category.MonthlyBudget));
+        Assert.Empty(repository.AddedTags);
+    }
+
+    [Fact]
+    public async Task Create_no_suggested_category_the_second_time()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+        await service.CreateSuggested();
+
+        var second = await service.CreateSuggested();
+
+        Assert.True(second.IsSuccess);
+        Assert.Empty(second.Value);
+        Assert.Equal(6, repository.Items.Count);
+    }
+
+    [Fact]
+    public async Task Skip_suggested_names_that_exist_ignoring_case_and_archived_ones()
+    {
+        var repository = new FakeCategoryRepository();
+        var archived = new Category(Guid.NewGuid(), "SPESA", "more", "grey");
+        archived.Archive();
+        repository.Items.AddRange([archived, new Category(Guid.NewGuid(), "casa", "gear", "lilac")]);
+        var service = new CategoryService(repository);
+
+        var result = await service.CreateSuggested();
+
+        Assert.Equal(["Trasporti", "Ristoranti", "Salute", "Svago"], result.Value.Select(category => category.Name));
+        Assert.Equal(6, repository.Items.Count);
+        Assert.Equal("more", repository.Items.Single(category => category.Name == "SPESA").Icon);
+    }
+
+    [Fact]
+    public async Task Create_only_the_chosen_suggestions_in_catalog_order()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        var result = await service.CreateSuggested(["svago", "Casa", "CASA"]);
+
+        Assert.Equal(["Casa", "Svago"], result.Value.Select(category => category.Name));
+        Assert.Equal(["Casa", "Svago"], repository.Items.Select(category => category.Name));
+    }
+
+    [Fact]
+    public async Task Ignore_chosen_names_the_suggestions_do_not_include()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        var unknown = await service.CreateSuggested(["Animali"]);
+        var none = await service.CreateSuggested([]);
+
+        Assert.Empty(unknown.Value);
+        Assert.Empty(none.Value);
+        Assert.Empty(repository.Items);
+    }
+
+    [Fact]
+    public async Task Propagate_repository_failure_when_creating_suggested_categories()
+    {
+        var unreadable = new FakeCategoryRepository { Failure = InfrastructureErrors.Unexpected };
+        var unwritable = new FakeCategoryRepository { AddFailure = InfrastructureErrors.PersistenceFailure };
+
+        var readFailure = await new CategoryService(unreadable).CreateSuggested();
+        var writeFailure = await new CategoryService(unwritable).CreateSuggested();
+
+        Assert.Equal("Infrastructure.Unexpected", readFailure.Error.Code);
+        Assert.Equal(InfrastructureErrors.PersistenceFailure, writeFailure.Error);
+        Assert.Empty(unwritable.Items);
+    }
 }
 
 
