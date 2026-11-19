@@ -1,7 +1,7 @@
 namespace Centesimo.Application;
 
 public sealed record ExpenseSpeechDraft(
-    long AmountCents,
+    long? AmountCents,
     Guid? CategoryId,
     string CategoryName,
     Guid? TagId,
