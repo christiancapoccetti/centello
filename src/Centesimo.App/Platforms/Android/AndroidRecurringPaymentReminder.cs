@@ -122,7 +122,7 @@ public sealed class RecurringPaymentReminderReceiver : BroadcastReceiver
         manager.Notify(AndroidRecurringPaymentReminder.GetNotificationId(id), builder
             .SetContentTitle("Pagamento in arrivo")
             .SetContentText($"Una spesa di {amount:C} scade il {dueOn}.")
-            .SetSmallIcon(Android.Resource.Drawable.IcDialogInfo)
+            .SetSmallIcon(Resource.Drawable.ic_stat_centesimo)
             .SetAutoCancel(true)
             .Build());
 
