@@ -51,6 +51,24 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     }
 
     [Fact]
+    public void Build_the_expense_history_service_with_the_system_clock()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseHistoryService>());
+    }
+
+    [Fact]
+    public void Build_the_expense_service_with_the_default_id_source()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseService>());
+    }
+
+    [Fact]
     public void Share_one_openai_client_between_transcriber_and_interpreter()
     {
         using var provider = BuildProvider();

@@ -16,9 +16,11 @@ internal sealed class FakeCategoryRepository : ICategoryRepository
 internal sealed class FakeTagRepository : ITagRepository
 {
     public List<Tag> Items { get; } = [];
+    public Error? Failure { get; set; }
     public Task<Result> Add(Tag value, CancellationToken token = default) { Items.Add(value); return Task.FromResult(Result.Success()); }
     public Task<Result<Tag?>> Get(Guid id, CancellationToken token = default) => Task.FromResult(Result<Tag?>.Success(Items.SingleOrDefault(x => x.TagId == id)));
-    public Task<Result<IReadOnlyList<Tag>>> GetByCategory(Guid id, CancellationToken token = default) => Task.FromResult(Result<IReadOnlyList<Tag>>.Success(Items.Where(x => x.CategoryId == id).ToList()));
+    public Task<Result<IReadOnlyList<Tag>>> GetAll(CancellationToken token = default) => Task.FromResult(Failure is null ? Result<IReadOnlyList<Tag>>.Success(Items) : Result<IReadOnlyList<Tag>>.Failure(Failure));
+    public Task<Result<IReadOnlyList<Tag>>> GetByCategory(Guid id, CancellationToken token = default) => Task.FromResult(Failure is null ? Result<IReadOnlyList<Tag>>.Success(Items.Where(x => x.CategoryId == id).ToList()) : Result<IReadOnlyList<Tag>>.Failure(Failure));
     public Task<Result> Update(Tag value, CancellationToken token = default) => Task.FromResult(Result.Success());
 }
 

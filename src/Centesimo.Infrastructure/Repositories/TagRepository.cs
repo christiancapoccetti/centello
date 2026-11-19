@@ -11,6 +11,11 @@ public sealed class TagRepository(CentesimoDbContext context)
         UseContext((db, token) => db.Tags.AsNoTracking()
             .SingleOrDefaultAsync(tag => tag.TagId == tagId, token), cancellationToken);
 
+    public Task<Result<IReadOnlyList<Tag>>> GetAll(CancellationToken cancellationToken = default) =>
+        UseContext<IReadOnlyList<Tag>>(async (db, token) => await db.Tags.AsNoTracking()
+            .OrderBy(tag => tag.Name)
+            .ToListAsync(token), cancellationToken);
+
     public Task<Result<IReadOnlyList<Tag>>> GetByCategory(Guid categoryId,
         CancellationToken cancellationToken = default) =>
         UseContext<IReadOnlyList<Tag>>(async (db, token) => await db.Tags.AsNoTracking()
