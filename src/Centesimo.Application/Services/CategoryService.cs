@@ -31,8 +31,15 @@ public sealed class CategoryService(ICategoryRepository categories)
             .ToList();
         return Result<IReadOnlyList<Category>>.Success(archived);
     }
+
+    public Task<Result<Category>> Create(string name, string icon, string color,
+        Money? budget = null, CancellationToken cancellationToken = default) =>
+        Create(name, icon, color, budget, [], cancellationToken);
+
+    /// <summary>Creates the category and its tags as one operation. Tag names are trimmed, blank ones are ignored and
+    /// names that differ only by case collapse into the first spelling.</summary>
     public async Task<Result<Category>> Create(string name, string icon, string color,
-        Money? budget = null, CancellationToken cancellationToken = default)
+        Money? budget, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
     {
         if (name.IsEmpty())
             return Result<Category>.Failure(ApplicationErrors.InvalidName);
@@ -42,11 +49,18 @@ public sealed class CategoryService(ICategoryRepository categories)
             return Result<Category>.Failure(availability.Error);
 
         var category = new Category(Guid.NewGuid(), name, icon, color, budget);
-        var saved = await categories.Add(category, cancellationToken);
+        var saved = await categories.Add(category, NewTags(category.CategoryId, tags), cancellationToken);
         return saved.IsFailure
             ? Result<Category>.Failure(saved.Error)
             : Result<Category>.Success(category);
     }
+
+    private static List<Tag> NewTags(Guid categoryId, IReadOnlyList<string> names) => names
+        .Where(name => name.HasValue())
+        .Select(name => name.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Select(name => new Tag(Guid.NewGuid(), categoryId, name))
+        .ToList();
 
     public async Task<Result> Update(Guid categoryId, string name, string icon, string color,
         Money? budget, CancellationToken cancellationToken = default)

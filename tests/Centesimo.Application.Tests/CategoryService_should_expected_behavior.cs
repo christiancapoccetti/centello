@@ -100,6 +100,72 @@ public sealed class CategoryService_should_expected_behavior
 
         Assert.Equal("Category.NotFound", result.Error.Code);
     }
+
+    [Fact]
+    public async Task Create_a_category_together_with_its_tags()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        var created = await service.Create("Ristoranti", "food", "mint", new Money(15_000), ["Pizza", "Asporto"]);
+
+        Assert.True(created.IsSuccess);
+        Assert.Same(created.Value, Assert.Single(repository.Items));
+        Assert.Equal(["Pizza", "Asporto"], repository.AddedTags.Select(tag => tag.Name));
+        Assert.All(repository.AddedTags, tag => Assert.Equal(created.Value.CategoryId, tag.CategoryId));
+        Assert.Equal(15_000, created.Value.MonthlyBudget?.Cents);
+    }
+
+    [Fact]
+    public async Task Trim_tag_names_skip_blank_ones_and_collapse_duplicates_ignoring_case()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        await service.Create("Ristoranti", "food", "mint", null, ["  Pizza ", "", "   ", "pizza", "Asporto", "PIZZA", "Asporto "]);
+
+        Assert.Equal(["Pizza", "Asporto"], repository.AddedTags.Select(tag => tag.Name));
+    }
+
+    [Fact]
+    public async Task Create_without_tags_when_none_are_given()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        var withoutList = await service.Create("Casa", "home", "peri");
+        var emptyList = await service.Create("Auto", "car", "butter", null, []);
+
+        Assert.True(withoutList.IsSuccess && emptyList.IsSuccess);
+        Assert.Empty(repository.AddedTags);
+    }
+
+    [Fact]
+    public async Task Reject_a_blank_name_and_a_duplicate_name_without_creating_the_tags()
+    {
+        var repository = new FakeCategoryRepository();
+        repository.Items.Add(new Category(Guid.NewGuid(), "Casa", "home", "peri"));
+        var service = new CategoryService(repository);
+
+        var blank = await service.Create("  ", "food", "mint", null, ["Pizza"]);
+        var duplicate = await service.Create(" casa ", "food", "mint", null, ["Pizza"]);
+
+        Assert.Equal("Validation.InvalidName", blank.Error.Code);
+        Assert.Equal("Category.NameAlreadyExists", duplicate.Error.Code);
+        Assert.Single(repository.Items);
+        Assert.Empty(repository.AddedTags);
+    }
+
+    [Fact]
+    public async Task Propagate_repository_failure_when_creating_a_category_with_tags()
+    {
+        var repository = new FakeCategoryRepository { Failure = InfrastructureErrors.Unexpected };
+        var service = new CategoryService(repository);
+
+        var result = await service.Create("Ristoranti", "food", "mint", null, ["Pizza"]);
+
+        Assert.Equal("Infrastructure.Unexpected", result.Error.Code);
+    }
 }
 
 
