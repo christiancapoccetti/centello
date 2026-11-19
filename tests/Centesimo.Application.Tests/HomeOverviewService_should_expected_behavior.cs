@@ -623,6 +623,95 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_list_the_five_latest_expenses_with_note_or_category_name()
+    {
+        var food = NewCategory("Spesa", color: "mint", icon: "food");
+        var leisure = NewCategory("Svago", color: "coral", icon: "leisure");
+        var expenses = new[]
+        {
+            Spend(food, 1_250, Today),
+            Spend(leisure, 1_599, new DateOnly(2026, 11, 18), note: "Netflix", recurringPaymentId: Guid.NewGuid()),
+            Spend(food, 4_000, new DateOnly(2026, 11, 12), note: "Mercato"),
+            Spend(food, 100, new DateOnly(2026, 11, 10)),
+            Spend(food, 200, new DateOnly(2026, 11, 8)),
+            Spend(food, 300, new DateOnly(2026, 11, 3)),
+            Spend(food, 400, new DateOnly(2026, 11, 1))
+        };
+
+        var overview = await Overview([food, leisure], expenses);
+
+        Assert.True(overview.HasLatest);
+        Assert.False(overview.HasNoLatest);
+        Assert.Equal(["Spesa", "Netflix", "Mercato", "Spesa", "Spesa"], overview.Latest.Select(item => item.Title));
+        Assert.Equal(
+            ["Oggi · Spesa", "Ieri · Svago · automatica", "12 nov · Spesa", "10 nov · Spesa", "8 nov · Spesa"],
+            overview.Latest.Select(item => item.Detail));
+        Assert.Equal(
+            ["12,50 €", "15,99 €", "40,00 €", "1,00 €", "2,00 €"],
+            overview.Latest.Select(item => item.Amount));
+        Assert.Equal(new[] { "food", "leisure", "food", "food", "food" }, overview.Latest.Select(item => item.IconKey));
+        Assert.Equal(new[] { "mint", "coral", "mint", "mint", "mint" }, overview.Latest.Select(item => item.ColorKey));
+        Assert.Equal("Netflix, Ieri · Svago · automatica, 15,99 €", overview.Latest[1].Description);
+    }
+
+    [Fact]
+    public async Task Should_fall_back_to_the_generic_icon_and_color_for_a_missing_category()
+    {
+        var orphan = new Expense(Guid.NewGuid(), Guid.NewGuid(), new Money(500), Today);
+        var legacy = NewCategory("Auto", color: "#176B5B", icon: "rocket");
+        var expenses = new[] { orphan, Spend(legacy, 700, new DateOnly(2026, 11, 18)) };
+
+        var latest = (await Overview([legacy], expenses)).Latest;
+
+        Assert.Equal(new LatestExpense(orphan.ExpenseId, "Categoria non disponibile", "Oggi · Categoria non disponibile",
+            "5,00 €", "more", "grey"), latest[0]);
+        Assert.Equal(("more", "grey"), (latest[1].IconKey, latest[1].ColorKey));
+    }
+
+    [Fact]
+    public async Task Should_list_only_expenses_inside_the_period_most_recent_first()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 100, new DateOnly(2026, 10, 31)),
+            Spend(category, 200, new DateOnly(2026, 11, 2)),
+            Spend(category, 300, new DateOnly(2026, 11, 3))
+        };
+
+        var latest = (await Overview([category], expenses)).Latest;
+
+        Assert.Equal(["3,00 €", "2,00 €"], latest.Select(item => item.Amount));
+    }
+
+    [Fact]
+    public async Task Should_break_ties_within_a_day_by_expense_id()
+    {
+        var category = NewCategory("Spesa");
+        var first = new Guid("00000000-0000-0000-0000-000000000001");
+        var second = new Guid("00000000-0000-0000-0000-000000000002");
+        var expenses = new[]
+        {
+            Spend(category, 100, Today, expenseId: first),
+            Spend(category, 200, Today, expenseId: second)
+        };
+
+        var latest = (await Overview([category], expenses)).Latest;
+
+        Assert.Equal([second, first], latest.Select(item => item.ExpenseId));
+    }
+
+    [Fact]
+    public async Task Should_list_nothing_when_the_period_has_no_expenses()
+    {
+        var overview = await Overview([NewCategory("Spesa")]);
+
+        Assert.Empty(overview.Latest);
+        Assert.False(overview.HasLatest);
+        Assert.True(overview.HasNoLatest);
+    }
+
+    [Fact]
     public async Task Should_return_the_repository_failure()
     {
         var failingCategories = new FakeCategoryRepository { Failure = Failed };
@@ -650,15 +739,18 @@ public sealed class HomeOverviewService_should_expected_behavior
         return result.Value;
     }
 
-    private static Category NewCategory(string name, long? budgetCents = null, bool archived = false, string color = "mint")
+    private static Category NewCategory(string name, long? budgetCents = null, bool archived = false,
+        string color = "mint", string icon = "cart")
     {
-        var category = new Category(Guid.NewGuid(), name, "cart", color, budgetCents.HasValue ? new Money(budgetCents.Value) : null);
+        var category = new Category(Guid.NewGuid(), name, icon, color, budgetCents.HasValue ? new Money(budgetCents.Value) : null);
         if (archived)
             category.Archive();
 
         return category;
     }
 
-    private static Expense Spend(Category category, long cents, DateOnly on) =>
-        new(Guid.NewGuid(), category.CategoryId, new Money(cents), on);
+    private static Expense Spend(Category category, long cents, DateOnly on, string note = "",
+        Guid? recurringPaymentId = null, Guid? expenseId = null) =>
+        new(expenseId ?? Guid.NewGuid(), category.CategoryId, new Money(cents), on, note: note,
+            recurringPaymentId: recurringPaymentId);
 }

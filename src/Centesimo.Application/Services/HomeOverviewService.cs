@@ -12,9 +12,12 @@ public sealed record HomeOverview(
     BudgetSummary Budget,
     PeriodComparison? Comparison,
     CategoryLine Categories,
-    SpendChart Chart)
+    SpendChart Chart,
+    IReadOnlyList<LatestExpense> Latest)
 {
     public bool HasComparison => Comparison is not null;
+    public bool HasLatest => Latest.Count > 0;
+    public bool HasNoLatest => Latest.Count == 0;
 }
 
 /// <summary>Navigation targets computed with the clock, so the view model never reads the date.</summary>
@@ -58,9 +61,15 @@ public sealed record SpendChart(
     public bool HasHighlight => HighlightLabel.HasValue();
 }
 
+public sealed record LatestExpense(Guid ExpenseId, string Title, string Detail, string Amount, string IconKey, string ColorKey)
+{
+    public string Description => $"{Title}, {Detail}, {Amount}";
+}
+
 public sealed class HomeOverviewService(ICategoryRepository categories, IExpenseRepository expenses,
     Func<DateOnly>? today = null)
 {
+    private const int LatestCount = 5;
     private const int KeySize = 3;
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
 
@@ -96,7 +105,8 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
         var budget = BudgetOf(period, categories);
         return new HomeOverview(period, Navigate(period, today), title, subtitle, ItalianFormat.Amount(spent),
             Summarize(spent, budget), Compare(period, window, expenses),
-            Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget));
+            Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget),
+            Latest(periodExpenses, categories, today));
     }
 
     private static long SpentBetween(IReadOnlyList<Expense> expenses, DateOnly from, DateOnly to) => expenses
@@ -284,6 +294,29 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
             parts.Add($"Media per restare nel budget: {ItalianFormat.Money((long)Math.Round(pace.Value, MidpointRounding.AwayFromZero))} {(isMonth ? "al giorno" : "al mese")}.");
 
         return string.Join(" ", parts);
+    }
+
+    // Within a day the order follows ExpenseId, which is random: the repository records no creation time.
+    private static IReadOnlyList<LatestExpense> Latest(IReadOnlyList<Expense> periodExpenses,
+        IReadOnlyList<Category> categories, DateOnly today)
+    {
+        var byId = categories.ToDictionary(category => category.CategoryId);
+        return periodExpenses
+            .OrderByDescending(expense => expense.OccurredOn)
+            .ThenByDescending(expense => expense.ExpenseId)
+            .Take(LatestCount)
+            .Select(expense => ToLatest(expense, byId.GetValueOrDefault(expense.CategoryId), today))
+            .ToList();
+    }
+
+    private static LatestExpense ToLatest(Expense expense, Category? category, DateOnly today)
+    {
+        var name = category?.Name ?? "Categoria non disponibile";
+        var automatic = expense.RecurringPaymentId.HasValue ? " · automatica" : "";
+        return new LatestExpense(expense.ExpenseId, expense.Note.HasValue() ? expense.Note : name,
+            $"{ItalianFormat.RelativeDay(expense.OccurredOn, today)} · {name}{automatic}",
+            ItalianFormat.Money(expense.Amount.Cents), CategoryIcons.Resolve(category?.Icon).Key,
+            CategoryPalette.Resolve(category?.Color).Key);
     }
 
     /// <summary>The current period compares to date with the same position in the previous one, clamped to its

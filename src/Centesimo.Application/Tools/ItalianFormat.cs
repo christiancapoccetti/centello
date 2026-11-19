@@ -39,6 +39,11 @@ internal static class ItalianFormat
     /// <summary>"12 novembre"</summary>
     public static string LongDate(DateOnly date) => $"{date.Day} {MonthName(date.Month)}";
 
+    /// <summary>"Oggi", "Ieri" or "12 nov"</summary>
+    public static string RelativeDay(DateOnly date, DateOnly today) => date == today
+        ? "Oggi"
+        : date == today.AddDays(-1) ? "Ieri" : ShortDate(date);
+
     /// <summary>"6%"</summary>
     public static string Percent(int percent) => $"{percent}%";
 
