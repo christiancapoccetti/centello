@@ -296,7 +296,8 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
         return string.Join(" ", parts);
     }
 
-    // Within a day the order follows ExpenseId, which is random: the repository records no creation time.
+    // Within a day the order follows ExpenseId, which sorts by creation time for expenses created since ids became
+    // version 7. Older and imported expenses carry random or hashed ids, so their order within a day is arbitrary.
     private static IReadOnlyList<LatestExpense> Latest(IReadOnlyList<Expense> periodExpenses,
         IReadOnlyList<Category> categories, DateOnly today)
     {

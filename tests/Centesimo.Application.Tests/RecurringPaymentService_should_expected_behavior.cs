@@ -25,6 +25,22 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Create_occurrence_expenses_with_time_ordered_ids()
+    {
+        var categories = new FakeCategoryRepository();
+        var category = new Category(Guid.NewGuid(), "Bills", "receipt", "#123456");
+        categories.Items.Add(category);
+        var expenses = new FakeExpenseRepository();
+        var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
+            new FakeRecurringPaymentRepository(), new FakeRecurringOccurrenceProcessor(expenses));
+        await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Monthly, new DateOnly(2026, 5, 1)));
+
+        await service.ProcessDue(new DateOnly(2026, 7, 20));
+
+        Assert.All(expenses.Items, expense => Assert.Equal(7, expense.ExpenseId.Version));
+    }
+
+    [Fact]
     public async Task Suspend_update_and_end_payment()
     {
         var categories = new FakeCategoryRepository();

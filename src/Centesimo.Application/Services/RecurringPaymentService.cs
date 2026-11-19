@@ -93,7 +93,7 @@ public sealed class RecurringPaymentService(
                 var occurrence = new RecurrenceOccurrence(payment.RecurringPaymentId, dueOn);
                 var request = new SaveExpenseRequest(payment.CategoryId, payment.Amount.Cents,
                     dueOn, payment.TagId, payment.Note);
-                var expense = request.ToExpense(Guid.NewGuid(), payment.RecurringPaymentId);
+                var expense = request.ToExpense(Guid.CreateVersion7(), payment.RecurringPaymentId);
                 payment.MoveToNextOccurrence();
                 var processed = await occurrenceProcessor.Process(
                     payment, expense, occurrence, cancellationToken);
