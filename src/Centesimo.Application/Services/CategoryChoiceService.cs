@@ -6,11 +6,12 @@ namespace Centesimo.Application;
 public sealed class CategoryChoiceService(ICategoryRepository categories, IExpenseRepository expenses,
     Func<DateOnly>? today = null)
 {
+    private const int RecentDays = 90;
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
 
-    /// <summary>Active categories, the ones with more spending this month first and the others by name, so the
-    /// category used most is the first to reach. <paramref name="alsoOffer"/> adds one category at the end even when
-    /// it is archived: an editor that only shows a stored choice needs it.</summary>
+    /// <summary>Active categories, the ones with more expenses recorded in the last 90 days first and equal counts
+    /// by name, so the category used most often is the first to reach. <paramref name="alsoOffer"/> adds one
+    /// category at the end even when it is archived: an editor that only shows a stored choice needs it.</summary>
     public async Task<Result<IReadOnlyList<Category>>> Get(Guid? alsoOffer = null,
         CancellationToken cancellationToken = default)
     {
@@ -20,17 +21,17 @@ public sealed class CategoryChoiceService(ICategoryRepository categories, IExpen
         if (categoryResult.IsFailure)
             return Result<IReadOnlyList<Category>>.Failure(categoryResult.Error);
 
-        var month = Period.MonthOf(_today());
-        var expenseResult = await expenses.GetBetween(month.Start, month.End, cancellationToken);
+        var day = _today();
+        var expenseResult = await expenses.GetBetween(day.AddDays(1 - RecentDays), day, cancellationToken);
         if (expenseResult.IsFailure)
             return Result<IReadOnlyList<Category>>.Failure(expenseResult.Error);
 
-        var spentByCategory = expenseResult.Value
+        var expensesByCategory = expenseResult.Value
             .GroupBy(expense => expense.CategoryId)
-            .ToDictionary(group => group.Key, group => group.Sum(expense => expense.Amount.Cents));
+            .ToDictionary(group => group.Key, group => group.Count());
         var offered = categoryResult.Value
             .Where(category => !category.IsArchived)
-            .OrderByDescending(category => spentByCategory.GetValueOrDefault(category.CategoryId))
+            .OrderByDescending(category => expensesByCategory.GetValueOrDefault(category.CategoryId))
             .ThenBy(category => category.Name)
             .Concat(categoryResult.Value.Where(category => category.IsArchived && category.CategoryId == alsoOffer))
             .ToList();

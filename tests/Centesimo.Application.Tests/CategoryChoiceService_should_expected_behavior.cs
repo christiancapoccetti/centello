@@ -8,7 +8,7 @@ public sealed class CategoryChoiceService_should_expected_behavior
     private static readonly Error Failed = new("Test.Failed", "Operazione non riuscita.");
 
     [Fact]
-    public async Task Should_offer_the_categories_with_more_spending_this_month_first()
+    public async Task Should_offer_the_categories_with_more_expenses_in_the_last_ninety_days_first()
     {
         var home = NewCategory("Casa");
         var food = NewCategory("Spesa");
@@ -16,9 +16,11 @@ public sealed class CategoryChoiceService_should_expected_behavior
         var expenses = new[]
         {
             Spend(leisure, 2_000, Today),
-            Spend(food, 5_000, new DateOnly(2026, 11, 3)),
-            Spend(food, 4_000, new DateOnly(2026, 11, 1)),
-            Spend(home, 3_000, new DateOnly(2026, 11, 10))
+            Spend(food, 500, new DateOnly(2026, 11, 3)),
+            Spend(food, 400, new DateOnly(2026, 10, 1)),
+            Spend(food, 300, new DateOnly(2026, 9, 12)),
+            Spend(home, 3_000, new DateOnly(2026, 11, 10)),
+            Spend(home, 3_000, new DateOnly(2026, 10, 10))
         };
 
         var offered = await Offer([home, food, leisure], expenses);
@@ -27,16 +29,35 @@ public sealed class CategoryChoiceService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_order_categories_without_spending_this_month_by_name_after_the_others()
+    public async Task Should_count_the_expenses_and_not_what_they_cost()
+    {
+        var home = NewCategory("Casa");
+        var coffee = NewCategory("Caffè");
+        var expenses = new[]
+        {
+            Spend(home, 90_000, Today),
+            Spend(coffee, 120, Today),
+            Spend(coffee, 120, Today.AddDays(-1))
+        };
+
+        var offered = await Offer([home, coffee], expenses);
+
+        Assert.Equal(["Caffè", "Casa"], offered.Select(category => category.Name));
+    }
+
+    [Fact]
+    public async Task Should_count_only_the_ninety_days_that_end_today()
     {
         var travel = NewCategory("Viaggi");
         var other = NewCategory("Altro");
         var food = NewCategory("Spesa");
         var expenses = new[]
         {
-            Spend(food, 100, Today),
-            Spend(travel, 90_000, new DateOnly(2026, 10, 31)),
-            Spend(other, 500, new DateOnly(2026, 12, 1))
+            Spend(food, 100, Today.AddDays(-89)),
+            Spend(travel, 100, Today.AddDays(-90)),
+            Spend(travel, 100, Today.AddDays(-120)),
+            Spend(other, 100, Today.AddDays(1)),
+            Spend(other, 100, Today.AddDays(2))
         };
 
         var offered = await Offer([travel, other, food], expenses);
@@ -45,14 +66,16 @@ public sealed class CategoryChoiceService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_order_equal_spending_by_name()
+    public async Task Should_order_equal_counts_by_name()
     {
         var health = NewCategory("Salute");
         var other = NewCategory("Altro");
+        var travel = NewCategory("Viaggi");
+        var gifts = NewCategory("Regali");
 
-        var offered = await Offer([health, other], [Spend(health, 700, Today), Spend(other, 700, Today)]);
+        var offered = await Offer([travel, health, gifts, other], [Spend(health, 700, Today), Spend(other, 90, Today)]);
 
-        Assert.Equal(["Altro", "Salute"], offered.Select(category => category.Name));
+        Assert.Equal(["Altro", "Salute", "Regali", "Viaggi"], offered.Select(category => category.Name));
     }
 
     [Fact]
