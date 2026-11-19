@@ -51,11 +51,6 @@ public partial class TodayPage : ContentPage
         var period = _viewModel.IsYearlyOverview ? "&period=year" : "";
         await Shell.Current.GoToAsync($"{nameof(CategorySpendingPage)}?categoryId={e.Category.CategoryId}&year={_viewModel.SelectedYear}&month={_viewModel.SelectedMonth}{period}");
     }
-    private void OnCardPressed(object? sender, EventArgs e) =>
-        InteractionFeedback.Press(sender);
-
-    private void OnCardReleased(object? sender, EventArgs e) =>
-        InteractionFeedback.Release(sender);
 
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
