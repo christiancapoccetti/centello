@@ -15,6 +15,7 @@ public static class MaterialSymbols
     public const string CalendarToday = "\uE935";
     public const string Category = "\uE574";
     public const string Check = "\uE5CA";
+    public const string CheckCircle = "\uE86C";
     public const string Checkroom = "\uF19E";
     public const string ChevronLeft = "\uE5CB";
     public const string ChevronRight = "\uE5CC";
@@ -24,6 +25,7 @@ public static class MaterialSymbols
     public const string ConfirmationNumber = "\uE638";
     public const string ContentCut = "\uE14E";
     public const string Delete = "\uE872";
+    public const string Description = "\uE873";
     public const string Devices = "\uE1B1";
     public const string DirectionsBus = "\uE530";
     public const string DirectionsCar = "\uE531";
@@ -49,6 +51,7 @@ public static class MaterialSymbols
     public const string MoreVert = "\uE5D4";
     public const string NorthEast = "\uF1E1";
     public const string Notifications = "\uE7F4";
+    public const string OpenInNew = "\uE89E";
     public const string Pause = "\uE034";
     public const string PauseCircle = "\uE1A2";
     public const string Pets = "\uE91D";
@@ -66,5 +69,8 @@ public static class MaterialSymbols
     public const string SportsSoccer = "\uEA2F";
     public const string Subscriptions = "\uE064";
     public const string Today = "\uE8DF";
+    public const string UploadFile = "\uE9FC";
+    public const string Visibility = "\uE8F4";
+    public const string VisibilityOff = "\uE8F5";
     public const string Work = "\uE8F9";
 }
