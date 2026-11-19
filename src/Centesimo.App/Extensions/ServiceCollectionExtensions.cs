@@ -1,3 +1,4 @@
+using Centesimo.Application;
 using Centesimo.App.Pages;
 using Centesimo.App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<OpenSourceLicensesPage>();
         services.AddTransient<LicensePage>();
         services.AddSingleton<RecurringPaymentAutomation>();
+        services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
 #if ANDROID
         services.AddSingleton<IOfflineSpeechRecognizer, WhisperOfflineSpeechRecognizer>();
 #else
