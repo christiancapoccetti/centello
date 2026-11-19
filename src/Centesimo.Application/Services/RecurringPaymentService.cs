@@ -14,8 +14,11 @@ public sealed class RecurringPaymentService(
     ITagRepository tags,
     IExpenseRepository expenses,
     IRecurringPaymentRepository recurringPayments,
-    IRecurringOccurrenceProcessor occurrenceProcessor)
+    IRecurringOccurrenceProcessor occurrenceProcessor,
+    Func<DateOnly>? today = null)
 {
+    private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
+
     public Task<Result<IReadOnlyList<RecurringPayment>>> GetAll(
         CancellationToken cancellationToken = default) => recurringPayments.GetAll(cancellationToken);
 
@@ -59,7 +62,7 @@ public sealed class RecurringPaymentService(
         Change(paymentId, payment => payment.Suspend(), cancellationToken);
 
     public Task<Result> Resume(Guid paymentId, CancellationToken cancellationToken = default) =>
-        Change(paymentId, payment => payment.Resume(), cancellationToken);
+        Change(paymentId, payment => payment.Resume(_today()), cancellationToken);
 
     public async Task<Result> End(Guid paymentId, DateOnly endsOn,
         CancellationToken cancellationToken = default)
