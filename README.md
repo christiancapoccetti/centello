@@ -1,6 +1,6 @@
 # Centesimo
 
-Centesimo is a simple, privacy-first Android expense tracker built with .NET MAUI. Its goal is to make manual expense entry quick while keeping financial data on the device.
+Centesimo is a simple Android expense tracker built with .NET MAUI. Its goal is to make expense entry quick while keeping the expense database on the device; the optional quick entry sends the phrase you speak or type to OpenAI (see below).
 
 ## Features
 
@@ -10,9 +10,9 @@ Centesimo is a simple, privacy-first Android expense tracker built with .NET MAU
 - Browse monthly expense history, then edit or delete an expense.
 - Review monthly or yearly spending and category budget progress from the home dashboard, with category details available for both periods.
 - Configure weekly, monthly, or yearly recurring payments, with optional end dates. Due expenses are created when the app is opened, and upcoming payments generate Android notifications.
-- Create an expense draft by voice on Android, with a multilingual Whisper model downloaded once and kept local, plus explicit confirmation in the expense editor.
+- Create an expense draft from a spoken or typed Italian phrase using OpenAI with your own API key, plus explicit confirmation in the expense editor.
 - Review local spending trends, category comparisons, and history-based insights for the current month or year.
-- Store application data locally in SQLite. Centesimo does not require an account or send financial data to a remote service.
+- Store application data locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a quick-entry phrase, and only when you enable OpenAI quick entry.
 
 Receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
 
@@ -58,13 +58,17 @@ dotnet build src/Centesimo.App/Centesimo.App.csproj -t:Run -f net10.0-android `
 
 Confirm that the target device is available with `adb devices` before running the app. The minimum supported Android API level is 24.
 
-## Offline voice expense entry
+## Quick expense entry with OpenAI
 
-The microphone action records up to 20 seconds and transcribes only on the Android device with Whisper. When Home opens and no valid local model is available, the app asks whether to download the multilingual model (about 181 MiB). If accepted, it downloads, verifies, stores, and loads the model into memory asynchronously. The microphone remains unavailable until preparation completes; if download is declined, it stays disabled and tapping it asks again. After the model is ready, audio is kept in memory and discarded after recognition; no speech audio is uploaded or processed remotely. The loaded model remains available while the app process is running to reduce the delay for later commands.
+Quick entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft. It is optional and uses your own OpenAI API key.
 
-Offline voice entry currently requires an arm64 Android device.
-
-Recognized commands use a predictable grammar with a numeric amount and an explicit category, for example: `Aggiungi spesa di 50 eur alla categoria spese auto, sotto tag tagliando`. A tag and a note (`con nota ...`) are optional. When the amount is valid but the category or tag does not resolve uniquely to an active item, the app opens a new expense editor with the amount, date, and note prefilled, leaving both category and tag unselected. The app never saves an expense automatically, and saving still requires a category.
+- **Setup:** enter the key in Settings ("Inserimento rapido con OpenAI"). A consent dialog must be accepted before the key is saved; the key can be removed at any time.
+- **Key handling:** the key is stored in Android SecureStorage and sent only to the OpenAI API. It lives on the client, so it is not a server-held secret: use it for personal use only.
+- **Flow:** hold the microphone button (up to 20 seconds) or tap "Scrivi". Audio is transcribed with `gpt-transcribe`, and the transcription stays editable in the "Inserimento rapido" sheet. The text is then interpreted by `gpt-6-luna` with a strict JSON schema that only admits your own category and tag keys, and the result is validated deterministically.
+- **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent.
+- **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync.
+- **Confirmation:** the draft opens in the expense editor and nothing is saved until you save it; saving still requires a category.
+- **Availability:** voice and typed quick entry are unavailable until a key is configured, and report an error without an Internet connection. Manual entry always works. Recording requires an arm64 Android device.
 
 ## License
 

@@ -5,7 +5,7 @@ Items are not commitments and will be prioritized after the core manual expense 
 
 ## Accessibility and input
 
-- Voice control for creating expenses and navigating common actions.
+- Voice control for navigating common actions (expense entry by voice or text already exists as OpenAI quick entry).
 - Improved screen-reader descriptions and accessibility testing.
 - Optional biometric protection when opening the app.
 
