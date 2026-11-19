@@ -2,67 +2,45 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
              xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
              x:Class="Centesimo.App.Pages.SettingsPage"
              Title="Impostazioni"
              SafeAreaEdges="All">
-    <ScrollView>
-        <VerticalStackLayout Padding="22,16" Spacing="20">
-            <VerticalStackLayout Spacing="2">
-                <Label Text="Impostazioni" Style="{StaticResource HeadlineLarge}" />
-                <Label Text="Gestisci dati, automazioni e inserimento rapido." Style="{StaticResource BodyMedium}" />
-            </VerticalStackLayout>
-            <Label Text="INSERIMENTO RAPIDO" Style="{StaticResource LabelLarge}" />
-            <Border Style="{StaticResource SurfaceCard}" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Inserimento rapido con OpenAI" Style="{StaticResource TitleLarge}" />
-                    <Label Text="Detta una spesa con parole tue. L'audio e il testo vengono inviati a OpenAI; le spese restano sul dispositivo." Style="{StaticResource BodyMedium}" />
-                    <Label Text="{Binding ApiKeyStatus}" Style="{StaticResource LabelLarge}" />
-                    <Entry Text="{Binding ApiKeyInput}" IsPassword="True" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" Placeholder="Chiave API OpenAI" MinimumHeightRequest="48" SemanticProperties.Description="Chiave API OpenAI" />
-                    <Label Text="{Binding ApiKeyError}" IsVisible="{Binding HasApiKeyError}" TextColor="{t:Theme Alert}" />
-                    <Button Text="Salva chiave" Style="{StaticResource PrimaryActionButton}" Clicked="OnSaveApiKeyClicked" IsEnabled="{Binding CanSaveApiKey}" />
-                    <Button Text="Rimuovi chiave" Style="{StaticResource TextActionButton}" Clicked="OnRemoveApiKeyClicked" IsVisible="{Binding HasApiKey}" />
-                </VerticalStackLayout>
-            </Border>
-            <Label Text="AUTOMAZIONI" Style="{StaticResource LabelLarge}" />
-            <Border Style="{StaticResource SurfaceCard}" Padding="16">
-                <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnRecurringPaymentsTapped" /></Border.GestureRecognizers>
-                <Grid ColumnDefinitions="52,*" ColumnSpacing="12">
-                    <Border Style="{StaticResource GlyphTile}"><Label Text="{x:Static app:MaterialSymbols.Autorenew}" Style="{StaticResource IconGlyph}" /></Border>
-                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center"><Label Text="Pagamenti regolari" Style="{StaticResource TitleLarge}" /><Label Text="Gestisci scadenze e promemoria" Style="{StaticResource BodyMedium}" /></VerticalStackLayout>
-                </Grid>
-            </Border>
-            <Label Text="DATI" Style="{StaticResource LabelLarge}" />
-            <Border Style="{StaticResource SurfaceCard}" Padding="16">
-                <VerticalStackLayout Spacing="14">
-                    <Grid ColumnDefinitions="52,*" ColumnSpacing="12"><Border Style="{StaticResource GlyphTile}"><Label Text="{x:Static app:MaterialSymbols.Download}" Style="{StaticResource IconGlyph}" /></Border><VerticalStackLayout Grid.Column="1" Spacing="2"><Label Text="Importa backup Money Manager" Style="{StaticResource TitleLarge}" /><Label Text="Importa i tuoi dati in locale. Restano privati sul dispositivo." Style="{StaticResource BodyMedium}" /></VerticalStackLayout></Grid>
-                    <Button Text="Scegli backup" Style="{StaticResource TextActionButton}" Clicked="OnImportClicked" IsEnabled="{Binding CanImport}" />
-                </VerticalStackLayout>
-            </Border>
-            <Border Style="{StaticResource TonalCard}" IsVisible="{Binding HasPreview}" Padding="16">
-                <VerticalStackLayout Spacing="14">
-                    <Grid ColumnDefinitions="44,*" ColumnSpacing="10"><Border Style="{StaticResource GlyphTile}" BackgroundColor="{t:Theme PositiveContainer}"><Label Text="{x:Static app:MaterialSymbols.Check}" Style="{StaticResource IconGlyph}" TextColor="{t:Theme OnPositiveContainer}" /></Border><Label Grid.Column="1" Text="Backup analizzato" Style="{StaticResource TitleLarge}" VerticalOptions="Center" /></Grid>
-                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
-                        <VerticalStackLayout><Label Text="{Binding PreviewResult.CategoriesCount}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" /><Label Text="nuove categorie" Style="{StaticResource BodyMedium}" FontSize="11" HorizontalTextAlignment="Center" /></VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="1"><Label Text="{Binding PreviewResult.ExpensesCount}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" /><Label Text="nuove spese" Style="{StaticResource BodyMedium}" FontSize="11" HorizontalTextAlignment="Center" /></VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="2"><Label Text="{Binding PreviewResult.RecurringPaymentsCount}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" /><Label Text="pagamenti regolari" Style="{StaticResource BodyMedium}" FontSize="11" HorizontalTextAlignment="Center" /></VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="3"><Label Text="{Binding PreviewResult.ExistingItemsCount}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" /><Label Text="già presenti" Style="{StaticResource BodyMedium}" FontSize="11" HorizontalTextAlignment="Center" /></VerticalStackLayout>
+    <Grid RowDefinitions="56,*">
+        <Label Padding="24,0" Text="Impostazioni" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="0,0,0,24">
+                <Label Text="Dati" Style="{StaticResource SectionTitle}" Margin="24,8,24,2" SemanticProperties.HeadingLevel="Level2" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Repeat}" Title="Pagamenti regolari" Detail="{Binding RecurringSummary}" IsNavigation="True" Tapped="OnRecurringPaymentsTapped" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Download}" Title="Importa da Money Manager" Detail="Da un backup .mmbackup" IsNavigation="True" Tapped="OnImportTapped" />
+
+                <Label Text="Inserimento vocale" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                <VerticalStackLayout IsVisible="{Binding ShowKeyStatus}">
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Mic}" Title="Attivo" Detail="Chiave OpenAI salvata" IsPositive="True" />
+                    <Grid Margin="24,12,24,0" ColumnDefinitions="Auto,*,Auto">
+                        <Button Text="Sostituisci chiave" Style="{StaticResource OutlinedButton}" Clicked="OnReplaceClicked" />
+                        <Button Grid.Column="2" Text="Rimuovi" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" TextColor="{t:Theme Alert}" Clicked="OnRemoveClicked" />
                     </Grid>
-                    <Button Text="Importa elementi nuovi" Style="{StaticResource PrimaryActionButton}" Clicked="OnImportPreviewClicked" IsEnabled="{Binding CanImport}" />
                 </VerticalStackLayout>
-            </Border>
-            <Border Style="{StaticResource SurfaceCard}" Padding="14"><HorizontalStackLayout Spacing="12"><Label Text="{x:Static app:MaterialSymbols.Info}" Style="{StaticResource IconGlyph}" FontSize="22" TextColor="{t:Theme Mute}" /><Label Text="Gli elementi già presenti non vengono duplicati." Style="{StaticResource BodyMedium}" VerticalOptions="Center" /></HorizontalStackLayout></Border>
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <Label Text="{Binding Message}" IsVisible="{Binding HasMessage}" TextColor="{t:Theme OnPositiveContainer}">
-                <Label.Triggers>
-                    <DataTrigger TargetType="Label" Binding="{Binding HasError}" Value="True">
-                        <Setter Property="TextColor" Value="{t:Theme Alert}" />
-                    </DataTrigger>
-                </Label.Triggers>
-            </Label>
-            <Label Text="APP" Style="{StaticResource LabelLarge}" />
-            <Border Style="{StaticResource SurfaceCard}" Padding="16"><VerticalStackLayout Spacing="8"><Grid ColumnDefinitions="*,Auto"><Label Text="Versione 1.0" Style="{StaticResource BodyMedium}" /><Label Grid.Column="1" Text="{x:Static app:MaterialSymbols.ChevronRight}" Style="{StaticResource IconGlyph}" TextColor="{t:Theme Mute}" /></Grid><Button Text="Licenza e codice sorgente" Style="{StaticResource TextActionButton}" HorizontalOptions="Start" Clicked="OnLicenseClicked" /></VerticalStackLayout></Border>
-            <VerticalStackLayout Spacing="8" Margin="0,12,0,0"><Label Text="LICENZE OPEN SOURCE" Style="{StaticResource LabelLarge}" /><Label Text="Consulta gli avvisi e le licenze dei componenti utilizzati dall'app." Style="{StaticResource BodyMedium}" /><Button Text="Visualizza licenze" Style="{StaticResource TextActionButton}" HorizontalOptions="Start" Clicked="OnOpenSourceLicensesClicked" /></VerticalStackLayout>
-        </VerticalStackLayout>
-    </ScrollView>
+                <VerticalStackLayout IsVisible="{Binding ShowKeyForm}">
+                    <Label Text="{Binding KeyLead}" Style="{StaticResource Lead}" Margin="24,4,24,0" LineHeight="1.45" />
+                    <c:TextField Margin="24,14,24,0" Label="Chiave API OpenAI" Placeholder="sk-…" IsPassword="True" Text="{Binding ApiKeyInput}" ErrorText="{Binding ApiKeyError}" />
+                    <HorizontalStackLayout Margin="24,12,24,0" Spacing="12">
+                        <Button Text="Salva chiave" Style="{StaticResource FilledButton}" Clicked="OnSaveKeyClicked" />
+                        <Button Text="Annulla" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" IsVisible="{Binding IsReplacing}" Clicked="OnCancelReplaceClicked" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+                <HorizontalStackLayout Margin="24,12,24,0" Spacing="8">
+                    <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Cloud}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
+                    <Label Text="Audio e testo della spesa vengono inviati a OpenAI; le spese restano sul telefono." Style="{StaticResource Caption}" LineHeight="1.45" MaximumWidthRequest="320" />
+                </HorizontalStackLayout>
+
+                <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Info}" Title="{Binding VersionText}" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Description}" Title="Licenze" Detail="Centesimo e componenti open source" IsNavigation="True" Tapped="OnLicensesTapped" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

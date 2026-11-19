@@ -6,195 +6,116 @@ namespace Centesimo.App.ViewModels;
 
 public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiSettings openAiSettings) : ObservableObject
 {
-    private bool _isBusy;
-    private string _message = "";
-    private bool _hasError;
-    private MoneyManagerImportPreview? _preview;
+    private const string NewKeyLead = "Detta una spesa con parole tue, per esempio “ieri 12 euro di pizza”. Serve una tua chiave API OpenAI.";
+    private const string ReplacementLead = "La nuova chiave prende il posto di quella salvata.";
+
+    private string _recurringSummary = "";
     private bool _hasApiKey;
+    private bool _isReplacing;
     private string _apiKeyInput = "";
     private string _apiKeyError = "";
 
-    public bool IsBusy
-    {
-        get => _isBusy;
-        private set
-        {
-            if (SetProperty(ref _isBusy, value))
-                OnPropertyChanged(nameof(CanImport));
-        }
-    }
-    public bool CanImport => !IsBusy;
-    public string Message { get => _message; private set => SetProperty(ref _message, value); }
-    public bool HasMessage => Message.HasValue();
-    public bool HasError { get => _hasError; private set => SetProperty(ref _hasError, value); }
-    public MoneyManagerImportPreview? PreviewResult
-    {
-        get => _preview;
-        private set
-        {
-            if (SetProperty(ref _preview, value))
-                OnPropertyChanged(nameof(HasPreview));
-        }
-    }
-    public bool HasPreview => PreviewResult is not null;
+    public string RecurringSummary { get => _recurringSummary; private set => SetProperty(ref _recurringSummary, value); }
+    public string VersionText => $"Versione {AppInfo.Current.VersionString}";
     public bool HasApiKey
     {
         get => _hasApiKey;
         private set
         {
             if (SetProperty(ref _hasApiKey, value))
-                OnPropertyChanged(nameof(ApiKeyStatus));
+                NotifyKeyStateChanged();
         }
     }
-    public string ApiKeyStatus => HasApiKey ? "Chiave API configurata." : "Nessuna chiave API configurata.";
+    /// <summary>The person is typing a key to put in place of the one saved.</summary>
+    public bool IsReplacing
+    {
+        get => _isReplacing;
+        private set
+        {
+            if (SetProperty(ref _isReplacing, value))
+                NotifyKeyStateChanged();
+        }
+    }
+    public bool ShowKeyStatus => HasApiKey && !IsReplacing;
+    public bool ShowKeyForm => !ShowKeyStatus;
+    public string KeyLead => IsReplacing ? ReplacementLead : NewKeyLead;
     public string ApiKeyInput
     {
         get => _apiKeyInput;
         set
         {
-            if (SetProperty(ref _apiKeyInput, value))
-                OnPropertyChanged(nameof(CanSaveApiKey));
+            if (!SetProperty(ref _apiKeyInput, value))
+                return;
+
+            ApiKeyError = "";
         }
     }
-    public bool CanSaveApiKey => ApiKeyInput.HasValue();
-    public string ApiKeyError
+    public string ApiKeyError { get => _apiKeyError; private set => SetProperty(ref _apiKeyError, value); }
+
+    public async Task Load()
     {
-        get => _apiKeyError;
-        private set
-        {
-            if (SetProperty(ref _apiKeyError, value))
-                OnPropertyChanged(nameof(HasApiKeyError));
-        }
+        HasApiKey = await openAiSettings.HasApiKey();
+        using var scope = scopeFactory.CreateScope();
+        var list = await scope.ServiceProvider.GetRequiredService<RecurringPaymentListService>().Get();
+        // The row keeps its last words when the list cannot be read: the payments page says what went wrong.
+        if (list.IsSuccess)
+            RecurringSummary = list.Value.ActiveSummary;
     }
-    public bool HasApiKeyError => ApiKeyError.HasValue();
 
-    public async Task LoadApiKeyStatus() => HasApiKey = await openAiSettings.HasApiKey();
+    public void StartReplacing() => IsReplacing = true;
 
-    public async Task SaveApiKey(bool consentAccepted)
+    public void StopReplacing()
     {
+        IsReplacing = false;
+        ClearInput();
+    }
+
+    /// <summary>False, with the reason on screen, when there is nothing to save: the consent is asked only for a key.</summary>
+    public bool HasKeyToSave()
+    {
+        if (ApiKeyInput.HasValue())
+            return true;
+
+        ApiKeyError = SpeechErrors.EmptyApiKey.Message;
+        return false;
+    }
+
+    /// <returns>True when the key is saved. Without consent nothing happens and nothing is said.</returns>
+    public async Task<bool> SaveApiKey(bool consentAccepted)
+    {
+        if (!consentAccepted)
+            return false;
+
         var result = await openAiSettings.SaveApiKey(ApiKeyInput, consentAccepted);
         if (result.IsFailure)
         {
             ApiKeyError = result.Error.Message;
-            return;
+            return false;
         }
 
-        ApiKeyInput = "";
-        ApiKeyError = "";
+        ClearInput();
+        IsReplacing = false;
         HasApiKey = true;
+        return true;
     }
 
     public void RemoveApiKey()
     {
         openAiSettings.ClearApiKey();
-        ApiKeyError = "";
+        ClearInput();
         HasApiKey = false;
     }
 
-    public async Task<Result<MoneyManagerImportPreview>> Preview(Stream backup,
-        CancellationToken cancellationToken = default)
+    private void ClearInput()
     {
-        if (IsBusy)
-            return Result<MoneyManagerImportPreview>.Failure(MoneyManagerImportErrors.InvalidBackup);
-
-        IsBusy = true;
-        ClearPreview();
-        ClearMessage();
-        try
-        {
-            Result<MoneyManagerImportPreview> result;
-            using (var scope = scopeFactory.CreateScope())
-            {
-                var importService = scope.ServiceProvider.GetRequiredService<MoneyManagerImportService>();
-                result = await importService.Preview(backup, cancellationToken);
-            }
-            if (result.IsFailure)
-            {
-                ClearPreview();
-                ShowError(result.Error.Message);
-            }
-            else
-                PreviewResult = result.Value;
-
-            return result;
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            ShowError("Importazione annullata.");
-            throw;
-        }
-        catch
-        {
-            ShowError("Non è stato possibile leggere il backup.");
-            return Result<MoneyManagerImportPreview>.Failure(MoneyManagerImportErrors.InvalidBackup);
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        ApiKeyInput = "";
+        ApiKeyError = "";
     }
 
-    public async Task Import(MoneyManagerImportPreview preview, CancellationToken cancellationToken = default)
+    private void NotifyKeyStateChanged()
     {
-        if (IsBusy)
-            return;
-
-        IsBusy = true;
-        ClearMessage();
-        try
-        {
-            Result<MoneyManagerImportReport> result;
-            using (var scope = scopeFactory.CreateScope())
-            {
-                var importService = scope.ServiceProvider.GetRequiredService<MoneyManagerImportService>();
-                result = await importService.Import(preview, cancellationToken);
-            }
-            if (result.IsFailure)
-            {
-                ShowError(result.Error.Message);
-                return;
-            }
-
-            ShowMessage($"Importazione completata: {result.Value.ExpensesAdded} spese, " +
-                $"{result.Value.RecurringPaymentsAdded} pagamenti regolari, " +
-                $"{result.Value.CategoriesAdded} categorie e {result.Value.TagsAdded} tag aggiunti. " +
-                $"Ignorati: {result.Value.IgnoredCount}; senza categoria: {result.Value.UncategorizedCount}.");
-            ClearPreview();
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            ShowError("Importazione annullata.");
-        }
-        catch
-        {
-            ShowError("Non è stato possibile importare il backup.");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-    public Task ImportPreview(CancellationToken cancellationToken = default) =>
-        PreviewResult is null ? Task.CompletedTask : Import(PreviewResult, cancellationToken);
-    public void ClearPreview() => PreviewResult = null;
-    public void ShowError(string message)
-    {
-        HasError = true;
-        Message = message;
-        OnPropertyChanged(nameof(HasMessage));
-    }
-
-    private void ShowMessage(string message)
-    {
-        HasError = false;
-        Message = message;
-        OnPropertyChanged(nameof(HasMessage));
-    }
-
-    private void ClearMessage()
-    {
-        HasError = false;
-        Message = "";
-        OnPropertyChanged(nameof(HasMessage));
+        OnPropertyChanged(nameof(ShowKeyStatus));
+        OnPropertyChanged(nameof(ShowKeyForm));
+        OnPropertyChanged(nameof(KeyLead));
     }
 }

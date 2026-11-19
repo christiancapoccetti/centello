@@ -6,67 +6,60 @@ namespace Centesimo.App.Pages;
 public partial class SettingsPage : ContentPage
 {
     private readonly SettingsViewModel _viewModel;
+    private readonly IConfirmation _confirmation;
+    private readonly ISnackbar _snackbar;
 
-    public SettingsPage(SettingsViewModel viewModel)
+    public SettingsPage(SettingsViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _confirmation = confirmation;
+        _snackbar = snackbar;
         BindingContext = viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await _viewModel.LoadApiKeyStatus();
+        await _viewModel.Load();
     }
 
-    private async void OnSaveApiKeyClicked(object? sender, EventArgs e)
-    {
-        var accepted = await DisplayAlertAsync(
-            "Inserimento rapido con OpenAI",
-            OpenAiSettings.ConsentMessage,
-            "Acconsento",
-            "Annulla");
-        await _viewModel.SaveApiKey(accepted);
-    }
-
-    private void OnRemoveApiKeyClicked(object? sender, EventArgs e) =>
-        _viewModel.RemoveApiKey();
-
-    private async void OnRecurringPaymentsTapped(object? sender, TappedEventArgs e) =>
+    private async void OnRecurringPaymentsTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(RecurringPaymentsPage));
 
-    private async void OnImportClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            var file = await FilePicker.Default.PickAsync(new PickOptions
-            {
-                PickerTitle = "Scegli il backup Money Manager"
-            });
-            if (file is null)
-            {
-                _viewModel.ClearPreview();
-                return;
-            }
+    private async void OnImportTapped(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(nameof(MoneyManagerImportPage));
 
-            await using var stream = await file.OpenReadAsync();
-            await _viewModel.Preview(stream);
-        }
-        catch (OperationCanceledException)
-        {
-            _viewModel.ShowError("Importazione annullata.");
-        }
-        catch
-        {
-            _viewModel.ShowError("Non è stato possibile aprire il backup selezionato.");
-        }
-    }
-    private async void OnImportPreviewClicked(object? sender, EventArgs e) => await _viewModel.ImportPreview();
-
-    private async void OnOpenSourceLicensesClicked(object? sender, EventArgs e) =>
-        await Shell.Current.GoToAsync(nameof(OpenSourceLicensesPage));
-
-    private async void OnLicenseClicked(object? sender, EventArgs e) =>
+    private async void OnLicensesTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(LicensePage));
+
+    private void OnReplaceClicked(object? sender, EventArgs e) => _viewModel.StartReplacing();
+
+    private void OnCancelReplaceClicked(object? sender, EventArgs e) => _viewModel.StopReplacing();
+
+    private async void OnSaveKeyClicked(object? sender, EventArgs e)
+    {
+        if (!_viewModel.HasKeyToSave())
+            return;
+
+        // Annulla in the dialog leaves everything as it is: the key stays typed and nothing is said.
+        var accepted = await _confirmation.Ask("Inserimento vocale con OpenAI", OpenAiSettings.ConsentMessage, "Acconsento", "Annulla");
+        if (await _viewModel.SaveApiKey(accepted))
+            _snackbar.Show("Chiave salvata. Tieni premuto il microfono per dettare.");
+    }
+
+    private async void OnRemoveClicked(object? sender, EventArgs e)
+    {
+        var confirmed = await _confirmation.Ask(
+            "Rimuovere la chiave OpenAI?",
+            "Il microfono smetterà di funzionare finché non salvi una nuova chiave. Le spese registrate restano sul telefono.",
+            "Rimuovi",
+            "Annulla",
+            isDestructive: true);
+        if (!confirmed)
+            return;
+
+        _viewModel.RemoveApiKey();
+        _snackbar.Show("Chiave rimossa");
+    }
 }
