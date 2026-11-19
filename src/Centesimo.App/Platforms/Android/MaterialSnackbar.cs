@@ -20,9 +20,13 @@ internal sealed class MaterialSnackbar(IFontManager fonts) : ISnackbar
         var snackbar = Snackbar.Make(root, message, Snackbar.LengthLong);
         snackbar.SetBackgroundTint(ThemeColors.Current(ThemeColor.Ink).ToPlatform());
         snackbar.SetTextColor(ThemeColors.Current(ThemeColor.Ground).ToPlatform());
-        if (snackbar.View.FindViewById<TextView>(Resource.Id.snackbar_text) is { } text)
+        if (snackbar.View is ViewGroup layout && First<TextView>(layout) is { } text)
+        {
             text.Typeface = fonts.GetTypeface(Microsoft.Maui.Font.OfSize(Fonts.Regular, 14));
-        if ((MarkedAnchor() ?? TabBar(root)) is { } anchor)
+            text.LetterSpacing = 0;
+        }
+
+        if ((MarkedAnchor() ?? First<BottomNavigationView>(root, bar => bar.IsShown)) is { } anchor)
             snackbar.SetAnchorView(anchor);
 
         snackbar.Show();
@@ -34,14 +38,14 @@ internal sealed class MaterialSnackbar(IFontManager fonts) : ISnackbar
         .FirstOrDefault(SnackbarAnchor.GetIsAnchor)?
         .Handler?.PlatformView as View;
 
-    private static View? TabBar(ViewGroup parent)
+    private static T? First<T>(ViewGroup parent, Func<T, bool>? matches = null) where T : View
     {
         for (var index = 0; index < parent.ChildCount; index++)
         {
             var child = parent.GetChildAt(index);
-            if (child is BottomNavigationView { IsShown: true })
-                return child;
-            if (child is ViewGroup group && TabBar(group) is { } found)
+            if (child is T candidate && (matches?.Invoke(candidate) ?? true))
+                return candidate;
+            if (child is ViewGroup group && First(group, matches) is { } found)
                 return found;
         }
 

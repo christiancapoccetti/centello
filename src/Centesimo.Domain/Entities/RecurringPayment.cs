@@ -17,6 +17,11 @@ public sealed class RecurringPayment
     /// <summary>True once the next occurrence falls after the end date, so no further expense will be created.</summary>
     public bool IsEnded => EndsOn.HasValue && NextDueOn > EndsOn.Value;
 
+    /// <summary>What the payment is doing now. A payment past its end is ended even if it was paused before.</summary>
+    public RecurringPaymentStatus Status => IsEnded
+        ? RecurringPaymentStatus.Ended
+        : IsSuspended ? RecurringPaymentStatus.Paused : RecurringPaymentStatus.Active;
+
     // For loading a stored payment. The public constructor checks what a new schedule must satisfy, and a payment
     // that has ended is stored with its next occurrence after its end date, which a new schedule may not have.
     private RecurringPayment()

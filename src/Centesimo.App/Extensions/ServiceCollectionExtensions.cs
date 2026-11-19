@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<OpenSourceLicensesPage>();
         services.AddTransient<LicensePage>();
         services.AddSingleton<RecurringPaymentAutomation>();
+        services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
 #if ANDROID

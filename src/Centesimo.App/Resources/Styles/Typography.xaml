@@ -46,6 +46,11 @@
         <Setter Property="LineHeight" Value="1.4" />
         <Setter Property="TextColor" Value="{t:Theme Mute}" />
     </Style>
+    <Style x:Key="Lead" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="LineHeight" Value="1.3" />
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+    </Style>
     <Style x:Key="BodyMedium" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="LineHeight" Value="1.4" />
         <Setter Property="TextColor" Value="{t:Theme Mute}" />

@@ -60,6 +60,21 @@
         <Setter Property="MinimumHeightRequest" Value="48" />
         <Setter Property="Padding" Value="12,8" />
     </Style>
+    <Style x:Key="OutlinedButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderColor" Value="{t:Theme Mute}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="Padding" Value="24,0" />
+    </Style>
+    <Style x:Key="DangerOutlinedButton" TargetType="Button" BasedOn="{StaticResource OutlinedButton}">
+        <Setter Property="BorderColor" Value="{t:Theme Alert}" />
+        <Setter Property="TextColor" Value="{t:Theme Alert}" />
+    </Style>
     <Style x:Key="IconGlyphButton" TargetType="Button">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Icons}" />
         <Setter Property="FontSize" Value="24" />
@@ -125,6 +140,16 @@
         <Setter Property="StrokeShape">
             <Setter.Value>
                 <Rectangle />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="InfoCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="12" />
             </Setter.Value>
         </Setter>
     </Style>

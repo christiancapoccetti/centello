@@ -30,6 +30,30 @@ public sealed class RecurringPayment_should_expected_behavior
     }
 
     [Fact]
+    public void Report_what_it_is_doing_now()
+    {
+        var active = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        var paused = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        paused.Suspend();
+        var resumed = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        resumed.Suspend();
+        resumed.Resume();
+        var ended = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        ended.End(new DateOnly(2026, 12, 5));
+        ended.MoveToNextOccurrence();
+        var pausedThenEnded = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));
+        pausedThenEnded.Suspend();
+        pausedThenEnded.End(new DateOnly(2026, 12, 5));
+        pausedThenEnded.MoveToNextOccurrence();
+
+        Assert.Equal(RecurringPaymentStatus.Active, active.Status);
+        Assert.Equal(RecurringPaymentStatus.Paused, paused.Status);
+        Assert.Equal(RecurringPaymentStatus.Active, resumed.Status);
+        Assert.Equal(RecurringPaymentStatus.Ended, ended.Status);
+        Assert.Equal(RecurringPaymentStatus.Ended, pausedThenEnded.Status);
+    }
+
+    [Fact]
     public void Be_ended_only_once_the_next_occurrence_falls_after_the_end_date()
     {
         var open = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 5));

@@ -21,6 +21,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     private FormState _original;
 
     public event EventHandler? Saved;
+    /// <summary>The save stopped on a field. Its message is under that field.</summary>
+    public event EventHandler? Rejected;
 
     public CategoryTagPicker Picker { get; }
     public ICommand SaveCommand { get; }
@@ -145,7 +147,10 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         // Both checks run, so every field that stops the save says so at once.
         var hasCategory = Picker.Validate();
         if (amount.IsFailure || !hasCategory)
+        {
+            Rejected?.Invoke(this, EventArgs.Empty);
             return;
+        }
 
         IsSaving = true;
         var request = new SaveExpenseRequest(
@@ -161,6 +166,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         {
             IsSaving = false;
             Explain(result.Error);
+            Rejected?.Invoke(this, EventArgs.Empty);
             return;
         }
 

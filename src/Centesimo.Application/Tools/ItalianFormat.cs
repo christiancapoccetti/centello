@@ -42,6 +42,9 @@ public static class ItalianFormat
     /// <summary>"12 novembre"</summary>
     public static string LongDate(DateOnly date) => $"{date.Day} {MonthName(date.Month)}";
 
+    /// <summary>"12 novembre 2026"</summary>
+    public static string FullDate(DateOnly date) => $"{LongDate(date)} {date.Year}";
+
     /// <summary>"del 5 dicembre", or "dell'8 agosto" and "dell'11 novembre" where the article elides</summary>
     public static string OfLongDate(DateOnly date) => $"{(date.Day is 8 or 11 ? "dell'" : "del ")}{LongDate(date)}";
 

@@ -1,3 +1,4 @@
+using Centesimo.App.Controls;
 using Centesimo.App.ViewModels;
 
 namespace Centesimo.App.Pages;
@@ -5,20 +6,23 @@ namespace Centesimo.App.Pages;
 public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributable
 {
     private readonly RecurringPaymentEditorViewModel _viewModel;
-    private readonly RecurringPaymentAutomation _automation;
     private readonly CategoryEditorPage _categoryEditor;
+    private readonly IConfirmation _confirmation;
+    private readonly ISnackbar _snackbar;
     private Guid? _paymentId;
     private bool _isLoaded;
 
-    public RecurringPaymentEditorPage(RecurringPaymentEditorViewModel viewModel,
-        RecurringPaymentAutomation automation, CategoryEditorPage categoryEditor)
+    public RecurringPaymentEditorPage(RecurringPaymentEditorViewModel viewModel, CategoryEditorPage categoryEditor,
+        IConfirmation confirmation, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _automation = automation;
         _categoryEditor = categoryEditor;
+        _confirmation = confirmation;
+        _snackbar = snackbar;
         BindingContext = viewModel;
         viewModel.Saved += OnSaved;
+        viewModel.Rejected += OnRejected;
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) =>
@@ -42,6 +46,22 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
         await _viewModel.Load(_paymentId);
     }
 
+    protected override bool OnBackButtonPressed()
+    {
+        _ = Close();
+        return true;
+    }
+
+    private async void OnCloseClicked(object? sender, EventArgs e) => await Close();
+
+    private async Task Close()
+    {
+        if (_viewModel.IsDirty && !await _confirmation.AskToDiscard())
+            return;
+
+        await Shell.Current.GoToAsync("..");
+    }
+
     private async void OnCategoryTapped(object? sender, object category)
     {
         if (category is CategoryOption option)
@@ -60,29 +80,49 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
         await Navigation.PushModalAsync(_categoryEditor, false);
     }
 
-    private async void OnCloseClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("..");
-
-    private async void OnSaved(object? sender, EventArgs e)
+    private async void OnReminderClicked(object? sender, EventArgs e)
     {
-        await RequestNotificationPermission();
-        await Shell.Current.GoToAsync("..");
+        if (await _viewModel.AcceptReminder())
+            _snackbar.Show("Promemoria attivi: ti avviso il giorno prima");
     }
 
-    private async Task RequestNotificationPermission()
+    private async void OnPauseClicked(object? sender, EventArgs e)
     {
-        var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
-        if (status == PermissionStatus.Granted)
+        var paused = await _viewModel.Pause();
+        if (paused.IsSuccess)
+            await Leave(_viewModel.Done("in pausa"));
+    }
+
+    private async void OnResumeClicked(object? sender, EventArgs e)
+    {
+        var resumed = await _viewModel.Resume();
+        if (resumed.IsSuccess)
+            await Leave(_viewModel.Done("ripreso"));
+    }
+
+    private async void OnEndClicked(object? sender, EventArgs e)
+    {
+        var preview = await _viewModel.PreviewEnd();
+        if (preview.IsFailure)
             return;
 
-        var accepted = await DisplayAlertAsync(
-            "Promemoria",
-            "Centesimo può inviarti una notifica per ricordarti le prossime scadenze dei pagamenti regolari.",
-            "Consenti",
-            "Non ora");
-        if (!accepted)
+        var confirmed = await _confirmation.Ask(_viewModel.EndQuestion, preview.Value.Message, "Termina", "Annulla",
+            isDestructive: true);
+        if (!confirmed)
             return;
 
-        if (await Permissions.RequestAsync<Permissions.PostNotifications>() == PermissionStatus.Granted)
-            await _automation.ProcessDue();
+        var ended = await _viewModel.End(preview.Value);
+        if (ended.IsSuccess)
+            await Leave(_viewModel.Done("terminato"));
+    }
+
+    private async void OnSaved(object? sender, EventArgs e) => await Leave("Pagamento salvato");
+
+    private async void OnRejected(object? sender, EventArgs e) => await InlineError.ShowFirst(Form);
+
+    private async Task Leave(string message)
+    {
+        await Shell.Current.GoToAsync("..");
+        _snackbar.Show(message);
     }
 }

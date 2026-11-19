@@ -1,3 +1,4 @@
+using Centesimo.App.Controls;
 using Centesimo.App.ViewModels;
 using Centesimo.Domain;
 
@@ -22,6 +23,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
         _snackbar = snackbar;
         BindingContext = viewModel;
         viewModel.Saved += OnSaved;
+        viewModel.Rejected += OnRejected;
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -106,6 +108,8 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
     }
 
     private async void OnSaved(object? sender, EventArgs e) => await Leave("Spesa salvata");
+
+    private async void OnRejected(object? sender, EventArgs e) => await InlineError.ShowFirst(Form);
 
     private async Task Leave(string message)
     {
