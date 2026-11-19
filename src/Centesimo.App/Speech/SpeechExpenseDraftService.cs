@@ -9,12 +9,6 @@ public sealed class SpeechExpenseDraftService(
     IExpenseTextInterpreter interpreter,
     IPendingExpenseSpeechDraft pendingDraft)
 {
-    public event EventHandler<string>? TranscriptionUpdated
-    {
-        add => recognizer.TranscriptionUpdated += value;
-        remove => recognizer.TranscriptionUpdated -= value;
-    }
-
     public Task<Result> WarmUp(CancellationToken cancellationToken = default) =>
         recognizer.WarmUp(cancellationToken);
 

@@ -17,11 +17,6 @@ public sealed class WhisperOfflineSpeechRecognizer : IOfflineSpeechRecognizer, I
     private bool _disposed;
     private RecordingSession? _session;
 
-    public event EventHandler<string>? TranscriptionUpdated
-    {
-        add { }
-        remove { }
-    }
     public bool IsListening => Volatile.Read(ref _session) is not null;
 
     public async Task<Result> WarmUp(CancellationToken cancellationToken = default)

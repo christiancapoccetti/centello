@@ -20,7 +20,6 @@ public partial class TodayPage : ContentPage
         _viewModel = viewModel;
         _speechDraftService = speechDraftService;
         _modelProvisioner = modelProvisioner;
-        _speechDraftService.TranscriptionUpdated += OnTranscriptionUpdated;
         BindingContext = viewModel;
     }
 
@@ -262,7 +261,4 @@ public partial class TodayPage : ContentPage
         _viewModel.SpeechPreparationActionText = "Attiva";
         _viewModel.SpeechAvailabilityMessage = "Comandi vocali non attivati.";
     }
-
-    private void OnTranscriptionUpdated(object? sender, string transcription) =>
-        MainThread.BeginInvokeOnMainThread(() => _viewModel.SpeechTranscription = transcription);
 }
