@@ -6,6 +6,7 @@ public enum ThemeColor
 {
     Ground,
     SurfaceRaised,
+    Selected,
     Ink,
     Mute,
     Hairline,
@@ -57,6 +58,7 @@ public static class ThemeColors
     {
         ThemeColor.Ground => ("#141516", "#FAFAF8"),
         ThemeColor.SurfaceRaised => ("#26282B", "#EFEFEA"),
+        ThemeColor.Selected => ("#333435", "#E3E3E2"),
         ThemeColor.Ink => ("#F4F4F0", "#16161A"),
         ThemeColor.Mute => ("#A0A3A9", "#62626A"),
         ThemeColor.Hairline => ("#2A2C2F", "#E4E4DF"),

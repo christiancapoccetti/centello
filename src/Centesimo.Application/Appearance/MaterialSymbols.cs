@@ -7,10 +7,12 @@ namespace Centesimo.Application;
 public static class MaterialSymbols
 {
     public const string Add = "\uE145";
+    public const string ArrowBack = "\uE5C4";
     public const string Autorenew = "\uE863";
     public const string BarChart = "\uE26B";
     public const string BeachAccess = "\uEB3E";
     public const string Bolt = "\uEA0B";
+    public const string CalendarToday = "\uE935";
     public const string Category = "\uE574";
     public const string Check = "\uE5CA";
     public const string Checkroom = "\uF19E";
@@ -21,11 +23,16 @@ public static class MaterialSymbols
     public const string Cloud = "\uE2BD";
     public const string ConfirmationNumber = "\uE638";
     public const string ContentCut = "\uE14E";
+    public const string Delete = "\uE872";
     public const string Devices = "\uE1B1";
     public const string DirectionsBus = "\uE530";
     public const string DirectionsCar = "\uE531";
     public const string Download = "\uF090";
     public const string East = "\uF1DF";
+    public const string Error = "\uE000";
+    public const string EventBusy = "\uE615";
+    public const string ExpandLess = "\uE5CE";
+    public const string ExpandMore = "\uE5CF";
     public const string FamilyRestroom = "\uF1A2";
     public const string Favorite = "\uE87D";
     public const string FitnessCenter = "\uEB43";
@@ -39,10 +46,16 @@ public static class MaterialSymbols
     public const string MenuBook = "\uEA19";
     public const string Mic = "\uE029";
     public const string MoreHoriz = "\uE5D3";
+    public const string MoreVert = "\uE5D4";
     public const string NorthEast = "\uF1E1";
+    public const string Notifications = "\uE7F4";
+    public const string Pause = "\uE034";
+    public const string PauseCircle = "\uE1A2";
     public const string Pets = "\uE91D";
+    public const string PlayArrow = "\uE037";
     public const string ReceiptLong = "\uEF6E";
     public const string Redeem = "\uE8F6";
+    public const string Repeat = "\uE040";
     public const string Restaurant = "\uE56C";
     public const string School = "\uE80C";
     public const string Settings = "\uE8B8";

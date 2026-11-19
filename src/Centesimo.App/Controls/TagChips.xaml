@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             x:Class="Centesimo.App.Controls.TagChips"
+             x:Name="Root"
+             MinimumHeightRequest="48">
+    <Grid>
+        <Label Text="{Binding Hint, Source={x:Reference Root}}" Style="{StaticResource Hint}" Margin="24,0" VerticalOptions="Center" />
+        <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+            <HorizontalStackLayout Padding="24,0" Spacing="8" BindableLayout.ItemsSource="{Binding Items, Source={x:Reference Root}}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <c:Chip Text="{Binding Name}" IsSelected="{Binding IsSelected}" Tapped="OnChipTapped" />
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentView>

@@ -1,33 +1,42 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:t="clr-namespace:Centesimo.App.Theming" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:c="clr-namespace:Centesimo.App.Controls" x:Class="Centesimo.App.Pages.ExpenseEditorPage" Title="{Binding Title}" Shell.NavBarIsVisible="False" SafeAreaEdges="All">
-    <Grid Padding="22,12,22,16" RowDefinitions="Auto,*,Auto" RowSpacing="12">
-        <Grid ColumnDefinitions="Auto,*,Auto" HeightRequest="48">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             x:Class="Centesimo.App.Pages.ExpenseEditorPage"
+             Title="{Binding Title}"
+             Shell.NavBarIsVisible="False"
+             SafeAreaEdges="All">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Grid Padding="22,12,22,0" ColumnDefinitions="Auto,*,Auto" HeightRequest="60">
             <Button Text="Chiudi" Style="{StaticResource TextActionButton}" Clicked="OnCancelClicked" />
             <Label Grid.Column="1" Text="{Binding Title}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" VerticalOptions="Center" />
             <BoxView Grid.Column="2" WidthRequest="64" />
         </Grid>
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Spacing="22" Padding="0,14,0,8">
+            <VerticalStackLayout Padding="0,14,0,24">
                 <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-                <VerticalStackLayout Spacing="4">
+                <VerticalStackLayout Margin="24,0" Spacing="4">
                     <Label Text="Quanto hai speso?" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
                     <Entry Text="{Binding Amount}" Placeholder="0,00 €" Keyboard="Numeric" FontFamily="{x:Static t:Fonts.SemiBold}" FontSize="44" HorizontalTextAlignment="Center" />
+                    <c:InlineError Text="{Binding AmountError}" />
                 </VerticalStackLayout>
-                <BoxView Style="{StaticResource Hairline}" />
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="DATA" Style="{StaticResource LabelLarge}" />
-                    <Border Style="{StaticResource FieldContainer}"><DatePicker Date="{Binding OccurredOn}" MaximumDate="{x:Static sys:DateTime.Today}" MinimumHeightRequest="48" /></Border>
-                    <Label Text="CATEGORIA" Style="{StaticResource LabelLarge}" />
-                    <c:CategorySelector Items="{Binding Categories}" CategoryTapped="OnCategorySelectorTapped" />
-                    <Border Style="{StaticResource FieldContainer}" IsVisible="{Binding HasTags}"><Picker ItemsSource="{Binding Tags}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedTag}" Title="Tag (facoltativo)" MinimumHeightRequest="48" /></Border>
-                </VerticalStackLayout>
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="NOTE" Style="{StaticResource LabelLarge}" />
-                    <Border Style="{StaticResource FieldContainer}"><Editor Text="{Binding Note}" Placeholder="Aggiungi una nota" AutoSize="TextChanges" MinimumHeightRequest="76" MaxLength="500" /></Border>
-                </VerticalStackLayout>
-                <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{t:Theme Alert}" />
+                <Label Text="Categoria" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
+                <c:CategoryGrid Margin="24,8" Items="{Binding Picker.Categories}" CategoryTapped="OnCategoryTapped" NewTapped="OnNewCategoryTapped" />
+                <c:InlineError Margin="24,0" Text="{Binding Picker.CategoryError}" />
+                <Label Text="Tag" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
+                <c:TagChips Items="{Binding Picker.Tags}" Hint="{Binding Picker.TagHint}" TagTapped="OnTagTapped" />
+                <c:InlineError Margin="24,0" Text="{Binding Picker.TagError}" />
+                <Label Text="Data" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
+                <c:DateChips Date="{Binding OccurredOn}" MaximumDate="{x:Static sys:DateTime.Today}" />
+                <c:TextField Margin="24,16,24,0" Label="Nota" Placeholder="Facoltativa" MaxLength="500" Text="{Binding Note}" />
             </VerticalStackLayout>
         </ScrollView>
-        <VerticalStackLayout Grid.Row="2" Spacing="2"><Button Text="Elimina spesa" IsVisible="{Binding IsEditMode}" Style="{StaticResource TextActionButton}" TextColor="{t:Theme Alert}" Clicked="OnDeleteClicked" /><Button Text="Salva spesa" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryActionButton}" /></VerticalStackLayout>
+        <VerticalStackLayout Grid.Row="2" Padding="24,12,24,16" Spacing="2">
+            <c:InlineError Text="{Binding ErrorMessage}" />
+            <Button Text="Elimina spesa" IsVisible="{Binding IsEditMode}" Style="{StaticResource TextActionButton}" TextColor="{t:Theme Alert}" Clicked="OnDeleteClicked" />
+            <Button Text="Salva spesa" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryActionButton}" />
+        </VerticalStackLayout>
     </Grid>
 </ContentPage>

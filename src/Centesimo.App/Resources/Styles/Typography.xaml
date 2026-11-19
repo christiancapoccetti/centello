@@ -62,6 +62,12 @@
     <Style x:Key="LabelLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
     </Style>
+    <Style x:Key="FieldLabel" TargetType="Label" BasedOn="{StaticResource LabelLarge}">
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style x:Key="Hint" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+    </Style>
     <Style x:Key="AmountLabel" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="16" />

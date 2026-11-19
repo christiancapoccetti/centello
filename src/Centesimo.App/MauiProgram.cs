@@ -17,6 +17,7 @@ public static class MauiProgram
             .ConfigureFonts(fonts => fonts.AddCentesimoFonts());
 #if ANDROID
         TabularFigures.Register();
+        PlainEntryAppearance.Register();
         builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Shell, CentesimoShellRenderer>());
 #endif
 

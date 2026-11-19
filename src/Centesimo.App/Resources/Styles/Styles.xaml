@@ -6,7 +6,7 @@
         <Setter Property="BackgroundColor" Value="{t:Theme Ground}" />
     </Style>
     <Style TargetType="Label" BasedOn="{StaticResource BaseText}" />
-    <Style TargetType="Entry">
+    <Style TargetType="Entry" ApplyToDerivedTypes="True">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
         <Setter Property="TextColor" Value="{t:Theme Ink}" />
         <Setter Property="PlaceholderColor" Value="{t:Theme Mute}" />

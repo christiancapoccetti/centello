@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
 using Centesimo.Application;
@@ -9,63 +8,46 @@ namespace Centesimo.App.ViewModels;
 public sealed class ExpenseEditorViewModel : ObservableObject
 {
     private static readonly CultureInfo ItalianCulture = CultureInfo.GetCultureInfo("it-IT");
-    private readonly CategoryService _categoryService;
-    private readonly TagService _tagService;
     private readonly ExpenseService _expenseService;
     private readonly IPendingExpenseSpeechDraft _pendingSpeechDraft;
     private Guid? _expenseId;
     private string _amount = "";
-    private CategoryOption? _selectedCategory;
-    private TagOption? _selectedTag;
     private DateTime _occurredOn = DateTime.Today;
     private string _note = "";
+    private string _amountError = "";
     private string _errorMessage = "";
     private bool _isLoading;
     private bool _isSaving;
 
     public event EventHandler? Saved;
 
-    public ObservableCollection<CategoryOption> Categories { get; } = [];
-    public ObservableCollection<TagOption> Tags { get; } = [];
+    public CategoryTagPicker Picker { get; }
     public ICommand SaveCommand { get; }
     public string Title => _expenseId.HasValue ? "Modifica spesa" : "Nuova spesa";
-    public string Amount { get => _amount; set => SetProperty(ref _amount, value); }
-    public CategoryOption? SelectedCategory
+    public bool IsEditMode => _expenseId.HasValue;
+    public string Amount
     {
-        get => _selectedCategory;
+        get => _amount;
         set
         {
-            SetProperty(ref _selectedCategory, value);
-            foreach (var category in Categories)
-                category.IsSelected = category == value;
+            if (SetProperty(ref _amount, value))
+                AmountError = "";
         }
     }
-    public TagOption? SelectedTag { get => _selectedTag; set => SetProperty(ref _selectedTag, value); }
     public DateTime OccurredOn { get => _occurredOn; set => SetProperty(ref _occurredOn, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
     public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
-    public bool HasTags => Tags.Count > 0;
-    public string ErrorMessage
-    {
-        get => _errorMessage;
-        private set
-        {
-            if (SetProperty(ref _errorMessage, value))
-                OnPropertyChanged(nameof(HasError));
-        }
-    }
-    public bool HasError => ErrorMessage.HasValue();
-    public bool IsEditMode => _expenseId.HasValue;
+    public string AmountError { get => _amountError; private set => SetProperty(ref _amountError, value); }
+    /// <summary>A failure that belongs to no field, such as a database error.</summary>
+    public string ErrorMessage { get => _errorMessage; private set => SetProperty(ref _errorMessage, value); }
 
     public ExpenseEditorViewModel(
-        CategoryService categoryService,
-        TagService tagService,
+        CategoryTagPicker picker,
         ExpenseService expenseService,
         IPendingExpenseSpeechDraft pendingSpeechDraft)
     {
-        _categoryService = categoryService;
-        _tagService = tagService;
+        Picker = picker;
         _expenseService = expenseService;
         _pendingSpeechDraft = pendingSpeechDraft;
         SaveCommand = new AsyncCommand(Save, () => !IsSaving);
@@ -73,44 +55,19 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 
     public async Task Load(Guid? expenseId = null)
     {
-        Reset();
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(IsEditMode));
         IsLoading = true;
-        var result = await _categoryService.GetActive();
-        if (result.IsFailure)
-            ErrorMessage = result.Error.Message;
+        var categories = await Picker.Load();
+        if (categories.IsFailure)
+            ErrorMessage = categories.Error.Message;
+        else if (expenseId.HasValue)
+            await LoadExpense(expenseId.Value);
         else
-            foreach (var category in result.Value)
-                Categories.Add(new CategoryOption(category.CategoryId, category.Name, category.Icon, category.Color));
-
-        if (_expenseId.HasValue && !HasError)
-            await LoadExpense(_expenseId.Value);
-        else if (!HasError)
             await ApplyPendingSpeechDraft();
 
         IsLoading = false;
-    }
-
-    public async Task LoadTags()
-    {
-        Tags.Clear();
-        SelectedTag = null;
-        if (SelectedCategory is null)
-        {
-            OnPropertyChanged(nameof(HasTags));
-            return;
-        }
-
-        var result = await _tagService.GetActive(SelectedCategory.CategoryId);
-        if (result.IsFailure)
-            ErrorMessage = result.Error.Message;
-        else
-            foreach (var tag in result.Value)
-                Tags.Add(new TagOption(tag.TagId, tag.Name));
-
-        OnPropertyChanged(nameof(HasTags));
     }
 
     private async Task LoadExpense(Guid expenseId)
@@ -122,27 +79,16 @@ public sealed class ExpenseEditorViewModel : ObservableObject
             return;
         }
 
-        if (result.Value is null)
+        if (result.Value is not { } expense)
         {
             ErrorMessage = ApplicationErrors.ExpenseNotFound.Message;
             return;
         }
 
-        var expense = result.Value;
         Amount = expense.Amount.ToDecimal().ToString("0.00", ItalianCulture);
         OccurredOn = expense.OccurredOn.ToDateTime(TimeOnly.MinValue);
         Note = expense.Note;
-        SelectedCategory = Categories.FirstOrDefault(category => category.CategoryId == expense.CategoryId);
-        if (SelectedCategory is null)
-        {
-            ErrorMessage = "La categoria originale non è più attiva. Seleziona una nuova categoria.";
-            return;
-        }
-
-        await LoadTags();
-        SelectedTag = Tags.FirstOrDefault(tag => tag.TagId == expense.TagId);
-        if (expense.TagId.HasValue && SelectedTag is null)
-            ErrorMessage = "Il tag originale non è più attivo. Scegli un tag disponibile o salva senza tag.";
+        await Picker.Restore(expense.CategoryId, expense.TagId);
     }
 
     private async Task ApplyPendingSpeechDraft()
@@ -154,18 +100,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         Amount = draft.AmountCents is { } cents ? (cents / 100m).ToString("0.00", ItalianCulture) : "";
         OccurredOn = draft.OccurredOn?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
         Note = draft.Note;
-        if (!draft.CategoryId.HasValue)
-            return;
-
-        SelectedCategory = Categories.SingleOrDefault(category => category.CategoryId == draft.CategoryId);
-        if (SelectedCategory is null)
-            return;
-
-        await LoadTags();
-        if (!draft.TagId.HasValue)
-            return;
-
-        SelectedTag = Tags.SingleOrDefault(tag => tag.TagId == draft.TagId);
+        await Picker.Suggest(draft.CategoryId, draft.TagId);
     }
 
     public async Task<Result> Delete()
@@ -186,41 +121,31 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         Saved?.Invoke(this, EventArgs.Empty);
         return result;
     }
+
     private async Task Save()
     {
-        var amountResult = MoneyInputParser.ParseOptional(Amount, ItalianCulture);
-        if (amountResult.IsFailure || amountResult.Value is null || amountResult.Value.Value.Cents <= 0)
-        {
-            ErrorMessage = "Inserisci un importo maggiore di zero.";
+        var amount = MoneyInputParser.ParsePositive(Amount, ItalianCulture);
+        AmountError = amount.IsFailure ? amount.Error.Message : "";
+        ErrorMessage = "";
+        // Both checks run, so every field that stops the save says so at once.
+        var hasCategory = Picker.Validate();
+        if (amount.IsFailure || !hasCategory)
             return;
-        }
-
-        if (SelectedCategory is null)
-        {
-            ErrorMessage = "Seleziona una categoria.";
-            return;
-        }
 
         IsSaving = true;
-        ErrorMessage = "";
         var request = new SaveExpenseRequest(
-            SelectedCategory.CategoryId,
-            amountResult.Value.Value.Cents,
+            Picker.CategoryId!.Value,
+            amount.Value.Cents,
             DateOnly.FromDateTime(OccurredOn),
-            SelectedTag?.TagId,
+            Picker.TagId,
             Note);
-        Result result;
-        if (_expenseId.HasValue)
-            result = await _expenseService.Update(_expenseId.Value, request);
-        else
-        {
-            var created = await _expenseService.Create(request);
-            result = created.IsSuccess ? Result.Success() : Result.Failure(created.Error);
-        }
+        Result result = _expenseId.HasValue
+            ? await _expenseService.Update(_expenseId.Value, request)
+            : await _expenseService.Create(request);
         if (result.IsFailure)
         {
             IsSaving = false;
-            ErrorMessage = result.Error.Message;
+            Explain(result.Error);
             return;
         }
 
@@ -228,28 +153,11 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         Saved?.Invoke(this, EventArgs.Empty);
     }
 
-    private void Reset()
+    private void Explain(Error error)
     {
-        Amount = "";
-        SelectedCategory = null;
-        SelectedTag = null;
-        OccurredOn = DateTime.Today;
-        Note = "";
-        ErrorMessage = "";
-        Categories.Clear();
-        Tags.Clear();
-        OnPropertyChanged(nameof(HasTags));
+        if (error == ApplicationErrors.InvalidAmount)
+            AmountError = MoneyInputParser.AmountRequired.Message;
+        else if (!Picker.Explain(error))
+            ErrorMessage = error.Message;
     }
-
-    public sealed class CategoryOption(Guid categoryId, string name, string icon, string color) : ObservableObject
-    {
-        private bool _isSelected;
-
-        public Guid CategoryId { get; } = categoryId;
-        public string Name { get; } = name;
-        public string Icon { get; } = icon;
-        public string Color { get; } = color;
-        public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
-    }
-    public sealed record TagOption(Guid TagId, string Name);
 }

@@ -5,12 +5,15 @@ namespace Centesimo.App.Pages;
 public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 {
     private readonly ExpenseEditorViewModel _viewModel;
+    private readonly CategoryEditorPage _categoryEditor;
     private Guid? _expenseId;
+    private bool _isLoaded;
 
-    public ExpenseEditorPage(ExpenseEditorViewModel viewModel)
+    public ExpenseEditorPage(ExpenseEditorViewModel viewModel, CategoryEditorPage categoryEditor)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _categoryEditor = categoryEditor;
         BindingContext = viewModel;
         viewModel.Saved += OnSaved;
     }
@@ -23,36 +26,37 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
                 : null;
     }
 
+    // The page appears again when the category editor closes or the app returns to the front. Loading again would
+    // throw away what was typed, so later appearances only refresh the categories on offer.
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        if (_isLoaded)
+        {
+            await _viewModel.Picker.Refresh();
+            return;
+        }
+
+        _isLoaded = true;
         await _viewModel.Load(_expenseId);
     }
 
-    private async void OnCategoryChanged(object? sender, SelectionChangedEventArgs e)
+    private async void OnCategoryTapped(object? sender, object category)
     {
-        if (_viewModel.IsLoading)
-            return;
-
-        await _viewModel.LoadTags();
+        if (category is CategoryOption option)
+            await _viewModel.Picker.Select(option);
     }
 
-    private async void OnCategoryTapped(object? sender, TappedEventArgs e)
+    private void OnTagTapped(object? sender, object tag)
     {
-        if (sender is not BindableObject { BindingContext: ExpenseEditorViewModel.CategoryOption category })
-            return;
-
-        _viewModel.SelectedCategory = category;
-        await _viewModel.LoadTags();
+        if (tag is TagOption option)
+            _viewModel.Picker.Toggle(option);
     }
 
-    private async void OnCategorySelectorTapped(object? sender, object category)
+    private async void OnNewCategoryTapped(object? sender, EventArgs e)
     {
-        if (category is not ExpenseEditorViewModel.CategoryOption selected)
-            return;
-
-        _viewModel.SelectedCategory = selected;
-        await _viewModel.LoadTags();
+        _categoryEditor.OpenNew();
+        await Navigation.PushModalAsync(_categoryEditor, false);
     }
 
     private async void OnDeleteClicked(object? sender, EventArgs e)
@@ -67,6 +71,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 
         await _viewModel.Delete();
     }
+
     private async void OnSaved(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync("..");
 

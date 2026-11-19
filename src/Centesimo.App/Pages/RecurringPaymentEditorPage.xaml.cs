@@ -6,13 +6,17 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
 {
     private readonly RecurringPaymentEditorViewModel _viewModel;
     private readonly RecurringPaymentAutomation _automation;
+    private readonly CategoryEditorPage _categoryEditor;
     private Guid? _paymentId;
+    private bool _isLoaded;
+
     public RecurringPaymentEditorPage(RecurringPaymentEditorViewModel viewModel,
-        RecurringPaymentAutomation automation)
+        RecurringPaymentAutomation automation, CategoryEditorPage categoryEditor)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _automation = automation;
+        _categoryEditor = categoryEditor;
         BindingContext = viewModel;
         viewModel.Saved += OnSaved;
     }
@@ -23,20 +27,41 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
                 ? id
                 : null;
 
+    // The page appears again when the category editor closes or the app returns to the front. Loading again would
+    // throw away what was typed, so later appearances only refresh the categories on offer.
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        if (_isLoaded)
+        {
+            await _viewModel.Picker.Refresh();
+            return;
+        }
+
+        _isLoaded = true;
         await _viewModel.Load(_paymentId);
     }
-    private async void OnCategorySelectorTapped(object? sender, object category)
-    {
-        if (category is not ExpenseEditorViewModel.CategoryOption option)
-            return;
 
-        _viewModel.SelectedCategory = option;
-        await _viewModel.LoadTags();
+    private async void OnCategoryTapped(object? sender, object category)
+    {
+        if (category is CategoryOption option)
+            await _viewModel.Picker.Select(option);
     }
+
+    private void OnTagTapped(object? sender, object tag)
+    {
+        if (tag is TagOption option)
+            _viewModel.Picker.Toggle(option);
+    }
+
+    private async void OnNewCategoryTapped(object? sender, EventArgs e)
+    {
+        _categoryEditor.OpenNew();
+        await Navigation.PushModalAsync(_categoryEditor, false);
+    }
+
     private async void OnCloseClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("..");
+
     private async void OnSaved(object? sender, EventArgs e)
     {
         await RequestNotificationPermission();

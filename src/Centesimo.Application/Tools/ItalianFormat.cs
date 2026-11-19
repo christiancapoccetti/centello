@@ -2,9 +2,9 @@ using System.Globalization;
 
 namespace Centesimo.Application;
 
-/// <summary>it-IT strings for the home. Spells separators and the no-break space before "€" explicitly, so the
+/// <summary>it-IT strings for every screen. Spells separators and the no-break space before "€" explicitly, so the
 /// output does not depend on the ICU version or on globalization-invariant mode. Amounts are never negative.</summary>
-internal static class ItalianFormat
+public static class ItalianFormat
 {
     private static readonly string[] MonthNames =
     [
