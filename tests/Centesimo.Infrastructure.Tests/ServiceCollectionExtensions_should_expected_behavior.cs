@@ -42,6 +42,15 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     }
 
     [Fact]
+    public void Build_the_home_overview_service_with_the_system_clock()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<HomeOverviewService>());
+    }
+
+    [Fact]
     public void Share_one_openai_client_between_transcriber_and_interpreter()
     {
         using var provider = BuildProvider();

@@ -1,0 +1,28 @@
+using System.Globalization;
+
+namespace Centesimo.Application;
+
+/// <summary>it-IT strings for the home. Spells separators and the no-break space before "€" explicitly, so the
+/// output does not depend on the ICU version or on globalization-invariant mode. Amounts are never negative.</summary>
+internal static class ItalianFormat
+{
+    private static readonly string[] MonthNames =
+    [
+        "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+        "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"
+    ];
+
+    /// <summary>"1.284,60"</summary>
+    public static string Amount(long cents) => $"{Grouped(cents / 100)},{cents % 100:00}";
+
+    /// <summary>"1.284,60 €"</summary>
+    public static string Money(long cents) => $"{Amount(cents)} €";
+
+    /// <summary>"1.600" for whole euros, "1.600,50" otherwise.</summary>
+    public static string Budget(long cents) => cents % 100 == 0 ? Grouped(cents / 100) : Amount(cents);
+
+    /// <summary>"Novembre"</summary>
+    public static string MonthTitle(int month) => char.ToUpperInvariant(MonthNames[month - 1][0]) + MonthNames[month - 1][1..];
+
+    private static string Grouped(long units) => units.ToString("N0", CultureInfo.InvariantCulture).Replace(',', '.');
+}
