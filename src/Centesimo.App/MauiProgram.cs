@@ -17,6 +17,7 @@ public static class MauiProgram
             .ConfigureFonts(fonts => fonts.AddCentesimoFonts());
 #if ANDROID
         TabularFigures.Register();
+        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Shell, CentesimoShellRenderer>());
 #endif
 
         var databasePath = Path.Combine(FileSystem.AppDataDirectory, "centesimo.db3");

@@ -27,6 +27,8 @@
     <MauiImage Include="Resources\Images\*.svg" />
     <MauiAsset Include="Resources\Raw\*" LogicalName="%(Filename)%(Extension)" />
     <MauiAsset Include="..\..\LICENSE" LogicalName="GPL-3.0.txt" />
+    <!-- The Android tab bar label style can only name a font resource, so the SemiBold cut is also packaged as one. -->
+    <AndroidResource Include="Resources\Fonts\Archivo-SemiBold.ttf" LogicalName="font\archivo_semibold.ttf" />
   </ItemGroup>
 
   <ItemGroup>
