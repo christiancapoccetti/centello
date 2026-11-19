@@ -148,9 +148,6 @@ public partial class TodayPage : ContentPage
         }
     }
 
-    private void OnTypeExpenseClicked(object? sender, EventArgs e) =>
-        _viewModel.IsSpeechSheetVisible = true;
-
     private async void OnUseSpeechTextClicked(object? sender, EventArgs e)
     {
         if (_viewModel.IsSpeechProcessing)

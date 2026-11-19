@@ -14,7 +14,7 @@
             <Border Style="{StaticResource SurfaceCard}" Padding="16">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Inserimento rapido con OpenAI" Style="{StaticResource TitleLarge}" />
-                    <Label Text="Detta o scrivi una spesa con parole tue. L'audio e il testo vengono inviati a OpenAI; le spese restano sul dispositivo." Style="{StaticResource BodyMedium}" />
+                    <Label Text="Detta una spesa con parole tue. L'audio e il testo vengono inviati a OpenAI; le spese restano sul dispositivo." Style="{StaticResource BodyMedium}" />
                     <Label Text="{Binding ApiKeyStatus}" Style="{StaticResource LabelLarge}" />
                     <Entry Text="{Binding ApiKeyInput}" IsPassword="True" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" Placeholder="Chiave API OpenAI" MinimumHeightRequest="48" SemanticProperties.Description="Chiave API OpenAI" />
                     <Label Text="{Binding ApiKeyError}" IsVisible="{Binding HasApiKeyError}" TextColor="{StaticResource ErrorLight}" />
