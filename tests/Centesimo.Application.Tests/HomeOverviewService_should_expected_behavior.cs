@@ -633,7 +633,7 @@ public sealed class HomeOverviewService_should_expected_behavior
             Spend(leisure, 1_599, new DateOnly(2026, 11, 18), note: "Netflix", recurringPaymentId: Guid.NewGuid()),
             Spend(food, 4_000, new DateOnly(2026, 11, 12), note: "Mercato"),
             Spend(food, 100, new DateOnly(2026, 11, 10)),
-            Spend(food, 200, new DateOnly(2026, 11, 8)),
+            Spend(food, 200, new DateOnly(2026, 11, 8), recurringPaymentId: Guid.NewGuid()),
             Spend(food, 300, new DateOnly(2026, 11, 3)),
             Spend(food, 400, new DateOnly(2026, 11, 1))
         };
@@ -644,7 +644,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         Assert.False(overview.HasNoLatest);
         Assert.Equal(["Spesa", "Netflix", "Mercato", "Spesa", "Spesa"], overview.Latest.Select(item => item.Title));
         Assert.Equal(
-            ["Oggi · Spesa", "Ieri · Svago · automatica", "12 nov · Spesa", "10 nov · Spesa", "8 nov · Spesa"],
+            ["Oggi", "Ieri · Svago · automatica", "12 nov · Spesa", "10 nov", "8 nov · automatica"],
             overview.Latest.Select(item => item.Detail));
         Assert.Equal(
             ["12,50 €", "15,99 €", "40,00 €", "1,00 €", "2,00 €"],
@@ -652,6 +652,24 @@ public sealed class HomeOverviewService_should_expected_behavior
         Assert.Equal(new[] { "food", "leisure", "food", "food", "food" }, overview.Latest.Select(item => item.IconKey));
         Assert.Equal(new[] { "mint", "coral", "mint", "mint", "mint" }, overview.Latest.Select(item => item.ColorKey));
         Assert.Equal("Netflix, Ieri · Svago · automatica, 15,99 €", overview.Latest[1].Description);
+    }
+
+    [Fact]
+    public async Task Should_not_name_the_category_twice_when_an_expense_has_no_note()
+    {
+        var food = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(food, 1_250, Today),
+            Spend(food, 900, new DateOnly(2026, 11, 18), note: "  "),
+            Spend(food, 500, new DateOnly(2026, 11, 12), note: "Mercato")
+        };
+
+        var latest = (await Overview([food], expenses)).Latest;
+
+        Assert.Equal([("Spesa", "Oggi"), ("Spesa", "Ieri"), ("Mercato", "12 nov · Spesa")],
+            latest.Select(item => (item.Title, item.Detail)));
+        Assert.Equal("Spesa, Oggi, 12,50 €", latest[0].Description);
     }
 
     [Fact]
@@ -663,7 +681,7 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         var latest = (await Overview([legacy], expenses)).Latest;
 
-        Assert.Equal(new LatestExpense(orphan.ExpenseId, "Categoria non disponibile", "Oggi · Categoria non disponibile",
+        Assert.Equal(new LatestExpense(orphan.ExpenseId, "Categoria non disponibile", "Oggi",
             "5,00 €", "more", "grey"), latest[0]);
         Assert.Equal(("more", "grey"), (latest[1].IconKey, latest[1].ColorKey));
     }

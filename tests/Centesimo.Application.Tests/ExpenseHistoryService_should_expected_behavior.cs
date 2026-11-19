@@ -96,7 +96,8 @@ public sealed class ExpenseHistoryService_should_expected_behavior
 
         var rows = history.Groups.SelectMany(group => group.Rows).ToList();
         Assert.Equal(["Da Mario", "Ristoranti", "Ristoranti"], rows.Select(row => row.Title));
-        Assert.Equal(["Ristoranti · Pizza", "Ristoranti", "Ristoranti · Pizza · automatica"], rows.Select(row => row.Detail));
+        Assert.Equal(["Ristoranti · Pizza", "", "Pizza · automatica"], rows.Select(row => row.Detail));
+        Assert.Equal("Ristoranti, 40,00 €", rows[1].Description);
         Assert.Equal(["12,50 €", "40,00 €", "15,99 €"], rows.Select(row => row.Amount));
         Assert.All(rows, row => Assert.Equal(("food", "mint"), (row.IconKey, row.ColorKey)));
         Assert.Equal("Da Mario, Ristoranti · Pizza, 12,50 €", rows[0].Description);
@@ -114,9 +115,9 @@ public sealed class ExpenseHistoryService_should_expected_behavior
         var history = await History(Period.Month(2026, 11), ExpenseFilter.All, [archived], expenses, [oldTag]);
 
         var rows = history.Groups.SelectMany(group => group.Rows).ToList();
-        Assert.Equal(new HistoryRow(orphan.ExpenseId, "Categoria non disponibile", "Categoria non disponibile",
+        Assert.Equal(new HistoryRow(orphan.ExpenseId, "Categoria non disponibile", "",
             "5,00 €", "more", "grey"), rows[0]);
-        Assert.Equal(("Vecchia · Affitto", "home", "coral"), (rows[1].Detail, rows[1].IconKey, rows[1].ColorKey));
+        Assert.Equal(("Vecchia", "Affitto", "home", "coral"), (rows[1].Title, rows[1].Detail, rows[1].IconKey, rows[1].ColorKey));
     }
 
     [Fact]

@@ -72,9 +72,10 @@ public sealed record SpendChart(
     public bool HasHighlight => HighlightLabel.HasValue();
 }
 
+/// <summary>Detail is "Ieri · Svago · automatica". It leaves the category out when the title already is its name.</summary>
 public sealed record LatestExpense(Guid ExpenseId, string Title, string Detail, string Amount, string IconKey, string ColorKey)
 {
-    public string Description => $"{Title}, {Detail}, {Amount}";
+    public string Description => RowLabels.Description(Title, Detail, Amount);
 }
 
 public sealed class HomeOverviewService(ICategoryRepository categories, IExpenseRepository expenses,
@@ -295,10 +296,9 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
 
     private static LatestExpense ToLatest(Expense expense, Category? category, DateOnly today)
     {
-        var name = category?.Name ?? "Categoria non disponibile";
-        var automatic = expense.RecurringPaymentId.HasValue ? " · automatica" : "";
-        return new LatestExpense(expense.ExpenseId, expense.Note.HasValue() ? expense.Note : name,
-            $"{ItalianFormat.RelativeDay(expense.OccurredOn, today)} · {name}{automatic}",
+        var label = RowLabels.Title(expense.Note, RowLabels.NameOf(category));
+        return new LatestExpense(expense.ExpenseId, label.Title,
+            RowLabels.Detail(ItalianFormat.RelativeDay(expense.OccurredOn, today), label.Category, RowLabels.AutomaticMark(expense)),
             ItalianFormat.Money(expense.Amount.Cents), CategoryIcons.Resolve(category?.Icon).Key,
             CategoryPalette.Resolve(category?.Color).Key);
     }

@@ -69,7 +69,7 @@ public sealed class ExpenseHistoryService(ICategoryRepository categories, ITagRe
     {
         var listed = periodExpenses.Where(filter.Matches).ToList();
         var categoryName = filter.CategoryId.HasValue
-            ? HistoryGroups.NameOf(categories.FirstOrDefault(category => category.CategoryId == filter.CategoryId))
+            ? RowLabels.NameOf(categories.FirstOrDefault(category => category.CategoryId == filter.CategoryId))
             : "";
         return new ExpenseHistory(period, ItalianFormat.PeriodTitle(period),
             ItalianFormat.Money(listed.Sum(expense => expense.Amount.Cents)),

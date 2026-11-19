@@ -295,7 +295,8 @@ public sealed class CategoryDetailService_should_expected_behavior
         Assert.Equal(["Oggi", "Ieri"], month.Groups.Select(group => group.Label));
         Assert.Equal(new HistoryRow(expenses[0].ExpenseId, "Da Mario", "Ristoranti · Pizza", "12,50 €", "food", "mint"),
             month.Groups[0].Rows.Single());
-        Assert.Equal("Ristoranti · automatica", month.Groups[1].Rows.Single().Detail);
+        var automatic = month.Groups[1].Rows.Single();
+        Assert.Equal(("Ristoranti", "automatica"), (automatic.Title, automatic.Detail));
         Assert.Equal(["Novembre"], year.Groups.Select(group => group.Label));
         Assert.Equal("28,49 €", year.Groups.Single().Total);
     }
