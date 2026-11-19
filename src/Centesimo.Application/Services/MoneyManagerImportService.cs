@@ -18,7 +18,14 @@ public sealed record MoneyManagerImportData(IReadOnlyList<MoneyManagerCategory> 
 { public IReadOnlyList<MoneyManagerRecurringPayment> RecurringPaymentsOrEmpty => RecurringPayments ?? []; }
 public sealed record MoneyManagerPersisted(int CategoriesAdded, int TagsAdded, int ExpensesAdded, int RecurringPaymentsAdded = 0);
 public sealed record MoneyManagerImportReport(int CategoriesAdded, int TagsAdded, int ExpensesAdded, int RecurringPaymentsAdded,
-    int IgnoredCount, int UncategorizedCount);
+    int IgnoredCount, int UncategorizedCount)
+{
+    /// <summary>What the import did, in one Italian sentence for the screen that ends it.</summary>
+    public string Summary => $"Importazione completata: {ItalianFormat.Count(ExpensesAdded)} spese, " +
+        $"{ItalianFormat.Count(RecurringPaymentsAdded)} pagamenti regolari, " +
+        $"{ItalianFormat.Count(CategoriesAdded)} categorie e {ItalianFormat.Count(TagsAdded)} tag aggiunti. " +
+        $"Ignorati: {ItalianFormat.Count(IgnoredCount)}; senza categoria: {ItalianFormat.Count(UncategorizedCount)}.";
+}
 
 public sealed record MoneyManagerImportPreview(MoneyManagerImportData Data, MoneyManagerPersisted Planned)
 {

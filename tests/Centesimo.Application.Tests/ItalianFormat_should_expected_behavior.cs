@@ -14,4 +14,11 @@ public sealed class ItalianFormat_should_expected_behavior
     [InlineData(2025, 12, 31, "31 dic 2025")]
     public void Add_the_year_to_a_short_date_in_another_year(int year, int month, int day, string expected) =>
         Assert.Equal(expected, ItalianFormat.ShortDate(new DateOnly(year, month, day), new DateOnly(2026, 11, 19)));
+
+    [Theory]
+    [InlineData(0, "0")]
+    [InlineData(37, "37")]
+    [InlineData(1218, "1.218")]
+    public void Group_the_thousands_of_a_count(int count, string expected) =>
+        Assert.Equal(expected, ItalianFormat.Count(count));
 }
