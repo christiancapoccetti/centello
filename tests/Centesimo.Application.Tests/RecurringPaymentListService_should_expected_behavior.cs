@@ -46,6 +46,20 @@ public sealed class RecurringPaymentListService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_count_the_active_payments_in_words()
+    {
+        var transport = NewCategory("Trasporti");
+        var parking = Payment(transport, 500, RecurrenceFrequency.Weekly, new DateOnly(2026, 11, 20), "Parcheggio");
+        var bus = Payment(transport, 3_900, RecurrenceFrequency.Monthly, new DateOnly(2026, 12, 1), "Abbonamento bus");
+        var insurance = Payment(transport, 41_200, RecurrenceFrequency.Yearly, new DateOnly(2027, 3, 14), "Assicurazione auto");
+        var ended = Ended(transport, 900, RecurrenceFrequency.Monthly, new DateOnly(2026, 10, 1), "Vecchio");
+
+        Assert.Equal("Nessuno attivo", (await List([transport], [ended])).ActiveSummary);
+        Assert.Equal("1 attivo", (await List([transport], [parking, ended])).ActiveSummary);
+        Assert.Equal("3 attivi", (await List([transport], [parking, bus, insurance])).ActiveSummary);
+    }
+
+    [Fact]
     public async Task Should_not_name_the_category_twice_when_a_payment_has_no_note()
     {
         var home = NewCategory("Casa");
