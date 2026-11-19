@@ -25,9 +25,13 @@ public static class ServiceCollectionExtensions
 #if ANDROID
         services.AddSingleton<ISpeechRecorder, AndroidAudioRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
+        services.AddSingleton<IConfirmation, MaterialConfirmation>();
+        services.AddSingleton<ISnackbar, MaterialSnackbar>();
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
+        services.AddSingleton<IConfirmation, AlertConfirmation>();
+        services.AddSingleton<ISnackbar, NoSnackbar>();
 #endif
         services.AddSingleton<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>

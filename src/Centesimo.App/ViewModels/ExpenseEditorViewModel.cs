@@ -16,8 +16,9 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     private string _note = "";
     private string _amountError = "";
     private string _errorMessage = "";
-    private bool _isLoading;
+    private string _voiceBanner = "";
     private bool _isSaving;
+    private FormState _original;
 
     public event EventHandler? Saved;
 
@@ -36,7 +37,20 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     }
     public DateTime OccurredOn { get => _occurredOn; set => SetProperty(ref _occurredOn, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
-    public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
+    /// <summary>What the voice heard, shown above a draft so the person can check it. Empty for a typed expense.</summary>
+    public string VoiceBanner
+    {
+        get => _voiceBanner;
+        private set
+        {
+            if (SetProperty(ref _voiceBanner, value))
+                OnPropertyChanged(nameof(HasVoiceBanner));
+        }
+    }
+    public bool HasVoiceBanner => VoiceBanner.HasValue();
+    /// <summary>True while the form differs from what is stored. A new expense starts from an empty form, so a draft
+    /// from the voice is unsaved input from the start.</summary>
+    public bool IsDirty => Snapshot() != _original;
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
     public string AmountError { get => _amountError; private set => SetProperty(ref _amountError, value); }
     /// <summary>A failure that belongs to no field, such as a database error.</summary>
@@ -51,6 +65,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         _expenseService = expenseService;
         _pendingSpeechDraft = pendingSpeechDraft;
         SaveCommand = new AsyncCommand(Save, () => !IsSaving);
+        _original = Snapshot();
     }
 
     public async Task Load(Guid? expenseId = null)
@@ -58,16 +73,19 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(IsEditMode));
-        IsLoading = true;
         var categories = await Picker.Load();
         if (categories.IsFailure)
+        {
             ErrorMessage = categories.Error.Message;
-        else if (expenseId.HasValue)
-            await LoadExpense(expenseId.Value);
-        else
-            await ApplyPendingSpeechDraft();
+            return;
+        }
 
-        IsLoading = false;
+        if (expenseId.HasValue)
+            await LoadExpense(expenseId.Value);
+
+        _original = Snapshot();
+        if (!expenseId.HasValue)
+            await ApplyPendingSpeechDraft();
     }
 
     private async Task LoadExpense(Guid expenseId)
@@ -100,6 +118,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         Amount = draft.AmountCents is { } cents ? (cents / 100m).ToString("0.00", ItalianCulture) : "";
         OccurredOn = draft.OccurredOn?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
         Note = draft.Note;
+        VoiceBanner = draft.Transcription.HasValue() ? $"Dalla voce: “{draft.Transcription}” · controlla e salva" : "";
         await Picker.Suggest(draft.CategoryId, draft.TagId);
     }
 
@@ -113,12 +132,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         var result = await _expenseService.Delete(_expenseId.Value);
         IsSaving = false;
         if (result.IsFailure)
-        {
             ErrorMessage = result.Error.Message;
-            return result;
-        }
 
-        Saved?.Invoke(this, EventArgs.Empty);
         return result;
     }
 
@@ -160,4 +175,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         else if (!Picker.Explain(error))
             ErrorMessage = error.Message;
     }
+
+    private FormState Snapshot() => new(Amount.Trim(), Picker.CategoryId, Picker.TagId, OccurredOn.Date, Note.Trim());
+
+    private readonly record struct FormState(string Amount, Guid? CategoryId, Guid? TagId, DateTime OccurredOn, string Note);
 }

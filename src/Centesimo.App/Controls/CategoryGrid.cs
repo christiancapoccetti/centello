@@ -129,7 +129,8 @@ public sealed class CategoryGrid : Grid
             Padding = new Thickness(1, 7, 1, 5);
             StrokeShape = new RoundRectangle { CornerRadius = 12 };
             _name.SetThemeColor(Label.TextColorProperty, ThemeColor.Ink);
-            Content = new VerticalStackLayout { Spacing = 6, Children = { picture, _name } };
+            // 3 and not the 6 of the design: Android puts the other 3 of font padding over the name.
+            Content = new VerticalStackLayout { Spacing = 3, Children = { picture, _name } };
             if (canTap)
             {
                 var tap = new TapGestureRecognizer();

@@ -12,5 +12,7 @@ internal static class PlainEntryAppearance
 
         handler.PlatformView.Background = null;
         handler.PlatformView.SetPadding(0, 0, 0, 0);
+        // Without it the line box is ascent plus descent, as in the design. The font padding adds 40% of the size.
+        handler.PlatformView.SetIncludeFontPadding(false);
     });
 }

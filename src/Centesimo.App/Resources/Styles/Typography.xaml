@@ -62,8 +62,11 @@
     <Style x:Key="LabelLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
     </Style>
+    <!-- A field label starts 24 under what is above it. Android puts 3 of font padding over a 14sp line, so the
+         margin is 21. What follows the label takes back the 3 under it. -->
     <Style x:Key="FieldLabel" TargetType="Label" BasedOn="{StaticResource LabelLarge}">
         <Setter Property="TextColor" Value="{t:Theme Mute}" />
+        <Setter Property="Margin" Value="24,21,24,0" />
     </Style>
     <Style x:Key="Hint" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="TextColor" Value="{t:Theme Mute}" />

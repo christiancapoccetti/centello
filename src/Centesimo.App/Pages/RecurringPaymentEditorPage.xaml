@@ -19,10 +19,10 @@
                     <Entry Text="{Binding Amount}" Placeholder="0,00 €" Keyboard="Numeric" FontFamily="{x:Static t:Fonts.SemiBold}" FontSize="44" HorizontalTextAlignment="Center" />
                     <c:InlineError Text="{Binding AmountError}" />
                 </VerticalStackLayout>
-                <Label Text="Categoria" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
+                <Label Text="Categoria" Style="{StaticResource FieldLabel}" />
                 <c:CategoryGrid Margin="24,8" Items="{Binding Picker.Categories}" CategoryTapped="OnCategoryTapped" NewTapped="OnNewCategoryTapped" />
                 <c:InlineError Margin="24,0" Text="{Binding Picker.CategoryError}" />
-                <Label Text="Tag" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
+                <Label Text="Tag" Style="{StaticResource FieldLabel}" />
                 <c:TagChips Items="{Binding Picker.Tags}" Hint="{Binding Picker.TagHint}" TagTapped="OnTagTapped" />
                 <c:InlineError Margin="24,0" Text="{Binding Picker.TagError}" />
                 <VerticalStackLayout Margin="24,24,24,0" Spacing="8">

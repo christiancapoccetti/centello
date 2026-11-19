@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             x:Class="Centesimo.App.Controls.AmountField"
+             x:Name="Root">
+    <VerticalStackLayout>
+        <Label Text="Importo" Style="{StaticResource FieldLabel}" Margin="0" AutomationProperties.IsInAccessibleTree="False" />
+        <!-- The row takes the whole width, so a tap beside the digits reaches the entry too. -->
+        <Grid Padding="0,2,0,6">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnRowTapped" />
+            </Grid.GestureRecognizers>
+            <HorizontalStackLayout Spacing="4" HorizontalOptions="Start">
+                <c:PlainEntry x:Name="Input"
+                              Text="{Binding Text, Source={x:Reference Root}}"
+                              IsReadOnly="{Binding IsReadOnly, Source={x:Reference Root}}"
+                              Placeholder="0,00"
+                              Keyboard="Numeric"
+                              MaxLength="10"
+                              FontFamily="{x:Static t:Fonts.CondensedExtraBold}"
+                              FontSize="60"
+                              SemanticProperties.Description="Importo in euro" />
+                <Label x:Name="Euro" Text="€" FontFamily="{x:Static t:Fonts.CondensedExtraBold}" FontSize="34" VerticalOptions="End" AutomationProperties.IsInAccessibleTree="False" />
+            </HorizontalStackLayout>
+        </Grid>
+        <BoxView x:Name="Underline" HeightRequest="2" />
+        <c:InlineError Margin="0,6,0,0" Text="{Binding ErrorText, Source={x:Reference Root}}" />
+    </VerticalStackLayout>
+</ContentView>

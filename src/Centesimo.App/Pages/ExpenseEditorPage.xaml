@@ -4,39 +4,61 @@
              xmlns:t="clr-namespace:Centesimo.App.Theming"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:local="clr-namespace:Centesimo.App"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
              x:Class="Centesimo.App.Pages.ExpenseEditorPage"
              Title="{Binding Title}"
              Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
              SafeAreaEdges="All">
-    <Grid RowDefinitions="Auto,*,Auto">
-        <Grid Padding="22,12,22,0" ColumnDefinitions="Auto,*,Auto" HeightRequest="60">
-            <Button Text="Chiudi" Style="{StaticResource TextActionButton}" Clicked="OnCancelClicked" />
-            <Label Grid.Column="1" Text="{Binding Title}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" VerticalOptions="Center" />
-            <BoxView Grid.Column="2" WidthRequest="64" />
+    <Grid RowDefinitions="56,*,Auto">
+        <Grid Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
+            <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Close}" Clicked="OnCloseClicked" SemanticProperties.Description="Chiudi" />
+            <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Title}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+            <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.MoreVert}" IsVisible="{Binding IsEditMode}" Clicked="OnMenuClicked" SemanticProperties.Description="Altre azioni" />
         </Grid>
+
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="0,14,0,24">
-                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-                <VerticalStackLayout Margin="24,0" Spacing="4">
-                    <Label Text="Quanto hai speso?" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
-                    <Entry Text="{Binding Amount}" Placeholder="0,00 €" Keyboard="Numeric" FontFamily="{x:Static t:Fonts.SemiBold}" FontSize="44" HorizontalTextAlignment="Center" />
-                    <c:InlineError Text="{Binding AmountError}" />
-                </VerticalStackLayout>
-                <Label Text="Categoria" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
-                <c:CategoryGrid Margin="24,8" Items="{Binding Picker.Categories}" CategoryTapped="OnCategoryTapped" NewTapped="OnNewCategoryTapped" />
+            <VerticalStackLayout Padding="0,0,0,24">
+                <Border Margin="24,4,24,0" Padding="14,10" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{t:Theme PositiveContainer}" IsVisible="{Binding HasVoiceBanner}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme OnPositiveContainer}" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Text="{Binding VoiceBanner}" Style="{StaticResource LabelLarge}" LineHeight="1.25" TextColor="{t:Theme OnPositiveContainer}" />
+                    </Grid>
+                </Border>
+                <c:AmountField x:Name="AmountInput" Margin="24,8,24,0" Text="{Binding Amount}" ErrorText="{Binding AmountError}" />
+                <Label Text="Categoria" Style="{StaticResource FieldLabel}" />
+                <c:CategoryGrid Margin="24,5,24,5" Items="{Binding Picker.Categories}" CategoryTapped="OnCategoryTapped" NewTapped="OnNewCategoryTapped" />
                 <c:InlineError Margin="24,0" Text="{Binding Picker.CategoryError}" />
-                <Label Text="Tag" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
-                <c:TagChips Items="{Binding Picker.Tags}" Hint="{Binding Picker.TagHint}" TagTapped="OnTagTapped" />
+                <Label Text="Tag" Style="{StaticResource FieldLabel}" />
+                <c:TagChips Margin="0,-3,0,0" Items="{Binding Picker.Tags}" Hint="{Binding Picker.TagHint}" TagTapped="OnTagTapped" />
                 <c:InlineError Margin="24,0" Text="{Binding Picker.TagError}" />
-                <Label Text="Data" Style="{StaticResource FieldLabel}" Margin="24,24,24,0" />
-                <c:DateChips Date="{Binding OccurredOn}" MaximumDate="{x:Static sys:DateTime.Today}" />
-                <c:TextField Margin="24,16,24,0" Label="Nota" Placeholder="Facoltativa" MaxLength="500" Text="{Binding Note}" />
+                <Label Text="Data" Style="{StaticResource FieldLabel}" />
+                <c:DateChips Margin="0,-3,0,0" Date="{Binding OccurredOn}" MaximumDate="{x:Static sys:DateTime.Today}" />
+                <c:TextField Margin="24,14,24,0" Label="Nota" Placeholder="Facoltativa" MaxLength="500" Text="{Binding Note}" />
             </VerticalStackLayout>
         </ScrollView>
-        <VerticalStackLayout Grid.Row="2" Padding="24,12,24,16" Spacing="2">
-            <c:InlineError Text="{Binding ErrorMessage}" />
-            <Button Text="Elimina spesa" IsVisible="{Binding IsEditMode}" Style="{StaticResource TextActionButton}" TextColor="{t:Theme Alert}" Clicked="OnDeleteClicked" />
-            <Button Text="Salva spesa" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryActionButton}" />
-        </VerticalStackLayout>
+
+        <Grid Grid.Row="2" RowDefinitions="1,Auto" local:SnackbarAnchor.IsAnchor="True">
+            <BoxView Style="{StaticResource Hairline}" />
+            <VerticalStackLayout Grid.Row="1" Padding="24,12" Spacing="8">
+                <c:InlineError Text="{Binding ErrorMessage}" />
+                <Button Text="Salva spesa" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryActionButton}" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- The overflow menu. The layer under it takes the tap that closes it. -->
+        <Grid x:Name="MenuLayer" Grid.RowSpan="3" IsVisible="False" BackgroundColor="Transparent">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnMenuDismissed" />
+            </Grid.GestureRecognizers>
+            <Border Style="{StaticResource MenuSurface}" Margin="0,52,12,0" HorizontalOptions="End" VerticalOptions="Start">
+                <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Delete}" TextColor="{t:Theme Alert}" />
+                    <Label Grid.Column="1" Text="Elimina spesa" FontSize="15" TextColor="{t:Theme Alert}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
+                    <Button Grid.ColumnSpan="2" Margin="-16,0" BackgroundColor="Transparent" Text="" Clicked="OnDeleteClicked" SemanticProperties.Description="Elimina spesa" />
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </ContentPage>

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:t="clr-namespace:Centesimo.App.Theming"
              xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:local="clr-namespace:Centesimo.App"
              xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
              x:Class="Centesimo.App.Pages.TodayPage"
              Title="Oggi"
@@ -125,7 +126,7 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <Border Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}">
+        <Border Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}" local:SnackbarAnchor.IsAnchor="True">
             <Grid ColumnDefinitions="*,1,76">
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
                     <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Add}" TextColor="{t:Theme Accent}" />
