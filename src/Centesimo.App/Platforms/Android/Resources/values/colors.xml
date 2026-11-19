@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Native widgets (dialogs, pickers, text cursors) in the light scheme: Ink on Ground from ThemeColors. -->
 <resources>
-    <color name="colorPrimary">#176B5B</color>
-    <color name="colorPrimaryDark">#005143</color>
-    <color name="colorAccent">#176B5B</color>
+    <color name="colorPrimary">#16161A</color>
+    <color name="colorPrimaryDark">#FAFAF8</color>
+    <color name="colorAccent">#16161A</color>
 </resources>

@@ -12,7 +12,23 @@ public class MainActivity : MauiAppCompatActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        if (Microsoft.Maui.Controls.Application.Current is not { } app)
+            return;
+
+        SystemBars.Apply(this, app.RequestedTheme == AppTheme.Dark);
+        app.RequestedThemeChanged += OnRequestedThemeChanged;
     }
+
+    protected override void OnDestroy()
+    {
+        if (Microsoft.Maui.Controls.Application.Current is { } app)
+            app.RequestedThemeChanged -= OnRequestedThemeChanged;
+
+        base.OnDestroy();
+    }
+
+    private void OnRequestedThemeChanged(object? sender, AppThemeChangedEventArgs e) =>
+        SystemBars.Apply(this, e.RequestedTheme == AppTheme.Dark);
 
     protected override void OnStop()
     {
@@ -37,5 +53,4 @@ public class MainActivity : MauiAppCompatActivity
         {
         }
     }
-
 }
