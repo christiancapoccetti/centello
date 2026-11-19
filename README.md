@@ -68,7 +68,7 @@ Quick entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft
 - **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent.
 - **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync.
 - **Confirmation:** the draft opens in the expense editor and nothing is saved until you save it; saving still requires a category.
-- **Availability:** voice and typed quick entry are unavailable until a key is configured, and report an error without an Internet connection. Manual entry always works. Recording requires an arm64 Android device.
+- **Availability:** voice and typed quick entry are unavailable until a key is configured, and report an error without an Internet connection. Manual entry always works.
 
 ## License
 
