@@ -1,6 +1,6 @@
 namespace Centesimo.App;
 
-/// <summary>The offer to send a reminder before a recurring payment. It is made in the editor of a new payment and
+/// <summary>The offer to send a notification on the day a recurring payment is due. It is made in the editor of a new payment and
 /// only until it is seen through, so nobody is asked again after every save.</summary>
 public interface IReminderOffer
 {

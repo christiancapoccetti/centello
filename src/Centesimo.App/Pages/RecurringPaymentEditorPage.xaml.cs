@@ -83,7 +83,7 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
     private async void OnReminderClicked(object? sender, EventArgs e)
     {
         if (await _viewModel.AcceptReminder())
-            _snackbar.Show("Promemoria attivi: ti avviso il giorno prima");
+            _snackbar.Show("Promemoria attivi: ti avviso il giorno della spesa");
     }
 
     private async void OnPauseClicked(object? sender, EventArgs e)

@@ -44,8 +44,8 @@
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                         <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.Notifications}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
                         <VerticalStackLayout Grid.Column="1">
-                            <Label Text="Vuoi un promemoria il giorno prima della spesa?" FontFamily="{x:Static t:Fonts.Bold}" FontSize="15" LineHeight="1.35" />
-                            <Label Text="Ti arriva una notifica sul telefono. Puoi toglierla quando vuoi." Style="{StaticResource BodyMedium}" LineHeight="1.45" Margin="0,4,0,12" />
+                            <Label Text="Vuoi una notifica il giorno della spesa?" FontFamily="{x:Static t:Fonts.Bold}" FontSize="15" LineHeight="1.35" />
+                            <Label Text="Ti arriva sul telefono la mattina alle 9. Puoi toglierla quando vuoi." Style="{StaticResource BodyMedium}" LineHeight="1.45" Margin="0,4,0,12" />
                             <Button Text="Attiva promemoria" Style="{StaticResource OutlinedButton}" HorizontalOptions="Start" Clicked="OnReminderClicked" />
                         </VerticalStackLayout>
                     </Grid>

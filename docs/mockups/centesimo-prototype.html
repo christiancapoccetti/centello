@@ -544,7 +544,7 @@ details.exp .body{padding:0 0 16px;font-size:13px;line-height:1.55;color:var(--m
     <div class="pad0"><div class="seg" data-seg="end"><button data-act="seg" data-arg="mai"><span class="ms ck">check</span>Mai</button><button data-act="seg" data-arg="data"><span class="ms ck">check</span>In una data</button></div></div>
     <div class="field" data-f="enddate"><label>Ultima spesa il</label><button class="box tap" data-act="snack" data-arg="Qui si apre il calendario"><span data-end-val></span><span class="ms suf">calendar_today</span></button><p class="errmsg" hidden><span class="ms">error</span><span>La data di fine non è valida.</span></p></div>
     <div class="field"><label for="ep-note">Nota</label><div class="box"><input id="ep-note" maxlength="500" placeholder="Per esempio Netflix" autocomplete="off"></div></div>
-    <div class="card remind" data-when="nuovo errori" data-remind><span class="ms">notifications</span><div><b>Vuoi un promemoria il giorno prima della spesa?</b><p>Ti arriva una notifica sul telefono. Puoi toglierla quando vuoi.</p><button class="btn out" data-act="remind">Attiva promemoria</button></div></div>
+    <div class="card remind" data-when="nuovo errori" data-remind><span class="ms">notifications</span><div><b>Vuoi una notifica il giorno della spesa?</b><p>Ti arriva sul telefono la mattina alle 9. Puoi toglierla quando vuoi.</p><button class="btn out" data-act="remind">Attiva promemoria</button></div></div>
     <div class="manage" data-when="modifica data-fine in-pausa">
       <button class="btn out block" data-act="finish" data-pause data-when="modifica data-fine"><span class="ms fill">pause</span>Metti in pausa</button>
       <p class="help2" data-when="modifica data-fine">Non crea spese finché non lo riprendi.</p>
@@ -1271,7 +1271,7 @@ const ACT = {
     back();
     snack(done);
   },
-  remind(el) { el.closest('[data-remind]').hidden = true; snack('Promemoria attivi: ti avviso il giorno prima'); },
+  remind(el) { el.closest('[data-remind]').hidden = true; snack('Promemoria attivi: ti avviso il giorno della spesa'); },
   savekey(el, sec) { show('impostazioni', $('#st-key').value.trim() ? 'consenso' : 'chiave-vuota', true); },
   consent() { show('impostazioni', 'configurato', true); snack('Chiave salvata. Tieni premuto il microfono per dettare.'); },
   removekey() { show('impostazioni', 'non-configurato', true); snack('Chiave rimossa'); },
