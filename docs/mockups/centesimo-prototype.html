@@ -699,7 +699,7 @@ const RECS = {
   netflix:       {note:'Netflix', cat:'svago', tag:'Streaming', amt:12.99, every:'mese', status:'attivo', next:'18 dic', nextLong:'18 dicembre 2026', nextDay:'18 dicembre'},
   bus:           {note:'Abbonamento bus', cat:'trasporti', tag:'Mezzi', amt:39, every:'mese', status:'attivo', next:'1 dic', nextLong:'1 dicembre 2026', nextDay:'1 dicembre'},
   assicurazione: {note:'Assicurazione auto', cat:'trasporti', amt:412, every:'anno', status:'attivo', next:'14 mar 2027', nextLong:'14 marzo 2027', nextDay:'14 marzo 2027'},
-  yoga:          {note:'Corso di yoga', cat:'salute', amt:45, every:'mese', status:'pausa', since:'2 ottobre', nextLong:'2 dicembre 2026', nextDay:'2 dicembre'},
+  yoga:          {note:'Corso di yoga', cat:'salute', amt:45, every:'mese', status:'pausa', nextLong:'2 dicembre 2026', nextDay:'2 dicembre'},
   rivista:       {note:'Rivista', cat:'altro', amt:4.90, every:'settimana', status:'terminato', last:'30 set', lastLong:'30 settembre 2026'},
   palestra:      {note:'Palestra', cat:'palestra', amt:39, every:'mese', status:'terminato', last:'31 ago', lastLong:'31 agosto 2026'},
 };
@@ -1053,9 +1053,9 @@ const RENDER = {
     }
     const row = id => {
       const r = RECS[id], c = CATS[r.cat];
-      const sub = r.status === 'terminato' ? `ultima il ${r.last}` : r.status === 'pausa' ? `in pausa dal ${r.since}` : `prossima il ${r.next}`;
+      const sub = r.status === 'terminato' ? ` · ultima il ${r.last}` : r.status === 'pausa' ? '' : ` · prossima il ${r.next}`;
       const badge = {pausa:' <span class="badge mute">In pausa</span>', terminato:' <span class="badge mute">Terminato</span>'}[r.status] || '';
-      return `<div class="row tall tap" role="button" tabindex="0" data-act="go" data-arg="editor-pagamento/${REC_STATE[r.status]}" data-rec="${id}">${tile(r.cat)}<span class="what"><b>${r.note}${badge}</b><small>${c.name} · ogni ${r.every} · ${sub}</small></span><span class="amt">${eur(r.amt)}</span></div>`;
+      return `<div class="row tall tap" role="button" tabindex="0" data-act="go" data-arg="editor-pagamento/${REC_STATE[r.status]}" data-rec="${id}">${tile(r.cat)}<span class="what"><b>${r.note}${badge}</b><small>${c.name} · ogni ${r.every}${sub}</small></span><span class="amt">${eur(r.amt)}</span></div>`;
     };
     const by = s => Object.keys(RECS).filter(id => RECS[id].status === s);
     const open = st === 'terminati-aperti', ended = by('terminato');
@@ -1091,7 +1091,7 @@ const RENDER = {
     err(st === 'errori', endField);
     if (st === 'in-pausa' || ro) {
       $('[data-state-ic]', sec).textContent = ro ? 'event_busy' : 'pause_circle';
-      $('[data-state-note]', sec).textContent = ro ? `Terminato il ${r.lastLong}: non crea più spese.` : `In pausa dal ${r.since}: non crea spese finché non lo riprendi.`;
+      $('[data-state-note]', sec).textContent = ro ? `Terminato il ${r.lastLong}: non crea più spese.` : 'In pausa: non crea spese finché non lo riprendi.';
     }
     if (r) {
       $('[data-end-title]', sec).textContent = `Terminare ${r.note}?`;
