@@ -1,17 +1,163 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:t="clr-namespace:Centesimo.App.Theming">
-<Style TargetType="Page" ApplyToDerivedTypes="True"><Setter Property="BackgroundColor" Value="{t:Theme Ground}" /></Style>
-<Style TargetType="ContentPage" ApplyToDerivedTypes="True"><Setter Property="BackgroundColor" Value="{StaticResource SurfaceLight}" /></Style>
-<Style TargetType="Label"><Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" /><Setter Property="FontSize" Value="14" /><Setter Property="TextColor" Value="{StaticResource OnSurfaceLight}" /></Style>
-<Style x:Key="PrimaryActionButton" TargetType="Button"><Setter Property="BackgroundColor" Value="{StaticResource PrimaryLight}" /><Setter Property="TextColor" Value="White" /><Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" /><Setter Property="FontSize" Value="16" /><Setter Property="HeightRequest" Value="56" /><Setter Property="MinimumHeightRequest" Value="56" /><Setter Property="MaximumHeightRequest" Value="56" /><Setter Property="CornerRadius" Value="20" /><Setter Property="Padding" Value="24,0" /></Style>
-<Style x:Key="TextActionButton" TargetType="Button"><Setter Property="BackgroundColor" Value="Transparent" /><Setter Property="TextColor" Value="{StaticResource PrimaryLight}" /><Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" /><Setter Property="MinimumHeightRequest" Value="48" /><Setter Property="Padding" Value="12,8" /></Style>
-<Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource TextActionButton}"><Setter Property="FontSize" Value="22" /><Setter Property="MinimumWidthRequest" Value="48" /><Setter Property="Padding" Value="8" /></Style>
-<Style x:Key="VoiceActionButton" TargetType="Button"><Setter Property="BackgroundColor" Value="{StaticResource PrimaryContainerLight}" /><Setter Property="TextColor" Value="{StaticResource PrimaryLight}" /><Setter Property="WidthRequest" Value="56" /><Setter Property="HeightRequest" Value="56" /><Setter Property="MinimumWidthRequest" Value="56" /><Setter Property="MinimumHeightRequest" Value="56" /><Setter Property="MaximumWidthRequest" Value="56" /><Setter Property="MaximumHeightRequest" Value="56" /><Setter Property="CornerRadius" Value="28" /><Setter Property="BorderWidth" Value="0" /><Setter Property="Padding" Value="14" /></Style>
-<Style x:Key="SurfaceCard" TargetType="Border"><Setter Property="BackgroundColor" Value="White" /><Setter Property="Stroke" Value="{StaticResource OutlineLight}" /><Setter Property="StrokeThickness" Value="1" /><Setter Property="Padding" Value="18" /><Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="20" /></Setter.Value></Setter></Style>
-<Style x:Key="TonalCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}"><Setter Property="BackgroundColor" Value="{StaticResource PrimaryContainerLight}" /><Setter Property="StrokeThickness" Value="0" /></Style>
-<Style x:Key="FieldContainer" TargetType="Border"><Setter Property="BackgroundColor" Value="{StaticResource SurfaceContainerHighLight}" /><Setter Property="StrokeThickness" Value="0" /><Setter Property="Padding" Value="14,8" /><Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="14" /></Setter.Value></Setter></Style>
-<Style x:Key="CategoryIconContainer" TargetType="Border"><Setter Property="WidthRequest" Value="44" /><Setter Property="HeightRequest" Value="44" /><Setter Property="StrokeThickness" Value="0" /><Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="14" /></Setter.Value></Setter></Style>
-<Style x:Key="CategoryIconImage" TargetType="Image"><Setter Property="HeightRequest" Value="22" /><Setter Property="WidthRequest" Value="22" /><Setter Property="HorizontalOptions" Value="Center" /><Setter Property="VerticalOptions" Value="Center" /></Style>
-<Style x:Key="EmptyStateLayout" TargetType="VerticalStackLayout"><Setter Property="Spacing" Value="8" /><Setter Property="HorizontalOptions" Value="Center" /><Setter Property="VerticalOptions" Value="Center" /></Style>
-<Style TargetType="Shell" ApplyToDerivedTypes="True"><Setter Property="Shell.BackgroundColor" Value="{StaticResource SurfaceLight}" /><Setter Property="Shell.ForegroundColor" Value="{StaticResource PrimaryLight}" /><Setter Property="Shell.TitleColor" Value="{StaticResource OnSurfaceLight}" /><Setter Property="Shell.UnselectedColor" Value="{StaticResource OnSurfaceVariantLight}" /><Setter Property="Shell.NavBarIsVisible" Value="False" /><Setter Property="Shell.TabBarBackgroundColor" Value="White" /><Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource PrimaryLight}" /><Setter Property="Shell.TabBarTitleColor" Value="{StaticResource PrimaryLight}" /><Setter Property="Shell.TabBarUnselectedColor" Value="{StaticResource OnSurfaceVariantLight}" /></Style>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:t="clr-namespace:Centesimo.App.Theming">
+    <Style TargetType="Page" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ground}" />
+    </Style>
+    <Style TargetType="Label" BasedOn="{StaticResource BaseText}" />
+    <Style TargetType="Entry">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="PlaceholderColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style TargetType="Editor">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="PlaceholderColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style TargetType="Picker">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="TitleColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style TargetType="DatePicker">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+    </Style>
+    <Style TargetType="ActivityIndicator">
+        <Setter Property="Color" Value="{t:Theme Ink}" />
+    </Style>
+    <Style TargetType="ProgressBar">
+        <Setter Property="ProgressColor" Value="{t:Theme Ink}" />
+    </Style>
+    <Style TargetType="Switch">
+        <Setter Property="OnColor" Value="{t:Theme Accent}" />
+    </Style>
+    <Style TargetType="Shell" ApplyToDerivedTypes="True">
+        <Setter Property="Shell.BackgroundColor" Value="{t:Theme Ground}" />
+        <Setter Property="Shell.NavBarIsVisible" Value="False" />
+        <Setter Property="Shell.TabBarBackgroundColor" Value="{t:Theme Ground}" />
+        <Setter Property="Shell.TabBarForegroundColor" Value="{t:Theme Ink}" />
+        <Setter Property="Shell.TabBarTitleColor" Value="{t:Theme Ink}" />
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style x:Key="PrimaryActionButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ink}" />
+        <Setter Property="TextColor" Value="{t:Theme Ground}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="HeightRequest" Value="56" />
+        <Setter Property="MinimumHeightRequest" Value="56" />
+        <Setter Property="MaximumHeightRequest" Value="56" />
+        <Setter Property="CornerRadius" Value="28" />
+        <Setter Property="Padding" Value="24,0" />
+    </Style>
+    <Style x:Key="TextActionButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="Padding" Value="12,8" />
+    </Style>
+    <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource TextActionButton}">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="MinimumWidthRequest" Value="48" />
+        <Setter Property="Padding" Value="8" />
+    </Style>
+    <Style x:Key="IconGlyphButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Icons}" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="Opacity" Value="0.3" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+    <Style x:Key="VoiceActionButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="WidthRequest" Value="56" />
+        <Setter Property="HeightRequest" Value="56" />
+        <Setter Property="MinimumWidthRequest" Value="56" />
+        <Setter Property="MinimumHeightRequest" Value="56" />
+        <Setter Property="MaximumWidthRequest" Value="56" />
+        <Setter Property="MaximumHeightRequest" Value="56" />
+        <Setter Property="CornerRadius" Value="28" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="Padding" Value="14" />
+    </Style>
+    <Style x:Key="SurfaceCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ground}" />
+        <Setter Property="Stroke" Value="{t:Theme Hairline}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="18" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="16" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="TonalCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="StrokeThickness" Value="0" />
+    </Style>
+    <Style x:Key="SplitPill" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="Stroke" Value="{t:Theme Outline}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="HeightRequest" Value="60" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="30" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="FieldContainer" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="14" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="CategoryIconContainer" TargetType="Border">
+        <Setter Property="WidthRequest" Value="44" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="14" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="CategoryIconImage" TargetType="Image">
+        <Setter Property="HeightRequest" Value="22" />
+        <Setter Property="WidthRequest" Value="22" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+    <Style x:Key="Hairline" TargetType="BoxView">
+        <Setter Property="Color" Value="{t:Theme Hairline}" />
+        <Setter Property="HeightRequest" Value="1" />
+    </Style>
+    <Style x:Key="EmptyStateLayout" TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="8" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
 </ResourceDictionary>
