@@ -10,8 +10,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TagService>();
         services.AddScoped<ExpenseService>();
         services.AddScoped<BudgetOverviewService>();
-        services.AddScoped<MonthlyOverviewService>();
-        services.AddScoped<YearlyOverviewService>();
         services.AddScoped<HomeOverviewService>();
         services.AddScoped<IInsightsService, InsightsService>();
         services.AddScoped<CategorySpendingService>();
