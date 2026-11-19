@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Centesimo.App.Theming;
 
 namespace Centesimo.App;
 
@@ -15,8 +16,7 @@ public static class InteractionFeedback
         PressedCards.Add(card, new PressedState(card.Opacity, card.Scale, card.Background));
         card.Opacity = 0.76;
         card.Scale = 0.965;
-        if (Microsoft.Maui.Controls.Application.Current?.Resources["PrimaryContainerLight"] is Color color)
-            card.Background = new SolidColorBrush(color);
+        card.Background = new SolidColorBrush(ThemeColors.Current(ThemeColor.SurfaceRaised));
     }
 
     public static void Release(object? sender)

@@ -29,8 +29,6 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
     public bool HasInsights => Insights.Count > 0;
     public bool HasCategories => Categories.Count > 0;
     public bool IsMonthly => _period == InsightPeriod.Month;
-    public string MonthSelectorBackground => IsMonthly ? "#DDF4EB" : "Transparent";
-    public string YearSelectorBackground => IsMonthly ? "Transparent" : "#DDF4EB";
     public string MonthSelectorDescription => IsMonthly ? "Questo mese, selezionato" : "Questo mese, non selezionato";
     public string YearSelectorDescription => IsMonthly ? "Questo anno, non selezionato" : "Questo anno, selezionato";
     public bool HasMoreInsights => AllInsights.Count > 3 && !_showAllInsights;
@@ -68,8 +66,6 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
         IsLoading = false;
         OnPropertyChanged(nameof(SummaryLabel));
         OnPropertyChanged(nameof(IsMonthly));
-        OnPropertyChanged(nameof(MonthSelectorBackground));
-        OnPropertyChanged(nameof(YearSelectorBackground));
         OnPropertyChanged(nameof(MonthSelectorDescription));
         OnPropertyChanged(nameof(YearSelectorDescription));
         OnPropertyChanged(nameof(HasInsights));

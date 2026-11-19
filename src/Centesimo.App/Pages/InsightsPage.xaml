@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="Centesimo.App.Pages.InsightsPage" Title="Insight" SafeAreaEdges="All">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:t="clr-namespace:Centesimo.App.Theming" xmlns:c="clr-namespace:Centesimo.App.Controls" x:Class="Centesimo.App.Pages.InsightsPage" Title="Insight" SafeAreaEdges="All">
  <ScrollView><VerticalStackLayout Padding="22,22,22,16" Spacing="16">
   <VerticalStackLayout Spacing="2"><Label Text="Insight" Style="{StaticResource HeadlineLarge}"/><Label Text="Guarda come cambiano le tue spese." Style="{StaticResource BodyMedium}"/></VerticalStackLayout>
-  <HorizontalStackLayout HorizontalOptions="Center"><Button Text="Questo mese" Clicked="OnMonthClicked" Style="{StaticResource TextActionButton}" BackgroundColor="{Binding MonthSelectorBackground}" SemanticProperties.Description="{Binding MonthSelectorDescription}"/><Button Text="Questo anno" Clicked="OnYearClicked" Style="{StaticResource TextActionButton}" BackgroundColor="{Binding YearSelectorBackground}" SemanticProperties.Description="{Binding YearSelectorDescription}"/></HorizontalStackLayout>
-  <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"/><Border Style="{StaticResource TonalCard}" SemanticProperties.Description="{Binding ComparisonDescription}"><VerticalStackLayout Spacing="8"><Label Text="{Binding SummaryLabel}" Style="{StaticResource LabelLarge}"/><Label Text="{Binding Total}" Style="{StaticResource DisplaySmall}"/><Label Text="{Binding Comparison}" Style="{StaticResource BodyMedium}"/><ProgressBar Progress="{Binding ComparisonProgress}" ProgressColor="{StaticResource PrimaryLight}" HeightRequest="6" IsVisible="{Binding HasComparison}"/></VerticalStackLayout></Border>
-  <Border Style="{StaticResource SurfaceCard}" IsVisible="{Binding HasError}"><VerticalStackLayout><Label Text="{Binding ErrorMessage}" TextColor="{StaticResource ErrorLight}"/><Button Text="Riprova" Clicked="OnRetryClicked" Style="{StaticResource TextActionButton}"/></VerticalStackLayout></Border>
+  <HorizontalStackLayout HorizontalOptions="Center">
+   <Button Text="Questo mese" Clicked="OnMonthClicked" Style="{StaticResource TextActionButton}" SemanticProperties.Description="{Binding MonthSelectorDescription}">
+    <Button.Triggers>
+     <DataTrigger TargetType="Button" Binding="{Binding IsMonthly}" Value="True">
+      <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+     </DataTrigger>
+    </Button.Triggers>
+   </Button>
+   <Button Text="Questo anno" Clicked="OnYearClicked" Style="{StaticResource TextActionButton}" SemanticProperties.Description="{Binding YearSelectorDescription}">
+    <Button.Triggers>
+     <DataTrigger TargetType="Button" Binding="{Binding IsMonthly}" Value="False">
+      <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+     </DataTrigger>
+    </Button.Triggers>
+   </Button>
+  </HorizontalStackLayout>
+  <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"/><Border Style="{StaticResource TonalCard}" SemanticProperties.Description="{Binding ComparisonDescription}"><VerticalStackLayout Spacing="8"><Label Text="{Binding SummaryLabel}" Style="{StaticResource LabelLarge}"/><Label Text="{Binding Total}" Style="{StaticResource DisplaySmall}"/><Label Text="{Binding Comparison}" Style="{StaticResource BodyMedium}"/><ProgressBar Progress="{Binding ComparisonProgress}" HeightRequest="6" IsVisible="{Binding HasComparison}"/></VerticalStackLayout></Border>
+  <Border Style="{StaticResource SurfaceCard}" IsVisible="{Binding HasError}"><VerticalStackLayout><Label Text="{Binding ErrorMessage}" TextColor="{t:Theme Alert}"/><Button Text="Riprova" Clicked="OnRetryClicked" Style="{StaticResource TextActionButton}"/></VerticalStackLayout></Border>
   <VerticalStackLayout Spacing="10" IsVisible="{Binding HasInsights}"><Label Text="I tuoi insight" Style="{StaticResource TitleLarge}"/><VerticalStackLayout BindableLayout.ItemsSource="{Binding Insights}" Spacing="10"><BindableLayout.ItemTemplate><DataTemplate><Border Style="{StaticResource SurfaceCard}"><Grid><VerticalStackLayout Spacing="4"><Label Text="{Binding Title}" Style="{StaticResource TitleMedium}"/><Label Text="{Binding Description}" Style="{StaticResource BodyMedium}"/></VerticalStackLayout><Button BackgroundColor="Transparent" Text="" Clicked="OnInsightClicked" CommandParameter="{Binding .}" IsVisible="{Binding IsActionable}" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri il dettaglio disponibile"/></Grid></Border></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout><Button Text="{Binding MoreInsightsText}" IsVisible="{Binding HasMoreInsights}" Clicked="OnMoreInsightsClicked" Style="{StaticResource TextActionButton}"/></VerticalStackLayout>
-  <VerticalStackLayout xmlns:controls="clr-namespace:Centesimo.App.Controls" Spacing="10" IsVisible="{Binding HasCategories}"><Label Text="Per categoria" Style="{StaticResource TitleLarge}"/><controls:CategoryBreakdownList ItemsSource="{Binding Categories}" CategoryClicked="OnCategoryClicked"/></VerticalStackLayout>
+  <VerticalStackLayout Spacing="10" IsVisible="{Binding HasCategories}"><Label Text="Per categoria" Style="{StaticResource TitleLarge}"/><c:CategoryBreakdownList ItemsSource="{Binding Categories}" CategoryClicked="OnCategoryClicked"/></VerticalStackLayout>
   <VerticalStackLayout IsVisible="{Binding IsEmpty}" Style="{StaticResource EmptyStateLayout}"><Label Text="Ancora nessuna spesa" Style="{StaticResource TitleLarge}"/><Label Text="Aggiungi una spesa per iniziare a vedere i tuoi insight." Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center"/><Button Text="Aggiungi spesa" Clicked="OnAddExpenseClicked" Style="{StaticResource PrimaryActionButton}"/></VerticalStackLayout><Label Text="I tuoi insight vengono elaborati solo su questo dispositivo." Style="{StaticResource BodySmall}" HorizontalTextAlignment="Center"/>
  </VerticalStackLayout></ScrollView>
 </ContentPage>

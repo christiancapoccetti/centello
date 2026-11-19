@@ -38,7 +38,6 @@ public sealed class CategorySpendingViewModel(CategorySpendingService spendingSe
     public double BudgetProgress { get => _budgetProgress; private set => SetProperty(ref _budgetProgress, value); }
     public bool IsOverBudget { get => _isOverBudget; private set => SetProperty(ref _isOverBudget, value); }
     public string BudgetStatus => IsOverBudget ? "Budget superato" : "Budget rispettato";
-    public string BudgetStatusColor => IsOverBudget ? "#BA1A1A" : "#196D61";
     public string ErrorMessage
     {
         get => _errorMessage;
@@ -104,7 +103,6 @@ public sealed class CategorySpendingViewModel(CategorySpendingService spendingSe
         OnPropertyChanged(nameof(HasTags));
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(BudgetStatus));
-        OnPropertyChanged(nameof(BudgetStatusColor));
     }
 
     private static string FormatMoney(long cents) => (cents / 100m).ToString("C", ItalianCulture);
