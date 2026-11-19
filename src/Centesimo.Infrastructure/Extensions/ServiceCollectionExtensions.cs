@@ -23,6 +23,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMoneyManagerImportRepository, MoneyManagerImportRepository>();
         services.AddScoped<IRecurringPaymentRepository, RecurringPaymentRepository>();
         services.AddScoped<IRecurringOccurrenceProcessor, RecurringOccurrenceProcessor>();
+        services.AddSingleton(provider => new OpenAiClient(
+            new HttpClient(),
+            provider.GetRequiredService<IOpenAiApiKeyProvider>()));
+        services.AddSingleton<ISpeechTranscriber, OpenAiSpeechTranscriber>();
+        services.AddSingleton<IExpenseTextInterpreter, OpenAiExpenseTextInterpreter>();
         return services;
     }
 }
