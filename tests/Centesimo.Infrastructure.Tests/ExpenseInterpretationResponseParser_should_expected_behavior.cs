@@ -169,4 +169,44 @@ public sealed class ExpenseInterpretationResponseParser_should_expected_behavior
 
         Assert.Equal("uno", result.Value.Note);
     }
+
+    [Fact]
+    public void Skip_a_commentary_message_before_the_final_answer()
+    {
+        var answer = JsonSerializer.Serialize(new { amount = 100, categoryKey = "c1", tagKey = (string?)null, date = (string?)null, note = "" });
+        var body = JsonSerializer.Serialize(new
+        {
+            status = "completed",
+            output = new object[]
+            {
+                new { type = "message", phase = "commentary", content = new object[] { new { type = "output_text", text = "Analizzo la frase." } } },
+                new { type = "message", phase = "final_answer", content = new object[] { new { type = "output_text", text = answer } } }
+            }
+        });
+
+        var result = ExpenseInterpretationResponseParser.Parse(body);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(100m, result.Value.Amount);
+    }
+
+    [Fact]
+    public void Use_the_last_answer_message_when_several_are_present()
+    {
+        var draft = JsonSerializer.Serialize(new { amount = 1, categoryKey = "c1", tagKey = (string?)null, date = (string?)null, note = "bozza" });
+        var answer = JsonSerializer.Serialize(new { amount = 2, categoryKey = "c1", tagKey = (string?)null, date = (string?)null, note = "finale" });
+        var body = JsonSerializer.Serialize(new
+        {
+            status = "completed",
+            output = new object[]
+            {
+                new { type = "message", content = new object[] { new { type = "output_text", text = draft } } },
+                new { type = "message", content = new object[] { new { type = "output_text", text = answer } } }
+            }
+        });
+
+        var result = ExpenseInterpretationResponseParser.Parse(body);
+
+        Assert.Equal("finale", result.Value.Note);
+    }
 }

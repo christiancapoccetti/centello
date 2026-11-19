@@ -38,10 +38,10 @@ public static class ExpenseInterpretationResponseParser
         if (GetString(response, "status") != "completed")
             return null;
 
-        var parts = GetItems(response, "output")
-            .Where(item => GetString(item, "type") == "message")
-            .SelectMany(item => GetItems(item, "content"))
-            .ToList();
+        // The model can emit commentary messages before the final answer; only the last answer message carries the schema.
+        var answer = GetItems(response, "output")
+            .LastOrDefault(item => GetString(item, "type") == "message" && GetString(item, "phase") != "commentary");
+        var parts = GetItems(answer, "content").ToList();
         if (parts.Any(part => GetString(part, "type") == "refusal"))
             return null;
 
