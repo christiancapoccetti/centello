@@ -164,6 +164,177 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_compare_the_current_month_with_the_same_elapsed_days_of_the_previous_month()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 10_000, new DateOnly(2026, 11, 5)),
+            Spend(category, 2_000, new DateOnly(2026, 11, 19)),
+            Spend(category, 8_000, new DateOnly(2026, 10, 10)),
+            Spend(category, 1_000, new DateOnly(2026, 10, 19)),
+            Spend(category, 50_000, new DateOnly(2026, 10, 20))
+        };
+
+        var overview = await Overview([category], expenses);
+
+        Assert.True(overview.HasComparison);
+        Assert.Equal(
+            new PeriodComparison("33% in più di ottobre", ComparisonTrend.Higher,
+                "Rispetto agli stessi giorni di ottobre: 33% in più."),
+            overview.Comparison);
+    }
+
+    [Fact]
+    public async Task Should_compare_a_lower_current_month_with_the_previous_one()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 9_400, new DateOnly(2026, 11, 5)),
+            Spend(category, 10_000, new DateOnly(2026, 10, 5))
+        };
+
+        var overview = await Overview([category], expenses);
+
+        Assert.Equal(
+            new PeriodComparison("6% in meno di ottobre", ComparisonTrend.Lower,
+                "Rispetto agli stessi giorni di ottobre: 6% in meno."),
+            overview.Comparison);
+    }
+
+    [Fact]
+    public async Task Should_clamp_the_comparison_to_the_previous_month_length()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 20_000, new DateOnly(2026, 3, 31)),
+            Spend(category, 5_000, new DateOnly(2026, 3, 2)),
+            Spend(category, 10_000, new DateOnly(2026, 2, 28))
+        };
+
+        var overview = await Overview([category], expenses, today: new DateOnly(2026, 3, 31));
+
+        Assert.Equal("150% in più di febbraio", overview.Comparison?.Text);
+    }
+
+    [Fact]
+    public async Task Should_compare_a_past_month_with_the_whole_previous_month()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 15_000, new DateOnly(2026, 8, 31)),
+            Spend(category, 10_000, new DateOnly(2026, 7, 1)),
+            Spend(category, 10_000, new DateOnly(2026, 7, 31)),
+            Spend(category, 90_000, new DateOnly(2026, 9, 1))
+        };
+
+        var overview = await Overview([category], expenses, Period.Month(2026, 8));
+
+        Assert.Equal(
+            new PeriodComparison("25% in meno di luglio", ComparisonTrend.Lower,
+                "Rispetto al mese di luglio: 25% in meno."),
+            overview.Comparison);
+    }
+
+    [Fact]
+    public async Task Should_not_compare_when_the_previous_period_has_no_spending()
+    {
+        var category = NewCategory("Spesa");
+        var onlyAfterTheElapsedDays = new[]
+        {
+            Spend(category, 20_000, new DateOnly(2026, 11, 5)),
+            Spend(category, 10_000, new DateOnly(2026, 10, 25))
+        };
+
+        var current = await Overview([category], onlyAfterTheElapsedDays);
+        var past = await Overview([category], onlyAfterTheElapsedDays, Period.Month(2026, 5));
+
+        Assert.Null(current.Comparison);
+        Assert.False(current.HasComparison);
+        Assert.Null(past.Comparison);
+    }
+
+    [Theory]
+    [InlineData(10_040, "In linea con ottobre", ComparisonTrend.Same)]
+    [InlineData(9_960, "In linea con ottobre", ComparisonTrend.Same)]
+    [InlineData(10_050, "1% in più di ottobre", ComparisonTrend.Higher)]
+    [InlineData(9_950, "1% in meno di ottobre", ComparisonTrend.Lower)]
+    public async Task Should_round_the_change_to_a_whole_percent_and_call_a_zero_change_in_line(
+        long current, string text, ComparisonTrend trend)
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, current, new DateOnly(2026, 11, 5)),
+            Spend(category, 10_000, new DateOnly(2026, 10, 10))
+        };
+
+        var overview = await Overview([category], expenses);
+
+        Assert.Equal(text, overview.Comparison?.Text);
+        Assert.Equal(trend, overview.Comparison?.Trend);
+    }
+
+    [Fact]
+    public async Task Should_compare_the_current_year_with_the_same_span_of_the_previous_year()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 30_000, new DateOnly(2026, 6, 1)),
+            Spend(category, 20_000, new DateOnly(2025, 1, 10)),
+            Spend(category, 5_000, new DateOnly(2025, 11, 19)),
+            Spend(category, 99_000, new DateOnly(2025, 11, 20))
+        };
+
+        var overview = await Overview([category], expenses, Period.Year(2026));
+
+        Assert.Equal(
+            new PeriodComparison("20% in più del 2025", ComparisonTrend.Higher,
+                "Rispetto agli stessi giorni del 2025: 20% in più."),
+            overview.Comparison);
+    }
+
+    [Fact]
+    public async Task Should_clamp_the_year_comparison_on_a_leap_day()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 10_000, new DateOnly(2028, 2, 29)),
+            Spend(category, 10_000, new DateOnly(2027, 2, 28)),
+            Spend(category, 40_000, new DateOnly(2027, 3, 1))
+        };
+
+        var overview = await Overview([category], expenses, Period.Year(2028), new DateOnly(2028, 2, 29));
+
+        Assert.Equal(
+            new PeriodComparison("In linea con il 2027", ComparisonTrend.Same,
+                "Rispetto agli stessi giorni del 2027: in linea."),
+            overview.Comparison);
+    }
+
+    [Fact]
+    public async Task Should_compare_a_past_year_with_the_whole_previous_year()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 12_000, new DateOnly(2025, 12, 31)),
+            Spend(category, 24_000, new DateOnly(2024, 12, 31))
+        };
+
+        var overview = await Overview([category], expenses, Period.Year(2025));
+
+        Assert.Equal(
+            new PeriodComparison("50% in meno del 2024", ComparisonTrend.Lower, "Rispetto al 2024: 50% in meno."),
+            overview.Comparison);
+    }
+
+    [Fact]
     public async Task Should_return_the_repository_failure()
     {
         var failingCategories = new FakeCategoryRepository { Failure = Failed };

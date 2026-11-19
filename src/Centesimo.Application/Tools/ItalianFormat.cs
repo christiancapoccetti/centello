@@ -21,8 +21,14 @@ internal static class ItalianFormat
     /// <summary>"1.600" for whole euros, "1.600,50" otherwise.</summary>
     public static string Budget(long cents) => cents % 100 == 0 ? Grouped(cents / 100) : Amount(cents);
 
+    /// <summary>"novembre"</summary>
+    public static string MonthName(int month) => MonthNames[month - 1];
+
     /// <summary>"Novembre"</summary>
-    public static string MonthTitle(int month) => char.ToUpperInvariant(MonthNames[month - 1][0]) + MonthNames[month - 1][1..];
+    public static string MonthTitle(int month) => char.ToUpperInvariant(MonthName(month)[0]) + MonthName(month)[1..];
+
+    /// <summary>"6%"</summary>
+    public static string Percent(int percent) => $"{percent}%";
 
     private static string Grouped(long units) => units.ToString("N0", CultureInfo.InvariantCulture).Replace(',', '.');
 }
