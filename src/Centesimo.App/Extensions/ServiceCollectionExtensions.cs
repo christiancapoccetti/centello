@@ -22,15 +22,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<RecurringPaymentAutomation>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
 #if ANDROID
-        services.AddSingleton<IOfflineSpeechRecognizer, WhisperOfflineSpeechRecognizer>();
-#else
-        services.AddSingleton<IOfflineSpeechRecognizer, UnavailableOfflineSpeechRecognizer>();
-#endif
-        services.AddSingleton<SpeechExpenseDraftService>();
-        services.AddSingleton<IItalianSpeechModelProvisioner, ItalianSpeechModelProvisioner>();
-#if ANDROID
+        services.AddSingleton<ISpeechRecorder, AndroidAudioRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
 #else
+        services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
 #endif
         services.AddSingleton<AppShell>();

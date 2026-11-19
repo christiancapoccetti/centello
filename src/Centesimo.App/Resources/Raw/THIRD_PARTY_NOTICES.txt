@@ -7,22 +7,6 @@ Copyright (c) Microsoft Corporation.
 License: MIT License.
 https://github.com/dotnet/maui
 
-Whisper.net 1.9.1
-Copyright (c) Sandro Hanea and contributors.
-License: MIT License.
-https://github.com/sandrohanea/whisper.net
-
-whisper.cpp runtime
-Copyright (c) The ggml authors.
-License: MIT License.
-https://github.com/ggml-org/whisper.cpp
-
-OpenAI Whisper model
-Copyright (c) 2022 OpenAI.
-License: MIT License.
-The optional Italian speech model is downloaded from the ggerganov/whisper.cpp repository.
-https://github.com/openai/whisper
-
 SQLite
 SQLite is in the public domain.
 https://sqlite.org/copyright.html

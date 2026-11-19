@@ -75,7 +75,7 @@ public partial class TodayPage : ContentPage
         {
             var permission = await RequestMicrophonePermission();
             if (permission != PermissionStatus.Granted)
-                return Result.Failure(new Centesimo.Application.Error("Speech.MicrophoneDenied", "Consenti l'accesso al microfono per usare i comandi vocali."));
+                return Result.Failure(SpeechErrors.MicrophoneDenied);
 
             var result = await _speechDraftService.Start();
             if (session != _speechSession || result.IsFailure)
@@ -105,7 +105,7 @@ public partial class TodayPage : ContentPage
 
         var accepted = await DisplayAlertAsync(
             "Microfono",
-            "Centesimo usa il microfono solo mentre tieni premuto il pulsante dei comandi vocali. L'audio viene elaborato sul dispositivo e non viene inviato online.",
+            "Centesimo usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.",
             "Consenti",
             "Non ora");
         return accepted

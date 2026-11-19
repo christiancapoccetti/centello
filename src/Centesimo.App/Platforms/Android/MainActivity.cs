@@ -1,6 +1,7 @@
 ﻿using Android.App;
 using Android.Content.PM;
 using Android.OS;
+using Centesimo.Application;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App;
@@ -15,13 +16,13 @@ public class MainActivity : MauiAppCompatActivity
 
     protected override void OnStop()
     {
-        CancelVoiceRecognition();
+        CancelRecording();
         base.OnStop();
     }
 
-    private void CancelVoiceRecognition() => _ = CancelVoiceRecognitionSafely();
+    private void CancelRecording() => _ = CancelRecordingSafely();
 
-    private static async Task CancelVoiceRecognitionSafely()
+    private static async Task CancelRecordingSafely()
     {
         try
         {
@@ -29,8 +30,8 @@ public class MainActivity : MauiAppCompatActivity
             if (platformApplication is null)
                 return;
 
-            var recognizer = platformApplication.Services.GetRequiredService<IOfflineSpeechRecognizer>();
-            await recognizer.Cancel();
+            var recorder = platformApplication.Services.GetRequiredService<ISpeechRecorder>();
+            await recorder.Cancel();
         }
         catch (Exception)
         {
