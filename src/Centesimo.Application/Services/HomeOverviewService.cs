@@ -10,7 +10,8 @@ public sealed record HomeOverview(
     string Subtitle,                 // "2026"
     string Total,                    // "1.284,60" (the page draws "€")
     BudgetSummary Budget,
-    PeriodComparison? Comparison)
+    PeriodComparison? Comparison,
+    CategoryLine Categories)
 {
     public bool HasComparison => Comparison is not null;
 }
@@ -28,9 +29,20 @@ public enum ComparisonTrend { Lower, Higher, Same }
 
 public sealed record PeriodComparison(string Text, ComparisonTrend Trend, string Description);
 
+public sealed record CategoryLine(IReadOnlyList<CategorySegment> Segments, IReadOnlyList<CategoryKeyItem> Key, string Description)
+{
+    public bool HasSegments => Segments.Count > 0;
+}
+
+/// <summary>One flat segment; its width is proportional to Cents. Archived or missing categories fold into one grey segment.</summary>
+public sealed record CategorySegment(string ColorKey, long Cents);
+
+public sealed record CategoryKeyItem(string Text, string ColorKey, bool IsOverBudget);
+
 public sealed class HomeOverviewService(ICategoryRepository categories, IExpenseRepository expenses,
     Func<DateOnly>? today = null)
 {
+    private const int KeySize = 3;
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
 
     /// <summary>Builds the overview for <paramref name="period"/>, or for the month containing today when null.</summary>
@@ -56,13 +68,15 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
     private static HomeOverview Build(Period period, DateOnly today, ComparisonWindow window,
         IReadOnlyList<Category> categories, IReadOnlyList<Expense> expenses)
     {
-        var spent = SpentBetween(expenses, period.Start, period.End);
+        var periodExpenses = expenses.Where(expense => period.Contains(expense.OccurredOn)).ToList();
+        var spent = periodExpenses.Sum(expense => expense.Amount.Cents);
         var year = period.Start.Year.ToString();
         var (title, subtitle) = period.Kind == PeriodKind.Month
             ? (ItalianFormat.MonthTitle(period.Start.Month), year)
             : ("Anno", year);
         return new HomeOverview(period, Navigate(period, today), title, subtitle, ItalianFormat.Amount(spent),
-            Summarize(spent, BudgetOf(period, categories)), Compare(period, window, expenses));
+            Summarize(spent, BudgetOf(period, categories)), Compare(period, window, expenses),
+            Line(period, categories, periodExpenses, spent));
     }
 
     private static long SpentBetween(IReadOnlyList<Expense> expenses, DateOnly from, DateOnly to) => expenses
@@ -132,6 +146,60 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
             ? $"agli stessi giorni {preposition} {reference}"
             : isMonth ? $"al mese di {reference}" : $"al {reference}";
         return new PeriodComparison(text, trend, $"Rispetto {basis}: {change}.");
+    }
+
+    // Active categories with spending, largest first. Whatever is left of the total (archived or missing
+    // categories) becomes one grey segment, so the line always adds up to the headline total. The key names the
+    // top KeySize categories and, when it is not among them, the category furthest over its budget.
+    private static CategoryLine Line(Period period, IReadOnlyList<Category> categories,
+        IReadOnlyList<Expense> periodExpenses, long spent)
+    {
+        if (spent == 0)
+            return new CategoryLine([], [], "");
+
+        var spentByCategory = periodExpenses
+            .GroupBy(expense => expense.CategoryId)
+            .ToDictionary(group => group.Key, group => group.Sum(expense => expense.Amount.Cents));
+        var yearFactor = period.Kind == PeriodKind.Year ? 12 : 1;
+        var ranked = categories
+            .Where(category => !category.IsArchived && spentByCategory.ContainsKey(category.CategoryId))
+            .Select(category => new RankedCategory(category, spentByCategory[category.CategoryId],
+                (category.MonthlyBudget?.Cents ?? 0) * yearFactor))
+            .OrderByDescending(item => item.Spent)
+            .ThenBy(item => item.Category.Name)
+            .ToList();
+        var folded = spent - ranked.Sum(item => item.Spent);
+        var segments = ranked
+            .Select(item => new CategorySegment(item.ColorKey, item.Spent))
+            .ToList();
+        if (folded > 0)
+            segments.Add(new CategorySegment(CategoryPalette.Fallback.Key, folded));
+
+        var key = ranked.Take(KeySize).ToList();
+        var furthestOver = ranked
+            .Skip(KeySize)
+            .Where(item => item.IsOverBudget)
+            .OrderByDescending(item => item.Overshoot)
+            .ThenBy(item => item.Category.Name)
+            .FirstOrDefault();
+        if (furthestOver is not null)
+            key.Add(furthestOver);
+
+        var description = ranked
+            .Select(item => $"{item.Category.Name} {ItalianFormat.Money(item.Spent)}")
+            .Concat(folded > 0 ? [$"Altre categorie {ItalianFormat.Money(folded)}"] : []);
+        return new CategoryLine(segments, key.Select(item => item.ToKeyItem()).ToList(),
+            $"Spesa per categoria: {string.Join(", ", description)}.");
+    }
+
+    private sealed record RankedCategory(Category Category, long Spent, long Budget)
+    {
+        public string ColorKey => CategoryPalette.Resolve(Category.Color).Key;
+        public long Overshoot => Budget > 0 ? Math.Max(0, Spent - Budget) : 0;
+        public bool IsOverBudget => Overshoot > 0;
+
+        public CategoryKeyItem ToKeyItem() =>
+            new(IsOverBudget ? $"{Category.Name} oltre" : Category.Name, ColorKey, IsOverBudget);
     }
 
     /// <summary>The current period compares to date with the same position in the previous one, clamped to its

@@ -335,6 +335,140 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_draw_categories_by_spending_and_fold_archived_spending_into_one_grey_segment()
+    {
+        var food = NewCategory("Cibo", color: "mint");
+        var home = NewCategory("Casa", color: "coral");
+        var unused = NewCategory("Mai usata", color: "sky");
+        var archived = NewCategory("Vecchia", archived: true, color: "lilac");
+        var expenses = new[]
+        {
+            Spend(home, 10_000, Today),
+            Spend(food, 30_000, Today),
+            Spend(archived, 1_500, Today),
+            new Expense(Guid.NewGuid(), Guid.NewGuid(), new Money(500), Today)
+        };
+
+        var line = (await Overview([food, home, unused, archived], expenses)).Categories;
+
+        Assert.True(line.HasSegments);
+        Assert.Equal(
+            [new CategorySegment("mint", 30_000), new CategorySegment("coral", 10_000), new CategorySegment("grey", 2_000)],
+            line.Segments);
+    }
+
+    [Fact]
+    public async Task Should_order_equal_spending_by_category_name_and_resolve_unknown_colors_to_grey()
+    {
+        var beta = NewCategory("Beta", color: "mint");
+        var alpha = NewCategory("Alfa", color: "#176B5B");
+        var expenses = new[] { Spend(beta, 1_000, Today), Spend(alpha, 1_000, Today) };
+
+        var line = (await Overview([beta, alpha], expenses)).Categories;
+
+        Assert.Equal([new CategorySegment("grey", 1_000), new CategorySegment("mint", 1_000)], line.Segments);
+        Assert.Equal(["Alfa", "Beta"], line.Key.Select(item => item.Text));
+    }
+
+    [Fact]
+    public async Task Should_not_draw_a_line_when_nothing_was_spent()
+    {
+        var line = (await Overview([NewCategory("Cibo")])).Categories;
+
+        Assert.False(line.HasSegments);
+        Assert.Empty(line.Segments);
+        Assert.Empty(line.Key);
+    }
+
+    [Fact]
+    public async Task Should_name_the_three_largest_categories_in_the_key()
+    {
+        var categories = new[]
+        {
+            NewCategory("Cibo", color: "mint"),
+            NewCategory("Casa", color: "coral"),
+            NewCategory("Auto", color: "peri"),
+            NewCategory("Svago", color: "sky")
+        };
+        var expenses = categories.Select((category, index) => Spend(category, (4 - index) * 1_000, Today));
+
+        var line = (await Overview(categories, expenses)).Categories;
+
+        Assert.Equal(
+            [new CategoryKeyItem("Cibo", "mint", false), new CategoryKeyItem("Casa", "coral", false),
+                new CategoryKeyItem("Auto", "peri", false)],
+            line.Key);
+        Assert.Equal(4, line.Segments.Count);
+    }
+
+    [Fact]
+    public async Task Should_mark_a_category_over_its_budget_in_the_key()
+    {
+        var over = NewCategory("Cibo", budgetCents: 20_000, color: "mint");
+        var within = NewCategory("Casa", budgetCents: 20_000, color: "coral");
+        var withoutBudget = NewCategory("Auto", budgetCents: 0, color: "peri");
+        var expenses = new[] { Spend(over, 30_000, Today), Spend(within, 20_000, Today), Spend(withoutBudget, 90_000, Today) };
+
+        var line = (await Overview([over, within, withoutBudget], expenses)).Categories;
+
+        Assert.Equal(
+            [new CategoryKeyItem("Auto", "peri", false), new CategoryKeyItem("Cibo oltre", "mint", true),
+                new CategoryKeyItem("Casa", "coral", false)],
+            line.Key);
+    }
+
+    [Fact]
+    public async Task Should_name_the_over_budget_category_in_the_key()
+    {
+        var top = new[]
+        {
+            NewCategory("Cibo", color: "mint"),
+            NewCategory("Casa", color: "coral"),
+            NewCategory("Auto", color: "peri")
+        };
+        var slightlyOver = NewCategory("Svago", budgetCents: 4_000, color: "sky");
+        var farOver = NewCategory("Viaggi", budgetCents: 1_000, color: "lilac");
+        var withinBudget = NewCategory("Libri", budgetCents: 9_000, color: "butter");
+        var expenses = top
+            .Select((category, index) => Spend(category, 100_000 - index * 1_000, Today))
+            .Concat([Spend(slightlyOver, 5_000, Today), Spend(farOver, 4_000, Today), Spend(withinBudget, 3_000, Today)]);
+
+        var line = (await Overview([.. top, slightlyOver, farOver, withinBudget], expenses)).Categories;
+
+        Assert.Equal(["Cibo", "Casa", "Auto", "Viaggi oltre"], line.Key.Select(item => item.Text));
+        Assert.Equal([false, false, false, true], line.Key.Select(item => item.IsOverBudget));
+        Assert.Equal("lilac", line.Key[^1].ColorKey);
+    }
+
+    [Fact]
+    public async Task Should_scale_category_budgets_by_twelve_for_a_year()
+    {
+        var category = NewCategory("Cibo", budgetCents: 10_000);
+        var expenses = new[] { Spend(category, 119_000, new DateOnly(2026, 3, 1)) };
+
+        var month = (await Overview([category], expenses, Period.Month(2026, 3))).Categories;
+        var year = (await Overview([category], expenses, Period.Year(2026))).Categories;
+        var overYear = (await Overview([category], [.. expenses, Spend(category, 2_000, new DateOnly(2026, 4, 1))], Period.Year(2026))).Categories;
+
+        Assert.True(month.Key[0].IsOverBudget);
+        Assert.False(year.Key[0].IsOverBudget);
+        Assert.True(overYear.Key[0].IsOverBudget);
+    }
+
+    [Fact]
+    public async Task Should_describe_the_line_for_screen_readers()
+    {
+        var food = NewCategory("Cibo");
+        var home = NewCategory("Casa");
+        var archived = NewCategory("Vecchia", archived: true);
+        var expenses = new[] { Spend(food, 30_000, Today), Spend(home, 10_000, Today), Spend(archived, 2_000, Today) };
+
+        var line = (await Overview([food, home, archived], expenses)).Categories;
+
+        Assert.Equal("Spesa per categoria: Cibo 300,00 €, Casa 100,00 €, Altre categorie 20,00 €.", line.Description);
+    }
+
+    [Fact]
     public async Task Should_return_the_repository_failure()
     {
         var failingCategories = new FakeCategoryRepository { Failure = Failed };
@@ -362,9 +496,9 @@ public sealed class HomeOverviewService_should_expected_behavior
         return result.Value;
     }
 
-    private static Category NewCategory(string name, long? budgetCents = null, bool archived = false)
+    private static Category NewCategory(string name, long? budgetCents = null, bool archived = false, string color = "mint")
     {
-        var category = new Category(Guid.NewGuid(), name, "cart", "mint", budgetCents.HasValue ? new Money(budgetCents.Value) : null);
+        var category = new Category(Guid.NewGuid(), name, "cart", color, budgetCents.HasValue ? new Money(budgetCents.Value) : null);
         if (archived)
             category.Archive();
 
