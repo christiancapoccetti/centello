@@ -8,10 +8,10 @@ public partial class App : Microsoft.Maui.Controls.Application
     public App(Func<AppShell> appShellFactory, RecurringPaymentAutomation automation)
     {
         InitializeComponent();
-        UserAppTheme = AppTheme.Light;
         _appShellFactory = appShellFactory;
         _automation = automation;
     }
+
     protected override Window CreateWindow(IActivationState? activationState)
     {
         var window = new Window(_appShellFactory());
