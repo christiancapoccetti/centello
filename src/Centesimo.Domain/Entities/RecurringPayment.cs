@@ -17,6 +17,12 @@ public sealed class RecurringPayment
     /// <summary>True once the next occurrence falls after the end date, so no further expense will be created.</summary>
     public bool IsEnded => EndsOn.HasValue && NextDueOn > EndsOn.Value;
 
+    // For loading a stored payment. The public constructor checks what a new schedule must satisfy, and a payment
+    // that has ended is stored with its next occurrence after its end date, which a new schedule may not have.
+    private RecurringPayment()
+    {
+    }
+
     public RecurringPayment(Guid recurringPaymentId, Guid categoryId, Money amount,
         RecurrenceFrequency frequency, DateOnly nextDueOn, Guid? tagId = null,
         string note = "", DateOnly? endsOn = null)
