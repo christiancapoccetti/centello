@@ -28,6 +28,8 @@ public sealed class CategoryTile : Border
         StrokeThickness = 0;
         StrokeShape = new Rectangle();
         Content = _glyph;
+        // The glyph is a private-use codepoint a screen reader cannot speak. The tile carries the label.
+        AutomationProperties.SetIsInAccessibleTree(_glyph, false);
         _glyph.SetThemeColor(Label.TextColorProperty, ThemeColor.TileInk);
         ApplyIcon(null);
         this.SetPaletteColor(BackgroundColorProperty, null);

@@ -75,5 +75,6 @@
         <Setter Property="TextColor" Value="{t:Theme Ink}" />
         <Setter Property="VerticalTextAlignment" Value="Center" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="AutomationProperties.IsInAccessibleTree" Value="False" />
     </Style>
 </ResourceDictionary>
