@@ -101,7 +101,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Keep_the_transcription_for_correction_when_the_interpretation_failed()
+    public async Task Keep_the_transcription_when_the_interpretation_failed()
     {
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Success("cento euro carburante");
@@ -116,42 +116,17 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Interpret_typed_text_without_recording_or_transcribing()
-    {
-        _interpreter.Draft = new ExpenseSpeechDraft(null, null, "", null, "", null, "caffè", "caffè");
-
-        var result = await _service.PrepareFromText("caffè");
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal("caffè", _interpreter.Text);
-        Assert.Equal(0, _recorder.StopCount);
-        Assert.Equal(0, _transcriber.CallCount);
-        Assert.Same(_interpreter.Draft, _pending.Take());
-        Assert.Equal(1, _scopes.CreatedCount);
-    }
-
-    [Fact]
-    public async Task Leave_no_draft_when_typed_text_cannot_be_interpreted()
-    {
-        _interpreter.Failure = InterpretationFailure;
-
-        var result = await _service.PrepareFromText("???");
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(InterpretationFailure, result.Error);
-        Assert.Null(_pending.Take());
-    }
-
-    [Fact]
-    public async Task Fail_when_the_categories_cannot_be_loaded()
+    public async Task Fail_before_transcribing_when_the_categories_cannot_be_loaded()
     {
         var failure = new Error("Test.Categories", "Categorie non disponibili.");
+        _recorder.Audio = Audio;
         _categories.Failure = failure;
 
-        var result = await _service.PrepareFromText("caffè");
+        var result = await _service.StopAndPrepare();
 
         Assert.True(result.IsFailure);
         Assert.Equal(failure, result.Error);
+        Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);
     }
 
@@ -180,19 +155,6 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         Assert.Equal(1, _recorder.StopCount);
         Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);
-    }
-
-    [Fact]
-    public async Task Not_interpret_typed_text_without_internet()
-    {
-        _internet.IsAvailable = false;
-
-        var result = await _service.PrepareFromText("caffè");
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(SpeechErrors.NoInternet, result.Error);
-        Assert.Equal(0, _interpreter.CallCount);
-        Assert.Null(_pending.Take());
     }
 
     [Fact]

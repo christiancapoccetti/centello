@@ -75,11 +75,8 @@ public sealed class TodayViewModel : ObservableObject
         get => _isSpeechProcessing;
         set
         {
-            if (!SetProperty(ref _isSpeechProcessing, value))
-                return;
-
-            OnPropertyChanged(nameof(IsSpeechIdle));
-            OnPropertyChanged(nameof(CanUseSpeechText));
+            if (SetProperty(ref _isSpeechProcessing, value))
+                OnPropertyChanged(nameof(IsSpeechIdle));
         }
     }
     public bool IsSpeechIdle => !IsSpeechProcessing;
@@ -99,10 +96,10 @@ public sealed class TodayViewModel : ObservableObject
         set
         {
             if (SetProperty(ref _speechTranscription, value))
-                OnPropertyChanged(nameof(CanUseSpeechText));
+                OnPropertyChanged(nameof(HasSpeechTranscription));
         }
     }
-    public bool CanUseSpeechText => !IsSpeechProcessing && SpeechTranscription.HasValue();
+    public bool HasSpeechTranscription => SpeechTranscription.HasValue();
     public string SpeechErrorMessage { get => _speechErrorMessage; set { if (SetProperty(ref _speechErrorMessage, value)) OnPropertyChanged(nameof(HasSpeechError)); } }
     public bool HasSpeechError => SpeechErrorMessage.HasValue();
 

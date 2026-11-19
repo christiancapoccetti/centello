@@ -133,7 +133,16 @@ public partial class TodayPage : ContentPage
 
             var result = await _speechDraftService.StopAndPrepare();
             _viewModel.SpeechTranscription = _speechDraftService.LastTranscription;
-            await OpenEditorOrShowError(result);
+            if (result.IsFailure)
+            {
+                _viewModel.SpeechErrorMessage = result.Error.Message;
+                return;
+            }
+
+            // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
+            _viewModel.IsSpeechSheetVisible = false;
+            _viewModel.SpeechTranscription = "";
+            await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
         }
         catch
         {
@@ -146,42 +155,6 @@ public partial class TodayPage : ContentPage
             if (_viewModel.HasSpeechError)
                 _viewModel.IsSpeechSheetVisible = true;
         }
-    }
-
-    private async void OnUseSpeechTextClicked(object? sender, EventArgs e)
-    {
-        if (_viewModel.IsSpeechProcessing)
-            return;
-
-        _viewModel.SpeechErrorMessage = "";
-        _viewModel.IsSpeechProcessing = true;
-        try
-        {
-            var result = await _speechDraftService.PrepareFromText(_viewModel.SpeechTranscription);
-            await OpenEditorOrShowError(result);
-        }
-        catch
-        {
-            _viewModel.SpeechErrorMessage = "Non riesco a elaborare il testo.";
-        }
-        finally
-        {
-            _viewModel.IsSpeechProcessing = false;
-        }
-    }
-
-    // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
-    private async Task OpenEditorOrShowError(Result result)
-    {
-        if (result.IsFailure)
-        {
-            _viewModel.SpeechErrorMessage = result.Error.Message;
-            return;
-        }
-
-        _viewModel.IsSpeechSheetVisible = false;
-        _viewModel.SpeechTranscription = "";
-        await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
     }
 
     private void OnCloseSpeechClicked(object? sender, EventArgs e)
@@ -197,7 +170,7 @@ public partial class TodayPage : ContentPage
     {
         var openSettings = await DisplayAlertAsync(
             "Inserimento rapido",
-            "Configura la chiave API OpenAI nelle impostazioni per usare voce e testo libero.",
+            "Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.",
             "Apri impostazioni",
             "Annulla");
         if (openSettings)

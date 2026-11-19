@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.Application;
 
-/// <summary>Turns a spoken or typed phrase into the draft the expense editor opens with. Nothing is saved here.</summary>
+/// <summary>Turns a spoken phrase into the draft the expense editor opens with. Nothing is saved here.</summary>
 public sealed class SpeechExpenseDraftService(
     ISpeechRecorder recorder,
     ISpeechTranscriber transcriber,
@@ -47,27 +47,11 @@ public sealed class SpeechExpenseDraftService(
             return Result.Failure(transcription.Error);
 
         LastTranscription = transcription.Value;
-        return await Interpret(transcription.Value, categories.Value, cancellationToken);
-    }
-
-    public async Task<Result> PrepareFromText(string text, CancellationToken cancellationToken = default)
-    {
-        if (!internet.IsAvailable)
-            return Result.Failure(SpeechErrors.NoInternet);
-
-        var categories = await LoadCategories(cancellationToken);
-        if (categories.IsFailure)
-            return Result.Failure(categories.Error);
-
-        return await Interpret(text, categories.Value, cancellationToken);
-    }
-
-    private async Task<Result> Interpret(
-        string text,
-        IReadOnlyCollection<SpeechCategory> categories,
-        CancellationToken cancellationToken)
-    {
-        var draft = await interpreter.Interpret(text, categories, DateOnly.FromDateTime(DateTime.Today), cancellationToken);
+        var draft = await interpreter.Interpret(
+            transcription.Value,
+            categories.Value,
+            DateOnly.FromDateTime(DateTime.Today),
+            cancellationToken);
         if (draft.IsFailure)
             return Result.Failure(draft.Error);
 
