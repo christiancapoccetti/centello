@@ -42,6 +42,9 @@ internal static class ItalianFormat
     /// <summary>"12 novembre"</summary>
     public static string LongDate(DateOnly date) => $"{date.Day} {MonthName(date.Month)}";
 
+    /// <summary>"del 5 dicembre", or "dell'8 agosto" and "dell'11 novembre" where the article elides</summary>
+    public static string OfLongDate(DateOnly date) => $"{(date.Day is 8 or 11 ? "dell'" : "del ")}{LongDate(date)}";
+
     /// <summary>"lun 17 nov"</summary>
     public static string WeekdayDate(DateOnly date) => $"{ShortWeekdayNames[(int)date.DayOfWeek]} {ShortDate(date)}";
 

@@ -6,6 +6,9 @@ public sealed record SaveRecurringPaymentRequest(Guid CategoryId, long AmountCen
     RecurrenceFrequency Frequency, DateOnly NextDueOn, Guid? TagId = null,
     string Note = "", DateOnly? EndsOn = null);
 
+/// <summary>What ending a payment now leaves behind: the date of the last expense and the sentence that says so.</summary>
+public sealed record RecurringEndPreview(DateOnly LastExpenseOn, string Message);
+
 public sealed class RecurringPaymentService(
     ICategoryRepository categories,
     ITagRepository tags,
@@ -73,6 +76,26 @@ public sealed class RecurringPaymentService(
 
         found.Value.End(endsOn);
         return await recurringPayments.Update(found.Value, cancellationToken);
+    }
+
+    /// <summary>What "Termina" does: it ends the payment on its next due date (<c>End(paymentId, NextDueOn)</c>), so
+    /// the occurrence due on that date is the last expense the payment creates. For a paused payment that expense
+    /// is created once it resumes.</summary>
+    public async Task<Result<RecurringEndPreview>> PreviewEnd(Guid paymentId,
+        CancellationToken cancellationToken = default)
+    {
+        var found = await recurringPayments.Get(paymentId, cancellationToken);
+        if (found.IsFailure)
+            return Result<RecurringEndPreview>.Failure(found.Error);
+
+        if (found.Value is not { } payment)
+            return Result<RecurringEndPreview>.Failure(ApplicationErrors.RecurringPaymentNotFound);
+
+        if (payment.IsEnded)
+            return Result<RecurringEndPreview>.Failure(ApplicationErrors.RecurringPaymentAlreadyEnded);
+
+        return Result<RecurringEndPreview>.Success(new RecurringEndPreview(payment.NextDueOn,
+            $"L'ultima spesa sarà quella {ItalianFormat.OfLongDate(payment.NextDueOn)}, poi non ne verranno create altre."));
     }
 
     public async Task<Result<int>> ProcessDue(DateOnly today,
