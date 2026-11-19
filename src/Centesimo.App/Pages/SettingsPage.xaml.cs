@@ -31,7 +31,7 @@ public partial class SettingsPage : ContentPage
         await Shell.Current.GoToAsync(nameof(MoneyManagerImportPage));
 
     private async void OnLicensesTapped(object? sender, EventArgs e) =>
-        await Shell.Current.GoToAsync(nameof(LicensePage));
+        await Shell.Current.GoToAsync(nameof(LicensesPage));
 
     private void OnReplaceClicked(object? sender, EventArgs e) => _viewModel.StartReplacing();
 
