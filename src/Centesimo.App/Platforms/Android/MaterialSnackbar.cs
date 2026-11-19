@@ -27,7 +27,12 @@ internal sealed class MaterialSnackbar(IFontManager fonts) : ISnackbar
         }
 
         if ((MarkedAnchor() ?? First<BottomNavigationView>(root, bar => bar.IsShown)) is { } anchor)
+        {
             snackbar.SetAnchorView(anchor);
+            // An editor often closes with the keyboard still up, which holds the anchor high for a moment.
+            // Following the anchor brings the snackbar down with it instead of leaving it in the middle of the page.
+            snackbar.AnchorViewLayoutListenerEnabled = true;
+        }
 
         snackbar.Show();
     }
