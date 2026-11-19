@@ -1,4 +1,5 @@
 using Centesimo.App.ViewModels;
+using Centesimo.Application;
 
 namespace Centesimo.App.Pages;
 
@@ -12,6 +13,25 @@ public partial class SettingsPage : ContentPage
         _viewModel = viewModel;
         BindingContext = viewModel;
     }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _viewModel.LoadApiKeyStatus();
+    }
+
+    private async void OnSaveApiKeyClicked(object? sender, EventArgs e)
+    {
+        var accepted = await DisplayAlertAsync(
+            "Inserimento rapido con OpenAI",
+            OpenAiSettings.ConsentMessage,
+            "Acconsento",
+            "Annulla");
+        await _viewModel.SaveApiKey(accepted);
+    }
+
+    private void OnRemoveApiKeyClicked(object? sender, EventArgs e) =>
+        _viewModel.RemoveApiKey();
 
     private async void OnRecurringPaymentsTapped(object? sender, TappedEventArgs e) =>
         await Shell.Current.GoToAsync(nameof(RecurringPaymentsPage));
