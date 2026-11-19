@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
+             x:Class="Centesimo.App.Pages.MoneyManagerImportPage"
+             Title="Importa da Money Manager"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             SafeAreaEdges="All">
+    <ContentPage.Resources>
+        <!-- A count over its name. The number is a condensed display face, so it reads before the label does. -->
+        <Style x:Key="Count" TargetType="Label" BasedOn="{StaticResource BaseText}">
+            <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="Margin" Value="0,-3,0,0" />
+        </Style>
+    </ContentPage.Resources>
+    <Grid RowDefinitions="56,*">
+        <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
+            <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" IsEnabled="{Binding CanLeave}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
+            <Label Grid.Column="1" Margin="4,0,0,0" Text="Importa da Money Manager" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="0,0,0,24">
+                <Label Text="Importa categorie, spese e pagamenti regolari da un backup .mmbackup. I dati restano sul telefono." Style="{StaticResource Lead}" Margin="24,1,24,0" />
+
+                <VerticalStackLayout Margin="24,20,24,0" IsVisible="{Binding CanChoose}">
+                    <Button Text="Scegli backup" Style="{StaticResource FilledButton}" Clicked="OnChooseClicked">
+                        <Button.ImageSource>
+                            <FontImageSource Glyph="{x:Static app:MaterialSymbols.UploadFile}" FontFamily="{x:Static t:Fonts.Icons}" Size="20" Color="{t:Theme Ground}" />
+                        </Button.ImageSource>
+                    </Button>
+                    <c:InlineError Margin="0,12,0,0" Text="{Binding ErrorMessage}" />
+                </VerticalStackLayout>
+
+                <HorizontalStackLayout Margin="24,20,24,0" Spacing="10" IsVisible="{Binding ShowFile}">
+                    <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.Description}" TextColor="{t:Theme Mute}" />
+                    <Label Text="{Binding FileName}" Style="{StaticResource BodyMedium}" VerticalOptions="Center" LineBreakMode="MiddleTruncation" />
+                </HorizontalStackLayout>
+
+                <Border Style="{StaticResource InfoCard}" Margin="24,16,24,0" IsVisible="{Binding ShowPreview}">
+                    <VerticalStackLayout>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.CheckCircle}" TextColor="{t:Theme OnPositiveContainer}" />
+                            <Label Text="Backup analizzato" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <Grid Margin="0,16,0,0" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="16">
+                            <VerticalStackLayout>
+                                <Label Text="{Binding NewCategories}" Style="{StaticResource Count}" />
+                                <Label Text="nuove categorie" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="{Binding NewExpenses}" Style="{StaticResource Count}" />
+                                <Label Text="nuove spese" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Row="1">
+                                <Label Text="{Binding NewRecurringPayments}" Style="{StaticResource Count}" />
+                                <Label Text="pagamenti regolari" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Row="1" Grid.Column="1">
+                                <Label Text="{Binding AlreadyPresent}" Style="{StaticResource Count}" />
+                                <Label Text="già presenti" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <BoxView Style="{StaticResource Hairline}" Color="{t:Theme Outline}" Margin="0,16,0,12" />
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Style="{StaticResource IconGlyph}" FontSize="16" Text="{x:Static app:MaterialSymbols.Info}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
+                            <Label Text="Gli elementi già presenti non vengono duplicati." Style="{StaticResource Caption}" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Margin="24,20,24,0" Spacing="8" IsVisible="{Binding IsPreviewReady}">
+                    <Button Text="Importa elementi nuovi" Style="{StaticResource FilledButton}" Clicked="OnImportClicked" />
+                    <Button Text="Scegli un altro file" Style="{StaticResource OutlinedButton}" Clicked="OnChooseClicked" />
+                    <c:InlineError Margin="0,4,0,0" Text="{Binding ErrorMessage}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Margin="24,24,24,0" IsVisible="{Binding ShowProgress}">
+                    <c:IndeterminateBar />
+                    <Label Text="{Binding ProgressText}" Style="{StaticResource Caption}" Margin="4,6,4,0" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsDone}">
+                    <Border Style="{StaticResource InfoCard}" Margin="24,16,24,0" BackgroundColor="{t:Theme PositiveContainer}">
+                        <VerticalStackLayout>
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.CheckCircle}" TextColor="{t:Theme OnPositiveContainer}" />
+                                <Label Text="Fatto" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" TextColor="{t:Theme OnPositiveContainer}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding ResultMessage}" Margin="0,8,0,0" TextColor="{t:Theme OnPositiveContainer}" LineHeight="1.5" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Button Text="Vai a Oggi" Style="{StaticResource OutlinedButton}" Margin="24,20,24,0" Clicked="OnTodayClicked" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
