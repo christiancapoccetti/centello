@@ -13,6 +13,7 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         services.AddSingleton<IOpenAiApiKeyStore, InMemoryOpenAiApiKeyStore>();
         services.AddSingleton<ISpeechRecorder, SilentSpeechRecorder>();
         services.AddSingleton<IInternetAccess, AlwaysOnlineInternetAccess>();
+        services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
         return services.BuildServiceProvider();
     }
 
@@ -77,7 +78,6 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseService>());
     }
 
-
     [Fact]
     public void Build_the_expense_export_service_with_the_system_clock()
     {
@@ -86,6 +86,16 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
 
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseExportService>());
     }
+
+    [Fact]
+    public void Share_one_recurring_payment_automation()
+    {
+        using var provider = BuildProvider();
+
+        Assert.Same(provider.GetRequiredService<RecurringPaymentAutomation>(),
+            provider.GetRequiredService<RecurringPaymentAutomation>());
+    }
+
     [Fact]
     public void Share_one_openai_client_between_transcriber_and_interpreter()
     {
