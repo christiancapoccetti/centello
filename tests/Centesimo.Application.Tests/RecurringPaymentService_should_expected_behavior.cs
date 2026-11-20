@@ -49,7 +49,7 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var payments = new FakeRecurringPaymentRepository();
         var expenses = new FakeExpenseRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses, payments,
-            new FakeRecurringOccurrenceProcessor(expenses));
+            new FakeRecurringOccurrenceProcessor(expenses), () => new DateOnly(2026, 7, 1));
         var created = await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Weekly, new DateOnly(2026, 7, 20)));
 
         var updated = await service.Update(created.Value.RecurringPaymentId, new(category.CategoryId, 2_000, RecurrenceFrequency.Yearly, new DateOnly(2026, 8, 1)));
@@ -57,7 +57,7 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var ended = await service.End(created.Value.RecurringPaymentId, new DateOnly(2027, 1, 1));
 
         Assert.True(updated.IsSuccess && suspended.IsSuccess && ended.IsSuccess);
-        Assert.True(created.Value.IsSuspended);
+        Assert.False(created.Value.IsSuspended);
         Assert.Equal(RecurrenceFrequency.Yearly, created.Value.Frequency);
     }
 
@@ -222,6 +222,63 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Preview_ending_a_paused_payment_on_the_occurrence_it_will_really_create()
+    {
+        var (service, payment) = await ServiceWithPayment(RecurrenceFrequency.Monthly, new DateOnly(2026, 10, 5),
+            today: new DateOnly(2026, 11, 20));
+        await service.Suspend(payment.RecurringPaymentId);
+
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        Assert.Equal(new DateOnly(2026, 12, 5), preview.Value.LastExpenseOn);
+        Assert.Equal("L'ultima spesa sarà quella del 5 dicembre, poi non ne verranno create altre.", preview.Value.Message);
+        Assert.Equal(new DateOnly(2026, 10, 5), payment.NextDueOn);
+        Assert.True(payment.IsSuspended);
+    }
+
+    [Fact]
+    public async Task Create_the_promised_last_expense_when_a_paused_payment_is_ended()
+    {
+        var (service, payment, expenses) = await ServiceWithPaymentAndExpenses(
+            RecurrenceFrequency.Monthly, new DateOnly(2026, 10, 5), today: new DateOnly(2026, 11, 20));
+        await service.Suspend(payment.RecurringPaymentId);
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        await service.End(payment.RecurringPaymentId, preview.Value.LastExpenseOn);
+        await service.Resume(payment.RecurringPaymentId);
+        await service.ProcessDue(new DateOnly(2027, 6, 1));
+
+        Assert.Equal([preview.Value.LastExpenseOn], expenses.Items.Select(expense => expense.OccurredOn));
+    }
+
+    [Fact]
+    public async Task Show_a_paused_payment_as_ended_once_its_last_expense_is_created()
+    {
+        var (service, payment, expenses) = await ServiceWithPaymentAndExpenses(
+            RecurrenceFrequency.Monthly, new DateOnly(2026, 10, 5), today: new DateOnly(2026, 11, 20));
+        await service.Suspend(payment.RecurringPaymentId);
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        await service.End(payment.RecurringPaymentId, preview.Value.LastExpenseOn);
+        await service.ProcessDue(new DateOnly(2026, 12, 5));
+
+        Assert.Single(expenses.Items);
+        Assert.Equal(RecurringPaymentStatus.Ended, payment.Status);
+    }
+
+    [Fact]
+    public async Task Refuse_to_preview_ending_a_paused_payment_whose_end_date_passed_during_the_pause()
+    {
+        var (service, payment) = await ServiceWithPayment(RecurrenceFrequency.Monthly, new DateOnly(2026, 6, 15),
+            endsOn: new DateOnly(2026, 8, 15), today: new DateOnly(2026, 9, 20));
+        await service.Suspend(payment.RecurringPaymentId);
+
+        var preview = await service.PreviewEnd(payment.RecurringPaymentId);
+
+        Assert.Equal("RecurringPayment.AlreadyEnded", preview.Error.Code);
+    }
+
+    [Fact]
     public async Task Refuse_to_preview_ending_a_missing_payment_and_propagate_repository_failure()
     {
         var payments = new FakeRecurringPaymentRepository();
@@ -238,9 +295,9 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
     }
 
     private static async Task<(RecurringPaymentService Service, RecurringPayment Payment)> ServiceWithPayment(
-        RecurrenceFrequency frequency, DateOnly nextDueOn, DateOnly? endsOn = null)
+        RecurrenceFrequency frequency, DateOnly nextDueOn, DateOnly? endsOn = null, DateOnly? today = null)
     {
-        var (service, payment, _) = await ServiceWithPaymentAndExpenses(frequency, nextDueOn, endsOn);
+        var (service, payment, _) = await ServiceWithPaymentAndExpenses(frequency, nextDueOn, endsOn, today);
         return (service, payment);
     }
 

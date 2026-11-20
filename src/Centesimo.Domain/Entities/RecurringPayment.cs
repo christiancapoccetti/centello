@@ -74,8 +74,19 @@ public sealed class RecurringPayment
             return;
 
         IsSuspended = false;
-        while (NextDueOn < today && !IsEnded)
-            MoveToNextOccurrence();
+        NextDueOn = UpcomingDueOn(today);
+    }
+
+    /// <summary>The first occurrence on or after <paramref name="today"/>, or the first one past the end date when
+    /// the payment ends before then. The schedule is left where it is.</summary>
+    public DateOnly UpcomingDueOn(DateOnly today)
+    {
+        var definition = new RecurrenceDefinition(Frequency, AnchorMonth, AnchorDay);
+        var dueOn = NextDueOn;
+        while (dueOn < today && !(EndsOn.HasValue && dueOn > EndsOn.Value))
+            dueOn = definition.GetNext(dueOn);
+
+        return dueOn;
     }
 
     public void End(DateOnly endsOn) => EndsOn = endsOn;

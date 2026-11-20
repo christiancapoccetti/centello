@@ -124,6 +124,16 @@ public sealed class RecurringPayment_should_expected_behavior
     }
 
     [Fact]
+    public void Name_the_first_occurrence_on_or_after_today_without_moving_the_schedule()
+    {
+        var payment = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 10, 5));
+
+        Assert.Equal(new DateOnly(2026, 12, 5), payment.UpcomingDueOn(new DateOnly(2026, 11, 20)));
+        Assert.Equal(new DateOnly(2026, 10, 5), payment.UpcomingDueOn(new DateOnly(2026, 10, 5)));
+        Assert.Equal(new DateOnly(2026, 10, 5), payment.NextDueOn);
+    }
+
+    [Fact]
     public void Leave_the_schedule_of_an_active_payment_untouched_when_resumed()
     {
         var payment = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 6, 15));
