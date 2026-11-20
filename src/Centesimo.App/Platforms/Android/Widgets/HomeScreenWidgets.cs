@@ -57,14 +57,19 @@ public sealed class HomeScreenWidgets : IStoreChangeListener
             .SelectMany(spec => manager.GetAppWidgetIds(spec.Component(context))!.Select(id => (spec, id)))
             .ToList();
         if (installed.Count == 0)
+        {
+            Midnight.Cancel(context);
             return;
+        }
 
-        if (await Read() is not { } data)
-            return;
+        if (await Read() is { } data)
+        {
+            var art = new WidgetArt(context, _fonts);
+            foreach (var (spec, id) in installed)
+                Push(context, manager, art, data, spec, id);
+        }
 
-        var art = new WidgetArt(context, _fonts);
-        foreach (var (spec, id) in installed)
-            Push(context, manager, art, data, spec, id);
+        Midnight.Arm(context);
     }
 
     private async Task<HomeScreenData?> Read()
