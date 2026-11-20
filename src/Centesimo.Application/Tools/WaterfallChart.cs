@@ -48,14 +48,14 @@ public sealed record WaterfallChart(
 
         var period = spending.Period;
         var levels = Running(spending.Compared, changes);
-        var high = levels.Max();
+        var scale = Scale.Of(levels);
         var steps = changes
             .Select((change, index) => new WaterfallStep(change.Name, change.IconKey, change.ColorKey, change.Delta,
-                Level(levels[index], high), Level(levels[index + 1], high), Label(levels[index], levels[index + 1])))
+                scale.Level(levels[index]), scale.Level(levels[index + 1]), Label(levels[index], levels[index + 1])))
             .ToList();
         return new WaterfallChart(InsightTexts.FromTo(period),
-            Total(spending.Compared, high, InsightTexts.Short(period.Previous())), steps,
-            Total(spending.Spent, high, InsightTexts.Short(period)), false, "", "");
+            Total(spending.Compared, scale, InsightTexts.Short(period.Previous())), steps,
+            Total(spending.Spent, scale, InsightTexts.Short(period)), scale.IsCut, "", "");
     }
 
     /// <summary>What a column of the chart changes by: a category, or the rest folded into one.</summary>
@@ -107,10 +107,43 @@ public sealed record WaterfallChart(
         return levels;
     }
 
-    private static double Level(long cents, long high) => (double)cents / high;
+    /// <summary>Where the plot starts and ends, in cents. It cuts only when the change is small against the totals: the
+    /// spread of the levels is at most a third of the highest one. Then it starts at a round number below the lowest
+    /// level, with half the spread as margin so the label under the lowest fall fits. Otherwise it starts at zero.</summary>
+    private readonly record struct Scale(long Floor, long High)
+    {
+        private static readonly long[] NiceMultiples = [1, 2, 5];
 
-    private static WaterfallTotal Total(long cents, long high, string caption) =>
-        new(cents, Level(cents, high), ItalianFormat.WholeEuros(cents), caption);
+        public bool IsCut => Floor > 0;
+
+        public static Scale Of(IReadOnlyList<long> levels)
+        {
+            var high = levels.Max();
+            var low = levels.Min();
+            // A tiny change would otherwise zoom without limit: the spread counts as at least a tenth of the highest.
+            var spread = Math.Max(high - low, high / 10);
+            if (spread * 3 > high)
+                return new Scale(0, high);
+
+            var step = NiceStep(spread);
+            return new Scale((2 * low - spread) / (2 * step) * step, high);
+        }
+
+        /// <summary>0..1 of the plot above the floor.</summary>
+        public double Level(long cents) => (double)(cents - Floor) / (High - Floor);
+
+        // The smallest 1, 2 or 5 x 10^k euros that is at least a quarter of the spread.
+        private static long NiceStep(long spread)
+        {
+            for (var decade = OneEuro; ; decade *= 10)
+                foreach (var multiple in NiceMultiples)
+                    if (decade * multiple * 4 >= spread)
+                        return decade * multiple;
+        }
+    }
+
+    private static WaterfallTotal Total(long cents, Scale scale, string caption) =>
+        new(cents, scale.Level(cents), ItalianFormat.WholeEuros(cents), caption);
 
     /// <summary>The whole euros of the level after a step minus those of the level before it, signed. Neighbouring
     /// labels share a rounded level, so they add up from the rounded start to the rounded end.</summary>

@@ -237,6 +237,61 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.Equal(current > previous ? "+1" : $"{Minus}1", chart.Steps.Single().Value);
     }
 
+    // The levels 136.660, 130.720, 126.100, 123.420, 123.860, 125.240 and 128.460 cents spread 13.240 cents, under a
+    // tenth of the highest, so the spread counts as a tenth: 13.666 cents. Three times that is under the highest level,
+    // so the scale is cut. A quarter of it is 34 €, so the step is 50 €, and 1.234,20 € less 68,33 € rounds down to
+    // 1.150 €. The plot then runs from 1.150 € to 1.366,60 €, 21.660 cents.
+    [Fact]
+    public async Task Should_start_the_scale_at_a_round_floor_below_the_lowest_level()
+    {
+        var chart = (await InsightFixtures.November().Overview()).Waterfall!;
+
+        Assert.True(chart.IsCut);
+        Assert.Equal(1.0, chart.Start.Level);
+        Assert.Equal(
+            [15_720 / 21_660.0, 11_100 / 21_660.0, 8_420 / 21_660.0, 8_860 / 21_660.0, 10_240 / 21_660.0, 13_460 / 21_660.0],
+            chart.Steps.Select(step => step.To));
+        Assert.Equal(13_460 / 21_660.0, chart.End.Level);
+    }
+
+    [Fact]
+    public async Task Should_start_the_scale_at_zero_when_the_change_is_large()
+    {
+        var chart = await Chart(new Line("Spesa", 200_000, 100_000));
+
+        Assert.False(chart.IsCut);
+        Assert.Equal(1.0, chart.Start.Level);
+        Assert.Equal((1.0, 0.5), (chart.Steps[0].From, chart.Steps[0].To));
+        Assert.Equal(0.5, chart.End.Level);
+    }
+
+    // From 300 € to 200 € the spread is exactly a third of the highest level and the step is 50 €, so the floor is 150 €.
+    [Theory]
+    [InlineData(20_000, true, 5_000 / 15_000.0)]
+    [InlineData(19_999, false, 19_999 / 30_000.0)]
+    public async Task Should_cut_the_scale_only_when_the_levels_spread_over_at_most_a_third_of_the_highest(
+        long current, bool isCut, double endLevel)
+    {
+        var chart = await Chart(new Line("Spesa", 30_000, current));
+
+        Assert.Equal(isCut, chart.IsCut);
+        Assert.Equal(endLevel, chart.End.Level, 12);
+    }
+
+    [Theory]
+    [InlineData(30_000, 29_000, 27_000)]
+    [InlineData(60_000, 58_000, 54_000)]
+    [InlineData(100_000, 99_500, 90_000)]
+    public async Task Should_round_the_floor_down_to_a_one_two_or_five_step_and_zoom_no_further_than_ten_times(
+        long previous, long current, long floor)
+    {
+        var chart = await Chart(new Line("Spesa", previous, current));
+
+        Assert.True(chart.IsCut);
+        Assert.Equal(1.0, chart.Start.Level);
+        Assert.Equal((double)(current - floor) / (previous - floor), chart.End.Level, 12);
+    }
+
     // Seven changes of at least 1 €, two under it, one category that dropped to zero, one unchanged, and spending in an
     // archived and in an unknown category: 780,00 € in October, 670,44 € in November.
     private static Line[] MessyMonth() =>
