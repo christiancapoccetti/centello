@@ -17,7 +17,7 @@ public static class InsightTexts
     public static BudgetSummary Summary(Period period, bool isToDate, long spentCents, long? comparedCents)
     {
         if (comparedCents is not { } compared)
-            return new BudgetSummary($"Nessuna spesa da confrontare {ItalianFormat.InPeriod(period.Previous())}.", "", "");
+            return new BudgetSummary($"Nessuna spesa da confrontare {InComparedPeriod(period, isToDate)}.", "", "");
 
         var subject = $"{SubjectOf(period, isToDate)} ";
         var difference = spentCents - compared;

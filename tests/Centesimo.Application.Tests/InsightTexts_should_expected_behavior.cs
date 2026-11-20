@@ -68,8 +68,13 @@ public sealed class InsightTexts_should_expected_behavior
         var month = InsightTexts.Summary(Period.Month(2026, 11), true, 128_460, null);
         var year = InsightTexts.Summary(Period.Year(2026), true, 1_800_000, null);
 
-        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare a ottobre.", "", ""), month);
-        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare nel 2025.", "", ""), year);
+        var pastMonth = InsightTexts.Summary(Period.Month(2026, 10), false, 128_460, null);
+        var pastYear = InsightTexts.Summary(Period.Year(2025), false, 1_800_000, null);
+
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare negli stessi giorni di ottobre.", "", ""), month);
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare nello stesso periodo del 2025.", "", ""), year);
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare a settembre.", "", ""), pastMonth);
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare nel 2024.", "", ""), pastYear);
     }
 
     [Theory]
