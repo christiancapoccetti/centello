@@ -159,10 +159,13 @@ public partial class TodayPage : ContentPage
         _viewModel.Capture = _viewModel.Capture.Close();
 
     private async void OnTakePhotoClicked(object? sender, EventArgs e) =>
-        await ReadPhoto(TakePhoto);
+        await ReadDocument(DraftSource.Photo, TakePhoto);
 
     private async void OnPickPhotoClicked(object? sender, EventArgs e) =>
-        await ReadPhoto(_photos.Pick);
+        await ReadDocument(DraftSource.Photo, _photos.Pick);
+
+    private async void OnPickPdfClicked(object? sender, EventArgs e) =>
+        await ReadDocument(DraftSource.Pdf, _photos.PickPdf);
 
     private async Task<Result<byte[]?>> TakePhoto()
     {
@@ -173,33 +176,33 @@ public partial class TodayPage : ContentPage
         return await _photos.Capture();
     }
 
-    private async Task ReadPhoto(Func<Task<Result<byte[]?>>> take)
+    private async Task ReadDocument(DraftSource source, Func<Task<Result<byte[]?>>> take)
     {
         if (!_viewModel.Capture.IsChoosingPhoto)
             return;
 
-        _viewModel.Capture = _viewModel.Capture.Pick(DraftSource.Photo);
+        _viewModel.Capture = _viewModel.Capture.Pick(source);
         try
         {
-            var photo = await take();
-            if (photo.IsFailure)
+            var picked = await take();
+            if (picked.IsFailure)
             {
-                _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Photo).Fail(photo.Error);
+                _viewModel.Capture = _viewModel.Capture.Read(source).Fail(picked.Error);
                 return;
             }
 
-            if (photo.Value is not { } bytes)
+            if (picked.Value is not { } bytes)
             {
                 _viewModel.Capture = _viewModel.Capture.Close();
                 return;
             }
 
-            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Photo);
+            _viewModel.Capture = _viewModel.Capture.Read(source);
             await Show(await _drafts.PrepareFromDocument(bytes));
         }
         catch
         {
-            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Photo).Fail(PhotoErrors.ProcessingFailed);
+            _viewModel.Capture = _viewModel.Capture.Read(source).Fail(PhotoErrors.ProcessingFailed);
         }
     }
 

@@ -192,6 +192,11 @@
                         <Label Grid.Column="1" Text="Scegli dalla galleria" FontSize="16" FontFamily="{x:Static t:Fonts.SemiBold}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
                         <Button Grid.ColumnSpan="2" Margin="-16,0" BackgroundColor="Transparent" Text="" Clicked="OnPickPhotoClicked" SemanticProperties.Description="Scegli dalla galleria" />
                     </Grid>
+                    <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.PictureAsPdf}" />
+                        <Label Grid.Column="1" Text="Scegli un PDF" FontSize="16" FontFamily="{x:Static t:Fonts.SemiBold}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
+                        <Button Grid.ColumnSpan="2" Margin="-16,0" BackgroundColor="Transparent" Text="" Clicked="OnPickPdfClicked" SemanticProperties.Description="Scegli un PDF" />
+                    </Grid>
                 </VerticalStackLayout>
             </Border>
         </Grid>

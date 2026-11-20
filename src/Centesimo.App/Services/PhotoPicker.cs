@@ -15,8 +15,14 @@ public sealed class PhotoPicker
         SelectionLimit = 1
     };
 
+    private static readonly PickOptions PdfOptions = new()
+    {
+        FileTypes = FilePickerFileType.Pdf,
+        PickerTitle = "Scegli un PDF"
+    };
+
     // Wider than what ExpenseDocument accepts on purpose: a camera app may leave a HEIC original next to the JPEG copy.
-    private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
+    private static readonly string[] LeftoverExtensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf"];
 
     // Below Android 13 MediaPicker.CapturePhotoAsync demands WRITE_EXTERNAL_STORAGE. Declaring it would make
     // MediaPicker rotate and compress a picked gallery photo in place, so the camera is not offered there.
@@ -31,6 +37,8 @@ public sealed class PhotoPicker
     }
 
     public Task<Result<byte[]?>> Pick() => Take(PickFirst);
+
+    public Task<Result<byte[]?>> PickPdf() => Take(() => FilePicker.Default.PickAsync(PdfOptions));
 
     private static async Task<FileResult?> PickFirst() =>
         (await MediaPicker.Default.PickPhotosAsync(Options)).FirstOrDefault();
@@ -77,15 +85,17 @@ public sealed class PhotoPicker
         return buffer.ToArray();
     }
 
+    // The pickers copy what the person chooses into the app cache and hand back that copy, so sweeping the cache never
+    // touches the person's own photo or PDF. Nothing outside it may be deleted.
     private static void DeleteLeftovers()
     {
         try
         {
-            var images = Directory
+            var leftovers = Directory
                 .EnumerateFiles(FileSystem.CacheDirectory, "*", SearchOption.AllDirectories)
-                .Where(path => ImageExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase));
-            foreach (var image in images)
-                Delete(image);
+                .Where(path => LeftoverExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase));
+            foreach (var leftover in leftovers)
+                Delete(leftover);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
