@@ -82,6 +82,11 @@ public sealed class InsightsService_should_expected_behavior
         var result = await CreateService(new DateOnly(2026, 7, 20), category, expenses).Get(Period.Month(2026, 7));
 
         Assert.Null(result.Value.ComparedSpentCents);
+        Assert.Null(result.Value.Waterfall);
+        Assert.False(result.Value.HasWaterfall);
+        Assert.Null(result.Value.Pace.Gap);
+        Assert.Equal(SplitVerdict.NothingToCompare, result.Value.Pace.Split);
+        Assert.False(result.Value.Pace.HasSentence);
     }
 
     [Fact]
