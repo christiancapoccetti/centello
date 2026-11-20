@@ -55,6 +55,10 @@ public static class ItalianFormat
     /// <summary>"del 5 dicembre", or "dell'8 agosto" and "dell'11 novembre" where the article elides</summary>
     public static string OfLongDate(DateOnly date) => $"{(date.Day is 8 or 11 ? "dell'" : "del ")}{LongDate(date)}";
 
+    /// <summary>"Una spesa di 12,50 € scade il 18 novembre.", or "scade l'8 agosto." where the article elides</summary>
+    public static string PaymentDue(long cents, DateOnly dueOn) =>
+        $"Una spesa di {Money(cents)} scade {(dueOn.Day is 8 or 11 ? "l'" : "il ")}{LongDate(dueOn)}.";
+
     /// <summary>"lun 17 nov"</summary>
     public static string WeekdayDate(DateOnly date) => $"{ShortWeekdayNames[(int)date.DayOfWeek]} {ShortDate(date)}";
 

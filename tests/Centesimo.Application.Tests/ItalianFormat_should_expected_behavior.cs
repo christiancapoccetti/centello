@@ -15,6 +15,15 @@ public sealed class ItalianFormat_should_expected_behavior
     public void Add_the_year_to_a_short_date_in_another_year(int year, int month, int day, string expected) =>
         Assert.Equal(expected, ItalianFormat.ShortDate(new DateOnly(year, month, day), new DateOnly(2026, 11, 19)));
 
+    [Theory]
+    [InlineData(2026, 11, 18, "scade il 18 novembre.")]
+    [InlineData(2026, 8, 8, "scade l'8 agosto.")]
+    [InlineData(2026, 12, 11, "scade l'11 dicembre.")]
+    public void Say_when_a_payment_is_due(int year, int month, int day, string expected) =>
+        Assert.Equal(
+            $"Una spesa di {ItalianFormat.Money(1250)} {expected}",
+            ItalianFormat.PaymentDue(1250, new DateOnly(year, month, day)));
+
     [Fact]
     public void Name_a_period_without_its_year()
     {
