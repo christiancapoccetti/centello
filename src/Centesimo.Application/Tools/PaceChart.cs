@@ -83,6 +83,7 @@ public sealed record PaceChart(
 {
     private const int MonthSlots = 31;
     private const int YearSlots = 12;
+    private const char Nbsp = ' ';
 
     public bool HasSentence => Sentence.HasValue();
 
@@ -94,7 +95,7 @@ public sealed record PaceChart(
         var scale = new Scale(heights.Max());
         return new PaceChart(
             period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
-            Bars(spending, compared, scale), null, null, null,
+            Bars(spending, compared, scale), Line(spending, scale), null, null,
             new PaceAxis(new PaceTick(0, ""), new PaceTick(0, ""), null), [],
             SplitVerdict.NothingToCompare, "", "");
     }
@@ -123,6 +124,18 @@ public sealed record PaceChart(
             .ToList();
     }
 
+    private static PaceLine? Line(SpendComparison spending, Scale scale)
+    {
+        if (spending.PreviousClosed == 0)
+            return null;
+
+        var previous = spending.Period.Previous();
+        var levels = Cumulative(SlotOf(previous, previous.End) + 1, previous, spending.PreviousWhole);
+        return new PaceLine(
+            levels.Select(level => scale.Of(level)).ToList(),
+            $"{Subject(previous)} ha chiuso a {Euros(spending.PreviousClosed)}");
+    }
+
     private static PaceSlotKind KindOf(int slot, int compared, int last, bool isToDate)
     {
         if (slot > last)
@@ -146,6 +159,14 @@ public sealed record PaceChart(
 
         return levels;
     }
+
+    /// <summary>"ottobre" or "il 2025": the previous period as a sentence names it.</summary>
+    private static string Subject(Period period) => period.Kind == PeriodKind.Month
+        ? ItalianFormat.MonthName(period.Start.Month)
+        : $"il {period.Start.Year}";
+
+    /// <summary>"1.590 €": the chart's unit is the whole euro.</summary>
+    private static string Euros(long cents) => $"{ItalianFormat.WholeEuros(cents)}{Nbsp}€";
 
     /// <summary>Cents as a fraction of the chart's one scale.</summary>
     private readonly record struct Scale(long Cents)
