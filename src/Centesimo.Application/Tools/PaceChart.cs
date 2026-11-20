@@ -83,7 +83,7 @@ public sealed record PaceChart(
 {
     private const int MonthSlots = 31;
     private const int YearSlots = 12;
-    private const char Nbsp = ' ';
+    private const char Nbsp = (char)0xA0;
 
     // WholeEuros rounds half up, so a difference under 0,50 € would read "0 €".
     private const long HalfEuro = 50;
@@ -96,11 +96,12 @@ public sealed record PaceChart(
         var compared = SlotOf(period, spending.Window.CurrentTo);
         long[] heights = [spending.Spent, spending.PreviousClosed, budget ?? 0];
         var scale = new Scale(heights.Max());
+        var split = PaceSplit.Of(spending);
+        var line = Line(spending, scale);
         return new PaceChart(
             period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
-            Bars(spending, compared, scale), Line(spending, scale), BudgetLine(budget, scale),
-            GapOf(spending, compared, scale),
-            new PaceAxis(new PaceTick(0, ""), new PaceTick(0, ""), null), [],
+            Bars(spending, compared, scale), line, BudgetLine(budget, scale), GapOf(spending, compared, scale),
+            AxisOf(spending, compared), KeyOf(spending, split, line is not null),
             SplitVerdict.NothingToCompare, "", "");
     }
 
@@ -138,6 +139,33 @@ public sealed record PaceChart(
         return new PaceLine(
             levels.Select(level => scale.Of(level)).ToList(),
             $"{Subject(previous)} ha chiuso a {Euros(spending.PreviousClosed)}");
+    }
+
+    private static PaceAxis AxisOf(SpendComparison spending, int compared)
+    {
+        var period = spending.Period;
+        return new PaceAxis(Tick(period, period.Start), Tick(period, period.End),
+            spending.IsToDate ? new PaceTick(compared, "oggi") : null);
+    }
+
+    private static PaceTick Tick(Period period, DateOnly day) => new(SlotOf(period, day),
+        period.Kind == PeriodKind.Month ? ItalianFormat.ShortDate(day) : ItalianFormat.ShortMonth(day.Month));
+
+    private static List<PaceKeyItem> KeyOf(SpendComparison spending, PaceSplit split, bool hasLine)
+    {
+        var period = spending.Period;
+        List<PaceKeyItem> key = [];
+        if (split.IsShown)
+            key.AddRange([
+                new PaceKeyItem(PaceSeries.Automatic, "Automatiche", ItalianFormat.Money(split.Automatic)),
+                new PaceKeyItem(PaceSeries.Variable, "Variabili", ItalianFormat.Money(split.Variable))]);
+        else
+            key.Add(new PaceKeyItem(PaceSeries.Spent, InsightTexts.Name(period), ""));
+
+        if (hasLine)
+            key.Add(new PaceKeyItem(PaceSeries.Previous, InsightTexts.Name(period.Previous()), ""));
+
+        return key;
     }
 
     private static PaceBudget? BudgetLine(long? budget, Scale scale) => budget is { } cents
@@ -200,4 +228,23 @@ public sealed record PaceChart(
     {
         public double Of(long cents) => Cents == 0 ? 0 : (double)cents / Cents;
     }
+}
+
+/// <summary>The automatic and the variable spending of the two compared windows, in cents.</summary>
+internal sealed record PaceSplit(long Automatic, long Variable, long ComparedAutomatic, long ComparedVariable)
+{
+    /// <summary>Either window holds automatic spending, so the bars and the key tell the two kinds apart.</summary>
+    public bool IsShown => Automatic > 0 || ComparedAutomatic > 0;
+
+    public static PaceSplit Of(SpendComparison spending)
+    {
+        var automatic = AutomaticIn(spending.Current);
+        var comparedAutomatic = AutomaticIn(spending.Previous);
+        return new PaceSplit(automatic, spending.Spent - automatic, comparedAutomatic,
+            spending.Compared - comparedAutomatic);
+    }
+
+    private static long AutomaticIn(IEnumerable<Expense> expenses) => expenses
+        .Where(expense => expense.IsAutomatic)
+        .Sum(expense => expense.Amount.Cents);
 }

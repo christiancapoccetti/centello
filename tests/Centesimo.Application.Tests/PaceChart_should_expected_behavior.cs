@@ -4,7 +4,7 @@ namespace Centesimo.Application.Tests;
 
 public sealed class PaceChart_should_expected_behavior
 {
-    private const char Nbsp = ' ';
+    private const char Nbsp = (char)0xA0;
 
     private static readonly DateOnly Today = new(2026, 11, 19);
 
@@ -410,6 +410,93 @@ public sealed class PaceChart_should_expected_behavior
         var pace = await new Ledger().Spend(On(11, 3), 10_000).Pace(Period.Month(2026, 11), Today);
 
         Assert.Null(pace.Budget);
+    }
+
+    [Fact]
+    public async Task Should_label_the_axis_at_the_first_day_today_and_the_last_day()
+    {
+        var pace = await new Ledger().Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(new PaceAxis(new PaceTick(0, "1 nov"), new PaceTick(29, "30 nov"), new PaceTick(18, "oggi")), pace.Axis);
+    }
+
+    [Fact]
+    public async Task Should_end_the_axis_of_february_on_its_28th_slot_and_name_no_today_in_a_past_month()
+    {
+        var pace = await new Ledger().Pace(Period.Month(2026, 2), Today);
+
+        Assert.Equal(new PaceAxis(new PaceTick(0, "1 feb"), new PaceTick(27, "28 feb"), null), pace.Axis);
+    }
+
+    [Fact]
+    public async Task Should_label_the_months_of_a_year()
+    {
+        var current = await new Ledger().Pace(Period.Year(2026), Today);
+        var past = await new Ledger().Pace(Period.Year(2025), Today);
+
+        Assert.Equal(new PaceAxis(new PaceTick(0, "gen"), new PaceTick(11, "dic"), new PaceTick(10, "oggi")), current.Axis);
+        Assert.Equal(new PaceAxis(new PaceTick(0, "gen"), new PaceTick(11, "dic"), null), past.Axis);
+    }
+
+    [Fact]
+    public async Task Should_key_automatic_and_variable_amounts_and_the_previous_period()
+    {
+        var ledger = new Ledger()
+            .Automatic(On(11, 1), 10_000)
+            .Spend(On(11, 2), 5_000)
+            .Spend(On(10, 4), 7_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(
+            [
+                new PaceKeyItem(PaceSeries.Automatic, "Automatiche", $"100,00{Nbsp}€"),
+                new PaceKeyItem(PaceSeries.Variable, "Variabili", $"50,00{Nbsp}€"),
+                new PaceKeyItem(PaceSeries.Previous, "Ottobre", "")
+            ],
+            pace.Key);
+    }
+
+    [Fact]
+    public async Task Should_key_the_split_when_only_the_compared_days_had_automatic_spending()
+    {
+        var ledger = new Ledger().Automatic(On(10, 1), 10_000).Spend(On(11, 2), 5_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(
+            [
+                new PaceKeyItem(PaceSeries.Automatic, "Automatiche", $"0,00{Nbsp}€"),
+                new PaceKeyItem(PaceSeries.Variable, "Variabili", $"50,00{Nbsp}€"),
+                new PaceKeyItem(PaceSeries.Previous, "Ottobre", "")
+            ],
+            pace.Key);
+    }
+
+    [Fact]
+    public async Task Should_key_the_period_alone_without_automatic_spending()
+    {
+        var ledger = new Ledger().Spend(On(11, 2), 5_000).Spend(On(10, 4), 7_000).Spend(On(11, 3, 2025), 1_000);
+
+        var month = await ledger.Pace(Period.Month(2026, 11), Today);
+        var year = await ledger.Pace(Period.Year(2026), Today);
+
+        Assert.Equal(
+            [new PaceKeyItem(PaceSeries.Spent, "Novembre", ""), new PaceKeyItem(PaceSeries.Previous, "Ottobre", "")],
+            month.Key);
+        Assert.Equal(
+            [new PaceKeyItem(PaceSeries.Spent, "2026", ""), new PaceKeyItem(PaceSeries.Previous, "2025", "")],
+            year.Key);
+    }
+
+    [Fact]
+    public async Task Should_leave_the_previous_period_out_of_the_key_without_a_line()
+    {
+        var plain = await new Ledger().Spend(On(11, 2), 5_000).Pace(Period.Month(2026, 11), Today);
+        var split = await new Ledger().Automatic(On(11, 1), 10_000).Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal([new PaceKeyItem(PaceSeries.Spent, "Novembre", "")], plain.Key);
+        Assert.Equal([PaceSeries.Automatic, PaceSeries.Variable], split.Key.Select(item => item.Series));
     }
 
     private static DateOnly On(int month, int day, int year = 2026) => new(year, month, day);
