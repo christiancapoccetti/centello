@@ -34,9 +34,10 @@ public abstract record InsightTarget
 public sealed record LocalInsight(InsightKind Kind, string Title, string Description, InsightTarget Target);
 
 /// <summary>From and To bound what was spent. IsToDate is true for the period that contains today, which is compared
-/// up to today with the same days of the previous one.</summary>
+/// up to today with the same days of the previous one. ComparedSpentCents is null when nothing was spent in the
+/// compared days. Summary is the sentence under the total, in euros.</summary>
 public sealed record InsightsOverview(Period Period, HomeNavigation Navigation, DateOnly From, DateOnly To,
-    bool IsToDate, long SpentCents, long? ComparedSpentCents, double? ChangePercentage,
+    bool IsToDate, long SpentCents, long? ComparedSpentCents, BudgetSummary Summary,
     IReadOnlyList<InsightCategory> Categories, IReadOnlyList<LocalInsight> Insights);
 
 public sealed class InsightsService(ICategoryRepository categories, IExpenseRepository expenses,
@@ -69,7 +70,7 @@ public sealed class InsightsService(ICategoryRepository categories, IExpenseRepo
         long? compared = spending.IsComparable ? spending.Compared : null;
         return new InsightsOverview(period, HomeNavigation.For(period, today), window.CurrentFrom, window.CurrentTo,
             spending.IsToDate, spending.Spent, compared,
-            compared is null ? null : (double)(spending.Spent - compared.Value) / compared.Value,
+            InsightTexts.Summary(period, spending.IsToDate, spending.Spent, compared),
             Rows(spending), BuildInsights(spending));
     }
 

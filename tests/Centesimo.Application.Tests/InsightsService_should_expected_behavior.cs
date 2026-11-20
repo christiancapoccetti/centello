@@ -49,7 +49,27 @@ public sealed class InsightsService_should_expected_behavior
         Assert.True(result.IsSuccess);
         Assert.Equal(new DateOnly(2026, 6, 1), result.Value.From.AddMonths(-1));
         Assert.Equal(800, result.Value.ComparedSpentCents);
-        Assert.Equal(0.25, result.Value.ChangePercentage!.Value, 3);
+    }
+
+    [Fact]
+    public async Task Should_summarize_the_difference_in_euros()
+    {
+        var category = new Category(Guid.NewGuid(), "Spesa", "cart", "#196D61");
+        var expenses = new FakeExpenseRepository();
+        expenses.Items.AddRange([
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(128_460), new DateOnly(2026, 11, 19)),
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(136_660), new DateOnly(2026, 10, 19)),
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(22_340), new DateOnly(2026, 10, 25)),
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(150_000), new DateOnly(2026, 9, 12))
+        ]);
+        var service = CreateService(new DateOnly(2026, 11, 19), category, expenses);
+
+        var current = (await service.Get(Period.Month(2026, 11))).Value;
+        var past = (await service.Get(Period.Month(2026, 10))).Value;
+
+        Assert.Equal(new BudgetSummary("Fino a oggi hai speso ", $"82,00{Nbsp}€ in meno", " degli stessi giorni di ottobre."),
+            current.Summary);
+        Assert.Equal(new BudgetSummary("A ottobre hai speso ", $"90,00{Nbsp}€ in più", " di settembre."), past.Summary);
     }
 
     [Fact]
@@ -185,7 +205,6 @@ public sealed class InsightsService_should_expected_behavior
         Assert.Equal((new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31)), (result.Value.From, result.Value.To));
         Assert.Equal(1000, result.Value.SpentCents);
         Assert.Equal(800, result.Value.ComparedSpentCents);
-        Assert.Equal(0.25, result.Value.ChangePercentage!.Value, 3);
     }
 
     [Fact]
@@ -380,14 +399,14 @@ public sealed class InsightsService_should_expected_behavior
         var result = await CreateService(new DateOnly(2026, 7, 20), [food, subscriptions], expenses).Get(Period.Month(2026, 7));
 
         var descriptions = result.Value.Insights.ToDictionary(x => x.Kind, x => x.Description);
-        Assert.Equal("Hai registrato 3 spese in Abbonamenti a luglio; nello stesso periodo di giugno nessuna.", descriptions[InsightKind.NewHabit]);
+        Assert.Equal("Hai registrato 3 spese in Abbonamenti a luglio; negli stessi giorni di giugno nessuna.", descriptions[InsightKind.NewHabit]);
         Assert.Equal($"1.200,00{Nbsp}€ il 3 luglio è molto più alta delle altre spese di Abbonamenti.",
             descriptions[InsightKind.UnusualExpense]);
     }
 
     [Theory]
     [InlineData(2026, 7, "Hai registrato 3 spese in Abbonamenti a luglio; a giugno nessuna.")]
-    [InlineData(2026, 8, "Hai registrato 3 spese in Abbonamenti ad agosto; nello stesso periodo di luglio nessuna.")]
+    [InlineData(2026, 8, "Hai registrato 3 spese in Abbonamenti ad agosto; negli stessi giorni di luglio nessuna.")]
     public async Task Say_a_new_habit_was_absent_only_over_the_days_that_were_compared(int year, int month, string expected)
     {
         var category = new Category(Guid.NewGuid(), "Abbonamenti", "tech", "#196D61");

@@ -39,7 +39,6 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
         ? "Ancora nessuna spesa"
         : $"Nessuna spesa {ItalianFormat.InPeriod(Overview.Period)}";
     public string Total => ItalianFormat.Amount(Overview?.SpentCents ?? 0);
-    public BudgetSummary? Summary => Overview is null ? null : InsightTexts.Summary(Overview);
     public IReadOnlyList<InsightRow> Insights => Overview?.Insights.Select(ToRow).ToList() ?? [];
     public bool HasInsights => Overview is { Insights.Count: > 0 };
     public IReadOnlyList<InsightCategoryRow> Categories => Overview is null ? [] : Overview.Categories.Select(ToRow).ToList();

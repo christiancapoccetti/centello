@@ -33,6 +33,17 @@ public sealed class ItalianFormat_should_expected_behavior
 
     [Theory]
     [InlineData(0, "0")]
+    [InlineData(49, "0")]
+    [InlineData(50, "1")]
+    [InlineData(149, "1")]
+    [InlineData(150, "2")]
+    [InlineData(8_200, "82")]
+    [InlineData(136_660, "1.367")]
+    public void Round_to_whole_euros(long cents, string expected) =>
+        Assert.Equal(expected, ItalianFormat.WholeEuros(cents));
+
+    [Theory]
+    [InlineData(0, "0")]
     [InlineData(37, "37")]
     [InlineData(1218, "1.218")]
     public void Group_the_thousands_of_a_count(int count, string expected) =>

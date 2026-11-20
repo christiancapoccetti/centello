@@ -31,9 +31,9 @@
                     <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="{Binding Summary.Lead}" />
-                                <Span Text="{Binding Summary.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
-                                <Span Text="{Binding Summary.Tail}" />
+                                <Span Text="{Binding Overview.Summary.Lead}" />
+                                <Span Text="{Binding Overview.Summary.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
+                                <Span Text="{Binding Overview.Summary.Tail}" />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>

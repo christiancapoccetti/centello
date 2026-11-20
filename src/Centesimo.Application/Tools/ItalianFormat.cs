@@ -24,6 +24,10 @@ public static class ItalianFormat
     /// <summary>"1.284,60 €"</summary>
     public static string Money(long cents) => $"{Amount(cents)} €";
 
+    /// <summary>"1.367" for 1.366,60: rounded to the euro, half up. Chart labels only; amounts in sentences keep their
+    /// cents.</summary>
+    public static string WholeEuros(long cents) => Grouped((cents + 50) / 100);
+
     /// <summary>"1.218" for a count of things.</summary>
     public static string Count(long count) => Grouped(count);
 
