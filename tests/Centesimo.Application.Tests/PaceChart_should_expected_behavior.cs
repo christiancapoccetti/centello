@@ -585,6 +585,73 @@ public sealed class PaceChart_should_expected_behavior
         Assert.False(pace.HasSentence);
     }
 
+    [Fact]
+    public async Task Should_describe_the_pace_for_screen_readers()
+    {
+        var ledger = new Ledger(160_000)
+            .Spend(On(10, 5), 100_000)
+            .Spend(On(10, 28), 50_000)
+            .Spend(On(11, 3), 90_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(
+            "Spesa accumulata di novembre fino a oggi: 900,00 €. Negli stessi giorni di ottobre: 1.000,00 €. "
+            + "Ottobre ha chiuso a 1.500,00 €. Budget: 1.600 €.",
+            pace.Description.Replace($"{Nbsp}€", " €"));
+    }
+
+    [Fact]
+    public async Task Should_describe_the_split_when_there_is_one()
+    {
+        var ledger = new Ledger().Automatic(On(11, 1), 38_000).Spend(On(11, 3), 5_000).Spend(On(10, 5), 1_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.StartsWith(
+            $"Spesa accumulata di novembre fino a oggi: 430,00{Nbsp}€, di cui automatiche 380,00{Nbsp}€. ",
+            pace.Description);
+    }
+
+    [Fact]
+    public async Task Should_describe_a_year_to_date()
+    {
+        var ledger = new Ledger().Spend(On(3, 3), 10_000).Spend(On(3, 5, 2025), 20_000).Spend(On(12, 5, 2025), 30_000);
+
+        var pace = await ledger.Pace(Period.Year(2026), Today);
+
+        Assert.Equal(
+            "Spesa accumulata del 2026 fino a oggi: 100,00 €. Nello stesso periodo del 2025: 200,00 €. "
+            + "Il 2025 ha chiuso a 500,00 €.",
+            pace.Description.Replace($"{Nbsp}€", " €"));
+    }
+
+    [Fact]
+    public async Task Should_describe_a_past_period_against_the_whole_previous_one_once()
+    {
+        var month = await new Ledger().Spend(On(10, 3), 10_000).Spend(On(9, 5), 20_000).Pace(Period.Month(2026, 10), Today);
+        var year = await new Ledger().Spend(On(3, 3, 2025), 10_000).Spend(On(3, 5, 2024), 20_000).Pace(Period.Year(2025), Today);
+
+        Assert.Equal(
+            "Spesa accumulata di ottobre: 100,00 €. A settembre: 200,00 €.",
+            month.Description.Replace($"{Nbsp}€", " €"));
+        Assert.Equal(
+            "Spesa accumulata del 2025: 100,00 €. Nel 2024: 200,00 €.",
+            year.Description.Replace($"{Nbsp}€", " €"));
+    }
+
+    [Fact]
+    public async Task Should_leave_out_of_the_description_what_the_chart_does_not_draw()
+    {
+        var alone = await new Ledger().Spend(On(11, 3), 5_000).Pace(Period.Month(2026, 11), Today);
+        var later = await new Ledger().Spend(On(11, 3), 5_000).Spend(On(10, 25), 10_000).Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal("Spesa accumulata di novembre fino a oggi: 50,00 €.", alone.Description.Replace($"{Nbsp}€", " €"));
+        Assert.Equal(
+            "Spesa accumulata di novembre fino a oggi: 50,00 €. Ottobre ha chiuso a 100,00 €.",
+            later.Description.Replace($"{Nbsp}€", " €"));
+    }
+
     // Automatic spending on the first day of each period and variable spending on the second, for both windows.
     private static Ledger Mixed(Period period, long automatic, long variable, long comparedAutomatic, long comparedVariable)
     {

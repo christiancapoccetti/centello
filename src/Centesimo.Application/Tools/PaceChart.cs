@@ -103,7 +103,7 @@ public sealed record PaceChart(
             period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
             Bars(spending, compared, scale), line, BudgetLine(budget, scale), GapOf(spending, compared, scale),
             AxisOf(spending, compared), KeyOf(spending, split, line is not null),
-            verdict, SentenceOf(spending, split, verdict), "");
+            verdict, SentenceOf(spending, split, verdict), Describe(spending, split, budget));
     }
 
     /// <summary>Day d of a month is slot d - 1, month m of a year is slot m - 1, for either period.</summary>
@@ -167,6 +167,32 @@ public sealed record PaceChart(
             key.Add(new PaceKeyItem(PaceSeries.Previous, InsightTexts.Name(period.Previous()), ""));
 
         return key;
+    }
+
+    // A clause drops with its data. The closing total of a past period is its compared total, so it is said once.
+    private static string Describe(SpendComparison spending, PaceSplit split, long? budget)
+    {
+        var period = spending.Period;
+        var toDate = spending.IsToDate ? " fino a oggi" : "";
+        var automatic = split.IsShown ? $", di cui automatiche {ItalianFormat.Money(split.Automatic)}" : "";
+        List<string> clauses =
+            [$"Spesa accumulata {InsightTexts.OfPeriod(period)}{toDate}: {ItalianFormat.Money(spending.Spent)}{automatic}."];
+        if (spending.IsComparable)
+        {
+            var against = RowLabels.Sentence(InsightTexts.InComparedPeriod(period, spending.IsToDate));
+            clauses.Add($"{against}: {ItalianFormat.Money(spending.Compared)}.");
+        }
+
+        if (spending.PreviousClosed > 0 && spending.PreviousClosed != spending.Compared)
+        {
+            var closed = RowLabels.Sentence(Subject(period.Previous()));
+            clauses.Add($"{closed} ha chiuso a {ItalianFormat.Money(spending.PreviousClosed)}.");
+        }
+
+        if (budget is { } cents)
+            clauses.Add($"Budget: {ItalianFormat.Budget(cents)}{Nbsp}€.");
+
+        return string.Join(' ', clauses);
     }
 
     private static string SentenceOf(SpendComparison spending, PaceSplit split, SplitVerdict verdict)
