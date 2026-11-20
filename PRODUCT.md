@@ -29,7 +29,6 @@ Success means expenses actually get logged, because entry is fast enough that sk
 - Bottom navigation with four tabs: `Oggi`, `Insight`, `Categorie`, `Impostazioni`.
 - Voice entry: hold the microphone for up to 20 seconds; typing a phrase was removed on purpose. The draft always opens in the expense editor, and nothing is saved without explicit confirmation.
 - Recurring payments create due expenses when the app opens and send Android notifications for upcoming ones.
-- One-time migration from a Money Manager `.mmbackup` file, with preview and no duplication.
 
 ## Capabilities and Constraints
 
@@ -47,7 +46,6 @@ Success means expenses actually get logged, because entry is fast enough that sk
 ## Evidence on Hand
 
 - Product docs: `README.md`, `FUTURE.md`, `DESIGN.md` (visual system) and `docs/mockups/centesimo-prototype.html` (approved prototype of every screen).
-- A real Money Manager backup (`MoneyManager_*.mmbackup`) holds personal financial data. Use it only for local testing and never put its contents into screenshots, docs or any public surface.
 - No reviews, testimonials, download counts or store listing exist. Do not invent any.
 
 ## Product Principles

@@ -290,7 +290,7 @@ A graphite-and-warm-white neutral world, one coral accent, and a seven-slot past
 
 ### Tertiary
 - **Alert** (`alert`, light `alert-light`): errors, inline field errors, the destructive outlined button, and an over-budget category in the home key. In dark it shares the coral hue; in light it deepens to a true red (#C8261A) so it never reads as the accent.
-- **Positive container / on-positive** (`positive-container`, `on-positive-container`): only for good news: the comparison chip when this month is lower than the last, and import success checks.
+- **Positive container / on-positive** (`positive-container`, `on-positive-container`): only for good news: the comparison chip when this month is lower than the last, and the confirmation row of an active voice entry key.
 
 ### Neutral
 - **Graphite Ground** (`graphite-ground`, light `paper-ground-light`): every page, the shell, the tab bar, bottom sheets, and the backing of labels that sit over chart bars.
@@ -416,7 +416,7 @@ Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action th
 Shell tab bar on the ground with no navigation bar above pages; selected tab and title in ink, unselected in mute. The period switcher (month, year, arrows) is the top of the home and Insight.
 
 ### Edge-to-edge lists
-A pushed list page (Spese, a category's page, Pagamenti regolari, Licenze, Importa) draws under the transparent navigation bar: its list scrolls behind the gesture handle and ends above it, never on a hard line. The page takes only the top and side insets (`EdgeToEdgePage`, root grid `EdgeToEdgeRoot`); the bottom inset is taken by the scrolling content, as `ListScroll` on a scroll view and the `ListEnd` footer on a collection, and by what floats over the list, such as the Nuovo pagamento button.
+A pushed list page (Spese, a category's page, Pagamenti regolari, Licenze) draws under the transparent navigation bar: its list scrolls behind the gesture handle and ends above it, never on a hard line. The page takes only the top and side insets (`EdgeToEdgePage`, root grid `EdgeToEdgeRoot`); the bottom inset is taken by the scrolling content, as `ListScroll` on a scroll view and the `ListEnd` footer on a collection, and by what floats over the list, such as the Nuovo pagamento button.
 
 ### Category tile (signature)
 The only place a category's icon and colour become pixels: a square (0 radius) tile in the category's palette ink, with a filled Material Symbols Rounded glyph in tile ink at 58% of the tile size. 36dp in rows, 48dp in the icon picker, 56dp as the editor's preview, 24dp inside chips. In the icon picker an unselected tile is neutral: the raised tone with a Mute glyph, so it reads as an icon on offer. Only the selected tile wears the category's ink, with the tile-ink glyph, inside its ring. The catalog holds 31 icons plus the "Altro" fallback; unknown keys fall back to "more" and grey.

@@ -16,7 +16,6 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 - Confirm that the mark, the launcher icon and the Play Store icon in `docs/brand/` are original work owned by the author.
 - Search the name `Centesimo` on the Play Store and in the trademark registers (UIBM, EUIPO) for conflicting finance apps or marks.
-- Keep third-party logos and brands out of the repository, the store listing and the screenshots. `Money Manager` (a Realbyte mark) may only describe the import, never appear in the title or as a keyword; add a line to the listing such as "Money Manager è un marchio dei rispettivi titolari; Centesimo non è affiliata".
 - Re-check `THIRD_PARTY_NOTICES.md` against the bundled packages (`project.assets.json`) whenever dependencies or the .NET SDK change. Done on 2026-11-20: every bundled library is listed, the .NET Foundation is named as the holder of the .NET components, and the full MIT, BSD 2-Clause, Apache 2.0 and OFL texts plus the .NET runtime notices ship with the app.
 - Tag the commit of every published build on GitHub, so the source offer points at the exact code.
 
@@ -28,7 +27,7 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Data safety form: voice audio, its transcript and the category and tag names are sent to OpenAI only when voice entry is enabled, encrypted in transit; expenses never leave the device.
 - Financial features declaration: Centesimo tracks expenses and provides no financial services.
 - Content rating questionnaire, target audience, and the ads declaration (no ads).
-- Store listing: short and full description, at least two screenshots made with placeholder data (never the real Money Manager backup), a 1024×500 feature graphic, and the 512 px icon already in `docs/brand/`.
+- Store listing: short and full description, at least two screenshots made with placeholder data, a 1024×500 feature graphic, and the 512 px icon already in `docs/brand/`.
 - Ship a signed Android App Bundle (AAB) with Play App Signing. Keep the upload key outside the repository with a backup, and add `*.keystore` and `*.jks` to `.gitignore` (today only `*.pfx` is ignored).
 - Increase `ApplicationVersion` for every upload.
 - Check 16 KB memory page support for the native libraries (SQLite) in the Play Console App Bundle explorer, and keep the target SDK at the level Play requires (36 today).
@@ -36,7 +35,7 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 ### Product gaps for other users
 
-- Backup and restore (see Data portability): the manifest sets `allowBackup="false"` and there is no export, so changing phone or uninstalling loses every expense.
+- Backup file and restore (see Data portability): Android Auto Backup is on, but there is still no backup file you can keep and no restore screen, so uninstalling or leaving Google's backup loses every expense.
 - Voice entry needs the user's own OpenAI API key, which family members are unlikely to have: explain it in the listing and keep manual entry as the main path.
 
 ## Accessibility and input
