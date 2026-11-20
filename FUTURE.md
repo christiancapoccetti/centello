@@ -60,3 +60,23 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 - Quick-entry widget: add an expense by hand or by voice without opening the app first.
 - Summary widget: month total, remaining budget and the comparison with the previous period.
+
+## App shortcuts
+
+- Launcher shortcuts (long press on the app icon), three in total:
+  - `Nuova spesa` (static): opens an empty expense editor.
+  - The two most used categories of the last 30 days (dynamic, with the category icon): open the expense editor with that category already selected, amount to type. They are refreshed when an expense is saved.
+- Each shortcut can be pinned to the home screen as its own icon.
+
+## Year in review
+
+- "Il tuo anno in Centesimo", in the style of Spotify Wrapped: full-screen story cards at the end of the year with the yearly total, the most expensive month, the category that grew the most, the most regular habit and the record day.
+- Computed on the device from the yearly Insight data; nothing leaves the phone.
+- Available from December and kept reachable from Insight for past years.
+
+## Ask Centesimo
+
+- Spoken questions about spending ("Quanto ho speso al ristorante a ottobre?", "Spendo più in benzina quest'anno o l'anno scorso?"), answered with a large figure, one sentence and a small chart; a tap opens the expenses behind the figure.
+- OpenAI only turns the question into a structured query (category, tag, period, kind of calculation) through the same constrained JSON schema as voice entry; the app computes the answer on the local database, so no expense leaves the phone.
+- Limited set of calculations: total, comparison between two periods, largest expense, average. Questions outside it get a plain "non so rispondere" instead of a guess.
+- The voice flow must tell a question from an expense: a field in the schema or two separate microphone modes.
