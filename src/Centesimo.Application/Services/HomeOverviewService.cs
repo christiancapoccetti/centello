@@ -45,6 +45,8 @@ public enum ComparisonTrend { Lower, Higher, Same }
 
 public sealed record PeriodComparison(string Text, ComparisonTrend Trend, string Description);
 
+/// <summary>Key holds every category of the line, over-budget ones first (the furthest over first), then the rest by
+/// spending. The screen shows as many whole items as fit on one line.</summary>
 public sealed record CategoryLine(IReadOnlyList<CategorySegment> Segments, IReadOnlyList<CategoryKeyItem> Key, string Description)
 {
     public bool HasSegments => Segments.Count > 0;
@@ -89,7 +91,6 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     IExpenseRepository expenses, Func<DateOnly>? today = null)
 {
     private const int LatestCount = 5;
-    private const int KeySize = 3;
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
 
     /// <summary>Builds the overview for <paramref name="period"/>, or for the month containing today when null.</summary>
@@ -181,8 +182,8 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     }
 
     // Active categories with spending, largest first. Whatever is left of the total (archived or missing
-    // categories) becomes one grey segment, so the line always adds up to the headline total. The key names the
-    // top KeySize categories and, when it is not among them, the category furthest over its budget.
+    // categories) becomes one grey segment, so the line always adds up to the headline total. The key lists the same
+    // categories with the over-budget ones first; OrderByDescending is stable, so ties keep the spending order.
     private static CategoryLine Line(Period period, IReadOnlyList<Category> categories,
         IReadOnlyList<Expense> periodExpenses, long spent)
     {
@@ -206,20 +207,15 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
         if (folded > 0)
             segments.Add(new CategorySegment(CategoryPalette.Fallback.Key, folded));
 
-        var key = ranked.Take(KeySize).ToList();
-        var furthestOver = ranked
-            .Skip(KeySize)
-            .Where(item => item.IsOverBudget)
+        var key = ranked
             .OrderByDescending(item => item.Overshoot)
-            .ThenBy(item => item.Category.Name)
-            .FirstOrDefault();
-        if (furthestOver is not null)
-            key.Add(furthestOver);
+            .Select(item => item.ToKeyItem())
+            .ToList();
 
         var description = ranked
             .Select(item => $"{item.Category.Name} {ItalianFormat.Money(item.Spent)}")
             .Concat(folded > 0 ? [$"Altre categorie {ItalianFormat.Money(folded)}"] : []);
-        return new CategoryLine(segments, key.Select(item => item.ToKeyItem()).ToList(),
+        return new CategoryLine(segments, key,
             $"Spesa per categoria: {string.Join(", ", description)}.");
     }
 

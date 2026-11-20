@@ -400,7 +400,7 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_name_the_three_largest_categories_in_the_key()
+    public async Task Should_list_every_category_in_the_key_largest_first()
     {
         var categories = new[]
         {
@@ -416,9 +416,22 @@ public sealed class HomeOverviewService_should_expected_behavior
         Assert.Equal(
             [new CategoryKeyItem(categories[0].CategoryId, "Cibo", "mint", false),
                 new CategoryKeyItem(categories[1].CategoryId, "Casa", "coral", false),
-                new CategoryKeyItem(categories[2].CategoryId, "Auto", "peri", false)],
+                new CategoryKeyItem(categories[2].CategoryId, "Auto", "peri", false),
+                new CategoryKeyItem(categories[3].CategoryId, "Svago", "sky", false)],
             line.Key);
-        Assert.Equal(4, line.Segments.Count);
+    }
+
+    [Fact]
+    public async Task Should_leave_archived_and_unspent_categories_out_of_the_key()
+    {
+        var spent = NewCategory("Cibo");
+        var unused = NewCategory("Casa");
+        var archived = NewCategory("Vecchia", archived: true);
+        var expenses = new[] { Spend(spent, 1_000, Today), Spend(archived, 5_000, Today) };
+
+        var line = (await Overview([spent, unused, archived], expenses)).Categories;
+
+        Assert.Equal(["Cibo"], line.Key.Select(item => item.Text));
     }
 
     [Fact]
@@ -432,33 +445,43 @@ public sealed class HomeOverviewService_should_expected_behavior
         var line = (await Overview([over, within, withoutBudget], expenses)).Categories;
 
         Assert.Equal(
-            [new CategoryKeyItem(withoutBudget.CategoryId, "Auto", "peri", false),
-                new CategoryKeyItem(over.CategoryId, "Cibo", "mint", true),
+            [new CategoryKeyItem(over.CategoryId, "Cibo", "mint", true),
+                new CategoryKeyItem(withoutBudget.CategoryId, "Auto", "peri", false),
                 new CategoryKeyItem(within.CategoryId, "Casa", "coral", false)],
             line.Key);
     }
 
     [Fact]
-    public async Task Should_name_the_over_budget_category_in_the_key()
+    public async Task Should_put_over_budget_categories_first_in_the_key_the_furthest_over_first()
     {
-        var top = new[]
-        {
-            NewCategory("Cibo", color: "mint"),
-            NewCategory("Casa", color: "coral"),
-            NewCategory("Auto", color: "peri")
-        };
+        var top = NewCategory("Cibo", color: "mint");
+        var second = NewCategory("Casa", color: "coral");
         var slightlyOver = NewCategory("Svago", budgetCents: 4_000, color: "sky");
         var farOver = NewCategory("Viaggi", budgetCents: 1_000, color: "lilac");
         var withinBudget = NewCategory("Libri", budgetCents: 9_000, color: "butter");
-        var expenses = top
-            .Select((category, index) => Spend(category, 100_000 - index * 1_000, Today))
-            .Concat([Spend(slightlyOver, 5_000, Today), Spend(farOver, 4_000, Today), Spend(withinBudget, 3_000, Today)]);
+        var expenses = new[]
+        {
+            Spend(top, 100_000, Today), Spend(second, 99_000, Today), Spend(slightlyOver, 5_000, Today),
+            Spend(farOver, 4_000, Today), Spend(withinBudget, 3_000, Today)
+        };
 
-        var line = (await Overview([.. top, slightlyOver, farOver, withinBudget], expenses)).Categories;
+        var line = (await Overview([top, second, slightlyOver, farOver, withinBudget], expenses)).Categories;
 
-        Assert.Equal(["Cibo", "Casa", "Auto", "Viaggi"], line.Key.Select(item => item.Text));
-        Assert.Equal([false, false, false, true], line.Key.Select(item => item.IsOverBudget));
-        Assert.Equal("lilac", line.Key[^1].ColorKey);
+        Assert.Equal(["Viaggi", "Svago", "Cibo", "Casa", "Libri"], line.Key.Select(item => item.Text));
+        Assert.Equal([true, true, false, false, false], line.Key.Select(item => item.IsOverBudget));
+    }
+
+    [Fact]
+    public async Task Should_order_key_items_with_the_same_overshoot_by_spending_then_name()
+    {
+        var beta = NewCategory("Beta", budgetCents: 1_000);
+        var alpha = NewCategory("Alfa", budgetCents: 1_000);
+        var bigger = NewCategory("Zeta", budgetCents: 2_000);
+        var expenses = new[] { Spend(beta, 3_000, Today), Spend(alpha, 3_000, Today), Spend(bigger, 4_000, Today) };
+
+        var line = (await Overview([beta, alpha, bigger], expenses)).Categories;
+
+        Assert.Equal(["Zeta", "Alfa", "Beta"], line.Key.Select(item => item.Text));
     }
 
     [Fact]
