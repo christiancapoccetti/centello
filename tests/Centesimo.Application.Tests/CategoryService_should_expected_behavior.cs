@@ -9,7 +9,7 @@ public sealed class CategoryService_should_expected_behavior
     {
         var repository = new FakeCategoryRepository();
         var service = new CategoryService(repository);
-        var created = await service.Create("Food", "cart", new Money(20_000));
+        var created = await service.Create("Food", "cart", "coral", new Money(20_000));
 
         await service.Archive(created.Value.CategoryId);
 
@@ -18,12 +18,44 @@ public sealed class CategoryService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Create_a_category_in_the_color_that_was_chosen()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        var created = await service.Create("Palestra", "gym", "sky");
+
+        Assert.True(created.IsSuccess);
+        Assert.Equal("sky", created.Value.Color);
+        Assert.Same(created.Value, Assert.Single(repository.Items));
+    }
+
+    [Theory]
+    [InlineData("grey")]
+    [InlineData("#176B5B")]
+    [InlineData("Coral")]
+    [InlineData("rocket")]
+    [InlineData("")]
+    public async Task Reject_a_new_category_whose_color_is_not_a_chromatic_slot_without_creating_anything(string color)
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+
+        var result = await service.Create("Palestra", "gym", color, null, ["Pesi"]);
+
+        Assert.Equal("Validation.InvalidColor", result.Error.Code);
+        Assert.Equal("Colore non valido.", result.Error.Message);
+        Assert.Empty(repository.Items);
+        Assert.Empty(repository.AddedTags);
+    }
+
+    [Fact]
     public async Task Get_a_category_by_id_archived_or_not_and_nothing_for_an_unknown_id()
     {
         var repository = new FakeCategoryRepository();
         var service = new CategoryService(repository);
-        var active = (await service.Create("Spesa", "cart")).Value;
-        var archived = (await service.Create("Palestra", "gym")).Value;
+        var active = (await service.Create("Spesa", "cart", "coral")).Value;
+        var archived = (await service.Create("Palestra", "gym", "peri")).Value;
         await service.Archive(archived.CategoryId);
 
         Assert.Equal("Spesa", (await service.Get(active.CategoryId)).Value?.Name);
@@ -54,7 +86,7 @@ public sealed class CategoryService_should_expected_behavior
         repository.Items.AddRange([active, archived]);
         var service = new CategoryService(repository);
 
-        var updated = await service.Update(active.CategoryId, "Dining", "home", new Money(5000));
+        var updated = await service.Update(active.CategoryId, "Dining", "home", "mint", new Money(5000));
         var categories = await service.GetActive();
 
         Assert.True(updated.IsSuccess);
@@ -63,33 +95,84 @@ public sealed class CategoryService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Update_keeps_the_color_the_category_was_given()
+    public async Task Update_changes_the_color_to_another_chromatic_slot()
     {
         var repository = new FakeCategoryRepository();
         var category = new Category(Guid.NewGuid(), "Food", "cart", "lilac");
         repository.Items.Add(category);
         var service = new CategoryService(repository);
 
-        await service.Update(category.CategoryId, "Dining", "home", null);
+        var result = await service.Update(category.CategoryId, "Dining", "home", "mint", null);
 
-        Assert.Equal(("Dining", "home", "lilac"), (category.Name, category.Icon, category.Color));
+        Assert.True(result.IsSuccess);
+        Assert.Equal(("Dining", "home", "mint"), (category.Name, category.Icon, category.Color));
+    }
+
+    [Theory]
+    [InlineData("grey")]
+    [InlineData("#176B5B")]
+    [InlineData("rocket")]
+    public async Task Update_keeps_the_stored_color_a_palette_cannot_offer_when_it_is_passed_unchanged(string stored)
+    {
+        var repository = new FakeCategoryRepository();
+        var category = new Category(Guid.NewGuid(), "Food", "cart", stored);
+        repository.Items.Add(category);
+        var service = new CategoryService(repository);
+
+        var result = await service.Update(category.CategoryId, "Dining", "home", stored, null);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(("Dining", stored), (category.Name, category.Color));
+    }
+
+    [Theory]
+    [InlineData("coral", "grey")]
+    [InlineData("coral", "#176B5B")]
+    [InlineData("coral", "")]
+    [InlineData("grey", "rocket")]
+    [InlineData("#176B5B", "grey")]
+    public async Task Reject_an_update_to_a_color_that_is_neither_chromatic_nor_the_stored_one(string stored, string color)
+    {
+        var repository = new FakeCategoryRepository();
+        var category = new Category(Guid.NewGuid(), "Food", "cart", stored);
+        repository.Items.Add(category);
+        var service = new CategoryService(repository);
+
+        var result = await service.Update(category.CategoryId, "Dining", "home", color, null);
+
+        Assert.Equal("Validation.InvalidColor", result.Error.Code);
+        Assert.Equal(("Food", "cart", stored), (category.Name, category.Icon, category.Color));
     }
 
     [Fact]
-    public async Task Give_a_new_category_the_palette_slot_the_fewest_active_categories_use()
+    public async Task Report_a_missing_category_before_an_invalid_color_on_update()
+    {
+        var service = new CategoryService(new FakeCategoryRepository());
+
+        var result = await service.Update(Guid.NewGuid(), "Dining", "home", "grey", null);
+
+        Assert.Equal("Category.NotFound", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Suggest_the_palette_slot_the_fewest_active_categories_use()
     {
         var repository = new FakeCategoryRepository();
         var service = new CategoryService(repository);
 
         var colors = new List<string>();
         foreach (var name in new[] { "A", "B", "C", "D", "E", "F", "G", "H" })
-            colors.Add((await service.Create(name, "cart")).Value.Color);
+        {
+            var next = (await service.NextColor()).Value;
+            await service.Create(name, "cart", next);
+            colors.Add(next);
+        }
 
         Assert.Equal(["coral", "peri", "butter", "mint", "lilac", "sky", "coral", "peri"], colors);
     }
 
     [Fact]
-    public async Task Fill_the_slot_a_deleted_color_left_free_and_break_ties_by_palette_order()
+    public async Task Suggest_the_slot_a_deleted_color_left_free_and_break_ties_by_palette_order()
     {
         var repository = new FakeCategoryRepository();
         repository.Items.AddRange(
@@ -101,14 +184,15 @@ public sealed class CategoryService_should_expected_behavior
         ]);
         var service = new CategoryService(repository);
 
-        var first = (await service.Create("E", "cart")).Value;
-        var second = (await service.Create("F", "cart")).Value;
+        var first = (await service.NextColor()).Value;
+        await service.Create("E", "cart", first);
+        var second = (await service.NextColor()).Value;
 
-        Assert.Equal(["butter", "lilac"], new[] { first.Color, second.Color });
+        Assert.Equal(["butter", "lilac"], new[] { first, second });
     }
 
     [Fact]
-    public async Task Not_count_archived_categories_or_unknown_colors_when_giving_a_color()
+    public async Task Not_count_archived_categories_or_unknown_colors_when_suggesting_a_color()
     {
         var repository = new FakeCategoryRepository();
         var archived = new Category(Guid.NewGuid(), "Old", "cart", "coral");
@@ -122,24 +206,22 @@ public sealed class CategoryService_should_expected_behavior
         ]);
         var service = new CategoryService(repository);
 
-        var created = await service.Create("New", "cart");
+        var next = await service.NextColor();
 
-        Assert.Equal("coral", created.Value.Color);
+        Assert.Equal("coral", next.Value);
     }
 
     [Fact]
-    public async Task Tell_the_color_the_next_category_will_get_without_creating_it()
+    public async Task Suggest_a_color_without_creating_a_category()
     {
         var repository = new FakeCategoryRepository();
         repository.Items.Add(new Category(Guid.NewGuid(), "A", "cart", "coral"));
         var service = new CategoryService(repository);
 
         var next = await service.NextColor();
-        var created = await service.Create("B", "cart");
 
         Assert.Equal("peri", next.Value);
-        Assert.Equal(next.Value, created.Value.Color);
-        Assert.Equal(2, repository.Items.Count);
+        Assert.Single(repository.Items);
     }
 
     [Fact]
@@ -194,7 +276,7 @@ public sealed class CategoryService_should_expected_behavior
         var repository = new FakeCategoryRepository();
         var service = new CategoryService(repository);
 
-        var created = await service.Create("Ristoranti", "food", new Money(15_000), ["Pizza", "Asporto"]);
+        var created = await service.Create("Ristoranti", "food", "mint", new Money(15_000), ["Pizza", "Asporto"]);
 
         Assert.True(created.IsSuccess);
         Assert.Same(created.Value, Assert.Single(repository.Items));
@@ -209,7 +291,7 @@ public sealed class CategoryService_should_expected_behavior
         var repository = new FakeCategoryRepository();
         var service = new CategoryService(repository);
 
-        await service.Create("Ristoranti", "food", null, ["  Pizza ", "", "   ", "pizza", "Asporto", "PIZZA", "Asporto "]);
+        await service.Create("Ristoranti", "food", "mint", null, ["  Pizza ", "", "   ", "pizza", "Asporto", "PIZZA", "Asporto "]);
 
         Assert.Equal(["Pizza", "Asporto"], repository.AddedTags.Select(tag => tag.Name));
     }
@@ -220,8 +302,8 @@ public sealed class CategoryService_should_expected_behavior
         var repository = new FakeCategoryRepository();
         var service = new CategoryService(repository);
 
-        var withoutList = await service.Create("Casa", "home");
-        var emptyList = await service.Create("Auto", "car", null, []);
+        var withoutList = await service.Create("Casa", "home", "coral");
+        var emptyList = await service.Create("Auto", "car", "peri", null, []);
 
         Assert.True(withoutList.IsSuccess && emptyList.IsSuccess);
         Assert.Empty(repository.AddedTags);
@@ -234,8 +316,8 @@ public sealed class CategoryService_should_expected_behavior
         repository.Items.Add(new Category(Guid.NewGuid(), "Casa", "home", "peri"));
         var service = new CategoryService(repository);
 
-        var blank = await service.Create("  ", "food", null, ["Pizza"]);
-        var duplicate = await service.Create(" casa ", "food", null, ["Pizza"]);
+        var blank = await service.Create("  ", "food", "mint", null, ["Pizza"]);
+        var duplicate = await service.Create(" casa ", "food", "mint", null, ["Pizza"]);
 
         Assert.Equal("Validation.InvalidName", blank.Error.Code);
         Assert.Equal("Category.NameAlreadyExists", duplicate.Error.Code);
@@ -249,7 +331,7 @@ public sealed class CategoryService_should_expected_behavior
         var repository = new FakeCategoryRepository { Failure = InfrastructureErrors.Unexpected };
         var service = new CategoryService(repository);
 
-        var result = await service.Create("Ristoranti", "food", null, ["Pizza"]);
+        var result = await service.Create("Ristoranti", "food", "mint", null, ["Pizza"]);
 
         Assert.Equal("Infrastructure.Unexpected", result.Error.Code);
     }
