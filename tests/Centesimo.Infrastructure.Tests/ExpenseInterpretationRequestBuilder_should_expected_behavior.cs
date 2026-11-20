@@ -229,4 +229,59 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
         Assert.Equal([null], AllowedValues(request, "categoryKey"));
         Assert.Contains("(nessuna categoria)", SystemInstructions(request));
     }
+
+    [Fact]
+    public void Keep_the_voice_request_exactly_as_it_is()
+    {
+        const string instructions = """
+            Compili la bozza di una spesa a partire da una frase in italiano, scritta o dettata.
+            Oggi è giovedì 2026-11-19.
+
+            Categorie e tag dell'utente. Usa solo queste chiavi:
+            (nessuna categoria)
+
+            Regole:
+            - amount: importo in euro come numero. "cento euro" è 100, "12,50" è 12.5. null se manca o non è chiaro.
+            - categoryKey: chiave della categoria che corrisponde chiaramente alla frase. null se nessuna corrisponde o se più categorie sono plausibili. Non indovinare.
+            - tagKey: chiave di un tag della categoria scelta, solo se corrisponde chiaramente. Altrimenti null.
+            - date: data della spesa nel formato AAAA-MM-GG. Risolvi espressioni come "ieri" o "lunedì scorso" a partire da oggi. null se la frase non indica una data.
+            - note: solo i dettagli che non sono già importo, categoria, tag o data. Altrimenti stringa vuota.
+            """;
+        var expected = new JsonObject
+        {
+            ["model"] = "gpt-6-luna",
+            ["reasoning"] = new JsonObject { ["effort"] = "none" },
+            ["store"] = false,
+            ["input"] = new JsonArray(
+                new JsonObject { ["role"] = "system", ["content"] = instructions },
+                new JsonObject { ["role"] = "user", ["content"] = "ieri 12 euro di pizza" }),
+            ["text"] = new JsonObject
+            {
+                ["format"] = new JsonObject
+                {
+                    ["type"] = "json_schema",
+                    ["name"] = "expense_draft",
+                    ["strict"] = true,
+                    ["schema"] = new JsonObject
+                    {
+                        ["type"] = "object",
+                        ["properties"] = new JsonObject
+                        {
+                            ["amount"] = new JsonObject { ["type"] = new JsonArray("number", "null") },
+                            ["categoryKey"] = new JsonObject { ["type"] = new JsonArray("string", "null"), ["enum"] = new JsonArray((JsonNode?)null) },
+                            ["tagKey"] = new JsonObject { ["type"] = new JsonArray("string", "null"), ["enum"] = new JsonArray((JsonNode?)null) },
+                            ["date"] = new JsonObject { ["type"] = new JsonArray("string", "null") },
+                            ["note"] = new JsonObject { ["type"] = "string" }
+                        },
+                        ["required"] = new JsonArray("amount", "categoryKey", "tagKey", "date", "note"),
+                        ["additionalProperties"] = false
+                    }
+                }
+            }
+        };
+
+        var request = Build(new ExpenseInterpretationCatalog([]), "ieri 12 euro di pizza");
+
+        Assert.Equal(expected.ToJsonString(), request.ToJsonString());
+    }
 }
