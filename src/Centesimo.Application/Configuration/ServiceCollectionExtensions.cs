@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<UpcomingRecurringPaymentService>();
         services.AddSingleton<OpenAiSettings>();
         services.AddSingleton<IOpenAiApiKeyProvider>(provider => provider.GetRequiredService<OpenAiSettings>());
-        services.AddSingleton<SpeechExpenseDraftService>();
+        services.AddSingleton<ExpenseDraftService>();
         return services;
     }
 }

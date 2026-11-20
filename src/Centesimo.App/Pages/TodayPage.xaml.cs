@@ -6,17 +6,19 @@ namespace Centesimo.App.Pages;
 public partial class TodayPage : ContentPage
 {
     private readonly TodayViewModel _viewModel;
-    private readonly SpeechExpenseDraftService _speechDraftService;
+    private readonly ExpenseDraftService _drafts;
+    private readonly OpenAiSettings _settings;
     private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;
     private int _speechSession;
     private long _speechPressedAt;
 
-    public TodayPage(TodayViewModel viewModel, SpeechExpenseDraftService speechDraftService, ISnackbar snackbar)
+    public TodayPage(TodayViewModel viewModel, ExpenseDraftService drafts, OpenAiSettings settings, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _speechDraftService = speechDraftService;
+        _drafts = drafts;
+        _settings = settings;
         _snackbar = snackbar;
         BindingContext = viewModel;
     }
@@ -25,7 +27,7 @@ public partial class TodayPage : ContentPage
     {
         base.OnAppearing();
         var load = _viewModel.Load();
-        var availability = _speechDraftService.IsAvailable();
+        var availability = _settings.HasApiKey();
         await Task.WhenAll(load, availability);
         _viewModel.IsSpeechAvailable = await availability;
     }
@@ -33,10 +35,10 @@ public partial class TodayPage : ContentPage
     protected override async void OnDisappearing()
     {
         base.OnDisappearing();
-        if (!_speechDraftService.IsListening)
+        if (!_drafts.IsListening)
             return;
 
-        await _speechDraftService.Cancel();
+        await _drafts.CancelListening();
         _viewModel.IsSpeechListening = false;
         _viewModel.IsSpeechProcessing = false;
         _viewModel.IsSpeechSheetVisible = false;
@@ -107,11 +109,11 @@ public partial class TodayPage : ContentPage
             if (permission != PermissionStatus.Granted)
                 return Result.Failure(SpeechErrors.MicrophoneDenied);
 
-            var result = await _speechDraftService.Start();
+            var result = await _drafts.StartListening();
             if (session != _speechSession || result.IsFailure)
             {
                 if (result.IsSuccess)
-                    await _speechDraftService.Cancel();
+                    await _drafts.CancelListening();
                 return result;
             }
 
@@ -167,8 +169,8 @@ public partial class TodayPage : ContentPage
                 return;
             }
 
-            var result = await _speechDraftService.StopAndPrepare();
-            _viewModel.SpeechTranscription = _speechDraftService.LastTranscription;
+            var result = await _drafts.PrepareFromSpeech();
+            _viewModel.SpeechTranscription = _drafts.LastTranscription;
             if (result.IsFailure)
             {
                 _viewModel.SpeechErrorMessage = result.Error.Message;
@@ -198,7 +200,7 @@ public partial class TodayPage : ContentPage
     {
         var started = await start;
         if (started.IsSuccess)
-            await _speechDraftService.Cancel();
+            await _drafts.CancelListening();
 
         _viewModel.IsSpeechListening = false;
         _snackbar.Show("Tieni premuto il microfono per dettare una spesa");

@@ -3,20 +3,17 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centesimo.Application;
 
 /// <summary>Turns a spoken phrase into the draft the expense editor opens with. Nothing is saved here.</summary>
-public sealed class SpeechExpenseDraftService(
+public sealed class ExpenseDraftService(
     ISpeechRecorder recorder,
     ISpeechTranscriber transcriber,
-    IExpenseTextInterpreter interpreter,
-    OpenAiSettings settings,
+    IExpenseInterpreter interpreter,
     IInternetAccess internet,
     IServiceScopeFactory scopeFactory)
 {
     public bool IsListening => recorder.IsListening;
     public string LastTranscription { get; private set; } = "";
 
-    public Task<bool> IsAvailable() => settings.HasApiKey();
-
-    public async Task<Result> Start(CancellationToken cancellationToken = default)
+    public async Task<Result> StartListening(CancellationToken cancellationToken = default)
     {
         LastTranscription = "";
         if (!internet.IsAvailable)
@@ -25,9 +22,9 @@ public sealed class SpeechExpenseDraftService(
         return await recorder.Start(cancellationToken);
     }
 
-    public Task Cancel() => recorder.Cancel();
+    public Task CancelListening() => recorder.Cancel();
 
-    public async Task<Result<ExpenseDraft>> StopAndPrepare(CancellationToken cancellationToken = default)
+    public async Task<Result<ExpenseDraft>> PrepareFromSpeech(CancellationToken cancellationToken = default)
     {
         var audio = await recorder.Stop(cancellationToken);
         if (audio.IsFailure)

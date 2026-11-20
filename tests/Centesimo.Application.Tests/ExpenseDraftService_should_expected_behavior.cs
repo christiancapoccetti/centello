@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.Application.Tests;
 
-public sealed class SpeechExpenseDraftService_should_expected_behavior
+public sealed class ExpenseDraftService_should_expected_behavior
 {
     private static readonly RecordedAudio Audio = new(new byte[] { 1, 2, 3, 4 });
     private static readonly Error RecordingFailure = new("Test.Recording", "Registrazione non riuscita.");
@@ -12,17 +12,16 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
 
     private readonly FakeCategoryRepository _categories = new();
     private readonly FakeTagRepository _tags = new();
-    private readonly FakeApiKeyStore _keys = new();
     private readonly FakeInternetAccess _internet = new();
     private readonly FakeSpeechRecorder _recorder = new();
     private readonly FakeSpeechTranscriber _transcriber = new();
-    private readonly FakeExpenseTextInterpreter _interpreter = new();
+    private readonly FakeExpenseInterpreter _interpreter = new();
     private readonly CountingScopeFactory _scopes;
-    private readonly SpeechExpenseDraftService _service;
+    private readonly ExpenseDraftService _service;
     private readonly Category _food = new(Guid.NewGuid(), "Cibo", "food", "#176B5B");
     private readonly Category _car = new(Guid.NewGuid(), "Auto", "car", "#176B5B");
 
-    public SpeechExpenseDraftService_should_expected_behavior()
+    public ExpenseDraftService_should_expected_behavior()
     {
         var archived = new Category(Guid.NewGuid(), "Vecchia", "gear", "#176B5B");
         archived.Archive();
@@ -31,23 +30,12 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         _scopes = new CountingScopeFactory(new ServiceMap(
             new CategoryService(_categories),
             new TagService(_categories, _tags)));
-        _service = new SpeechExpenseDraftService(
+        _service = new ExpenseDraftService(
             _recorder,
             _transcriber,
             _interpreter,
-            new OpenAiSettings(_keys),
             _internet,
             _scopes);
-    }
-
-    [Fact]
-    public async Task Be_available_only_when_an_api_key_is_saved()
-    {
-        Assert.False(await _service.IsAvailable());
-
-        _keys.Key = "sk-test";
-
-        Assert.True(await _service.IsAvailable());
     }
 
     [Fact]
@@ -57,12 +45,12 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         _transcriber.Result = Result<string>.Success("Ho speso 100 euro di carburante");
         _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", "Ho speso 100 euro di carburante");
 
-        var result = await _service.StopAndPrepare();
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsSuccess);
         Assert.Equal(Audio, _transcriber.Audio);
         Assert.Equal(["Auto", "Carburante", "Cibo"], _transcriber.Keywords);
-        Assert.Equal("Ho speso 100 euro di carburante", _interpreter.Text);
+        Assert.Equal("Ho speso 100 euro di carburante", _interpreter.Phrase);
         Assert.Equal(["Auto", "Cibo"], _interpreter.Categories.Select(category => category.Name));
         Assert.Equal("Ho speso 100 euro di carburante", _service.LastTranscription);
         Assert.Same(_interpreter.Draft, result.Value);
@@ -74,7 +62,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     {
         _recorder.StopResult = Result<RecordedAudio>.Failure(RecordingFailure);
 
-        var result = await _service.StopAndPrepare();
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(RecordingFailure, result.Error);
@@ -88,7 +76,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Failure(TranscriptionFailure);
 
-        var result = await _service.StopAndPrepare();
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(TranscriptionFailure, result.Error);
@@ -103,7 +91,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         _transcriber.Result = Result<string>.Success("cento euro carburante");
         _interpreter.Failure = InterpretationFailure;
 
-        var result = await _service.StopAndPrepare();
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(InterpretationFailure, result.Error);
@@ -117,7 +105,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _categories.Failure = failure;
 
-        var result = await _service.StopAndPrepare();
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(failure, result.Error);
@@ -130,7 +118,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     {
         _internet.IsAvailable = false;
 
-        var result = await _service.Start();
+        var result = await _service.StartListening();
 
         Assert.True(result.IsFailure);
         Assert.Equal(SpeechErrors.NoInternet, result.Error);
@@ -143,7 +131,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _internet.IsAvailable = false;
 
-        var result = await _service.StopAndPrepare();
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(SpeechErrors.NoInternet, result.Error);
@@ -158,20 +146,12 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Success("vecchia frase");
         _interpreter.Failure = InterpretationFailure;
-        await _service.StopAndPrepare();
+        await _service.PrepareFromSpeech();
 
-        await _service.Start();
+        await _service.StartListening();
 
         Assert.Equal("", _service.LastTranscription);
         Assert.Equal(1, _recorder.StartCount);
-    }
-
-    private sealed class FakeApiKeyStore : IOpenAiApiKeyStore
-    {
-        public string Key { get; set; } = "";
-        public Task<string> GetApiKey() => Task.FromResult(Key);
-        public Task SetApiKey(string apiKey) => Task.CompletedTask;
-        public void ClearApiKey() => Key = "";
     }
 
     private sealed class FakeInternetAccess : IInternetAccess
@@ -221,22 +201,22 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         }
     }
 
-    private sealed class FakeExpenseTextInterpreter : IExpenseTextInterpreter
+    private sealed class FakeExpenseInterpreter : IExpenseInterpreter
     {
         public ExpenseDraft Draft { get; set; } = new(null, null, null, null, "", "");
         public Error? Failure { get; set; }
-        public string Text { get; private set; } = "";
+        public string Phrase { get; private set; } = "";
         public IReadOnlyCollection<DraftCategory> Categories { get; private set; } = [];
         public int CallCount { get; private set; }
 
         public Task<Result<ExpenseDraft>> Interpret(
-            string text,
+            string phrase,
             IReadOnlyCollection<DraftCategory> categories,
             DateOnly today,
             CancellationToken cancellationToken = default)
         {
             CallCount++;
-            Text = text;
+            Phrase = phrase;
             Categories = categories;
             return Task.FromResult(Failure is null
                 ? Result<ExpenseDraft>.Success(Draft)

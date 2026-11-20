@@ -1,9 +1,9 @@
 namespace Centesimo.Application;
 
-public interface IExpenseTextInterpreter
+public interface IExpenseInterpreter
 {
     Task<Result<ExpenseDraft>> Interpret(
-        string text,
+        string phrase,
         IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default);

@@ -3,7 +3,7 @@ using Centesimo.Application;
 
 namespace Centesimo.Infrastructure.Tests;
 
-public sealed class OpenAiExpenseTextInterpreter_should_expected_behavior
+public sealed class OpenAiExpenseInterpreter_should_expected_behavior
 {
     private const string ApiKey = "sk-secret-test-key";
     private static readonly DateOnly Today = new(2026, 11, 19);
@@ -17,15 +17,15 @@ public sealed class OpenAiExpenseTextInterpreter_should_expected_behavior
         new(HomeId, "Casa", [new DraftTag(Guid.NewGuid(), "Affitto")])
     ];
 
-    private static OpenAiExpenseTextInterpreter CreateInterpreter(FakeHttpMessageHandler handler, string apiKey = ApiKey) =>
+    private static OpenAiExpenseInterpreter CreateInterpreter(FakeHttpMessageHandler handler, string apiKey = ApiKey) =>
         new(new OpenAiClient(new HttpClient(handler), new FakeApiKeyProvider(apiKey)));
 
     private static Task<Result<ExpenseDraft>> Interpret(
         FakeHttpMessageHandler handler,
-        string text = "Ho speso 100 euro di carburante",
+        string phrase = "Ho speso 100 euro di carburante",
         string apiKey = ApiKey,
         CancellationToken cancellationToken = default) =>
-        CreateInterpreter(handler, apiKey).Interpret(text, Categories, Today, cancellationToken);
+        CreateInterpreter(handler, apiKey).Interpret(phrase, Categories, Today, cancellationToken);
 
     [Fact]
     public async Task Turn_a_natural_phrase_into_a_draft_with_the_users_own_ids()
@@ -99,11 +99,11 @@ public sealed class OpenAiExpenseTextInterpreter_should_expected_behavior
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task Not_call_openai_for_blank_text(string text)
+    public async Task Not_call_openai_for_blank_phrase(string phrase)
     {
         var handler = FakeHttpMessageHandler.Responding(HttpStatusCode.OK, OpenAiResponses.Interpretation());
 
-        var result = await Interpret(handler, text);
+        var result = await Interpret(handler, phrase);
 
         Assert.True(result.IsFailure);
         Assert.Equal(SpeechErrors.EmptyTranscription, result.Error);

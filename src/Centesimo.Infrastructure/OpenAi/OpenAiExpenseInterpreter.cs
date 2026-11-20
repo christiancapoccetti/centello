@@ -4,19 +4,19 @@ using Centesimo.Domain;
 
 namespace Centesimo.Infrastructure;
 
-public sealed class OpenAiExpenseTextInterpreter(OpenAiClient client) : IExpenseTextInterpreter
+public sealed class OpenAiExpenseInterpreter(OpenAiClient client) : IExpenseInterpreter
 {
     public async Task<Result<ExpenseDraft>> Interpret(
-        string text,
+        string phrase,
         IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default)
     {
-        if (text.IsEmpty())
+        if (phrase.IsEmpty())
             return Result<ExpenseDraft>.Failure(SpeechErrors.EmptyTranscription);
 
         var catalog = new ExpenseInterpretationCatalog(categories);
-        var request = ExpenseInterpretationRequestBuilder.Build(text, catalog, today);
+        var request = ExpenseInterpretationRequestBuilder.Build(phrase, catalog, today);
         using var content = new StringContent(request.ToJsonString(), Encoding.UTF8, "application/json");
         var response = await client.Post("responses", content, cancellationToken);
         if (response.IsFailure)
@@ -27,6 +27,6 @@ public sealed class OpenAiExpenseTextInterpreter(OpenAiClient client) : IExpense
             return Result<ExpenseDraft>.Failure(interpretation.Error);
 
         return Result<ExpenseDraft>.Success(
-            ExpenseInterpretationResolver.Resolve(interpretation.Value, catalog, today, text));
+            ExpenseInterpretationResolver.Resolve(interpretation.Value, catalog, today, phrase));
     }
 }
