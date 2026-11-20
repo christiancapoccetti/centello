@@ -82,8 +82,7 @@ public abstract class RepositoryBase
 
     protected async Task<Result<TValue>> SaveContextInTransaction<TValue>(
         Func<CentesimoDbContext, CancellationToken, Task<TValue>> mutation,
-        CancellationToken cancellationToken = default,
-        bool clearChangeTracker = false)
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -105,11 +104,6 @@ public abstract class RepositoryBase
         catch (Exception)
         {
             return Result<TValue>.Failure(InfrastructureErrors.Unexpected);
-        }
-        finally
-        {
-            if (clearChangeTracker)
-                Context.ChangeTracker.Clear();
         }
     }
 }
