@@ -6,7 +6,7 @@ public sealed class PendingExpenseSpeechDraft_should_expected_behavior
     public void Take_returns_resolved_draft_only_once()
     {
         var pending = new PendingExpenseSpeechDraft();
-        var draft = new ExpenseSpeechDraft(5_000, Guid.NewGuid(), "Auto", Guid.NewGuid(), "Tagliando", null, "", "testo");
+        var draft = new ExpenseSpeechDraft(5_000, Guid.NewGuid(), Guid.NewGuid(), null, "", "testo");
 
         pending.Set(draft);
 

@@ -32,9 +32,7 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
 
         Assert.Equal(10_000, draft.AmountCents);
         Assert.Equal(CarId, draft.CategoryId);
-        Assert.Equal("Auto", draft.CategoryName);
         Assert.Equal(FuelId, draft.TagId);
-        Assert.Equal("Carburante", draft.TagName);
         Assert.Equal(new DateOnly(2026, 11, 18), draft.OccurredOn);
         Assert.Equal("pieno", draft.Note);
         Assert.Equal("Ho speso 100 euro di carburante", draft.Transcription);
@@ -46,9 +44,7 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
         var draft = Resolve(Interpretation(categoryKey: null, tagKey: null));
 
         Assert.Null(draft.CategoryId);
-        Assert.Equal("", draft.CategoryName);
         Assert.Null(draft.TagId);
-        Assert.Equal("", draft.TagName);
         Assert.Equal(10_000, draft.AmountCents);
     }
 
@@ -72,7 +68,6 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
 
         Assert.Equal(CarId, draft.CategoryId);
         Assert.Null(draft.TagId);
-        Assert.Equal("", draft.TagName);
     }
 
     [Fact]

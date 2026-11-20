@@ -19,9 +19,7 @@ public static class ExpenseInterpretationResolver
         return new ExpenseSpeechDraft(
             ToCents(value.Amount),
             category?.Category.CategoryId,
-            category?.Category.Name ?? "",
             tag?.Tag.TagId,
-            tag?.Tag.Name ?? "",
             ParseDate(value.Date, today),
             LimitNote(value.Note.Trim()),
             sourceText);

@@ -57,7 +57,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     {
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Success("Ho speso 100 euro di carburante");
-        _interpreter.Draft = new ExpenseSpeechDraft(10_000, _car.CategoryId, "Auto", null, "", null, "", "Ho speso 100 euro di carburante");
+        _interpreter.Draft = new ExpenseSpeechDraft(10_000, _car.CategoryId, null, null, "", "Ho speso 100 euro di carburante");
 
         var result = await _service.StopAndPrepare();
 
@@ -228,7 +228,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
 
     private sealed class FakeExpenseTextInterpreter : IExpenseTextInterpreter
     {
-        public ExpenseSpeechDraft Draft { get; set; } = new(null, null, "", null, "", null, "", "");
+        public ExpenseSpeechDraft Draft { get; set; } = new(null, null, null, null, "", "");
         public Error? Failure { get; set; }
         public string Text { get; private set; } = "";
         public IReadOnlyCollection<SpeechCategory> Categories { get; private set; } = [];
