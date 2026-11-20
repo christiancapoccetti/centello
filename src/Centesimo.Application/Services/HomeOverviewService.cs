@@ -43,7 +43,9 @@ public sealed record BudgetSummary(string Lead, string Emphasis, string Tail);
 
 public enum ComparisonTrend { Lower, Higher, Same }
 
-public sealed record PeriodComparison(string Text, ComparisonTrend Trend, string Description);
+/// <summary>Text "12% in meno di ottobre" | "In linea con ottobre". Short "12% su ottobre" | "20% sul 2025", and the same as
+/// Text when the trend is Same.</summary>
+public sealed record PeriodComparison(string Text, string Short, ComparisonTrend Trend, string Description);
 
 /// <summary>Key holds every category of the line, over-budget ones first (the furthest over first), then the rest by
 /// spending. The screen shows as many whole items as fit on one line.</summary>
@@ -175,12 +177,13 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
         var reference = isMonth
             ? ItalianFormat.MonthName(period.Previous().Start.Month)
             : period.Previous().Start.Year.ToString();
-        var (preposition, sameAs) = isMonth ? ("di", "con") : ("del", "con il");
+        var (preposition, sameAs, shortPreposition) = isMonth ? ("di", "con", "su") : ("del", "con il", "sul");
         var text = trend == ComparisonTrend.Same ? $"In linea {sameAs} {reference}" : $"{change} {preposition} {reference}";
         var basis = window.IsPartial
             ? $"agli stessi giorni {preposition} {reference}"
             : isMonth ? $"al mese di {reference}" : $"al {reference}";
-        return new PeriodComparison(text, trend, $"Rispetto {basis}: {change}.");
+        var shortText = trend == ComparisonTrend.Same ? text : $"{ItalianFormat.Percent(percent)} {shortPreposition} {reference}";
+        return new PeriodComparison(text, shortText, trend, $"Rispetto {basis}: {change}.");
     }
 
     // Active categories with spending, largest first. Whatever is left of the total (archived or missing

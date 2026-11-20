@@ -199,7 +199,7 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         Assert.True(overview.HasComparison);
         Assert.Equal(
-            new PeriodComparison("33% in più di ottobre", ComparisonTrend.Higher,
+            new PeriodComparison("33% in più di ottobre", "33% su ottobre", ComparisonTrend.Higher,
                 "Rispetto agli stessi giorni di ottobre: 33% in più."),
             overview.Comparison);
     }
@@ -217,7 +217,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview([category], expenses);
 
         Assert.Equal(
-            new PeriodComparison("6% in meno di ottobre", ComparisonTrend.Lower,
+            new PeriodComparison("6% in meno di ottobre", "6% su ottobre", ComparisonTrend.Lower,
                 "Rispetto agli stessi giorni di ottobre: 6% in meno."),
             overview.Comparison);
     }
@@ -253,7 +253,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview([category], expenses, Period.Month(2026, 8));
 
         Assert.Equal(
-            new PeriodComparison("25% in meno di luglio", ComparisonTrend.Lower,
+            new PeriodComparison("25% in meno di luglio", "25% su luglio", ComparisonTrend.Lower,
                 "Rispetto al mese di luglio: 25% in meno."),
             overview.Comparison);
     }
@@ -312,7 +312,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview([category], expenses, Period.Year(2026));
 
         Assert.Equal(
-            new PeriodComparison("20% in più del 2025", ComparisonTrend.Higher,
+            new PeriodComparison("20% in più del 2025", "20% sul 2025", ComparisonTrend.Higher,
                 "Rispetto agli stessi giorni del 2025: 20% in più."),
             overview.Comparison);
     }
@@ -331,7 +331,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview([category], expenses, Period.Year(2028), new DateOnly(2028, 2, 29));
 
         Assert.Equal(
-            new PeriodComparison("In linea con il 2027", ComparisonTrend.Same,
+            new PeriodComparison("In linea con il 2027", "In linea con il 2027", ComparisonTrend.Same,
                 "Rispetto agli stessi giorni del 2027: in linea."),
             overview.Comparison);
     }
@@ -349,7 +349,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview([category], expenses, Period.Year(2025));
 
         Assert.Equal(
-            new PeriodComparison("50% in meno del 2024", ComparisonTrend.Lower, "Rispetto al 2024: 50% in meno."),
+            new PeriodComparison("50% in meno del 2024", "50% sul 2024", ComparisonTrend.Lower, "Rispetto al 2024: 50% in meno."),
             overview.Comparison);
     }
 
