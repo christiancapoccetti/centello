@@ -1,3 +1,4 @@
+using Centesimo.App.Drawing;
 using Centesimo.App.Theming;
 using Centesimo.Application;
 
@@ -15,7 +16,6 @@ public sealed class DailySpendChartView : ContentView
     // label fits even when the line is at the top of the scale.
     private const double PaceLabelRise = 22;
     private const double AxisGap = 5;
-    private const double LabelClearance = 8;
 
     private readonly BarsCanvas _bars = new();
     private readonly Label _pace = CreateLabel(ThemeColor.Pace, Fonts.SemiBold);
@@ -84,69 +84,25 @@ public sealed class DailySpendChartView : ContentView
         if (Chart is not { } chart || Width <= 0)
             return;
 
-        var left = Math.Clamp(Width * chart.HighlightPosition - _highlight.Width / 2, 0,
-            Math.Max(0, Width - _highlight.Width));
-        _highlight.TranslationX = left;
-        _start.Opacity = chart.HasHighlight && left < _start.Width + LabelClearance ? 0 : 1;
-        _end.Opacity = chart.HasHighlight && left + _highlight.Width > Width - _end.Width - LabelClearance ? 0 : 1;
+        var placement = ChartAxisLayout.Place(Width, chart.HighlightPosition, chart.HasHighlight, _highlight.Width,
+            _start.Width, _end.Width);
+        _highlight.TranslationX = placement.HighlightLeft;
+        _start.Opacity = placement.ShowStart ? 1 : 0;
+        _end.Opacity = placement.ShowEnd ? 1 : 0;
     }
 
     private sealed class BarsCanvas : ThemedDrawingView
     {
-        private const float Gap = 3;
-        private const float FutureStub = 4;
-        private const float MinimumBar = 2;
-        private const float PaceStroke = 1.5f;
-        private const float PaceDash = 4;
-        private const float PaceDashGap = 3;
-
         public SpendChart? Chart { get; set; }
 
         protected override void Draw(ICanvas canvas, RectF bounds)
         {
-            if (Chart is not { Bars.Count: > 0 } chart)
+            if (Chart is not { } chart)
                 return;
 
-            // Hard edges: antialiasing would blur the 3dp gaps between bars.
-            canvas.Antialias = false;
-            var full = bounds.Height - (float)PaceLabelRise;
-            var width = (bounds.Width - Gap * (chart.Bars.Count - 1)) / chart.Bars.Count;
-            for (var index = 0; index < chart.Bars.Count; index++)
-            {
-                var bar = chart.Bars[index];
-                var height = HeightOf(bar, full);
-                if (height == 0)
-                    continue;
-
-                canvas.FillColor = Token(ColorOf(bar.Kind));
-                canvas.FillRectangle(bounds.Left + index * (width + Gap), bounds.Bottom - height, width, height);
-            }
-
-            if (chart.PaceFraction is not { } pace)
-                return;
-
-            var y = bounds.Bottom - (float)pace * full;
-            canvas.StrokeColor = Token(ThemeColor.Pace);
-            canvas.StrokeSize = PaceStroke;
-            // The canvas reads dash lengths as multiples of the stroke size.
-            canvas.StrokeDashPattern = [PaceDash / PaceStroke, PaceDashGap / PaceStroke];
-            canvas.DrawLine(bounds.Left, y, bounds.Right, y);
+            var plot = new RectF(bounds.Left, bounds.Top + (float)PaceLabelRise, bounds.Width,
+                bounds.Height - (float)PaceLabelRise);
+            SpendBarsPainter.Draw(canvas, plot, chart, IsDark);
         }
-
-        // Today is always marked and a day to come is a stub. A past day draws what was spent, never less than a
-        // visible sliver, and nothing when nothing was spent.
-        private static float HeightOf(SpendBar bar, float full) => bar.Kind switch
-        {
-            SpendBarKind.Future => FutureStub,
-            SpendBarKind.Current => Math.Max(MinimumBar, (float)bar.Fraction * full),
-            SpendBarKind.Past => bar.Fraction > 0 ? Math.Max(MinimumBar, (float)bar.Fraction * full) : 0
-        };
-
-        private static ThemeColor ColorOf(SpendBarKind kind) => kind switch
-        {
-            SpendBarKind.Future => ThemeColor.Hairline,
-            SpendBarKind.Current => ThemeColor.Ink,
-            SpendBarKind.Past => ThemeColor.ChartBar
-        };
     }
 }
