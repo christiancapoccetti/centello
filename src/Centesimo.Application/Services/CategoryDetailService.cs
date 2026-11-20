@@ -61,7 +61,7 @@ public sealed class CategoryDetailService(ICategoryRepository categories, ITagRe
         IReadOnlyList<Tag> tags, IReadOnlyList<Expense> categoryExpenses)
     {
         var spent = categoryExpenses.Sum(expense => expense.Amount.Cents);
-        var budget = BudgetOf(category, period);
+        var budget = PeriodBudget.Of(period, category.MonthlyBudget);
         var listed = categoryExpenses.Where(expense => selected.Matches(expense.TagId)).ToList();
         var buckets = SpendBuckets.Of(period, today, categoryExpenses);
         return new CategoryDetail(category.CategoryId, category.Name, CategoryIcons.Resolve(category.Icon).Key,
@@ -72,11 +72,6 @@ public sealed class CategoryDetailService(ICategoryRepository categories, ITagRe
             HistoryGroups.Build(period, today, listed, [category], tags, acrossCategories: false),
             HistoryGroups.EmptyText(period, category.Name, selected, tags));
     }
-
-    // A year budget is twelve monthly budgets. A budget of zero is "no budget": nothing to measure against.
-    private static long? BudgetOf(Category category, Period period) => category.MonthlyBudget is { Cents: > 0 } monthly
-        ? monthly.Cents * (period.Kind == PeriodKind.Year ? 12 : 1)
-        : null;
 
     private static BudgetSummary? Summarize(long spent, long? budget)
     {

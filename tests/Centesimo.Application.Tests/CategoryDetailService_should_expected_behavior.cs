@@ -111,6 +111,17 @@ public sealed class CategoryDetailService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_keep_the_budget_of_an_archived_category_on_its_own_page()
+    {
+        var category = NewCategory("Ristoranti", budgetCents: 15_000, archived: true);
+
+        var detail = await Detail(category, Period.Month(2026, 11), expenses: [Spend(category, 12_000, Today)]);
+
+        Assert.Equal(ItalianFormat.Money(3_000), detail.Budget?.Emphasis);
+        Assert.Equal(" su 150", detail.Budget?.Tail);
+    }
+
+    [Fact]
     public async Task Should_say_nothing_is_left_when_the_budget_is_spent_exactly()
     {
         var category = NewCategory("Ristoranti", budgetCents: 15_000);
