@@ -1,3 +1,5 @@
+using Centesimo.Application;
+
 namespace Centesimo.App.Theming;
 
 /// <summary>{t:Theme Ink}: an AppThemeBinding to the token's light/dark pair. Works in Setters and on Brush
