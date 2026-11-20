@@ -11,7 +11,7 @@ namespace Centesimo.Infrastructure;
 public sealed class OpenAiClient
 {
     private static readonly Uri BaseAddress = new("https://api.openai.com/v1/");
-    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
     private readonly HttpClient _http;
     private readonly IOpenAiApiKeyProvider _apiKeys;
 

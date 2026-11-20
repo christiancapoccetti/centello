@@ -49,13 +49,13 @@ public sealed class OpenAiClient_should_expected_behavior
     }
 
     [Fact]
-    public void Time_out_after_thirty_seconds()
+    public void Time_out_after_a_minute()
     {
         var http = new HttpClient(FakeHttpMessageHandler.Responding(HttpStatusCode.OK));
 
         _ = new OpenAiClient(http, new FakeApiKeyProvider(ApiKey));
 
-        Assert.Equal(TimeSpan.FromSeconds(30), http.Timeout);
+        Assert.Equal(TimeSpan.FromSeconds(60), http.Timeout);
     }
 
     [Theory]
