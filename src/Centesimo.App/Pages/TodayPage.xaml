@@ -74,11 +74,12 @@
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
                                 <!-- The gap between items is padding: FlexLayout counts an item margin twice. -->
-                                <HorizontalStackLayout Padding="0,12,14,12" Spacing="6" SemanticProperties.Description="{Binding Text}" SemanticProperties.Hint="Apri la categoria">
+                                <HorizontalStackLayout Padding="0,12,14,12" Spacing="6" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria">
                                     <HorizontalStackLayout.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnCategoryKeyTapped" />
                                     </HorizontalStackLayout.GestureRecognizers>
                                     <c:PaletteSwatch ColorKey="{Binding ColorKey}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                                    <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Error}" FontSize="14" TextColor="{t:Theme Alert}" VerticalOptions="Center" IsVisible="{Binding IsOverBudget}" />
                                     <Label Text="{Binding Text}" Style="{StaticResource Caption}">
                                         <Label.Triggers>
                                             <DataTrigger TargetType="Label" Binding="{Binding IsOverBudget}" Value="True">

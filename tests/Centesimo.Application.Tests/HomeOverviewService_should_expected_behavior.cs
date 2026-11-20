@@ -433,7 +433,7 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         Assert.Equal(
             [new CategoryKeyItem(withoutBudget.CategoryId, "Auto", "peri", false),
-                new CategoryKeyItem(over.CategoryId, "Cibo oltre", "mint", true),
+                new CategoryKeyItem(over.CategoryId, "Cibo", "mint", true),
                 new CategoryKeyItem(within.CategoryId, "Casa", "coral", false)],
             line.Key);
     }
@@ -456,9 +456,21 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         var line = (await Overview([.. top, slightlyOver, farOver, withinBudget], expenses)).Categories;
 
-        Assert.Equal(["Cibo", "Casa", "Auto", "Viaggi oltre"], line.Key.Select(item => item.Text));
+        Assert.Equal(["Cibo", "Casa", "Auto", "Viaggi"], line.Key.Select(item => item.Text));
         Assert.Equal([false, false, false, true], line.Key.Select(item => item.IsOverBudget));
         Assert.Equal("lilac", line.Key[^1].ColorKey);
+    }
+
+    [Fact]
+    public async Task Should_describe_an_over_budget_key_item_as_over_budget_for_screen_readers()
+    {
+        var over = NewCategory("Cibo", budgetCents: 20_000, color: "mint");
+        var within = NewCategory("Casa", budgetCents: 20_000, color: "coral");
+        var expenses = new[] { Spend(over, 30_000, Today), Spend(within, 10_000, Today) };
+
+        var line = (await Overview([over, within], expenses)).Categories;
+
+        Assert.Equal(["Cibo, oltre il budget", "Casa"], line.Key.Select(item => item.Description));
     }
 
     [Fact]

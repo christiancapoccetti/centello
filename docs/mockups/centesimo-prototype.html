@@ -120,6 +120,7 @@ a.chip{text-decoration:none}
 .keys button::after{content:"";position:absolute;inset:-17px -7px}
 .keys i{width:10px;height:10px;display:block}
 .keys .al{color:var(--alert);font-weight:600}
+.keys .al .ms{font-size:14px;margin-right:-2px;font-variation-settings:'FILL' 1,'wght' 500}
 .chart{position:relative;margin:30px 24px 0;height:104px;display:flex;align-items:flex-end;gap:3px}
 .chart.yr{gap:6px}
 .chart.yr .pace span{right:auto;left:0;padding:0 4px 0 0}
@@ -876,7 +877,7 @@ const RENDER = {
     const over = year ? [] : ACTIVE.filter(id => CATS[id].budget && CATS[id].m > CATS[id].budget);
     const keyed = withSpend.filter(id => !over.includes(id)).slice(0, over.length ? 3 : 4);
     const detState = year ? 'anno' : 'mese';
-    const keyBtn = (id, cls, label) => `<button class="tap ${cls}" data-act="go" data-arg="dettaglio-categoria/${detState}" data-cat="${id}">${cls ? '' : `<i style="background:var(--k-${CATS[id].color})"></i>`}${label}</button>`;
+    const keyBtn = (id, cls, label) => `<button class="tap ${cls}" data-act="go" data-arg="dettaglio-categoria/${detState}" data-cat="${id}" ${cls ? `aria-label="${label}, oltre il budget"` : ''}><i style="background:var(--k-${CATS[id].color})"></i>${cls ? '<span class="ms" aria-hidden="true">error</span>' : ''}${label}</button>`;
     let chart;
     if (year) {
       const max = Math.max(...YEAR_MONTHS);
@@ -888,7 +889,7 @@ const RENDER = {
     }
     box.innerHTML = `<section class="total"><b>${fmt(spent)}<span>€</span></b><p>Ne restano <em>${eur(budget - spent)}</em> su ${fmt(budget, 0)} di budget</p>${cmp}</section>
       <div class="mosaic" role="img" aria-label="Spesa per categoria: ${withSpend.map(id => `${CATS[id].name} ${eur(CATS[id][k])}`).join(', ')}">${withSpend.map(id => `<i style="flex:${Math.floor(CATS[id][k])};background:var(--k-${CATS[id].color})"></i>`).join('')}</div>
-      <div class="keys">${keyed.map(id => keyBtn(id, '', CATS[id].name)).join('')}${over.map(id => keyBtn(id, 'al', `${CATS[id].name} oltre`)).join('')}</div>
+      <div class="keys">${keyed.map(id => keyBtn(id, '', CATS[id].name)).join('')}${over.map(id => keyBtn(id, 'al', CATS[id].name)).join('')}</div>
       ${chart}`;
     $('[data-oggi-rows]', sec).innerHTML = EXP.slice(0, 3).map(e => expRow(e, {date:true})).join('');
   },

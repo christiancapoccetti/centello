@@ -53,7 +53,12 @@ public sealed record CategoryLine(IReadOnlyList<CategorySegment> Segments, IRead
 /// <summary>One flat segment; its width is proportional to Cents. Archived or missing categories fold into one grey segment.</summary>
 public sealed record CategorySegment(string ColorKey, long Cents);
 
-public sealed record CategoryKeyItem(Guid CategoryId, string Text, string ColorKey, bool IsOverBudget);
+/// <summary>Text is the category name. An over-budget item says so for a screen reader and draws a glyph, so the
+/// meaning never rests on its color alone.</summary>
+public sealed record CategoryKeyItem(Guid CategoryId, string Text, string ColorKey, bool IsOverBudget)
+{
+    public string Description => IsOverBudget ? $"{Text}, oltre il budget" : Text;
+}
 
 public enum SpendBarKind { Past, Current, Future }
 
@@ -231,7 +236,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
         public bool IsOverBudget => Overshoot > 0;
 
         public CategoryKeyItem ToKeyItem() =>
-            new(Category.CategoryId, IsOverBudget ? $"{Category.Name} oltre" : Category.Name, ColorKey, IsOverBudget);
+            new(Category.CategoryId, Category.Name, ColorKey, IsOverBudget);
     }
 
     // One bar per day (month) or per month (year). The scale also covers the pace line, which keeps it on the chart.
