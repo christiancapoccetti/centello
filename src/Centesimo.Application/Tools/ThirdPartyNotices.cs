@@ -14,6 +14,7 @@ public static class ThirdPartyNotices
     private const string LicensePrefix = "License:";
     private const string PublicDomain = "public domain";
     private const int HeadingNameWords = 3;
+    private const string UpstreamLicenses = "Licenze varie";
 
     public static IReadOnlyList<NoticeComponent> Parse(string notices)
     {
@@ -32,6 +33,11 @@ public static class ThirdPartyNotices
             .Select(lines => ToComponent(lines, licenses))
             .ToList();
     }
+
+    /// <summary>A notices file a component ships for the parts it includes, as the .NET runtime does. It is shown as
+    /// written, since its notices follow no layout of ours.</summary>
+    public static NoticeComponent Upstream(string name, string notices) =>
+        new(name, UpstreamLicenses, notices.Replace("\r\n", "\n").Trim());
 
     private static bool IsComponent(List<string> lines) =>
         lines.Count >= 2 && lines.Any(line => line.StartsWith(LicensePrefix) || line.Contains(PublicDomain, StringComparison.OrdinalIgnoreCase));

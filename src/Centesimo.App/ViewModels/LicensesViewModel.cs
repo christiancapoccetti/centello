@@ -7,6 +7,12 @@ public sealed class LicensesViewModel : ObservableObject
 {
     private const string LicenseAsset = "GPL-3.0.txt";
     private const string NoticesAsset = "THIRD_PARTY_NOTICES.txt";
+    // Copied verbatim from the .NET runtime packs: they cover what those runtimes compile in, as zlib-ng or lz4.
+    private static readonly (string Asset, string Name)[] RuntimeNotices =
+    [
+        ("DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt", "Componenti inclusi nel runtime .NET"),
+        ("DOTNET_ANDROID_THIRD_PARTY_NOTICES.txt", "Componenti inclusi in .NET for Android"),
+    ];
 
     private string _gplText = "";
     private IReadOnlyList<NoticeComponent> _components = [];
@@ -33,12 +39,25 @@ public sealed class LicensesViewModel : ObservableObject
             return;
 
         _isLoaded = true;
-        var license = await Read(LicenseAsset);
+        var licenseRead = Read(LicenseAsset);
+        var noticesRead = Read(NoticesAsset);
+        var runtimeReads = RuntimeNotices.Select(runtime => Read(runtime.Asset)).ToList();
+        await Task.WhenAll([licenseRead, noticesRead, .. runtimeReads]);
+
+        var license = licenseRead.Result;
         GplText = license is null ? "Non è stato possibile caricare il testo della licenza." : LicenseText.Reflow(license);
-        var notices = await Read(NoticesAsset);
-        Components = notices is null ? [] : ThirdPartyNotices.Parse(notices);
-        if (Components.Count == 0)
+        var notices = noticesRead.Result is null ? [] : ThirdPartyNotices.Parse(noticesRead.Result);
+        if (notices.Count == 0)
+        {
             ComponentsMessage = "Non è stato possibile caricare gli avvisi di licenza.";
+            return;
+        }
+
+        var runtimes = RuntimeNotices
+            .Zip(runtimeReads, (runtime, read) => (runtime.Name, Text: read.Result))
+            .Where(runtime => runtime.Text is not null)
+            .Select(runtime => ThirdPartyNotices.Upstream(runtime.Name, runtime.Text!));
+        Components = [.. notices, .. runtimes];
     }
 
     private static async Task<string?> Read(string asset)

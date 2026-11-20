@@ -116,6 +116,23 @@ public sealed class ThirdPartyNotices_should_expected_behavior
         });
     }
 
+    [Theory]
+    [InlineData("DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt", ".NET Runtime uses third-party libraries")]
+    [InlineData("DOTNET_ANDROID_THIRD_PARTY_NOTICES.txt", "THIRD - PARTY SOFTWARE NOTICES AND INFORMATION")]
+    public void Ship_the_notices_of_the_dotnet_runtimes(string asset, string expected)
+    {
+        var text = File.ReadAllText(Path.Combine(FontFiles.RepoRoot(), "src/Centesimo.App/Resources/Raw", asset));
+
+        Assert.Contains(expected, ThirdPartyNotices.Upstream("Runtime", text).Text);
+    }
+
+    [Fact]
+    public void Keep_the_layout_of_an_upstream_notices_file()
+    {
+        var component = ThirdPartyNotices.Upstream("Runtime .NET", "\r\nNotice for A\r\n-----\r\n\r\nCopyright A.\r\n");
+
+        Assert.Equal(("Runtime .NET", "Licenze varie", "Notice for A\n-----\n\nCopyright A."), (component.Name, component.License, component.Text));
+    }
 
     [Fact]
     public void Reflow_a_wrapped_text_into_paragraphs()
