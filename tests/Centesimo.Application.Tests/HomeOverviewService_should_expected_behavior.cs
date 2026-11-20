@@ -840,6 +840,181 @@ public sealed class HomeOverviewService_should_expected_behavior
         Assert.Equal(Failed, expenseFailure.Error);
     }
 
+    [Fact]
+    public async Task Should_word_the_glance_for_the_widgets()
+    {
+        var category = NewCategory("Spesa", budgetCents: 80_000);
+        var expenses = new[]
+        {
+            Spend(category, 48_620, new DateOnly(2026, 11, 5)),
+            Spend(category, 55_250, new DateOnly(2026, 10, 10))
+        };
+
+        var glance = await Glance([category], expenses);
+
+        Assert.Equal("Novembre", glance.Month);
+        Assert.Equal("2026", glance.Year);
+        Assert.Equal("486,20", glance.Total);
+        Assert.Equal(new BudgetSummary("Ne restano ", "313,80 €", " su 800"), glance.Budget);
+        Assert.Equal("12% su ottobre", glance.Comparison!.Short);
+        Assert.Equal("12% in meno di ottobre", glance.Comparison.Text);
+        Assert.Equal("27 € al giorno", glance.Chart.PaceLabel);
+        Assert.Equal(("1", "oggi", "30"), (glance.Chart.StartLabel, glance.Chart.HighlightLabel, glance.Chart.EndLabel));
+        Assert.Equal([new CategorySegment("mint", 48_620)], glance.Segments);
+        Assert.Equal("", glance.OverBudget);
+        Assert.False(glance.HasOverBudget);
+        Assert.Equal("Novembre 2026: 486,20 €. Ne restano 313,80 € su 800. 12% in meno di ottobre.", glance.Description);
+    }
+
+    [Fact]
+    public async Task Should_say_the_furthest_over_budget_category_in_the_glance()
+    {
+        var home = NewCategory("Casa", budgetCents: 50_000);
+        var travel = NewCategory("Viaggi", budgetCents: 30_000);
+        var expenses = new[]
+        {
+            Spend(home, 52_850, new DateOnly(2026, 11, 3)),
+            Spend(travel, 40_000, new DateOnly(2026, 11, 4))
+        };
+
+        var glance = await Glance([home, travel], expenses);
+
+        Assert.Equal(new BudgetSummary("Hai superato il budget di ", "128,50 €", " su 800"), glance.Budget);
+        Assert.Equal("Viaggi oltre il budget", glance.OverBudget);
+        Assert.True(glance.HasOverBudget);
+        Assert.Equal("Novembre 2026: 928,50 €. Hai superato il budget di 128,50 € su 800. Viaggi oltre il budget.",
+            glance.Description);
+    }
+
+    [Fact]
+    public async Task Should_say_there_is_no_budget_in_the_glance()
+    {
+        var category = NewCategory("Spesa");
+
+        var glance = await Glance([category], [Spend(category, 1_000, Today)]);
+
+        Assert.Equal(new BudgetSummary("Nessun budget impostato", "", ""), glance.Budget);
+        Assert.Equal("", glance.Chart.PaceLabel);
+        Assert.Null(glance.Chart.PaceFraction);
+    }
+
+    [Fact]
+    public async Task Should_use_the_first_run_line_in_the_glance_until_a_category_exists()
+    {
+        var glance = await Glance();
+
+        Assert.Equal(new BudgetSummary("Ancora nessuna spesa a novembre", "", ""), glance.Budget);
+        Assert.Equal("0,00", glance.Total);
+        Assert.Empty(glance.Segments);
+        Assert.Equal("Novembre 2026: 0,00 €. Ancora nessuna spesa a novembre.", glance.Description);
+    }
+
+    [Fact]
+    public async Task Should_use_the_first_run_line_in_the_glance_when_nothing_is_spent()
+    {
+        var category = NewCategory("Spesa", budgetCents: 80_000);
+
+        var glance = await Glance([category], [Spend(category, 1_000, new DateOnly(2026, 10, 3))]);
+
+        Assert.Equal(new BudgetSummary("Ancora nessuna spesa a novembre", "", ""), glance.Budget);
+        Assert.Empty(glance.Segments);
+        Assert.Equal("", glance.OverBudget);
+    }
+
+    [Theory]
+    [InlineData(9_400, "6% su ottobre", "6% in meno di ottobre")]
+    [InlineData(13_300, "33% su ottobre", "33% in più di ottobre")]
+    [InlineData(10_040, "In linea con ottobre", "In linea con ottobre")]
+    public async Task Should_compare_the_glance_with_the_previous_month(long current, string shortText, string text)
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, current, new DateOnly(2026, 11, 5)),
+            Spend(category, 10_000, new DateOnly(2026, 10, 10))
+        };
+
+        var glance = await Glance([category], expenses);
+
+        Assert.Equal(shortText, glance.Comparison!.Short);
+        Assert.Equal(text, glance.Comparison.Text);
+        Assert.Contains($" {text}.", glance.Description);
+    }
+
+    [Fact]
+    public async Task Should_leave_the_comparison_out_of_the_glance_without_a_previous_month()
+    {
+        var category = NewCategory("Spesa");
+
+        var glance = await Glance([category], [Spend(category, 1_000, Today)]);
+
+        Assert.Null(glance.Comparison);
+        Assert.Equal("Novembre 2026: 10,00 €. Nessun budget impostato.", glance.Description);
+    }
+
+    [Theory]
+    [InlineData(80_000, "27 € al giorno")]
+    [InlineData(79_000, "26 € al giorno")]
+    [InlineData(82_500, "28 € al giorno")]
+    public async Task Should_round_the_glance_pace_to_whole_euros(long budget, string label)
+    {
+        var category = NewCategory("Spesa", budgetCents: budget);
+
+        var glance = await Glance([category], [Spend(category, 1_000, Today)]);
+
+        Assert.Equal(label, glance.Chart.PaceLabel);
+    }
+
+    [Theory]
+    [InlineData(2026, 11, 19, "30")]
+    [InlineData(2026, 12, 5, "31")]
+    [InlineData(2027, 2, 10, "28")]
+    public async Task Should_end_the_glance_chart_on_the_last_day_of_the_month(int year, int month, int day, string end)
+    {
+        var glance = await Glance(today: new DateOnly(year, month, day));
+
+        Assert.Equal(("1", end), (glance.Chart.StartLabel, glance.Chart.EndLabel));
+    }
+
+    [Fact]
+    public async Task Should_not_read_the_tags_for_the_glance()
+    {
+        var service = new HomeOverviewService(new FakeCategoryRepository(), new FakeTagRepository { Failure = Failed },
+            new FakeExpenseRepository(), () => Today);
+
+        var result = await service.Glance();
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Should_return_the_repository_failure_for_the_glance()
+    {
+        var categoryFailure = await new HomeOverviewService(new FakeCategoryRepository { Failure = Failed },
+            new FakeTagRepository(), new FakeExpenseRepository(), () => Today).Glance();
+        var expenseFailure = await new HomeOverviewService(new FakeCategoryRepository(), new FakeTagRepository(),
+            new FakeExpenseRepository { Failure = Failed }, () => Today).Glance();
+
+        Assert.Equal(Failed, categoryFailure.Error);
+        Assert.Equal(Failed, expenseFailure.Error);
+    }
+
+    private static async Task<MonthGlance> Glance(IEnumerable<Category>? categories = null,
+        IEnumerable<Expense>? expenses = null, DateOnly? today = null)
+    {
+        var categoryRepository = new FakeCategoryRepository();
+        categoryRepository.Items.AddRange(categories ?? []);
+        var expenseRepository = new FakeExpenseRepository();
+        expenseRepository.Items.AddRange(expenses ?? []);
+        var service = new HomeOverviewService(categoryRepository, new FakeTagRepository(), expenseRepository,
+            () => today ?? Today);
+
+        var result = await service.Glance();
+
+        Assert.True(result.IsSuccess);
+        return result.Value;
+    }
+
     private static async Task<HomeOverview> Overview(IEnumerable<Category>? categories = null,
         IEnumerable<Expense>? expenses = null, Period? period = null, DateOnly? today = null,
         IEnumerable<Tag>? tags = null)

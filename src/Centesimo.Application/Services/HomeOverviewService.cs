@@ -90,6 +90,22 @@ public sealed record LatestExpense(Guid ExpenseId, string Title, string Detail, 
     public string Description => RowLabels.Description(Title, Detail, Amount);
 }
 
+/// <summary>The month of today as the home screen widgets read it: the figures of the home, worded for a small
+/// surface. Strings are Italian.</summary>
+public sealed record MonthGlance(
+    string Month,                          // "Novembre"
+    string Year,                           // "2026"
+    string Total,                          // "486,20" (the widget draws "€" smaller)
+    BudgetSummary Budget,                  // "Ne restano " + "313,80 €" + " su 800"
+    PeriodComparison? Comparison,          // Il mese shows Short, Il ritmo shows Text
+    IReadOnlyList<CategorySegment> Segments,
+    string OverBudget,                     // "Ristoranti oltre il budget", the furthest over; "" when none is
+    SpendChart Chart,                      // the home's bars and pace, with the widget's labels
+    string Description)                    // the whole summary for a screen reader
+{
+    public bool HasOverBudget => OverBudget.HasValue();
+}
+
 public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepository tags,
     IExpenseRepository expenses, Func<DateOnly>? today = null)
 {
@@ -101,36 +117,87 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     public async Task<Result<HomeOverview>> Get(Period? period = null, CancellationToken cancellationToken = default)
     {
         var day = _today();
-        var selected = period ?? Period.MonthOf(day);
-        var window = ComparisonWindow.For(selected, day);
-        var categoryResult = await categories.GetAll(cancellationToken);
-        if (categoryResult.IsFailure)
-            return Result<HomeOverview>.Failure(categoryResult.Error);
+        var reading = await Read(period ?? Period.MonthOf(day), day, cancellationToken);
+        if (reading.IsFailure)
+            return Result<HomeOverview>.Failure(reading.Error);
 
-        // One range covers the comparison window and the period. The reads are awaited one after the other:
-        // the repositories share a scoped DbContext, which never allows two operations at once, and
-        // RepositoryBase would turn that violation into a silent "Unexpected".
         var tagResult = await tags.GetAll(cancellationToken);
         if (tagResult.IsFailure)
             return Result<HomeOverview>.Failure(tagResult.Error);
 
-        var expenseResult = await expenses.GetBetween(window.PreviousFrom, selected.End, cancellationToken);
-        if (expenseResult.IsFailure)
-            return Result<HomeOverview>.Failure(expenseResult.Error);
-
-        return Result<HomeOverview>.Success(Build(selected, day, window, categoryResult.Value, tagResult.Value, expenseResult.Value));
+        return Result<HomeOverview>.Success(Build(reading.Value, tagResult.Value));
     }
 
-    private static HomeOverview Build(Period period, DateOnly today, ComparisonWindow window,
-        IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags, IReadOnlyList<Expense> expenses)
+    /// <summary>The month of today, worded for a home screen widget. Same reads and figures as Get(null), without the
+    /// tags: a widget has no latest rows.</summary>
+    public async Task<Result<MonthGlance>> Glance(CancellationToken cancellationToken = default)
     {
-        var periodExpenses = expenses.Where(expense => period.Contains(expense.OccurredOn)).ToList();
-        var spent = periodExpenses.Sum(expense => expense.Amount.Cents);
-        var budget = PeriodBudget.OfActive(period, categories);
-        return new HomeOverview(period, HomeNavigation.For(period, today), ItalianFormat.Amount(spent),
-            categories.Count == 0 ? NothingYet(period) : Summarize(spent, budget), Compare(period, window, expenses),
-            Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget),
-            Latest(periodExpenses, categories, tags, today), categories.Count > 0);
+        var day = _today();
+        var reading = await Read(Period.MonthOf(day), day, cancellationToken);
+        if (reading.IsFailure)
+            return Result<MonthGlance>.Failure(reading.Error);
+
+        return Result<MonthGlance>.Success(Glimpse(reading.Value));
+    }
+
+    // One range covers the comparison window and the period. The reads are awaited one after the other: the
+    // repositories share a scoped DbContext, which never allows two operations at once, and RepositoryBase would turn
+    // that violation into a silent "Unexpected".
+    private async Task<Result<Reading>> Read(Period period, DateOnly day, CancellationToken cancellationToken)
+    {
+        var window = ComparisonWindow.For(period, day);
+        var categoryResult = await categories.GetAll(cancellationToken);
+        if (categoryResult.IsFailure)
+            return Result<Reading>.Failure(categoryResult.Error);
+
+        var expenseResult = await expenses.GetBetween(window.PreviousFrom, period.End, cancellationToken);
+        if (expenseResult.IsFailure)
+            return Result<Reading>.Failure(expenseResult.Error);
+
+        return Result<Reading>.Success(new Reading(period, day, window, categoryResult.Value, expenseResult.Value));
+    }
+
+    private sealed record Reading(Period Period, DateOnly Today, ComparisonWindow Window,
+        IReadOnlyList<Category> Categories, IReadOnlyList<Expense> Expenses)
+    {
+        public IReadOnlyList<Expense> InPeriod { get; } =
+            Expenses.Where(expense => Period.Contains(expense.OccurredOn)).ToList();
+
+        public long Spent => InPeriod.Sum(expense => expense.Amount.Cents);
+        public long? Budget { get; } = PeriodBudget.OfActive(Period, Categories);
+    }
+
+    private static HomeOverview Build(Reading reading, IReadOnlyList<Tag> tags) =>
+        new(reading.Period, HomeNavigation.For(reading.Period, reading.Today), ItalianFormat.Amount(reading.Spent),
+            reading.Categories.Count == 0
+                ? NothingYet(reading.Period)
+                : Summarize(reading.Spent, reading.Budget, " di budget"),
+            Compare(reading.Period, reading.Window, reading.Expenses), Line(reading),
+            Chart(reading, HomeLabels(reading.Period, reading.Today)),
+            Latest(reading.InPeriod, reading.Categories, tags, reading.Today), reading.Categories.Count > 0);
+
+    private static MonthGlance Glimpse(Reading reading)
+    {
+        var line = Line(reading);
+        var budget = reading.Categories.Count == 0 || reading.Spent == 0
+            ? NothingYet(reading.Period)
+            : Summarize(reading.Spent, reading.Budget, "");
+        var comparison = Compare(reading.Period, reading.Window, reading.Expenses);
+        var overBudget = line.Key.FirstOrDefault(item => item.IsOverBudget) is { } over
+            ? $"{over.Text} oltre il budget"
+            : "";
+        var sentences = new[]
+            {
+                $"{ItalianFormat.PeriodTitle(reading.Period)}: {ItalianFormat.Money(reading.Spent)}",
+                budget.Lead + budget.Emphasis + budget.Tail,
+                comparison?.Text ?? "",
+                overBudget
+            }
+            .Where(sentence => sentence.HasValue())
+            .Select(sentence => $"{sentence}.");
+        return new MonthGlance(ItalianFormat.PeriodName(reading.Period), reading.Period.Start.Year.ToString(),
+            ItalianFormat.Amount(reading.Spent), budget, comparison, line.Segments, overBudget,
+            Chart(reading, GlanceLabels(reading.Period)), string.Join(" ", sentences));
     }
 
     // The first run has no budget to speak of: the line under the total says there is nothing to count yet.
@@ -141,7 +208,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
         .Where(expense => expense.OccurredOn >= from && expense.OccurredOn <= to)
         .Sum(expense => expense.Amount.Cents);
 
-    private static BudgetSummary Summarize(long spent, long? budget)
+    private static BudgetSummary Summarize(long spent, long? budget, string remainingSuffix)
     {
         if (budget is not { } total)
             return new BudgetSummary("Nessun budget impostato", "", "");
@@ -151,7 +218,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
                 $" su {ItalianFormat.Budget(total)}");
 
         return new BudgetSummary("Ne restano ", ItalianFormat.Money(total - spent),
-            $" su {ItalianFormat.Budget(total)} di budget");
+            $" su {ItalianFormat.Budget(total)}{remainingSuffix}");
     }
 
     // The percentage is rounded first, so a change that rounds to zero reads as "in linea".
@@ -189,9 +256,9 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     // Active categories with spending, largest first. Whatever is left of the total (archived or missing
     // categories) becomes one grey segment, so the line always adds up to the headline total. The key lists the same
     // categories with the over-budget ones first; OrderByDescending is stable, so ties keep the spending order.
-    private static CategoryLine Line(Period period, IReadOnlyList<Category> categories,
-        IReadOnlyList<Expense> periodExpenses, long spent)
+    private static CategoryLine Line(Reading reading)
     {
+        var (period, categories, periodExpenses, spent) = (reading.Period, reading.Categories, reading.InPeriod, reading.Spent);
         if (spent == 0)
             return new CategoryLine([], [], "");
 
@@ -235,22 +302,36 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     }
 
     // One bar per day (month) or per month (year). The scale also covers the pace line, which keeps it on the chart.
-    private static SpendChart Chart(Period period, DateOnly today, IReadOnlyList<Expense> periodExpenses, long? budget)
+    private static SpendChart Chart(Reading reading, ChartLabels labels)
     {
-        var isMonth = period.Kind == PeriodKind.Month;
-        var buckets = SpendBuckets.Of(period, today, periodExpenses);
-        double? pace = budget.HasValue ? (double)budget.Value / buckets.Count : null;
+        var buckets = SpendBuckets.Of(reading.Period, reading.Today, reading.InPeriod);
+        double? pace = reading.Budget.HasValue ? (double)reading.Budget.Value / buckets.Count : null;
         var scale = buckets.Scale(pace ?? 0);
 
-        var highlight = !buckets.HasToday ? "" : isMonth
-            ? $"oggi {ItalianFormat.Money(buckets.Cents[buckets.Current])}"
-            : $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(buckets.Cents[buckets.Current])}";
-        return new SpendChart(buckets.Bars(scale), pace / scale,
+        var highlight = buckets.HasToday ? labels.Highlight(buckets.Cents[buckets.Current]) : "";
+        return new SpendChart(buckets.Bars(scale), pace / scale, labels.Start, labels.End,
+            highlight, buckets.HasToday ? (buckets.Current + 0.5) / buckets.Count : 0,
+            DescribeChart(reading.Period, buckets.Cents, buckets.Current, pace), labels.Pace(pace));
+    }
+
+    private static ChartLabels HomeLabels(Period period, DateOnly today)
+    {
+        var isMonth = period.Kind == PeriodKind.Month;
+        return new ChartLabels(
+            pace => pace.HasValue ? PaceLabelText : "",
             isMonth ? ItalianFormat.ShortDate(period.Start) : ItalianFormat.ShortMonth(1),
             isMonth ? ItalianFormat.ShortDate(period.End) : ItalianFormat.ShortMonth(12),
-            highlight, buckets.HasToday ? (buckets.Current + 0.5) / buckets.Count : 0,
-            DescribeChart(period, buckets.Cents, buckets.Current, pace), pace.HasValue ? PaceLabelText : "");
+            cents => isMonth
+                ? $"oggi {ItalianFormat.Money(cents)}"
+                : $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(cents)}");
     }
+
+    private static ChartLabels GlanceLabels(Period period) => new(
+        pace => pace is { } perDay ? $"{ItalianFormat.WholeEuros((long)Math.Round(perDay, MidpointRounding.AwayFromZero))} € al giorno" : "",
+        "1", period.End.Day.ToString(), _ => "oggi");
+
+    /// <summary>The words of the chart that differ between the home and a widget.</summary>
+    private sealed record ChartLabels(Func<double?, string> Pace, string Start, string End, Func<long, string> Highlight);
 
     private static string DescribeChart(Period period, long[] buckets, int current, double? pace)
     {
