@@ -32,6 +32,11 @@ public sealed class AppEntryRouter(IConfirmation confirmation, IPendingExpenseSp
             return;
         }
 
+        // The same absolute route as the one on screen is no navigation at all: leave the editor first so the new one
+        // is built and takes its query.
+        if (rebuildsToday && TodayStack(shell).Any(page => page is not null))
+            await shell.GoToAsync($"//{nameof(TodayPage)}");
+
         await shell.GoToAsync(route);
     }
 
