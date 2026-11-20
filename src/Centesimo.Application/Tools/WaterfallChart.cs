@@ -38,7 +38,7 @@ public sealed record WaterfallChart(
     private const long DriverPercent = 75;
     private const string FoldName = "Altre categorie";
     private const char Minus = '−';
-    private const char Nbsp = ' ';
+    private const char Nbsp = '\u00A0';
 
     /// <summary>Null when nothing was spent in the compared days, or when nothing changed at all.</summary>
     internal static WaterfallChart? For(SpendComparison spending)
@@ -52,15 +52,17 @@ public sealed record WaterfallChart(
 
         var period = spending.Period;
         var levels = Running(spending.Compared, changes);
+        var shifts = Shifts(levels);
         var scale = Scale.Of(levels);
+        var start = Total(spending.Compared, scale, InsightTexts.Short(period.Previous()));
+        var end = Total(spending.Spent, scale, InsightTexts.Short(period));
         var steps = changes
             .Select((change, index) => new WaterfallStep(change.Name, change.IconKey, change.ColorKey, change.Delta,
-                scale.Level(levels[index]), scale.Level(levels[index + 1]), Label(levels[index], levels[index + 1])))
+                scale.Level(levels[index]), scale.Level(levels[index + 1]), Label(shifts[index])))
             .ToList();
-        return new WaterfallChart(InsightTexts.FromTo(period),
-            Total(spending.Compared, scale, InsightTexts.Short(period.Previous())), steps,
-            Total(spending.Spent, scale, InsightTexts.Short(period)), scale.IsCut,
-            Say(spending, changes, scale), "");
+        var title = InsightTexts.FromTo(period);
+        return new WaterfallChart(title, start, steps, end, scale.IsCut, Say(spending, changes, scale),
+            Describe(title, start, end, changes, shifts));
     }
 
     /// <summary>What a column of the chart changes by: a category, or the rest folded into one. The fold is named in
@@ -248,16 +250,35 @@ public sealed record WaterfallChart(
     private static WaterfallTotal Total(long cents, Scale scale, string caption) =>
         new(cents, scale.Level(cents), ItalianFormat.WholeEuros(cents), caption);
 
-    /// <summary>The whole euros of the level after a step minus those of the level before it, signed. Neighbouring
-    /// labels share a rounded level, so they add up from the rounded start to the rounded end.</summary>
-    private static string Label(long before, long after)
+    /// <summary>The whole euros of the level after each step minus those of the level before it. Neighbouring shifts
+    /// share a rounded level, so they add up from the rounded start to the rounded end.</summary>
+    private static long[] Shifts(IReadOnlyList<long> levels) =>
+        [.. levels.Zip(levels.Skip(1), (before, after) => Euros(after) - Euros(before))];
+
+    /// <summary>"+5", "−60" or "0".</summary>
+    private static string Label(long euros)
     {
-        var euros = Euros(after) - Euros(before);
         if (euros == 0)
             return "0";
 
         return euros > 0 ? $"+{ItalianFormat.Count(euros)}" : $"{Minus}{ItalianFormat.Count(-euros)}";
     }
+
+    /// <summary>"Da ottobre a novembre, da 1.367 € a 1.285 €: Trasporti meno 60 €, Altro più 5 €." It follows the labels
+    /// on the chart, euro for euro.</summary>
+    private static string Describe(string title, WaterfallTotal start, WaterfallTotal end, IReadOnlyList<Change> changes,
+        IReadOnlyList<long> shifts)
+    {
+        var parts = changes.Select((change, index) => $"{change.Name} {Spoken(shifts[index])}");
+        return $"{title}, da {start.Value}{Nbsp}€ a {end.Value}{Nbsp}€: {string.Join(", ", parts)}.";
+    }
+
+    private static string Spoken(long euros) => euros switch
+    {
+        0 => $"0{Nbsp}€",
+        > 0 => $"più {ItalianFormat.Count(euros)}{Nbsp}€",
+        _ => $"meno {ItalianFormat.Count(-euros)}{Nbsp}€"
+    };
 
     // Levels are never negative, so half up is half away from zero.
     private static long Euros(long cents) => (cents + 50) / 100;

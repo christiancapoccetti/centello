@@ -359,6 +359,24 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.Equal(sentence, chart.Sentence);
     }
 
+    [Fact]
+    public async Task Should_describe_the_waterfall_for_screen_readers()
+    {
+        var chart = (await InsightFixtures.November().Overview()).Waterfall!;
+
+        Assert.Equal(
+            $"Da ottobre a novembre, da 1.367{Nbsp}€ a 1.285{Nbsp}€: Trasporti meno 60{Nbsp}€, Svago meno 46{Nbsp}€, Salute meno 27{Nbsp}€, Altro più 5{Nbsp}€, Spesa più 13{Nbsp}€, Ristoranti più 33{Nbsp}€.",
+            chart.Description);
+    }
+
+    [Fact]
+    public async Task Should_describe_a_year_and_a_step_that_reads_zero()
+    {
+        var chart = (await Overview([new Line("A", 10_000, 10_040)], Period.Year(2026))).Waterfall!;
+
+        Assert.Equal($"Dal 2025 al 2026, da 100{Nbsp}€ a 100{Nbsp}€: Altre categorie 0{Nbsp}€.", chart.Description);
+    }
+
     // The levels 136.660, 130.720, 126.100, 123.420, 123.860, 125.240 and 128.460 cents spread 13.240 cents, under a
     // tenth of the highest, so the spread counts as a tenth: 13.666 cents. Three times that is under the highest level,
     // so the scale is cut. A quarter of it is 34 €, so the step is 50 €, and 1.234,20 € less 68,33 € rounds down to
