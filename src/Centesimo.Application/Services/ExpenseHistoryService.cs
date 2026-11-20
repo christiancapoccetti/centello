@@ -27,8 +27,6 @@ public sealed record ExpenseFilter
 public sealed record ExpenseHistory(
     Period Period,
     HomeNavigation Navigation,
-    string Title,                              // "Novembre 2026" | "Anno 2026"
-    string Total,                              // "1.284,60 €", of the listed expenses
     IReadOnlyList<HistoryGroup> Groups,
     IReadOnlyList<HistoryFilterChip> CategoryChips,
     string EmptyText)                          // "Nessuna spesa in Ristoranti a novembre"
@@ -72,8 +70,7 @@ public sealed class ExpenseHistoryService(ICategoryRepository categories, ITagRe
         var categoryName = filter.CategoryId.HasValue
             ? RowLabels.NameOf(categories.FirstOrDefault(category => category.CategoryId == filter.CategoryId))
             : "";
-        return new ExpenseHistory(period, HomeNavigation.For(period, today), ItalianFormat.PeriodTitle(period),
-            ItalianFormat.Money(listed.Sum(expense => expense.Amount.Cents)),
+        return new ExpenseHistory(period, HomeNavigation.For(period, today),
             HistoryGroups.Build(period, today, listed, categories, tags), Chips(filter, categories, periodExpenses),
             HistoryGroups.EmptyText(period, categoryName, filter.Tag, tags));
     }

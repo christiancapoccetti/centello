@@ -8,24 +8,6 @@ public sealed class ExpenseHistoryService_should_expected_behavior
     private static readonly Error Failed = new("Test.Failed", "Operazione non riuscita.");
 
     [Fact]
-    public async Task Should_title_the_period_and_total_what_is_listed()
-    {
-        var category = NewCategory("Spesa");
-        var expenses = new[]
-        {
-            Spend(category, 12_050, Today),
-            Spend(category, 1_000, new DateOnly(2026, 11, 2)),
-            Spend(category, 9_999, new DateOnly(2026, 10, 31))
-        };
-
-        var month = await History(Period.Month(2026, 11), ExpenseFilter.All, [category], expenses);
-        var year = await History(Period.Year(2026), ExpenseFilter.All, [category], expenses);
-
-        Assert.Equal(("Novembre 2026", "130,50 €"), (month.Title, month.Total));
-        Assert.Equal(("Anno 2026", "230,49 €"), (year.Title, year.Total));
-    }
-
-    [Fact]
     public async Task Should_group_a_month_by_day_newest_first_with_relative_labels()
     {
         var category = NewCategory("Spesa");
@@ -131,7 +113,6 @@ public sealed class ExpenseHistoryService_should_expected_behavior
             expenses);
 
         Assert.Equal(["10,00 €", "5,00 €"], history.Groups.Single().Rows.Select(row => row.Amount).Order(StringComparer.Ordinal));
-        Assert.Equal("15,00 €", history.Total);
         Assert.Equal(["Casa", "Ristoranti"], history.CategoryChips.Select(chip => chip.Name));
     }
 
@@ -153,9 +134,9 @@ public sealed class ExpenseHistoryService_should_expected_behavior
         var untagged = await History(Period.Month(2026, 11),
             ExpenseFilter.ForCategory(food.CategoryId, TagFilter.Untagged), [food], expenses, [pizza]);
 
-        Assert.Equal("60,00 €", all.Total);
-        Assert.Equal("10,00 €", tagged.Total);
-        Assert.Equal("20,00 €", untagged.Total);
+        Assert.Equal(3, all.Groups.Single().Rows.Count);
+        Assert.Equal([ItalianFormat.Money(1_000)], tagged.Groups.Single().Rows.Select(row => row.Amount));
+        Assert.Equal([ItalianFormat.Money(2_000)], untagged.Groups.Single().Rows.Select(row => row.Amount));
     }
 
     [Fact]

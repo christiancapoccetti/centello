@@ -22,20 +22,6 @@ public sealed class CategoryService(ICategoryRepository categories)
         return Result<IReadOnlyList<Category>>.Success(active);
     }
 
-    public async Task<Result<IReadOnlyList<Category>>> GetArchived(
-        CancellationToken cancellationToken = default)
-    {
-        var result = await categories.GetAll(cancellationToken);
-        if (result.IsFailure)
-            return Result<IReadOnlyList<Category>>.Failure(result.Error);
-
-        var archived = result.Value
-            .Where(category => category.IsArchived)
-            .OrderBy(category => category.Name)
-            .ToList();
-        return Result<IReadOnlyList<Category>>.Success(archived);
-    }
-
     public Task<Result<Category>> Create(string name, string icon, string color,
         Money? budget = null, CancellationToken cancellationToken = default) =>
         Create(name, icon, color, budget, [], cancellationToken);
@@ -113,20 +99,6 @@ public sealed class CategoryService(ICategoryRepository categories)
         found.Value.UpdateDetails(name, icon, color, budget);
         return await categories.Update(found.Value, cancellationToken);
     }
-    public async Task<Result> SetBudget(Guid categoryId, Money? budget,
-        CancellationToken cancellationToken = default)
-    {
-        var found = await categories.Get(categoryId, cancellationToken);
-        if (found.IsFailure)
-            return Result.Failure(found.Error);
-
-        if (found.Value is null)
-            return Result.Failure(ApplicationErrors.CategoryNotFound);
-
-        found.Value.SetBudget(budget);
-        return await categories.Update(found.Value, cancellationToken);
-    }
-
     public async Task<Result> Archive(Guid categoryId, CancellationToken cancellationToken = default)
     {
         var found = await categories.Get(categoryId, cancellationToken);

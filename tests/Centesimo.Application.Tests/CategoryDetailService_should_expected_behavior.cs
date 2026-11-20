@@ -32,9 +32,8 @@ public sealed class CategoryDetailService_should_expected_behavior
         var detail = await Detail(category, Period.Month(2026, 11), expenses: expenses);
 
         Assert.Equal(category.CategoryId, detail.CategoryId);
-        Assert.Equal(("Ristoranti", "food", "mint", false), (detail.Name, detail.IconKey, detail.ColorKey, detail.IsArchived));
+        Assert.Equal(("Ristoranti", "food", "mint"), (detail.Name, detail.IconKey, detail.ColorKey));
         Assert.Equal(Period.Month(2026, 11), detail.Period);
-        Assert.Equal("Novembre 2026", detail.Title);
         Assert.Equal("130,50", detail.Total);
     }
 
@@ -55,20 +54,19 @@ public sealed class CategoryDetailService_should_expected_behavior
 
         var detail = await Detail(category, Period.Month(2026, 11), expenses: [Spend(category, 700, Today)]);
 
-        Assert.True(detail.IsArchived);
         Assert.Equal("7,00", detail.Total);
         Assert.Single(detail.Groups);
     }
 
     [Fact]
-    public async Task Should_title_a_year_and_total_it()
+    public async Task Should_total_a_year()
     {
         var category = NewCategory("Spesa");
         var expenses = new[] { Spend(category, 1_000, new DateOnly(2026, 1, 5)), Spend(category, 2_000, Today) };
 
         var detail = await Detail(category, Period.Year(2026), expenses: expenses);
 
-        Assert.Equal(("Anno 2026", "30,00"), (detail.Title, detail.Total));
+        Assert.Equal("30,00", detail.Total);
     }
 
     [Fact]

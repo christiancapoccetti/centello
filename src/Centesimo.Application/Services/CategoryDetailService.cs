@@ -13,10 +13,8 @@ public sealed record CategoryDetail(
     string Name,
     string IconKey,
     string ColorKey,
-    bool IsArchived,
     Period Period,
     HomeNavigation Navigation,
-    string Title,                       // "Novembre 2026" | "Anno 2026"
     string Total,                       // "128,50" (the page draws "€")
     BudgetSummary? Budget,              // null when the category has no budget
     bool IsOverBudget,
@@ -67,8 +65,8 @@ public sealed class CategoryDetailService(ICategoryRepository categories, ITagRe
         var listed = categoryExpenses.Where(expense => selected.Matches(expense.TagId)).ToList();
         var buckets = SpendBuckets.Of(period, today, categoryExpenses);
         return new CategoryDetail(category.CategoryId, category.Name, CategoryIcons.Resolve(category.Icon).Key,
-            CategoryPalette.Resolve(category.Color).Key, category.IsArchived, period, HomeNavigation.For(period, today),
-            ItalianFormat.PeriodTitle(period), ItalianFormat.Amount(spent), Summarize(spent, budget), spent > budget,
+            CategoryPalette.Resolve(category.Color).Key, period, HomeNavigation.For(period, today),
+            ItalianFormat.Amount(spent), Summarize(spent, budget), spent > budget,
             buckets.Bars(buckets.Scale()), Chips(selected, tags, categoryExpenses),
             // The page is the category: a row that named it again would say nothing.
             HistoryGroups.Build(period, today, listed, [category], tags, nameCategory: false),

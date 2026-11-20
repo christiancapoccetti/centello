@@ -147,10 +147,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <Style x:Key="TonalCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
-        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
-        <Setter Property="StrokeThickness" Value="0" />
-    </Style>
     <Style x:Key="SplitPill" TargetType="Border">
         <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
         <Setter Property="Stroke" Value="{t:Theme Outline}" />
@@ -159,17 +155,6 @@
         <Setter Property="StrokeShape">
             <Setter.Value>
                 <RoundRectangle CornerRadius="30" />
-            </Setter.Value>
-        </Setter>
-    </Style>
-    <Style x:Key="GlyphTile" TargetType="Border">
-        <Setter Property="WidthRequest" Value="44" />
-        <Setter Property="HeightRequest" Value="44" />
-        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
-        <Setter Property="StrokeThickness" Value="0" />
-        <Setter Property="StrokeShape">
-            <Setter.Value>
-                <Rectangle />
             </Setter.Value>
         </Setter>
     </Style>

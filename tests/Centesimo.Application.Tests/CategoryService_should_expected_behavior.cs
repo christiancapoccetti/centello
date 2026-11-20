@@ -5,13 +5,12 @@ namespace Centesimo.Application.Tests;
 public sealed class CategoryService_should_expected_behavior
 {
     [Fact]
-    public async Task Create_set_budget_and_archive()
+    public async Task Create_with_a_budget_and_archive()
     {
         var repository = new FakeCategoryRepository();
         var service = new CategoryService(repository);
-        var created = await service.Create("Food", "cart", "#123456");
+        var created = await service.Create("Food", "cart", "#123456", new Money(20_000));
 
-        await service.SetBudget(created.Value.CategoryId, new Money(20_000));
         await service.Archive(created.Value.CategoryId);
 
         Assert.Equal(20_000, created.Value.MonthlyBudget?.Cents);
@@ -61,22 +60,6 @@ public sealed class CategoryService_should_expected_behavior
         Assert.True(updated.IsSuccess);
         Assert.Single(categories.Value);
         Assert.Equal("Dining", categories.Value[0].Name);
-    }
-
-    [Fact]
-    public async Task Return_only_archived_categories_ordered_by_name()
-    {
-        var repository = new FakeCategoryRepository();
-        var first = new Category(Guid.NewGuid(), "Zaini", "cart", "#176B5B");
-        first.Archive();
-        var second = new Category(Guid.NewGuid(), "Auto", "car", "#6A4F88");
-        second.Archive();
-        repository.Items.AddRange([first, new Category(Guid.NewGuid(), "Cibo", "food", "#8B4A5D"), second]);
-        var service = new CategoryService(repository);
-
-        var categories = await service.GetArchived();
-
-        Assert.Equal(["Auto", "Zaini"], categories.Value.Select(category => category.Name));
     }
 
     [Fact]
