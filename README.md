@@ -16,7 +16,7 @@ Centesimo is a simple Android expense tracker built with .NET MAUI, designed and
 - Dark and light theme following the Android setting; the app is locked to portrait.
 - Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a voice-entry phrase, and only when you enable voice entry.
 
-Receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
+Android backs the expenses up to your Google account (Auto Backup), so a new phone with the same account gets them back. Receipt photos, localization, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
 
 ## Design
 
