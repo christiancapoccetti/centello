@@ -34,6 +34,7 @@ public sealed record WaterfallChart(
     private const int MaxSteps = 6;
     private const long OneEuro = 100;
     private const string FoldName = "Altre categorie";
+    private const char Minus = '−';
 
     /// <summary>Null when nothing was spent in the compared days, or when nothing changed at all.</summary>
     internal static WaterfallChart? For(SpendComparison spending)
@@ -45,13 +46,16 @@ public sealed record WaterfallChart(
         if (changes.Count == 0)
             return null;
 
+        var period = spending.Period;
         var levels = Running(spending.Compared, changes);
         var high = levels.Max();
         var steps = changes
             .Select((change, index) => new WaterfallStep(change.Name, change.IconKey, change.ColorKey, change.Delta,
-                Level(levels[index], high), Level(levels[index + 1], high), ""))
+                Level(levels[index], high), Level(levels[index + 1], high), Label(levels[index], levels[index + 1])))
             .ToList();
-        return new WaterfallChart("", Total(spending.Compared, high), steps, Total(spending.Spent, high), false, "", "");
+        return new WaterfallChart(InsightTexts.FromTo(period),
+            Total(spending.Compared, high, InsightTexts.Short(period.Previous())), steps,
+            Total(spending.Spent, high, InsightTexts.Short(period)), false, "", "");
     }
 
     /// <summary>What a column of the chart changes by: a category, or the rest folded into one.</summary>
@@ -105,5 +109,20 @@ public sealed record WaterfallChart(
 
     private static double Level(long cents, long high) => (double)cents / high;
 
-    private static WaterfallTotal Total(long cents, long high) => new(cents, Level(cents, high), "", "");
+    private static WaterfallTotal Total(long cents, long high, string caption) =>
+        new(cents, Level(cents, high), ItalianFormat.WholeEuros(cents), caption);
+
+    /// <summary>The whole euros of the level after a step minus those of the level before it, signed. Neighbouring
+    /// labels share a rounded level, so they add up from the rounded start to the rounded end.</summary>
+    private static string Label(long before, long after)
+    {
+        var euros = Euros(after) - Euros(before);
+        if (euros == 0)
+            return "0";
+
+        return euros > 0 ? $"+{ItalianFormat.Count(euros)}" : $"{Minus}{ItalianFormat.Count(-euros)}";
+    }
+
+    // Levels are never negative, so half up is half away from zero.
+    private static long Euros(long cents) => (cents + 50) / 100;
 }
