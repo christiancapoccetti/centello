@@ -171,7 +171,7 @@
         <Grid Grid.RowSpan="3" IsVisible="{Binding IsSpeechSheetVisible}" BackgroundColor="{t:Theme Scrim}">
             <Border VerticalOptions="End" BackgroundColor="{t:Theme Ground}" StrokeThickness="0" StrokeShape="RoundRectangle 28,28,0,0" Padding="24,24,24,28">
                 <VerticalStackLayout Spacing="16">
-                    <Label Text="Inserimento rapido" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" />
+                    <Label Text="Inserimento vocale" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" />
                     <ActivityIndicator IsVisible="{Binding IsSpeechProcessing}" IsRunning="{Binding IsSpeechProcessing}" />
                     <Label Text="{Binding SpeechTranscription, StringFormat='Ho sentito: “{0}”'}" IsVisible="{Binding HasSpeechTranscription}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
                     <Label Text="{Binding SpeechErrorMessage}" IsVisible="{Binding HasSpeechError}" TextColor="{t:Theme Alert}" HorizontalTextAlignment="Center" />

@@ -216,7 +216,7 @@ public partial class TodayPage : ContentPage
     private async void OnInactiveSpeechClicked(object? sender, EventArgs e)
     {
         var openSettings = await DisplayAlertAsync(
-            "Inserimento rapido",
+            "Inserimento vocale",
             "Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.",
             "Apri impostazioni",
             "Annulla");
