@@ -98,23 +98,18 @@ public sealed record PaceChart(
         var scale = new Scale(heights.Max());
         var split = PaceSplit.Of(spending);
         var verdict = split.Verdict();
-        var line = Line(spending, scale);
+        var line = LineOf(spending, scale);
         return new PaceChart(
             period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
-            Bars(spending, compared, scale), line, BudgetLine(budget, scale), GapOf(spending, compared, scale),
+            BarsOf(spending, compared, scale), line, BudgetLineOf(budget, scale), GapOf(spending, compared, scale),
             AxisOf(spending, compared), KeyOf(spending, split, line is not null),
             verdict, SentenceOf(spending, split, verdict), Describe(spending, split, budget));
     }
 
-    /// <summary>Day d of a month is slot d - 1, month m of a year is slot m - 1, for either period.</summary>
-    private static int SlotOf(Period period, DateOnly day) => (period.Kind == PeriodKind.Month ? day.Day : day.Month) - 1;
-
-    private static int SlotCount(Period period) => period.Kind == PeriodKind.Month ? MonthSlots : YearSlots;
-
-    private static List<PaceSlot> Bars(SpendComparison spending, int compared, Scale scale)
+    private static List<PaceSlot> BarsOf(SpendComparison spending, int compared, Scale scale)
     {
         var period = spending.Period;
-        var count = SlotCount(period);
+        var count = period.Kind == PeriodKind.Month ? MonthSlots : YearSlots;
         var last = SlotOf(period, period.End);
         var total = Cumulative(count, period, spending.Current);
         var automatic = Cumulative(count, period, spending.Current.Where(expense => expense.IsAutomatic));
@@ -130,7 +125,18 @@ public sealed record PaceChart(
             .ToList();
     }
 
-    private static PaceLine? Line(SpendComparison spending, Scale scale)
+    private static PaceSlotKind KindOf(int slot, int compared, int last, bool isToDate)
+    {
+        if (slot > last)
+            return PaceSlotKind.Outside;
+
+        if (slot > compared)
+            return PaceSlotKind.Ahead;
+
+        return slot == compared && isToDate ? PaceSlotKind.Today : PaceSlotKind.Spent;
+    }
+
+    private static PaceLine? LineOf(SpendComparison spending, Scale scale)
     {
         if (spending.PreviousClosed == 0)
             return null;
@@ -140,6 +146,24 @@ public sealed record PaceChart(
         return new PaceLine(
             levels.Select(level => scale.Of(level)).ToList(),
             $"{Subject(previous)} ha chiuso a {Euros(spending.PreviousClosed)}");
+    }
+
+    private static PaceBudget? BudgetLineOf(long? budget, Scale scale) => budget is { } cents
+        ? new PaceBudget(scale.Of(cents), $"budget {ItalianFormat.Budget(cents)}{Nbsp}€")
+        : null;
+
+    private static PaceGap? GapOf(SpendComparison spending, int compared, Scale scale)
+    {
+        if (!spending.IsComparable)
+            return null;
+
+        var delta = spending.Spent - spending.Compared;
+        var inLine = Math.Abs(delta) < HalfEuro;
+        var amount = inLine ? "In linea" : $"{Euros(Math.Abs(delta))} {(delta < 0 ? "in meno" : "in più")}";
+        var previous = spending.Period.Previous();
+        var against = inLine ? With(previous) : InsightTexts.OfPeriod(previous);
+        return new PaceGap(compared, scale.Of(spending.Compared), scale.Of(spending.Spent), amount,
+            spending.IsToDate ? $"{against} a oggi" : against);
     }
 
     private static PaceAxis AxisOf(SpendComparison spending, int compared)
@@ -167,32 +191,6 @@ public sealed record PaceChart(
             key.Add(new PaceKeyItem(PaceSeries.Previous, InsightTexts.Name(period.Previous()), ""));
 
         return key;
-    }
-
-    // A clause drops with its data. The closing total of a past period is its compared total, so it is said once.
-    private static string Describe(SpendComparison spending, PaceSplit split, long? budget)
-    {
-        var period = spending.Period;
-        var toDate = spending.IsToDate ? " fino a oggi" : "";
-        var automatic = split.IsShown ? $", di cui automatiche {ItalianFormat.Money(split.Automatic)}" : "";
-        List<string> clauses =
-            [$"Spesa accumulata {InsightTexts.OfPeriod(period)}{toDate}: {ItalianFormat.Money(spending.Spent)}{automatic}."];
-        if (spending.IsComparable)
-        {
-            var against = RowLabels.Sentence(InsightTexts.InComparedPeriod(period, spending.IsToDate));
-            clauses.Add($"{against}: {ItalianFormat.Money(spending.Compared)}.");
-        }
-
-        if (spending.PreviousClosed > 0 && spending.PreviousClosed != spending.Compared)
-        {
-            var closed = RowLabels.Sentence(Subject(period.Previous()));
-            clauses.Add($"{closed} ha chiuso a {ItalianFormat.Money(spending.PreviousClosed)}.");
-        }
-
-        if (budget is { } cents)
-            clauses.Add($"Budget: {ItalianFormat.Budget(cents)}{Nbsp}€.");
-
-        return string.Join(' ', clauses);
     }
 
     private static string SentenceOf(SpendComparison spending, PaceSplit split, SplitVerdict verdict)
@@ -223,46 +221,35 @@ public sealed record PaceChart(
         return $"{none} spesa automatica; {compared} erano {ItalianFormat.Money(split.ComparedAutomatic)}.";
     }
 
-    /// <summary>"20 € più alte" or "20 € più basse".</summary>
-    private static string Difference(long delta) => $"{Euros(Math.Abs(delta))} {(delta > 0 ? "più alte" : "più basse")}";
-
-    private static string With(Period period) => $"con {Subject(period)}";
-
-    private static PaceBudget? BudgetLine(long? budget, Scale scale) => budget is { } cents
-        ? new PaceBudget(scale.Of(cents), $"budget {ItalianFormat.Budget(cents)}{Nbsp}€")
-        : null;
-
-    private static PaceGap? GapOf(SpendComparison spending, int compared, Scale scale)
+    // A clause drops with its data. The closing total of a past period is its compared total, so it is said once.
+    private static string Describe(SpendComparison spending, PaceSplit split, long? budget)
     {
-        if (!spending.IsComparable)
-            return null;
+        var period = spending.Period;
+        var toDate = spending.IsToDate ? " fino a oggi" : "";
+        var automatic = split.IsShown ? $", di cui automatiche {ItalianFormat.Money(split.Automatic)}" : "";
+        List<string> clauses =
+            [$"Spesa accumulata {InsightTexts.OfPeriod(period)}{toDate}: {ItalianFormat.Money(spending.Spent)}{automatic}."];
+        if (spending.IsComparable)
+        {
+            var against = RowLabels.Sentence(InsightTexts.InComparedPeriod(period, spending.IsToDate));
+            clauses.Add($"{against}: {ItalianFormat.Money(spending.Compared)}.");
+        }
 
-        var delta = spending.Spent - spending.Compared;
-        var inLine = Math.Abs(delta) < HalfEuro;
-        var amount = inLine ? "In linea" : $"{Euros(Math.Abs(delta))} {(delta < 0 ? "in meno" : "in più")}";
-        return new PaceGap(compared, scale.Of(spending.Compared), scale.Of(spending.Spent), amount,
-            GapCaption(spending, inLine));
+        if (spending.PreviousClosed > 0 && spending.PreviousClosed != spending.Compared)
+        {
+            var closed = RowLabels.Sentence(Subject(period.Previous()));
+            clauses.Add($"{closed} ha chiuso a {ItalianFormat.Money(spending.PreviousClosed)}.");
+        }
+
+        if (budget is { } cents)
+            clauses.Add($"Budget: {ItalianFormat.Budget(cents)}{Nbsp}€.");
+
+        return string.Join(' ', clauses);
     }
 
-    private static string GapCaption(SpendComparison spending, bool inLine)
-    {
-        var previous = spending.Period.Previous();
-        var against = inLine ? With(previous) : InsightTexts.OfPeriod(previous);
-        return spending.IsToDate ? $"{against} a oggi" : against;
-    }
+    /// <summary>Day d of a month is slot d - 1, month m of a year is slot m - 1, for either period.</summary>
+    private static int SlotOf(Period period, DateOnly day) => (period.Kind == PeriodKind.Month ? day.Day : day.Month) - 1;
 
-    private static PaceSlotKind KindOf(int slot, int compared, int last, bool isToDate)
-    {
-        if (slot > last)
-            return PaceSlotKind.Outside;
-
-        if (slot > compared)
-            return PaceSlotKind.Ahead;
-
-        return slot == compared && isToDate ? PaceSlotKind.Today : PaceSlotKind.Spent;
-    }
-
-    /// <summary>Spending through the end of each slot. Slots after the last expense keep the running total.</summary>
     private static long[] Cumulative(int count, Period period, IEnumerable<Expense> expenses)
     {
         var levels = new long[count];
@@ -275,15 +262,16 @@ public sealed record PaceChart(
         return levels;
     }
 
-    /// <summary>"ottobre" or "il 2025": the previous period as a sentence names it.</summary>
     private static string Subject(Period period) => period.Kind == PeriodKind.Month
         ? ItalianFormat.MonthName(period.Start.Month)
         : $"il {period.Start.Year}";
 
-    /// <summary>"1.590 €": the chart's unit is the whole euro.</summary>
+    private static string With(Period period) => $"con {Subject(period)}";
+
     private static string Euros(long cents) => $"{ItalianFormat.WholeEuros(cents)}{Nbsp}€";
 
-    /// <summary>Cents as a fraction of the chart's one scale.</summary>
+    private static string Difference(long delta) => $"{Euros(Math.Abs(delta))} {(delta > 0 ? "più alte" : "più basse")}";
+
     private readonly record struct Scale(long Cents)
     {
         public double Of(long cents) => Cents == 0 ? 0 : (double)cents / Cents;
