@@ -81,10 +81,75 @@ public sealed record PaceChart(
     string Sentence, // the wording of Split; empty for NothingToCompare and NoAutomatic
     string Description) // screen-reader text alternative
 {
+    private const int MonthSlots = 31;
+    private const int YearSlots = 12;
+
     public bool HasSentence => Sentence.HasValue();
 
-    internal static PaceChart For(SpendComparison spending, long? budget) => new(
-        spending.Period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
-        [], null, null, null, new PaceAxis(new PaceTick(0, ""), new PaceTick(0, ""), null), [],
-        SplitVerdict.NothingToCompare, "", "");
+    internal static PaceChart For(SpendComparison spending, long? budget)
+    {
+        var period = spending.Period;
+        var compared = SlotOf(period, spending.Window.CurrentTo);
+        long[] heights = [spending.Spent, spending.PreviousClosed, budget ?? 0];
+        var scale = new Scale(heights.Max());
+        return new PaceChart(
+            period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
+            Bars(spending, compared, scale), null, null, null,
+            new PaceAxis(new PaceTick(0, ""), new PaceTick(0, ""), null), [],
+            SplitVerdict.NothingToCompare, "", "");
+    }
+
+    /// <summary>Day d of a month is slot d - 1, month m of a year is slot m - 1, for either period.</summary>
+    private static int SlotOf(Period period, DateOnly day) => (period.Kind == PeriodKind.Month ? day.Day : day.Month) - 1;
+
+    private static int SlotCount(Period period) => period.Kind == PeriodKind.Month ? MonthSlots : YearSlots;
+
+    private static List<PaceSlot> Bars(SpendComparison spending, int compared, Scale scale)
+    {
+        var period = spending.Period;
+        var count = SlotCount(period);
+        var last = SlotOf(period, period.End);
+        var total = Cumulative(count, period, spending.Current);
+        var automatic = Cumulative(count, period, spending.Current.Where(expense => expense.IsAutomatic));
+        return Enumerable
+            .Range(0, count)
+            .Select(slot =>
+            {
+                var kind = KindOf(slot, compared, last, spending.IsToDate);
+                return kind is PaceSlotKind.Spent or PaceSlotKind.Today
+                    ? new PaceSlot(kind, scale.Of(automatic[slot]), scale.Of(total[slot]))
+                    : new PaceSlot(kind, 0, 0);
+            })
+            .ToList();
+    }
+
+    private static PaceSlotKind KindOf(int slot, int compared, int last, bool isToDate)
+    {
+        if (slot > last)
+            return PaceSlotKind.Outside;
+
+        if (slot > compared)
+            return PaceSlotKind.Ahead;
+
+        return slot == compared && isToDate ? PaceSlotKind.Today : PaceSlotKind.Spent;
+    }
+
+    /// <summary>Spending through the end of each slot. Slots after the last expense keep the running total.</summary>
+    private static long[] Cumulative(int count, Period period, IEnumerable<Expense> expenses)
+    {
+        var levels = new long[count];
+        foreach (var expense in expenses)
+            levels[SlotOf(period, expense.OccurredOn)] += expense.Amount.Cents;
+
+        for (var slot = 1; slot < count; slot++)
+            levels[slot] += levels[slot - 1];
+
+        return levels;
+    }
+
+    /// <summary>Cents as a fraction of the chart's one scale.</summary>
+    private readonly record struct Scale(long Cents)
+    {
+        public double Of(long cents) => Cents == 0 ? 0 : (double)cents / Cents;
+    }
 }
