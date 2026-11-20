@@ -32,6 +32,11 @@ public sealed class OpenAiExpenseInterpreter_should_expected_behavior
     private static Task<Result<ExpenseDraft>> InterpretPhoto(FakeHttpMessageHandler handler, string apiKey = ApiKey) =>
         CreateInterpreter(handler, apiKey).Interpret(ExpenseDocument.Read(PhotoBytes).Value, Categories, Today);
 
+    private static readonly byte[] PdfBytes = [.. "%PDF-1.7"u8, 0x0A, 0x01];
+
+    private static Task<Result<ExpenseDraft>> InterpretPdf(FakeHttpMessageHandler handler) =>
+        CreateInterpreter(handler).Interpret(ExpenseDocument.Read(PdfBytes).Value, Categories, Today);
+
     [Fact]
     public async Task Turn_a_natural_phrase_into_a_draft_with_the_users_own_ids()
     {
@@ -269,5 +274,37 @@ public sealed class OpenAiExpenseInterpreter_should_expected_behavior
         Assert.True(result.IsFailure);
         Assert.Equal("OpenAi.RateLimited", result.Error.Code);
         Assert.DoesNotContain(ApiKey, result.Error.Message);
+    }
+
+    [Fact]
+    public async Task Turn_a_pdf_into_a_pdf_draft()
+    {
+        var handler = FakeHttpMessageHandler.Responding(
+            HttpStatusCode.OK,
+            OpenAiResponses.Interpretation(amount: "89.9", categoryKey: "c2", tagKey: null, date: "2026-11-10", note: "Enel"));
+
+        var result = await InterpretPdf(handler);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(8_990, result.Value.AmountCents);
+        Assert.Same(DraftSource.Pdf, result.Value.Source);
+        Assert.Equal("", result.Value.Heard);
+    }
+
+    [Fact]
+    public async Task Post_the_pdf_as_an_input_file()
+    {
+        var handler = FakeHttpMessageHandler.Responding(HttpStatusCode.OK, OpenAiResponses.Interpretation());
+
+        await InterpretPdf(handler);
+
+        var request = Assert.Single(handler.Requests);
+        using var json = request.Json;
+        var part = json.RootElement.GetProperty("input")[1].GetProperty("content")[0];
+        Assert.Equal("input_file", part.GetProperty("type").GetString());
+        const string prefix = "data:application/pdf;base64,";
+        var url = part.GetProperty("file_data").GetString()!;
+        Assert.StartsWith(prefix, url);
+        Assert.Equal(PdfBytes, Convert.FromBase64String(url[prefix.Length..]));
     }
 }

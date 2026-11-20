@@ -195,7 +195,7 @@ public partial class TodayPage : ContentPage
             }
 
             _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Photo);
-            await Show(await _drafts.PrepareFromPhoto(bytes));
+            await Show(await _drafts.PrepareFromDocument(bytes));
         }
         catch
         {

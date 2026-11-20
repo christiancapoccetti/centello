@@ -49,7 +49,7 @@ public sealed class ExpenseDraftService(
             cancellationToken);
     }
 
-    public async Task<Result<ExpenseDraft>> PrepareFromPhoto(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
+    public async Task<Result<ExpenseDraft>> PrepareFromDocument(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
     {
         var photo = ExpenseDocument.Read(image);
         if (photo.IsFailure)

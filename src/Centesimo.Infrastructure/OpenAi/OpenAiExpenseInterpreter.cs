@@ -37,7 +37,7 @@ public sealed class OpenAiExpenseInterpreter(OpenAiClient client) : IExpenseInte
             ExpenseInterpretationRequestBuilder.Build(document, catalog, today),
             catalog,
             today,
-            DraftSource.Photo,
+            DraftSource.Of(document),
             "",
             cancellationToken);
     }

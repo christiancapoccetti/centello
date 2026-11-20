@@ -160,7 +160,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     {
         _interpreter.Draft = new ExpenseDraft(1_250, _food.CategoryId, null, new DateOnly(2026, 11, 18), "Conad", DraftSource.Photo, "");
 
-        var result = await _service.PrepareFromPhoto(Jpeg);
+        var result = await _service.PrepareFromDocument(Jpeg);
 
         Assert.True(result.IsSuccess);
         Assert.Same(_interpreter.Draft, result.Value);
@@ -171,9 +171,34 @@ public sealed class ExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Not_call_openai_for_a_file_that_is_not_an_image()
+    public async Task Interpret_a_pdf_like_a_photo()
     {
-        var result = await _service.PrepareFromPhoto(new byte[] { 0x25, 0x50, 0x44, 0x46 });
+        byte[] pdf = [.. "%PDF-1.7"u8, 0x0A];
+        _interpreter.Draft = new ExpenseDraft(8_990, _food.CategoryId, null, new DateOnly(2026, 11, 10), "Enel", DraftSource.Pdf, "");
+
+        var result = await _service.PrepareFromDocument(pdf);
+
+        Assert.Same(_interpreter.Draft, result.Value);
+        Assert.True(_interpreter.Document!.IsPdf);
+        Assert.Equal(pdf, _interpreter.Document.Bytes.ToArray());
+    }
+
+    [Fact]
+    public async Task Refuse_a_pdf_over_the_pdf_limit_without_calling_openai()
+    {
+        var oversized = new byte[DocumentLimits.MaximumPdfBytes + 1];
+        "%PDF-"u8.CopyTo(oversized);
+
+        var result = await _service.PrepareFromDocument(oversized);
+
+        Assert.Equal(PhotoErrors.PdfTooLarge, result.Error);
+        Assert.Equal(0, _interpreter.CallCount);
+    }
+
+    [Fact]
+    public async Task Not_call_openai_for_a_file_that_is_neither_an_image_nor_a_pdf()
+    {
+        var result = await _service.PrepareFromDocument("plain text"u8.ToArray());
 
         Assert.True(result.IsFailure);
         Assert.Equal(PhotoErrors.Unsupported, result.Error);
@@ -186,7 +211,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     {
         _internet.IsAvailable = false;
 
-        var result = await _service.PrepareFromPhoto(Jpeg);
+        var result = await _service.PrepareFromDocument(Jpeg);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DraftErrors.NoInternet, result.Error);
@@ -199,7 +224,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         var failure = new Error("Test.Categories", "Categorie non disponibili.");
         _categories.Failure = failure;
 
-        var result = await _service.PrepareFromPhoto(Jpeg);
+        var result = await _service.PrepareFromDocument(Jpeg);
 
         Assert.True(result.IsFailure);
         Assert.Equal(failure, result.Error);
@@ -211,7 +236,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     {
         _interpreter.Failure = InterpretationFailure;
 
-        var result = await _service.PrepareFromPhoto(Jpeg);
+        var result = await _service.PrepareFromDocument(Jpeg);
 
         Assert.Equal(InterpretationFailure, result.Error);
     }
