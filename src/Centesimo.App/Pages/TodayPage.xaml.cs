@@ -10,7 +10,7 @@ public partial class TodayPage : ContentPage
     private readonly OpenAiSettings _settings;
     private readonly PhotoPicker _photos;
     private const string MicrophoneRationale = "Centesimo usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.";
-    private const string CameraRationale = "Centesimo usa la fotocamera solo per fotografare lo scontrino. La foto viene inviata a OpenAI per leggerla e Centesimo non la salva.";
+    private const string CameraRationale = "Centesimo usa la fotocamera solo per fotografare una spesa, come uno scontrino o una fattura. La foto viene inviata a OpenAI per leggerla e Centesimo non la salva.";
 
     private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;
@@ -264,7 +264,7 @@ public partial class TodayPage : ContentPage
     {
         var openSettings = await DisplayAlertAsync(
             "Voce e foto con OpenAI",
-            "Configura la chiave API OpenAI nelle impostazioni per dettare le spese o leggere gli scontrini da una foto.",
+            "Configura la chiave API OpenAI nelle impostazioni per dettare le spese o leggere una spesa da una foto.",
             "Apri impostazioni",
             "Annulla");
         if (openSettings)

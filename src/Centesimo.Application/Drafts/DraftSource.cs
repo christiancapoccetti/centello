@@ -13,7 +13,7 @@ public sealed class DraftSource
 
     public static readonly DraftSource Photo = new(
         MaterialSymbols.PhotoCamera,
-        sheetTitle: "Lettura scontrino",
+        sheetTitle: "Lettura della foto",
         readingLine: "Cerco importo, data e negozio…",
         privacyNote: "Foto inviata a OpenAI, Centesimo non la salva",
         banner: _ => "Dalla foto · controlla e salva");

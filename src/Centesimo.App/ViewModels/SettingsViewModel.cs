@@ -6,7 +6,7 @@ namespace Centesimo.App.ViewModels;
 
 public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiSettings openAiSettings) : ObservableObject
 {
-    private const string NewKeyLead = "Detta una spesa con parole tue, per esempio “ieri 12 euro di pizza”, o fotografa uno scontrino. Serve una tua chiave API OpenAI.";
+    private const string NewKeyLead = "Detta una spesa con parole tue, per esempio “ieri 12 euro di pizza”, o fotografa uno scontrino o una fattura. Serve una tua chiave API OpenAI.";
     private const string ReplacementLead = "La nuova chiave prende il posto di quella salvata.";
 
     private string _recurringSummary = "";

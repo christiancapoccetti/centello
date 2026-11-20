@@ -12,7 +12,7 @@ public interface IOpenAiApiKeyProvider
 public sealed class OpenAiSettings(IOpenAiApiKeyStore store) : IOpenAiApiKeyProvider
 {
     public const string ConsentMessage =
-        "Usando OpenAI, l'audio registrato, le foto degli scontrini e il testo della spesa vengono inviati a OpenAI per la trascrizione e la lettura. " +
+        "Usando OpenAI, l'audio registrato, le foto delle spese e il testo della spesa vengono inviati a OpenAI per la trascrizione e la lettura. " +
         "Centesimo non salva né l'audio né le foto: le tue spese restano solo sul dispositivo. " +
         "La chiave è conservata in modo sicuro sul telefono, ma una chiave su un'app non ha le garanzie di un server: usala solo per uso personale.";
 

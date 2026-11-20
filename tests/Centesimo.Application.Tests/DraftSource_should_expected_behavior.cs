@@ -35,7 +35,7 @@ public sealed class DraftSource_should_expected_behavior
     public void Speak_for_the_photo_on_the_sheet()
     {
         Assert.Equal(MaterialSymbols.PhotoCamera, DraftSource.Photo.Glyph);
-        Assert.Equal("Lettura scontrino", DraftSource.Photo.SheetTitle);
+        Assert.Equal("Lettura della foto", DraftSource.Photo.SheetTitle);
         Assert.Equal("Cerco importo, data e negozio…", DraftSource.Photo.ReadingLine);
         Assert.Equal("Foto inviata a OpenAI, Centesimo non la salva", DraftSource.Photo.PrivacyNote);
     }
