@@ -362,6 +362,56 @@ public sealed class PaceChart_should_expected_behavior
         Assert.Equal(caption, pace.Gap!.Caption);
     }
 
+    [Theory]
+    [InlineData(160_000, "budget 1.600 €")]
+    [InlineData(160_050, "budget 1.600,50 €")]
+    public async Task Should_draw_the_budget_line_with_its_label(long budgetCents, string label)
+    {
+        var pace = await new Ledger(budgetCents).Spend(On(11, 3), 10_000).Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(1.0, pace.Budget!.Fraction, 9);
+        Assert.Equal(label.Replace(" €", $"{Nbsp}€"), pace.Budget.Label);
+    }
+
+    [Fact]
+    public async Task Should_scale_the_budget_line_to_twelve_months_for_a_year()
+    {
+        var pace = await new Ledger(100_000).Spend(On(3, 3), 10_000).Pace(Period.Year(2026), Today);
+
+        Assert.Equal(1.0, pace.Budget!.Fraction, 9);
+        Assert.Equal($"budget 12.000{Nbsp}€", pace.Budget.Label);
+    }
+
+    [Fact]
+    public async Task Should_scale_to_the_budget_when_it_is_the_largest()
+    {
+        var ledger = new Ledger(100_000).Spend(On(10, 31), 60_000).Spend(On(11, 3), 40_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(1.0, pace.Budget!.Fraction, 9);
+        Assert.Equal(0.6, pace.Previous!.Levels[^1], 9);
+        Assert.Equal(0.4, pace.Slots[18].Total, 9);
+    }
+
+    [Fact]
+    public async Task Should_draw_the_budget_line_under_the_top_when_spending_passes_it()
+    {
+        var ledger = new Ledger(20_000).Spend(On(10, 31), 60_000).Spend(On(11, 3), 40_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(20_000 / 60_000.0, pace.Budget!.Fraction, 9);
+    }
+
+    [Fact]
+    public async Task Should_draw_no_budget_line_without_a_budget()
+    {
+        var pace = await new Ledger().Spend(On(11, 3), 10_000).Pace(Period.Month(2026, 11), Today);
+
+        Assert.Null(pace.Budget);
+    }
+
     private static DateOnly On(int month, int day, int year = 2026) => new(year, month, day);
 
     private static IEnumerable<T> Run<T>(T value, int count) => Enumerable.Repeat(value, count);

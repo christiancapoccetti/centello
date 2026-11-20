@@ -98,7 +98,8 @@ public sealed record PaceChart(
         var scale = new Scale(heights.Max());
         return new PaceChart(
             period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
-            Bars(spending, compared, scale), Line(spending, scale), null, GapOf(spending, compared, scale),
+            Bars(spending, compared, scale), Line(spending, scale), BudgetLine(budget, scale),
+            GapOf(spending, compared, scale),
             new PaceAxis(new PaceTick(0, ""), new PaceTick(0, ""), null), [],
             SplitVerdict.NothingToCompare, "", "");
     }
@@ -138,6 +139,10 @@ public sealed record PaceChart(
             levels.Select(level => scale.Of(level)).ToList(),
             $"{Subject(previous)} ha chiuso a {Euros(spending.PreviousClosed)}");
     }
+
+    private static PaceBudget? BudgetLine(long? budget, Scale scale) => budget is { } cents
+        ? new PaceBudget(scale.Of(cents), $"budget {ItalianFormat.Budget(cents)}{Nbsp}€")
+        : null;
 
     private static PaceGap? GapOf(SpendComparison spending, int compared, Scale scale)
     {
