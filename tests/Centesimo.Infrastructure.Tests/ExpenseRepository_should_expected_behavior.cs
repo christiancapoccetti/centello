@@ -33,4 +33,22 @@ public sealed class ExpenseRepository_should_expected_behavior
         Assert.Equal(included.ExpenseId, categoryExpenses.Value[0].ExpenseId);
         Assert.Null((await repository.Get(included.ExpenseId)).Value);
     }
+
+    [Fact]
+    public async Task Return_every_expense_between_the_smallest_and_largest_date()
+    {
+        using var database = new TestDatabase();
+        var category = new Category(Guid.NewGuid(), "Food", "cart", "#123456");
+        database.Context.Add(category);
+        await database.Context.SaveChangesAsync();
+        var repository = new ExpenseRepository(database.Context);
+        await repository.Add(new Expense(Guid.NewGuid(), category.CategoryId, new Money(100),
+            new DateOnly(1999, 1, 1)));
+        await repository.Add(new Expense(Guid.NewGuid(), category.CategoryId, new Money(200),
+            new DateOnly(2026, 7, 20)));
+
+        var expenses = await repository.GetBetween(DateOnly.MinValue, DateOnly.MaxValue);
+
+        Assert.Equal(2, expenses.Value.Count);
+    }
 }

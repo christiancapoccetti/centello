@@ -77,6 +77,15 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseService>());
     }
 
+
+    [Fact]
+    public void Build_the_expense_export_service_with_the_system_clock()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseExportService>());
+    }
     [Fact]
     public void Share_one_openai_client_between_transcriber_and_interpreter()
     {
