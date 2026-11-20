@@ -1,11 +1,11 @@
 namespace Centesimo.Application;
 
-public sealed class ExpensePhoto
+public sealed class ExpenseDocument
 {
     private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF];
     private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
-    private ExpensePhoto(ReadOnlyMemory<byte> bytes, string mediaType)
+    private ExpenseDocument(ReadOnlyMemory<byte> bytes, string mediaType)
     {
         Bytes = bytes;
         MediaType = mediaType;
@@ -15,16 +15,16 @@ public sealed class ExpensePhoto
 
     public string MediaType { get; }
 
-    public static Result<ExpensePhoto> Read(ReadOnlyMemory<byte> bytes)
+    public static Result<ExpenseDocument> Read(ReadOnlyMemory<byte> bytes)
     {
         if (bytes.Length > PhotoLimits.MaximumBytes)
-            return Result<ExpensePhoto>.Failure(PhotoErrors.TooLarge);
+            return Result<ExpenseDocument>.Failure(PhotoErrors.TooLarge);
 
         var mediaType = MediaTypeOf(bytes.Span);
         if (mediaType is null)
-            return Result<ExpensePhoto>.Failure(PhotoErrors.Unsupported);
+            return Result<ExpenseDocument>.Failure(PhotoErrors.Unsupported);
 
-        return Result<ExpensePhoto>.Success(new ExpensePhoto(bytes, mediaType));
+        return Result<ExpenseDocument>.Success(new ExpenseDocument(bytes, mediaType));
     }
 
     private static string? MediaTypeOf(ReadOnlySpan<byte> bytes)

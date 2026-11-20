@@ -8,10 +8,10 @@ public interface IExpenseInterpreter
         DateOnly today,
         CancellationToken cancellationToken = default);
 
-    /// <returns>A draft with every field empty when the photo shows no readable expense. That is not a failure: the
+    /// <returns>A draft with every field empty when the document shows no readable expense. That is not a failure: the
     /// editor opens empty with today's date.</returns>
     Task<Result<ExpenseDraft>> Interpret(
-        ExpensePhoto photo,
+        ExpenseDocument document,
         IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default);

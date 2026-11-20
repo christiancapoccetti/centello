@@ -27,14 +27,14 @@ public sealed class OpenAiExpenseInterpreter(OpenAiClient client) : IExpenseInte
     }
 
     public Task<Result<ExpenseDraft>> Interpret(
-        ExpensePhoto photo,
+        ExpenseDocument document,
         IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default)
     {
         var catalog = new ExpenseInterpretationCatalog(categories);
         return Send(
-            ExpenseInterpretationRequestBuilder.Build(photo, catalog, today),
+            ExpenseInterpretationRequestBuilder.Build(document, catalog, today),
             catalog,
             today,
             DraftSource.Photo,

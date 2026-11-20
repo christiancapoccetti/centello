@@ -11,8 +11,8 @@ public static class ExpenseInterpretationRequestBuilder
     public static JsonObject Build(string text, ExpenseInterpretationCatalog catalog, DateOnly today) =>
         Request(PhraseInstructions(catalog, today), text, catalog);
 
-    public static JsonObject Build(ExpensePhoto photo, ExpenseInterpretationCatalog catalog, DateOnly today) =>
-        Request(PhotoInstructions(catalog, today), new JsonArray(ImagePart(photo)), catalog);
+    public static JsonObject Build(ExpenseDocument document, ExpenseInterpretationCatalog catalog, DateOnly today) =>
+        Request(PhotoInstructions(catalog, today), new JsonArray(ImagePart(document)), catalog);
 
     private static JsonObject Request(string instructions, JsonNode userContent, ExpenseInterpretationCatalog catalog) => new()
     {
@@ -41,10 +41,10 @@ public static class ExpenseInterpretationRequestBuilder
     };
 
     // Receipts print small; "high" keeps the total legible after OpenAI scales the image.
-    private static JsonObject ImagePart(ExpensePhoto photo) => new()
+    private static JsonObject ImagePart(ExpenseDocument document) => new()
     {
         ["type"] = "input_image",
-        ["image_url"] = $"data:{photo.MediaType};base64,{Convert.ToBase64String(photo.Bytes.Span)}",
+        ["image_url"] = $"data:{document.MediaType};base64,{Convert.ToBase64String(document.Bytes.Span)}",
         ["detail"] = "high"
     };
 

@@ -15,7 +15,7 @@ public sealed class PhotoPicker
         SelectionLimit = 1
     };
 
-    // Wider than what ExpensePhoto accepts on purpose: a camera app may leave a HEIC original next to the JPEG copy.
+    // Wider than what ExpenseDocument accepts on purpose: a camera app may leave a HEIC original next to the JPEG copy.
     private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
 
     // Below Android 13 MediaPicker.CapturePhotoAsync demands WRITE_EXTERNAL_STORAGE. Declaring it would make

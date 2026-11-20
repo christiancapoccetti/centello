@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Centesimo.Application.Tests;
 
-public sealed class ExpensePhoto_should_expected_behavior
+public sealed class ExpenseDocument_should_expected_behavior
 {
     private static readonly byte[] JpegSignature = [0xFF, 0xD8, 0xFF, 0xE0];
     private static readonly byte[] PngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
@@ -22,7 +22,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     [Fact]
     public void Read_a_jpeg()
     {
-        var result = ExpensePhoto.Read(JpegSignature);
+        var result = ExpenseDocument.Read(JpegSignature);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("image/jpeg", result.Value.MediaType);
@@ -32,7 +32,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     [Fact]
     public void Read_a_png()
     {
-        var result = ExpensePhoto.Read(PngSignature);
+        var result = ExpenseDocument.Read(PngSignature);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("image/png", result.Value.MediaType);
@@ -41,7 +41,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     [Fact]
     public void Read_a_webp()
     {
-        var result = ExpensePhoto.Read(Webp());
+        var result = ExpenseDocument.Read(Webp());
 
         Assert.True(result.IsSuccess);
         Assert.Equal("image/webp", result.Value.MediaType);
@@ -50,7 +50,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     [Fact]
     public void Refuse_an_empty_file()
     {
-        var result = ExpensePhoto.Read(ReadOnlyMemory<byte>.Empty);
+        var result = ExpenseDocument.Read(ReadOnlyMemory<byte>.Empty);
 
         Assert.True(result.IsFailure);
         Assert.Equal(PhotoErrors.Unsupported, result.Error);
@@ -61,7 +61,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     {
         byte[] heic = [0x00, 0x00, 0x00, 0x18, .. Ascii("ftypheic")];
 
-        var result = ExpensePhoto.Read(heic);
+        var result = ExpenseDocument.Read(heic);
 
         Assert.Equal(PhotoErrors.Unsupported, result.Error);
     }
@@ -69,7 +69,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     [Fact]
     public void Refuse_a_pdf()
     {
-        var result = ExpensePhoto.Read(Ascii("%PDF-1.7"));
+        var result = ExpenseDocument.Read(Ascii("%PDF-1.7"));
 
         Assert.Equal(PhotoErrors.Unsupported, result.Error);
     }
@@ -79,7 +79,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     {
         byte[] wave = [.. Ascii("RIFF"), 0x24, 0x00, 0x00, 0x00, .. Ascii("WAVE")];
 
-        var result = ExpensePhoto.Read(wave);
+        var result = ExpenseDocument.Read(wave);
 
         Assert.Equal(PhotoErrors.Unsupported, result.Error);
     }
@@ -87,7 +87,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     [Fact]
     public void Refuse_a_photo_over_the_size_limit()
     {
-        var result = ExpensePhoto.Read(Padded(JpegSignature, PhotoLimits.MaximumBytes + 1));
+        var result = ExpenseDocument.Read(Padded(JpegSignature, PhotoLimits.MaximumBytes + 1));
 
         Assert.True(result.IsFailure);
         Assert.Equal(PhotoErrors.TooLarge, result.Error);
@@ -96,7 +96,7 @@ public sealed class ExpensePhoto_should_expected_behavior
     [Fact]
     public void Accept_a_photo_of_exactly_the_size_limit()
     {
-        var result = ExpensePhoto.Read(Padded(JpegSignature, PhotoLimits.MaximumBytes));
+        var result = ExpenseDocument.Read(Padded(JpegSignature, PhotoLimits.MaximumBytes));
 
         Assert.True(result.IsSuccess);
     }

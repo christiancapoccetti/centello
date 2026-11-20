@@ -164,7 +164,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
 
         Assert.True(result.IsSuccess);
         Assert.Same(_interpreter.Draft, result.Value);
-        Assert.Equal(Jpeg, _interpreter.Photo!.Bytes.ToArray());
+        Assert.Equal(Jpeg, _interpreter.Document!.Bytes.ToArray());
         Assert.Equal(["Auto", "Cibo"], _interpreter.Categories.Select(category => category.Name));
         Assert.Equal(1, _scopes.CreatedCount);
         Assert.Equal("", _service.LastTranscription);
@@ -268,7 +268,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         public ExpenseDraft Draft { get; set; } = new(null, null, null, null, "", DraftSource.Voice, "");
         public Error? Failure { get; set; }
         public string Phrase { get; private set; } = "";
-        public ExpensePhoto? Photo { get; private set; }
+        public ExpenseDocument? Document { get; private set; }
         public IReadOnlyCollection<DraftCategory> Categories { get; private set; } = [];
         public int CallCount { get; private set; }
 
@@ -287,13 +287,13 @@ public sealed class ExpenseDraftService_should_expected_behavior
         }
 
         public Task<Result<ExpenseDraft>> Interpret(
-            ExpensePhoto photo,
+            ExpenseDocument document,
             IReadOnlyCollection<DraftCategory> categories,
             DateOnly today,
             CancellationToken cancellationToken = default)
         {
             CallCount++;
-            Photo = photo;
+            Document = document;
             Categories = categories;
             return Task.FromResult(Failure is null
                 ? Result<ExpenseDraft>.Success(Draft)

@@ -28,7 +28,7 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
     private static readonly byte[] PhotoBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02, 0x03];
 
     private static JsonObject BuildPhoto(ExpenseInterpretationCatalog? catalog = null) =>
-        ExpenseInterpretationRequestBuilder.Build(ExpensePhoto.Read(PhotoBytes).Value, catalog ?? Catalog, Today);
+        ExpenseInterpretationRequestBuilder.Build(ExpenseDocument.Read(PhotoBytes).Value, catalog ?? Catalog, Today);
 
     [Fact]
     public void Target_the_interpretation_model_without_reasoning_or_storage()

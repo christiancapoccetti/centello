@@ -30,7 +30,7 @@ public sealed class OpenAiExpenseInterpreter_should_expected_behavior
     private static readonly byte[] PhotoBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02, 0x03];
 
     private static Task<Result<ExpenseDraft>> InterpretPhoto(FakeHttpMessageHandler handler, string apiKey = ApiKey) =>
-        CreateInterpreter(handler, apiKey).Interpret(ExpensePhoto.Read(PhotoBytes).Value, Categories, Today);
+        CreateInterpreter(handler, apiKey).Interpret(ExpenseDocument.Read(PhotoBytes).Value, Categories, Today);
 
     [Fact]
     public async Task Turn_a_natural_phrase_into_a_draft_with_the_users_own_ids()
