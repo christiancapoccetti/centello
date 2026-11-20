@@ -85,6 +85,27 @@ public sealed class InsightsService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_reproduce_the_mockup_month_from_the_fixture()
+    {
+        var fixture = InsightFixtures.November();
+
+        var november = await fixture.Overview();
+        var october = await fixture.Overview(Period.Month(2026, 10));
+
+        Assert.Equal((InsightFixtures.SpentCents, InsightFixtures.ComparedCents), (november.SpentCents, november.ComparedSpentCents));
+        Assert.Equal(InsightFixtures.PreviousClosedCents, october.SpentCents);
+        Assert.Equal(
+            ["Spesa 41230 39850", "Casa 38000 38000", "Trasporti 14620 20560", "Ristoranti 12840 9620",
+             "Svago 9610 14230", "Salute 6120 8800", "Altro 6040 5600"],
+            november.Categories.Select(x => $"{x.Name} {x.SpentCents} {x.ComparedSpentCents}"));
+        Assert.Equal(InsightFixtures.BudgetCents, fixture.Categories.Items.Sum(x => x.MonthlyBudget!.Value.Cents));
+        Assert.Equal(InsightFixtures.AutomaticCents,
+            fixture.Expenses.Items.Where(x => x.IsAutomatic && x.OccurredOn.Month == 11).Sum(x => x.Amount.Cents));
+        Assert.Equal(InsightFixtures.NovemberDays, SpentPerDay(fixture, 11, 19));
+        Assert.Equal(InsightFixtures.OctoberDays, SpentPerDay(fixture, 10, 31));
+    }
+
+    [Fact]
     public async Task Should_not_raise_an_insight_for_a_change_the_charts_already_show()
     {
         var food = new Category(Guid.NewGuid(), "Cibo", "food", "#196D61");
@@ -442,6 +463,13 @@ public sealed class InsightsService_should_expected_behavior
         Assert.Equal(expected, habit.Description);
         Assert.Equal(InsightTarget.Category(category.CategoryId, Period.Year(year)), habit.Target);
     }
+
+    private static IReadOnlyList<long> SpentPerDay(InsightFixtures fixture, int month, int days) => Enumerable
+        .Range(1, days)
+        .Select(day => fixture.Expenses.Items
+            .Where(expense => expense.OccurredOn == new DateOnly(2026, month, day))
+            .Sum(expense => expense.Amount.Cents))
+        .ToList();
 
     private static async Task<(long Spent, long? Compared, DateOnly From, DateOnly To)> Summary(InsightsService service, Period period) =>
         Summarize((await service.Get(period)).Value);
