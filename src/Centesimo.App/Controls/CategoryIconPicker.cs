@@ -2,8 +2,8 @@ using Centesimo.Application;
 
 namespace Centesimo.App.Controls;
 
-/// <summary>The icon of a category: the catalog in six columns, every tile in the color chosen for the category and
-/// the chosen icon ringed.</summary>
+/// <summary>The icon of a category: the catalog in six columns. Every tile is neutral but the chosen one, which is
+/// ringed and wears the color of the category.</summary>
 public sealed class CategoryIconPicker : Grid
 {
     public static readonly BindableProperty SelectedKeyProperty = BindableProperty.Create(nameof(SelectedKey), typeof(string),
@@ -40,8 +40,11 @@ public sealed class CategoryIconPicker : Grid
 
     private void ApplySelection()
     {
-        foreach (var (cell, _) in _cells)
+        foreach (var (cell, tile) in _cells)
+        {
             cell.IsSelected = cell.Key == SelectedKey;
+            tile.IsNeutral = !cell.IsSelected;
+        }
     }
 
     private void ApplyColor()

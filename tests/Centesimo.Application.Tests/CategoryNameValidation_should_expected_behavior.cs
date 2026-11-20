@@ -8,10 +8,10 @@ public sealed class CategoryNameValidation_should_expected_behavior
     public async Task Should_reject_duplicate_name_ignoring_case_and_whitespace()
     {
         var repository = new FakeCategoryRepository();
-        repository.Items.Add(new Category(Guid.NewGuid(), "Food", "cart", "#176B5B"));
+        repository.Items.Add(new Category(Guid.NewGuid(), "Food", "cart", "coral"));
         var service = new CategoryService(repository);
 
-        var result = await service.Create(" food ", "home");
+        var result = await service.Create(" food ", "home", "coral");
 
         Assert.True(result.IsFailure);
         Assert.Equal("Category.NameAlreadyExists", result.Error.Code);
@@ -22,13 +22,13 @@ public sealed class CategoryNameValidation_should_expected_behavior
     public async Task Should_allow_unchanged_name_and_reject_another_category_name_on_update()
     {
         var repository = new FakeCategoryRepository();
-        var food = new Category(Guid.NewGuid(), "Food", "cart", "#176B5B");
-        var travel = new Category(Guid.NewGuid(), "Travel", "car", "#4F5F7A");
+        var food = new Category(Guid.NewGuid(), "Food", "cart", "coral");
+        var travel = new Category(Guid.NewGuid(), "Travel", "car", "peri");
         repository.Items.AddRange([food, travel]);
         var service = new CategoryService(repository);
 
-        var unchanged = await service.Update(food.CategoryId, "food", "home", null);
-        var duplicate = await service.Update(food.CategoryId, "Travel", "home", null);
+        var unchanged = await service.Update(food.CategoryId, "food", "home", "coral", null);
+        var duplicate = await service.Update(food.CategoryId, "Travel", "home", "coral", null);
 
         Assert.True(unchanged.IsSuccess);
         Assert.True(duplicate.IsFailure);
@@ -41,7 +41,7 @@ public sealed class CategoryNameValidation_should_expected_behavior
         var repository = new FakeCategoryRepository { Failure = InfrastructureErrors.Unexpected };
         var service = new CategoryService(repository);
 
-        var result = await service.Create("Food", "cart");
+        var result = await service.Create("Food", "cart", "coral");
 
         Assert.True(result.IsFailure);
         Assert.Equal("Infrastructure.Unexpected", result.Error.Code);

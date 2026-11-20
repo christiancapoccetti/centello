@@ -11,6 +11,7 @@ public static class ApplicationErrors
     public static readonly Error ExpenseNotFound = new("Expense.NotFound", "La spesa non esiste.");
     public static readonly Error InvalidAmount = new("Expense.InvalidAmount", "L'importo deve essere maggiore di zero.");
     public static readonly Error InvalidName = new("Validation.InvalidName", "Il nome è obbligatorio.");
+    public static readonly Error InvalidColor = new("Validation.InvalidColor", "Colore non valido.");
     public static readonly Error RecurringPaymentNotFound = new("RecurringPayment.NotFound", "Il pagamento regolare non esiste.");
     public static readonly Error InvalidEndDate = new("RecurringPayment.InvalidEndDate", "La data di fine non è valida.");
     public static readonly Error RecurringPaymentAlreadyEnded = new("RecurringPayment.AlreadyEnded", "Il pagamento regolare è già terminato.");
