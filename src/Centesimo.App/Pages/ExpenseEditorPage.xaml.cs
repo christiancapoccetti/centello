@@ -7,18 +7,15 @@ namespace Centesimo.App.Pages;
 public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 {
     private readonly ExpenseEditorViewModel _viewModel;
-    private readonly CategoryEditorPage _categoryEditor;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
     private Guid? _expenseId;
     private bool _isLoaded;
 
-    public ExpenseEditorPage(ExpenseEditorViewModel viewModel, CategoryEditorPage categoryEditor,
-        IConfirmation confirmation, ISnackbar snackbar)
+    public ExpenseEditorPage(ExpenseEditorViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _categoryEditor = categoryEditor;
         _confirmation = confirmation;
         _snackbar = snackbar;
         BindingContext = viewModel;
@@ -84,11 +81,8 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
             _viewModel.Picker.Toggle(option);
     }
 
-    private async void OnNewCategoryTapped(object? sender, EventArgs e)
-    {
-        _categoryEditor.OpenNew();
-        await Navigation.PushModalAsync(_categoryEditor, false);
-    }
+    private async void OnNewCategoryTapped(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(CategoryEditorPage.Route());
 
     private void OnMenuClicked(object? sender, EventArgs e) => MenuLayer.IsVisible = true;
 

@@ -29,9 +29,12 @@ public sealed class TagRepository(CentesimoDbContext context)
         SaveContext(async (db, token) =>
         {
             var tracked = await db.Tags.SingleOrDefaultAsync(item => item.TagId == tag.TagId, token);
-            if (tracked is null || !tag.IsArchived)
+            if (tracked is null)
                 return;
 
-            tracked.Archive();
+            if (tag.IsArchived)
+                tracked.Archive();
+            else
+                tracked.Restore();
         }, cancellationToken);
 }

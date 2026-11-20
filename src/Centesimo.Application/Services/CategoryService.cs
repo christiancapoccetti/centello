@@ -4,6 +4,10 @@ namespace Centesimo.Application;
 
 public sealed class CategoryService(ICategoryRepository categories)
 {
+    /// <summary>The category, archived or not, or null when there is none with this id.</summary>
+    public Task<Result<Category?>> Get(Guid categoryId, CancellationToken cancellationToken = default) =>
+        categories.Get(categoryId, cancellationToken);
+
     public async Task<Result<IReadOnlyList<Category>>> GetActive(
         CancellationToken cancellationToken = default)
     {

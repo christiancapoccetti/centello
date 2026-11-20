@@ -129,8 +129,7 @@ public sealed record CategoryItemViewModel(
     string Name,
     string Icon,
     string Color,
-    string BudgetText,
-    string BudgetInput)
+    string BudgetText)
 {
     public static CategoryItemViewModel From(Category category) => new(
         category.CategoryId,
@@ -139,6 +138,5 @@ public sealed record CategoryItemViewModel(
         category.Color,
         category.MonthlyBudget is null
             ? "Nessun budget"
-            : $"Budget: {category.MonthlyBudget.Value.ToDecimal().ToString("C", System.Globalization.CultureInfo.GetCultureInfo("it-IT"))}",
-        category.MonthlyBudget?.ToDecimal().ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("it-IT")) ?? "");
+            : $"Budget: {category.MonthlyBudget.Value.ToDecimal().ToString("C", System.Globalization.CultureInfo.GetCultureInfo("it-IT"))}");
 }

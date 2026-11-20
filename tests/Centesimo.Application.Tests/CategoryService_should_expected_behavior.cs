@@ -19,6 +19,20 @@ public sealed class CategoryService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Get_a_category_by_id_archived_or_not_and_nothing_for_an_unknown_id()
+    {
+        var repository = new FakeCategoryRepository();
+        var service = new CategoryService(repository);
+        var active = (await service.Create("Spesa", "cart", "coral")).Value;
+        var archived = (await service.Create("Palestra", "gym", "mint")).Value;
+        await service.Archive(archived.CategoryId);
+
+        Assert.Equal("Spesa", (await service.Get(active.CategoryId)).Value?.Name);
+        Assert.True((await service.Get(archived.CategoryId)).Value?.IsArchived);
+        Assert.Null((await service.Get(Guid.NewGuid())).Value);
+    }
+
+    [Fact]
     public async Task Propagate_infrastructure_failure_instead_of_not_found()
     {
         var repository = new FakeCategoryRepository

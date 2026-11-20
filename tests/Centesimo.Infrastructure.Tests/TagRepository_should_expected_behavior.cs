@@ -42,4 +42,50 @@ public sealed class TagRepository_should_expected_behavior
         Assert.Equal(["Fuel", "Market"], tags.Value.Select(tag => tag.Name));
         Assert.Empty(database.Context.ChangeTracker.Entries());
     }
+
+    [Fact]
+    public async Task Store_a_tag_archived_and_then_restored()
+    {
+        using var database = new TestDatabase();
+        var category = new Category(Guid.NewGuid(), "Food", "cart", "#123456");
+        database.Context.Add(category);
+        await database.Context.SaveChangesAsync();
+        var repository = new TagRepository(database.Context);
+        var tagId = Guid.NewGuid();
+        await repository.Add(new Tag(tagId, category.CategoryId, "Market"));
+        database.Context.ChangeTracker.Clear();
+
+        var loaded = (await repository.Get(tagId)).Value!;
+        loaded.Archive();
+        var archived = await repository.Update(loaded);
+        database.Context.ChangeTracker.Clear();
+        var afterArchive = (await repository.Get(tagId)).Value!;
+        afterArchive.Restore();
+        var restored = await repository.Update(afterArchive);
+        database.Context.ChangeTracker.Clear();
+
+        Assert.True(archived.IsSuccess);
+        Assert.True(restored.IsSuccess);
+        Assert.False((await repository.Get(tagId)).Value!.IsArchived);
+    }
+
+    [Fact]
+    public async Task Store_an_archived_tag()
+    {
+        using var database = new TestDatabase();
+        var category = new Category(Guid.NewGuid(), "Food", "cart", "#123456");
+        database.Context.Add(category);
+        await database.Context.SaveChangesAsync();
+        var repository = new TagRepository(database.Context);
+        var tagId = Guid.NewGuid();
+        await repository.Add(new Tag(tagId, category.CategoryId, "Market"));
+        database.Context.ChangeTracker.Clear();
+
+        var loaded = (await repository.Get(tagId)).Value!;
+        loaded.Archive();
+        await repository.Update(loaded);
+        database.Context.ChangeTracker.Clear();
+
+        Assert.True((await repository.Get(tagId)).Value!.IsArchived);
+    }
 }

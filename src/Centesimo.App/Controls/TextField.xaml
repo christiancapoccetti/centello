@@ -11,17 +11,22 @@
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnBoxTapped" />
             </Border.GestureRecognizers>
-            <!-- The entry is as high as its line and sits in the middle: a tap anywhere else in the box reaches it too. -->
-            <c:PlainEntry x:Name="Input"
-                          Text="{Binding Text, Source={x:Reference Root}}"
-                          Placeholder="{Binding Placeholder, Source={x:Reference Root}}"
-                          MaxLength="{Binding MaxLength, Source={x:Reference Root}}"
-                          IsReadOnly="{Binding IsReadOnly, Source={x:Reference Root}}"
-                          FontSize="16"
-                          VerticalOptions="Center"
-                          Focused="OnFocusChanged"
-                          Unfocused="OnFocusChanged"
-                          SemanticProperties.Description="{Binding Label, Source={x:Reference Root}}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <!-- The entry is as high as its line and sits in the middle: a tap anywhere else in the box reaches it too. -->
+                <c:PlainEntry x:Name="Input"
+                              Text="{Binding Text, Source={x:Reference Root}}"
+                              Placeholder="{Binding Placeholder, Source={x:Reference Root}}"
+                              MaxLength="{Binding MaxLength, Source={x:Reference Root}}"
+                              IsReadOnly="{Binding IsReadOnly, Source={x:Reference Root}}"
+                              Keyboard="{Binding Keyboard, Source={x:Reference Root}}"
+                              FontSize="16"
+                              VerticalOptions="Center"
+                              Focused="OnFocusChanged"
+                              Unfocused="OnFocusChanged"
+                              Completed="OnCompleted"
+                              SemanticProperties.Description="{Binding Label, Source={x:Reference Root}}" />
+                <Label Grid.Column="1" Text="{Binding Suffix, Source={x:Reference Root}}" FontSize="16" TextColor="{t:Theme Mute}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
+            </Grid>
         </Border>
         <Label x:Name="Caption"
                Text="{Binding Label, Source={x:Reference Root}}"
@@ -33,6 +38,7 @@
                HorizontalOptions="Start"
                VerticalOptions="Start"
                AutomationProperties.IsInAccessibleTree="False" />
+        <Label x:Name="Helper" Grid.Row="1" Margin="16,4,16,0" Text="{Binding HelperText, Source={x:Reference Root}}" Style="{StaticResource BodySmall}" />
         <c:InlineError Grid.Row="1" Margin="16,6,0,0" Text="{Binding ErrorText, Source={x:Reference Root}}" />
     </Grid>
 </ContentView>

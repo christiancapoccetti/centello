@@ -24,6 +24,8 @@ public sealed class Chip : ContentView
         typeof(Chip), false, propertyChanged: (chip, _, _) => ((Chip)chip).Apply());
     public static readonly BindableProperty HasCheckProperty = BindableProperty.Create(nameof(HasCheck), typeof(bool),
         typeof(Chip), true, propertyChanged: (chip, _, _) => ((Chip)chip).Apply());
+    public static readonly BindableProperty DescriptionProperty = BindableProperty.Create(nameof(Description), typeof(string),
+        typeof(Chip), "", propertyChanged: (chip, _, _) => ((Chip)chip).Apply());
 
     private const double SidePadding = 12;
     private const double TilePadding = 4;
@@ -88,6 +90,8 @@ public sealed class Chip : ContentView
     public bool IsSelected { get => (bool)GetValue(IsSelectedProperty); set => SetValue(IsSelectedProperty, value); }
     /// <summary>False for a row of chips where a check would move every chip after the selected one.</summary>
     public bool HasCheck { get => (bool)GetValue(HasCheckProperty); set => SetValue(HasCheckProperty, value); }
+    /// <summary>What a screen reader says when the text alone does not say what a tap does. Empty reads the text.</summary>
+    public string Description { get => (string)GetValue(DescriptionProperty); set => SetValue(DescriptionProperty, value); }
 
     private void Apply()
     {
@@ -116,7 +120,7 @@ public sealed class Chip : ContentView
         else
             _shape.BackgroundColor = Colors.Transparent;
 
-        SemanticProperties.SetDescription(this, Text);
+        SemanticProperties.SetDescription(this, Description.HasValue() ? Description : Text);
         SemanticProperties.SetHint(this, IsSelected ? "Selezionato" : "");
     }
 }

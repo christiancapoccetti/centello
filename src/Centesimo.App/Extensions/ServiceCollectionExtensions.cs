@@ -37,8 +37,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>
             () => provider.GetRequiredService<AppShell>());
-        services.AddSingleton<CategoryEditorViewModel>();
-        services.AddSingleton<CategoryEditorPage>();
+        services.AddTransient<CategoryEditorViewModel>();
+        services.AddTransient<CategoryEditorPage>();
         services.AddTransient<CategorySpendingViewModel>();
         services.AddTransient<CategorySpendingPage>();
         services.AddTransient<TagExpensesViewModel>();

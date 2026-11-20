@@ -6,18 +6,16 @@ namespace Centesimo.App.Pages;
 public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributable
 {
     private readonly RecurringPaymentEditorViewModel _viewModel;
-    private readonly CategoryEditorPage _categoryEditor;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
     private Guid? _paymentId;
     private bool _isLoaded;
 
-    public RecurringPaymentEditorPage(RecurringPaymentEditorViewModel viewModel, CategoryEditorPage categoryEditor,
-        IConfirmation confirmation, ISnackbar snackbar)
+    public RecurringPaymentEditorPage(RecurringPaymentEditorViewModel viewModel, IConfirmation confirmation,
+        ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _categoryEditor = categoryEditor;
         _confirmation = confirmation;
         _snackbar = snackbar;
         BindingContext = viewModel;
@@ -74,11 +72,8 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
             _viewModel.Picker.Toggle(option);
     }
 
-    private async void OnNewCategoryTapped(object? sender, EventArgs e)
-    {
-        _categoryEditor.OpenNew();
-        await Navigation.PushModalAsync(_categoryEditor, false);
-    }
+    private async void OnNewCategoryTapped(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(CategoryEditorPage.Route());
 
     private async void OnReminderClicked(object? sender, EventArgs e)
     {

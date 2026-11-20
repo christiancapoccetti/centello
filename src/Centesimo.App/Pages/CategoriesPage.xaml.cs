@@ -5,13 +5,11 @@ namespace Centesimo.App.Pages;
 public partial class CategoriesPage : ContentPage
 {
     private readonly CategoriesViewModel _viewModel;
-    private readonly CategoryEditorPage _editorPage;
 
-    public CategoriesPage(CategoriesViewModel viewModel, CategoryEditorPage editorPage)
+    public CategoriesPage(CategoriesViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _editorPage = editorPage;
         BindingContext = viewModel;
     }
 
@@ -21,11 +19,8 @@ public partial class CategoriesPage : ContentPage
         await _viewModel.Load();
     }
 
-    private async void OnNewCategoryClicked(object? sender, EventArgs e)
-    {
-        _editorPage.OpenNew();
-        await Navigation.PushModalAsync(_editorPage, false);
-    }
+    private async void OnNewCategoryClicked(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(CategoryEditorPage.Route());
 
     private async void OnActiveClicked(object? sender, EventArgs e) => await _viewModel.ShowActive();
 
@@ -36,8 +31,7 @@ public partial class CategoriesPage : ContentPage
         if (sender is not Button { CommandParameter: CategoryItemViewModel category })
             return;
 
-        _editorPage.OpenEdit(category);
-        await Navigation.PushModalAsync(_editorPage, false);
+        await Shell.Current.GoToAsync(CategoryEditorPage.Route(category.CategoryId));
     }
 
     private void OnCardPressed(object? sender, EventArgs e) =>
