@@ -21,6 +21,9 @@ public partial class BackupPage : ContentPage
     private async void OnCreateBackupTapped(object? sender, EventArgs e) =>
         await Present(await _viewModel.CreateBackup(), "File di backup");
 
+    private async void OnRestoreTapped(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(nameof(RestorePage));
+
     private async void OnExportCsvTapped(object? sender, EventArgs e) =>
         await Present(await _viewModel.ExportExpenses(), "Esporta spese");
 

@@ -26,6 +26,7 @@
 
                 <Label Text="File di backup" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Save}" Title="Crea file di backup" Detail="Spese, categorie, tag e pagamenti regolari" Kind="Action" Tapped="OnCreateBackupTapped" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Restore}" Title="Ripristina da file" Detail="Sostituisce i dati di questo telefono" Kind="Navigation" Tapped="OnRestoreTapped" />
 
                 <Label Text="Foglio di calcolo" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.TableView}" Title="Esporta spese in CSV" Detail="Tutte le spese, per Excel o Fogli" Kind="Action" Tapped="OnExportCsvTapped" />
