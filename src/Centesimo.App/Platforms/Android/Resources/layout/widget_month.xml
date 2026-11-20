@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        android:background="@drawable/widget_surface"
+        android:orientation="vertical"
+        android:paddingLeft="16dp"
+        android:paddingTop="16dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="14dp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <ImageView
+                android:id="@+id/month"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                android:tint="@color/theme_ink" />
+            <ImageView
+                android:id="@+id/year"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:importantForAccessibility="no"
+                android:tint="@color/theme_mute" />
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:importantForAccessibility="no"
+            android:tint="@color/theme_ink" />
+        <FrameLayout
+            android:id="@+id/budget"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp">
+            <ImageView
+                android:id="@+id/budget_day"
+                style="@style/Widget.Centesimo.Day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no" />
+            <ImageView
+                android:id="@+id/budget_night"
+                style="@style/Widget.Centesimo.Night"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+        <include
+            layout="@layout/widget_comparison"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_marginTop="10dp" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+        <FrameLayout
+            android:id="@+id/line"
+            android:layout_width="match_parent"
+            android:layout_height="10dp">
+            <ImageView
+                android:id="@+id/line_day"
+                style="@style/Widget.Centesimo.Day"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:scaleType="fitXY" />
+            <ImageView
+                android:id="@+id/line_night"
+                style="@style/Widget.Centesimo.Night"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:scaleType="fitXY" />
+        </FrameLayout>
+        <LinearLayout
+            android:id="@+id/over_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:orientation="horizontal">
+            <ImageView
+                android:id="@+id/over_glyph"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:importantForAccessibility="no"
+                android:tint="@color/theme_alert" />
+            <ImageView
+                android:id="@+id/over_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:importantForAccessibility="no"
+                android:tint="@color/theme_alert" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
