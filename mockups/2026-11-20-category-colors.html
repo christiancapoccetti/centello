@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colore categoria · varianti</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#FAFAF8;--raised:#EFEFEA;--fg:#16161A;--mute:#62626A;--line:#E4E4DF;--outline:#DCDCD6;--tile-ink:#16161A;
+ --coral:#F47A68;--peri:#7C95F2;--butter:#EDC14F;--mint:#57C493;--lilac:#C597E6;--sky:#79C2E6;
+ --page:#E9E9E4;--page-fg:#16161A;--page-mute:#5E5E66;
+}
+.dark{
+ --bg:#141516;--raised:#26282B;--fg:#F4F4F0;--mute:#A0A3A9;--line:#2A2C2F;--outline:#3A3D41;--tile-ink:#141516;
+ --coral:#FF8A7A;--peri:#8EA6FF;--butter:#F5D06B;--mint:#6ED3A6;--lilac:#D4A8F0;--sky:#8FD0F0;
+ --page:#0B0B0C;--page-fg:#F4F4F0;--page-mute:#A0A3A9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--page)}
+body{font-family:Archivo,sans-serif;color:var(--page-fg);background:var(--page);font-variant-numeric:tabular-nums;padding:32px 24px 56px}
+::selection{background:var(--fg);color:var(--bg)}
+.ms{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;font-size:24px;line-height:1;font-variation-settings:'FILL' 1,'wght' 500;display:inline-block;white-space:nowrap}
+.ms.o{font-variation-settings:'FILL' 0,'wght' 500}
+
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;max-width:1800px}
+h1{font-size:28px;font-weight:800}
+.intro{margin-top:8px;max-width:76ch;color:var(--page-mute);font-size:16px;line-height:1.5}
+.theme{display:flex;border:1px solid var(--outline);border-radius:9999px;overflow:hidden}
+.theme button{font:600 14px Archivo,sans-serif;color:var(--page-mute);background:none;border:0;padding:10px 18px;cursor:pointer;min-height:44px}
+.theme button[aria-pressed="true"]{background:var(--page-fg);color:var(--page)}
+.theme button:focus-visible{outline:2px solid var(--page-fg);outline-offset:2px}
+.grid{display:flex;flex-wrap:wrap;gap:32px;margin-top:28px}
+figure{width:412px}
+figcaption{margin-bottom:14px;min-height:104px}
+figcaption b{display:block;font-size:20px;font-weight:800}
+figcaption p{margin-top:6px;font-size:15px;line-height:1.45;color:var(--page-mute)}
+figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
+
+.phone{width:412px;height:915px;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;border-radius:28px;overflow:hidden;outline:1px solid var(--outline)}
+.status{height:32px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600}
+.status .ms{font-size:18px}
+.top{height:56px;flex:none;padding:0 4px;display:flex;align-items:center;gap:4px}
+.top .ib{width:48px;height:48px;display:grid;place-items:center}
+.top b{font-size:20px;font-weight:700;margin-left:4px}
+.scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--outline) transparent;padding-bottom:24px}
+.preview{display:flex;align-items:center;gap:16px;margin:12px 24px 0}
+.preview b{font-size:22px;font-weight:700}
+.field{margin:20px 24px 0;position:relative;height:56px;border:1px solid var(--outline);border-radius:4px;padding:0 16px;display:flex;align-items:center;font-size:16px}
+.field label{position:absolute;top:-9px;left:12px;padding:0 4px;background:var(--bg);font-size:12px;font-weight:600;color:var(--mute)}
+.field.empty{color:var(--mute)}
+.field small{position:absolute;right:16px;color:var(--mute)}
+.help{margin:4px 40px 0;font-size:12px;color:var(--mute)}
+.flabel{margin:22px 24px 0;font-size:14px;font-weight:600}
+.hint{margin:6px 24px 0;font-size:13px;line-height:1.35;color:var(--mute)}
+
+.tile{display:grid;place-items:center;color:var(--tile-ink);flex:none}
+.tile .ms{font-size:28px}
+.tile.big{width:56px;height:56px}
+.tile.big .ms{font-size:32px}
+.tile.n{background:var(--raised);color:var(--mute)}
+
+.icons{display:grid;grid-template-columns:repeat(6,48px);justify-content:space-between;row-gap:12px;margin:12px 24px 0}
+.cell{width:48px;height:48px;position:relative}
+.cell .tile{width:48px;height:48px}
+.cell.on::after{content:"";position:absolute;inset:-5px;border:2px solid var(--fg)}
+
+.swatches{display:flex;justify-content:space-between;margin:12px 24px 0}
+.sw{width:48px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.sw i{display:block;width:40px;height:40px;position:relative}
+.sw.on i::after{content:"";position:absolute;inset:-5px;border:2px solid var(--fg)}
+.sw small{font-size:12px;color:var(--mute)}
+.sw.on small{color:var(--fg);font-weight:700}
+
+.bottom{flex:none;border-top:1px solid var(--line);padding:12px 24px}
+.save{height:56px;border-radius:28px;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-size:16px;font-weight:700}
+.gest{height:24px;flex:none;display:grid;place-items:center;background:var(--bg)}
+.gest::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--fg)}
+@media (max-width:480px){body{padding:24px 16px 40px}figure,.phone{width:100%}.phone{max-width:412px}}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>Nuova categoria: colore e icone</h1>
+    <p class="intro">Oggi l'app assegna il colore usato da meno categorie (adesso il pervinca) e lo stende su tutte le 31 icone: sembra il colore dell'interfaccia, non quello della categoria, e non si capisce da dove arrivi. Ogni variante cambia una sola cosa rispetto alla precedente. Nell'esempio stai creando «Palestra».</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+
+<div class="grid">
+  <figure><figcaption><b>Oggi</b><p>Tutte le icone nel colore assegnato. La scelta si vede solo dall'anello.</p></figcaption><div class="phone" id="P0"></div></figure>
+  <figure><figcaption><b>A · Icone neutre</b><p>Le icone sono grigie; <em>solo quella scelta prende il colore</em>. Il colore resta automatico, ma ora si legge come il colore di questa categoria.</p></figcaption><div class="phone" id="PA"></div></figure>
+  <figure><figcaption><b>B · Scegli il colore</b><p>A più una fila con i 6 colori della palette. <em>Parte selezionato quello consigliato</em> (il meno usato); se ne tocchi un altro cambiano anteprima e icona scelta. Vale anche in modifica.</p></figcaption><div class="phone" id="PB"></div></figure>
+  <figure><figcaption><b>C · Scegli, sapendo quanti</b><p>B più, sotto ogni colore, <em>quante categorie lo usano già</em>: si vede perché è consigliato e si evita di ripetere sempre lo stesso.</p></figcaption><div class="phone" id="PC"></div></figure>
+</div>
+
+<script>
+const ICONS=['shopping_cart','home','directions_car','favorite','sports_soccer','shopping_bag','restaurant','redeem','beach_access','devices','school','family_restroom','fitness_center','handyman','local_cafe','medication','bolt','directions_bus','flight','pets','subscriptions','confirmation_number','checkroom','work','local_gas_station','smartphone','content_cut','child_friendly','receipt_long','menu_book','smoking_rooms'];
+const PALETTE=[['coral','Corallo',3],['peri','Pervinca',1],['butter','Burro',3],['mint','Menta',2],['lilac','Lilla',2],['sky','Celeste',2]];
+const CHOSEN='fitness_center', COLOR='peri';
+
+const icons=neutral=>`<div class="icons">${ICONS.map(ic=>{
+  const on=ic===CHOSEN, colored=!neutral||on;
+  return `<span class="cell${on?' on':''}"><span class="tile${colored?'':' n'}" style="${colored?`background:var(--${COLOR})`:''}"><span class="ms">${ic}</span></span></span>`;
+}).join('')}</div>`;
+
+const swatches=withCount=>`<p class="flabel">Colore</p><div class="swatches">${PALETTE.map(([k,name,n])=>
+  `<span class="sw${k===COLOR?' on':''}"><i style="background:var(--${k})" aria-label="${name}"></i>${withCount?`<small>${n}</small>`:''}</span>`).join('')}</div>
+  <p class="hint">${withCount?'Il numero dice quante categorie lo usano già. Consigliato il meno usato.':'Consigliato il colore usato da meno categorie.'}</p>`;
+
+const phone=({neutral,swatch,count})=>`
+ <div class="status"><span>9:41</span><span><span class="ms">signal_cellular_alt</span> <span class="ms">wifi</span> <span class="ms">battery_full</span></span></div>
+ <div class="top"><span class="ib"><span class="ms o">close</span></span><b>Nuova categoria</b></div>
+ <div class="scroll">
+  <div class="preview"><span class="tile big" style="background:var(--${COLOR})"><span class="ms">${CHOSEN}</span></span><b>Palestra</b></div>
+  <div class="field"><label>Nome</label>Palestra</div>
+  ${swatch?swatches(count):''}
+  <p class="flabel">Icona</p>
+  ${icons(neutral)}
+  <div class="field empty" style="margin-top:28px"><label>Budget mensile</label>Nessun budget<small>€</small></div>
+  <p class="help">Lascia vuoto se non vuoi un budget</p>
+  <p class="flabel">Tag</p>
+  <p class="hint" style="margin-top:12px">Nessun tag</p>
+ </div>
+ <div class="bottom"><div class="save">Salva</div></div>
+ <div class="gest"></div>`;
+
+document.getElementById('P0').innerHTML=phone({neutral:false});
+document.getElementById('PA').innerHTML=phone({neutral:true});
+document.getElementById('PB').innerHTML=phone({neutral:true,swatch:true});
+document.getElementById('PC').innerHTML=phone({neutral:true,swatch:true,count:true});
+
+if(location.hash.includes('chiaro')) document.documentElement.classList.remove('dark');
+document.querySelectorAll('.theme button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.documentElement.classList.toggle('dark',btn.dataset.theme==='dark');
+  document.querySelectorAll('.theme button').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+}));
+</script>
+</body>
+</html>
