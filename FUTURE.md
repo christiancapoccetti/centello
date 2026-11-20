@@ -29,6 +29,7 @@ Items are not commitments and will be prioritized after the core manual expense 
 
 ## Insights
 
+- Next step: review the Insight section (content, structure and how it relates to the home and the category detail).
 - Configurable budget alerts.
 
 ## Categories and recurring payments
