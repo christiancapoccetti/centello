@@ -129,7 +129,7 @@ public sealed class CategoryDetailService_should_expected_behavior
         var detail = await Detail(category, Period.Month(2026, 11), expenses: [Spend(category, 17_850, Today)]);
 
         Assert.True(detail.IsOverBudget);
-        Assert.Equal(new BudgetSummary("Oltre il budget di ", "28,50 €", ""), detail.Budget);
+        Assert.Equal(new BudgetSummary("Hai superato il budget di ", "28,50 €", " su 150"), detail.Budget);
     }
 
     [Fact]
