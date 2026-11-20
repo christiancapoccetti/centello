@@ -34,14 +34,14 @@ Success means expenses actually get logged, because entry is fast enough that sk
 ## Capabilities and Constraints
 
 - Categories with optional monthly budgets (create, edit, archive, restore); tags within a category; expenses with amount, date, category, optional tag and note; monthly history with edit and delete; monthly and yearly overviews; recurring payments (weekly, monthly, yearly, optional end date); Insight with a `Questo mese` / `Questo anno` period.
-- Local-first by construction: SQLite on the device, no account, no backend, no sync. The only data that leaves the phone is the quick-entry audio or text, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
+- Local-first by construction: SQLite on the device, no account, no backend, no sync. The only data that leaves the phone is the voice-entry audio and its transcript, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
 - Stack: .NET 10 MAUI, Android only (min API 24), MVVM, Clean Architecture, Result Pattern.
 - User-facing text is Italian and currently hardcoded; amounts are in euros with Italian formatting (`486,20 €`).
 - Not in scope yet (see `FUTURE.md`): receipt photos, localization/English, backup export and restore, configurable budget alerts, biometric lock.
 
 ## Brand Commitments
 
-- Name: **Centesimo**. Logo at `src/Centesimo.App/Resources/Images/centessimo-logo.png`, app icon at `src/Centesimo.App/Resources/AppIcon/`.
+- Name: **Centesimo**. The mark (a warm-white C with a coral segment, supplied by the owner) lives in `docs/brand/` as SVG plus the 512 px Play Store icon; the launcher icon is the adaptive icon in `src/Centesimo.App/Platforms/Android/Resources/`.
 - Voice: Italian, informal second person (`tu`), short and plain; privacy is stated factually ("Restano privati sul dispositivo"), never as a marketing claim.
 
 ## Evidence on Hand
@@ -55,7 +55,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 1. **Entry speed is the product.** Any change that adds a tap or a field to logging an expense has to justify itself against that cost.
 2. **Show, don't plan.** Help people notice how their spending changes. Do not push budgets, thresholds or guilt.
-3. **The user confirms.** Automation (quick entry, recurring payments, import) proposes; nothing ambiguous is saved silently.
+3. **The user confirms.** Automation (voice entry, recurring payments, import) proposes; nothing ambiguous is saved silently.
 4. **Local by default.** Data stays on the phone. Anything that would leave it is opt-in, explained in plain Italian, and reversible.
 5. **Built for an audience of strangers.** Even with two users, every screen should be clear to someone who has never seen the app before.
 
