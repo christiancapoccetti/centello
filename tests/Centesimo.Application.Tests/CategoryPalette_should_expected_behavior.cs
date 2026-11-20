@@ -11,6 +11,27 @@ public sealed class CategoryPalette_should_expected_behavior
         Assert.Equal(SlotKeys, CategoryPalette.All.Select(color => color.Key));
 
     [Fact]
+    public void Should_hand_out_every_slot_but_grey() =>
+        Assert.Equal(["coral", "peri", "butter", "mint", "lilac", "sky"], CategoryPalette.Chromatic.Select(color => color.Key));
+
+    [Fact]
+    public void Should_pick_the_first_slot_when_nothing_is_used() =>
+        Assert.Equal("coral", CategoryPalette.LeastUsed([]).Key);
+
+    [Fact]
+    public void Should_pick_the_least_used_slot_and_break_ties_by_palette_order()
+    {
+        Assert.Equal("peri", CategoryPalette.LeastUsed(["coral"]).Key);
+        Assert.Equal("sky", CategoryPalette.LeastUsed(["coral", "peri", "butter", "mint", "lilac"]).Key);
+        Assert.Equal("mint", CategoryPalette.LeastUsed(["coral", "coral", "peri", "butter", "lilac", "sky", "sky"]).Key);
+        Assert.Equal("coral", CategoryPalette.LeastUsed(["coral", "peri", "butter", "mint", "lilac", "sky"]).Key);
+    }
+
+    [Fact]
+    public void Should_ignore_grey_and_values_that_are_not_slots() =>
+        Assert.Equal("coral", CategoryPalette.LeastUsed(["grey", "grey", "#176B5B", "Coral", "magenta"]).Key);
+
+    [Fact]
     public void Should_resolve_every_slot_to_itself() =>
         Assert.All(SlotKeys, key => Assert.Equal(key, CategoryPalette.Resolve(key).Key));
 

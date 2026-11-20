@@ -39,12 +39,7 @@ public sealed class MoneyManagerBackupReader : IMoneyManagerBackupReader
     };
 
     // Grey means "unknown color", so an imported category only gets one of the other slots.
-    private static readonly string[] ImportColors =
-    [
-        .. CategoryPalette.All
-            .Where(color => color != CategoryPalette.Fallback)
-            .Select(color => color.Key)
-    ];
+    private static readonly string[] ImportColors = [.. CategoryPalette.Chromatic.Select(color => color.Key)];
 
     public async Task<Result<MoneyManagerImportData>> Read(Stream backup,
         CancellationToken cancellationToken = default)

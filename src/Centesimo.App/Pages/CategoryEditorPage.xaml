@@ -28,7 +28,7 @@
 
                 <!-- The tile as every list will draw it, with the name as it is typed. -->
                 <Grid Margin="24,12,24,0" ColumnDefinitions="56,*" ColumnSpacing="16">
-                    <c:CategoryTile IconKey="{Binding SelectedIcon}" ColorKey="{Binding SelectedColor}" Size="56" AutomationProperties.IsInAccessibleTree="False" />
+                    <c:CategoryTile IconKey="{Binding SelectedIcon}" ColorKey="{Binding ColorKey}" Size="56" AutomationProperties.IsInAccessibleTree="False" />
                     <Label Grid.Column="1" Text="{Binding PreviewName}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="22" VerticalOptions="Center" LineBreakMode="TailTruncation" AutomationProperties.IsInAccessibleTree="False">
                         <Label.Triggers>
                             <DataTrigger TargetType="Label" Binding="{Binding HasName}" Value="False">
@@ -42,10 +42,9 @@
                 <c:TextField Margin="24,20,24,0" Label="Nome" Placeholder="Per esempio Ristoranti" MaxLength="40" Text="{Binding Name}" ErrorText="{Binding NameError}" IsReadOnly="{Binding IsReadOnly}" />
 
                 <VerticalStackLayout IsVisible="{Binding CanEdit}">
-                    <Label Text="Aspetto" Style="{StaticResource FieldLabel}" />
-                    <!-- The pickers are wider than their pictures by the room of a ring on each side. -->
-                    <c:PaletteColorPicker Margin="19,4,19,0" SelectedKey="{Binding SelectedColor}" />
-                    <c:CategoryIconPicker Margin="19,10,19,0" SelectedKey="{Binding SelectedIcon}" ColorKey="{Binding SelectedColor}" />
+                    <Label Text="Icona" Style="{StaticResource FieldLabel}" />
+                    <!-- The picker is wider than its pictures by the room of a ring on each side. -->
+                    <c:CategoryIconPicker Margin="19,4,19,0" SelectedKey="{Binding SelectedIcon}" ColorKey="{Binding ColorKey}" />
                 </VerticalStackLayout>
 
                 <c:TextField Margin="24,14,24,0" Label="Budget mensile" Placeholder="Nessun budget" Suffix="€" Keyboard="Numeric" MaxLength="12" HelperText="Lascia vuoto se non vuoi un budget" Text="{Binding Budget}" ErrorText="{Binding BudgetError}" IsReadOnly="{Binding IsReadOnly}" />

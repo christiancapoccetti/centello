@@ -11,7 +11,7 @@ public sealed class CategoryNameValidation_should_expected_behavior
         repository.Items.Add(new Category(Guid.NewGuid(), "Food", "cart", "#176B5B"));
         var service = new CategoryService(repository);
 
-        var result = await service.Create(" food ", "home", "#8B4A5D");
+        var result = await service.Create(" food ", "home");
 
         Assert.True(result.IsFailure);
         Assert.Equal("Category.NameAlreadyExists", result.Error.Code);
@@ -27,8 +27,8 @@ public sealed class CategoryNameValidation_should_expected_behavior
         repository.Items.AddRange([food, travel]);
         var service = new CategoryService(repository);
 
-        var unchanged = await service.Update(food.CategoryId, "food", "home", "#8B4A5D", null);
-        var duplicate = await service.Update(food.CategoryId, "Travel", "home", "#8B4A5D", null);
+        var unchanged = await service.Update(food.CategoryId, "food", "home", null);
+        var duplicate = await service.Update(food.CategoryId, "Travel", "home", null);
 
         Assert.True(unchanged.IsSuccess);
         Assert.True(duplicate.IsFailure);
@@ -41,7 +41,7 @@ public sealed class CategoryNameValidation_should_expected_behavior
         var repository = new FakeCategoryRepository { Failure = InfrastructureErrors.Unexpected };
         var service = new CategoryService(repository);
 
-        var result = await service.Create("Food", "cart", "#176B5B");
+        var result = await service.Create("Food", "cart");
 
         Assert.True(result.IsFailure);
         Assert.Equal("Infrastructure.Unexpected", result.Error.Code);

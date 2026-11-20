@@ -20,8 +20,22 @@ public static class CategoryPalette
         Fallback
     ];
 
+    /// <summary>The slots a category can be given. Grey is what a category without a known color shows, never a color
+    /// to hand out.</summary>
+    public static IReadOnlyList<PaletteColor> Chromatic { get; } = [.. All.Where(color => color != Fallback)];
+
     private static readonly IReadOnlyDictionary<string, PaletteColor> ByKey =
         All.ToDictionary(color => color.Key, StringComparer.Ordinal);
+
+    /// <summary>The chromatic slot the fewest of <paramref name="usedKeys"/> hold: the first in palette order among the
+    /// ones tied. Keys that are not chromatic slots count for nothing.</summary>
+    public static PaletteColor LeastUsed(IEnumerable<string> usedKeys)
+    {
+        var uses = usedKeys
+            .GroupBy(key => key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+        return Chromatic.MinBy(color => uses.GetValueOrDefault(color.Key))!;
+    }
 
     /// <summary>The slot stored under <paramref name="key"/>, or <see cref="Fallback"/> for a missing, unknown or legacy value.</summary>
     public static PaletteColor Resolve(string? key) =>

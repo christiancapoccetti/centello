@@ -47,7 +47,7 @@ public sealed class CategoryEditorViewModel : ObservableObject
     private string _storedName = "";
     private string _name = "";
     private string _selectedIcon = CategoryIcons.All[0].Key;
-    private string _selectedColor = CategoryPalette.All[0].Key;
+    private string _colorKey = CategoryPalette.Chromatic[0].Key;
     private string _budget = "";
     private string _newTagName = "";
     private bool _isAddingTag;
@@ -89,7 +89,9 @@ public sealed class CategoryEditorViewModel : ObservableObject
     public string PreviewName => HasName ? Name.Trim() : "Nome della categoria";
     public bool HasName => Name.HasValue();
     public string SelectedIcon { get => _selectedIcon; set => SetProperty(ref _selectedIcon, value); }
-    public string SelectedColor { get => _selectedColor; set => SetProperty(ref _selectedColor, value); }
+    /// <summary>The color the category has, or will be given when it is saved. It is not chosen here: the preview only
+    /// shows it.</summary>
+    public string ColorKey { get => _colorKey; private set => SetProperty(ref _colorKey, value); }
     public string Budget
     {
         get => _budget;
@@ -154,6 +156,8 @@ public sealed class CategoryEditorViewModel : ObservableObject
     {
         if (categoryId.HasValue)
             await LoadCategory(categoryId.Value);
+        else
+            await LoadNextColor();
 
         _original = Snapshot();
     }
@@ -226,11 +230,20 @@ public sealed class CategoryEditorViewModel : ObservableObject
         _storedName = category.Name;
         Name = category.Name;
         SelectedIcon = CategoryIcons.Resolve(category.Icon).Key;
-        SelectedColor = CategoryPalette.Resolve(category.Color).Key;
+        ColorKey = CategoryPalette.Resolve(category.Color).Key;
         Budget = category.MonthlyBudget?.ToDecimal().ToString("0.00", ItalianCulture) ?? "";
         await LoadTags(categoryId);
         // Every property that reads the mode changes with it.
         OnPropertyChanged("");
+    }
+
+    private async Task LoadNextColor()
+    {
+        var next = await _categoryService.NextColor();
+        if (next.IsSuccess)
+            ColorKey = next.Value;
+        else
+            ErrorMessage = next.Error.Message;
     }
 
     private async Task LoadTags(Guid categoryId)
@@ -302,7 +315,7 @@ public sealed class CategoryEditorViewModel : ObservableObject
 
         IsSaving = true;
         var result = _categoryId.HasValue
-            ? await _categoryService.Update(_categoryId.Value, Name, SelectedIcon, SelectedColor, budget.Value)
+            ? await _categoryService.Update(_categoryId.Value, Name, SelectedIcon, budget.Value)
             : await CreateCategory(budget.Value);
         if (result.IsFailure)
         {
@@ -319,7 +332,7 @@ public sealed class CategoryEditorViewModel : ObservableObject
 
     private async Task<Result> CreateCategory(Money? budget)
     {
-        var created = await _categoryService.Create(Name, SelectedIcon, SelectedColor, budget, PendingTags.ToList());
+        var created = await _categoryService.Create(Name, SelectedIcon, budget, PendingTags.ToList());
         return created.IsSuccess ? Result.Success() : Result.Failure(created.Error);
     }
 
@@ -332,9 +345,9 @@ public sealed class CategoryEditorViewModel : ObservableObject
     }
 
     private FormState Snapshot() =>
-        new(Name.Trim(), SelectedIcon, SelectedColor, Budget.Trim(), string.Join('\n', PendingTags));
+        new(Name.Trim(), SelectedIcon, Budget.Trim(), string.Join('\n', PendingTags));
 
-    private readonly record struct FormState(string Name, string Icon, string Color, string Budget, string PendingTags);
+    private readonly record struct FormState(string Name, string Icon, string Budget, string PendingTags);
 
     /// <summary>What the editor says and allows for a new category, a stored one and an archived one.</summary>
     private sealed record Mode(string Title, bool CanEdit, bool CanArchive, bool CanRestore)

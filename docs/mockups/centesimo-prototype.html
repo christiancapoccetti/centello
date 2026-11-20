@@ -342,11 +342,7 @@ a.chip{text-decoration:none}
 .preview{display:flex;align-items:center;gap:16px;padding:12px 24px 4px}
 .preview b{font-size:22px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .preview b.ph{color:var(--mute);font-weight:600}
-.swatches{display:flex;justify-content:space-between;padding:12px 24px 0}
-.sw{position:relative;width:40px;height:40px;display:grid;place-items:center;color:var(--tile-ink)}
-.sw::after{content:"";position:absolute;inset:-4px}
-.sw .ms{font-size:22px}
-.sw.on,.ic.on{box-shadow:0 0 0 3px var(--ground),0 0 0 5px var(--ink)}
+.ic.on{box-shadow:0 0 0 3px var(--ground),0 0 0 5px var(--ink)}
 .icons{display:grid;grid-template-columns:repeat(6,48px);justify-content:space-between;row-gap:12px;padding:20px 24px 0}
 .ic{width:48px;height:48px;display:grid;place-items:center;background:var(--selc);color:var(--tile-ink)}
 .tagadd{display:flex;gap:8px;align-items:flex-start;padding:16px 24px 0}
@@ -502,8 +498,7 @@ details.exp .body{padding:0 0 16px;font-size:13px;line-height:1.55;color:var(--m
     <div class="preview"><span class="pic lg" data-prev-tile><span class="ms fill"></span></span><b data-prev-name></b></div>
     <div class="field" data-f="name"><label for="ec-name">Nome</label><div class="box"><input id="ec-name" maxlength="40" placeholder="Per esempio Ristoranti" autocomplete="off"></div><p class="errmsg" hidden><span class="ms">error</span><span>Il nome è obbligatorio.</span></p></div>
     <div data-when="!archiviata">
-      <span class="lbl">Aspetto</span>
-      <div class="swatches" data-sw></div>
+      <span class="lbl">Icona</span>
       <div class="icons" data-icons></div>
     </div>
     <div class="field" data-f="budget"><label for="ec-budget">Budget mensile</label><div class="box"><input id="ec-budget" inputmode="decimal" placeholder="Nessun budget" autocomplete="off"><span class="suf">€</span></div><p class="help">Lascia vuoto se non vuoi un budget</p><p class="errmsg" hidden><span class="ms">error</span><span>Inserisci un importo valido con massimo due decimali.</span></p></div>
@@ -707,7 +702,6 @@ const RECS = {
 const REC_STATE = {attivo:'modifica', pausa:'in-pausa', terminato:'terminato'};
 
 const ICONS = [['shopping_cart','Carrello'],['home','Casa'],['directions_car','Auto'],['favorite','Cuore'],['sports_soccer','Sport'],['shopping_bag','Shopping'],['restaurant','Cibo'],['redeem','Regalo'],['beach_access','Mare'],['devices','Tecnologia'],['school','Scuola'],['family_restroom','Famiglia'],['fitness_center','Palestra'],['handyman','Manutenzione'],['local_cafe','Caffè'],['medication','Salute'],['bolt','Bollette'],['directions_bus','Mezzi pubblici'],['flight','Viaggi'],['pets','Animali'],['subscriptions','Abbonamenti'],['confirmation_number','Svago'],['checkroom','Abbigliamento'],['work','Lavoro'],['local_gas_station','Carburante'],['smartphone','Telefono'],['content_cut','Cura personale'],['child_friendly','Bambini'],['receipt_long','Tasse'],['menu_book','Libri'],['smoking_rooms','Sigarette'],['more_horiz','Altro']];
-const PALETTE = [['coral','Corallo'],['peri','Pervinca'],['butter','Burro'],['mint','Menta'],['lilac','Lilla'],['sky','Celeste'],['grey','Grigio']];
 const SUGGESTED = ['spesa','casa','trasporti','ristoranti','salute','svago'];
 
 /* ---------- screen registry: routing, panel and URL parameters all read this ---------- */
@@ -762,7 +756,8 @@ const SCREENS = {
       menu:{label:'Menu', overlay:1, base:'modifica'}, archivia:{label:'Archivia categoria', overlay:1, base:'modifica'},
       'archivia-tag':{label:'Archivia tag', overlay:1, base:'modifica'}, annulla:{label:'Annulla modifiche', overlay:1, base:'modifica'}},
     notes:['Anteprima dal vivo del riquadro: icona, colore e nome mentre scrivi.',
-      'Campi con etichetta vera; colore e icona stanno insieme in “Aspetto”; il budget dice che è mensile e facoltativo.',
+      'Il colore non si sceglie: una nuova categoria prende quello meno usato, e l’anteprima lo mostra subito. Modificandola resta com’è.',
+      'Campi con etichetta vera; il budget dice che è mensile e facoltativo.',
       'I tag si aggiungono già quando crei la categoria; quelli archiviati si ripristinano.',
       'Gli errori compaiono sotto il campo che li causa; chiudere con modifiche chiede conferma.',
       'Archivia categoria è nel menu in alto, lontano da Salva.']},
@@ -1029,7 +1024,7 @@ const RENDER = {
     if (st === 'modifica') c = CATS[ctx.cat] && !CATS[ctx.cat].archived ? CATS[ctx.cat] : CATS.ristoranti;
     if (ro) c = CATS[ctx.cat] && CATS[ctx.cat].archived ? CATS[ctx.cat] : CATS.palestra;
     $('[data-title]', sec).textContent = {modifica:'Modifica categoria', archiviata:'Categoria archiviata'}[st] || 'Nuova categoria';
-    sec.dataset.color = c ? c.color : 'coral';
+    sec.dataset.color = c ? c.color : nextColor();
     sec.dataset.icon = c ? c.icon : 'shopping_cart';
     $('#ec-name').value = c ? c.name : '';
     $('#ec-budget').value = st === 'errori' ? '12,345' : c && c.budget ? fmt(c.budget) : '';
@@ -1110,6 +1105,11 @@ const RENDER = {
   licenze(sec, st) { $('[data-full]', sec).open = st === 'testo'; $$('details', sec).forEach(d => { if (!d.hasAttribute('data-full')) d.open = false; }); },
 };
 
+/* A new category takes the palette slot the fewest active categories use; the first in palette order breaks a tie. */
+function nextColor() {
+  const slots = ['coral', 'peri', 'butter', 'mint', 'lilac', 'sky'], uses = id => ACTIVE.filter(a => CATS[a].color === id).length;
+  return slots.reduce((best, id) => uses(id) < uses(best) ? id : best);
+}
 function ecPaint(sec) {
   const color = sec.dataset.color, icon = sec.dataset.icon, name = $('#ec-name').value.trim(), ro = sec.classList.contains('ro');
   const prev = $('[data-prev-tile]', sec);
@@ -1118,7 +1118,6 @@ function ecPaint(sec) {
   const pn = $('[data-prev-name]', sec);
   pn.textContent = name || 'Nome della categoria';
   pn.classList.toggle('ph', !name);
-  $('[data-sw]', sec).innerHTML = PALETTE.map(([k, n]) => `<button class="sw c-${k} ${k === color ? 'on' : ''}" data-act="sw" data-arg="${k}" aria-label="${n}" aria-pressed="${k === color}">${k === color ? '<span class="ms">check</span>' : ''}</button>`).join('');
   const grid = $('[data-icons]', sec);
   grid.style.setProperty('--selc', `var(--k-${color})`);
   grid.innerHTML = ICONS.map(([g, n]) => `<button class="ic ${g === icon ? 'on' : ''}" data-act="ic" data-arg="${g}" aria-label="${n}" aria-pressed="${g === icon}"><span class="ms fill">${g}</span></button>`).join('');
@@ -1236,7 +1235,6 @@ const ACT = {
   },
   togglechip(el, sec) { el.classList.toggle('on'); el.setAttribute('aria-pressed', el.classList.contains('on')); $('[data-create]', sec).disabled = !$('[data-welcome] .on', sec); },
   createcats(el, sec) { const n = $$('[data-welcome] .on', sec).length; show('oggi', 'normale', true); snack(`${n} categorie create: ora puoi aggiungere le spese`); },
-  sw(el, sec) { sec.dataset.color = el.dataset.arg; ecPaint(sec); markDirty(sec); },
   ic(el, sec) { sec.dataset.icon = el.dataset.arg; ecPaint(sec); markDirty(sec); },
   rmtag(el, sec) {
     if (cur.base === 'modifica') { ctx.tagToArchive = el.dataset.arg; $('[data-tag-title]', sec).textContent = `Archiviare il tag ${ctx.tagToArchive}?`; show(cur.screen, 'archivia-tag', true); return; }
