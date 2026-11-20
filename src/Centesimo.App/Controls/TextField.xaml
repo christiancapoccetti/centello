@@ -11,7 +11,7 @@
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnBoxTapped" />
             </Border.GestureRecognizers>
-            <Grid ColumnDefinitions="*,Auto">
+            <Grid x:Name="Row" ColumnDefinitions="*,Auto">
                 <!-- The entry is as high as its line and sits in the middle: a tap anywhere else in the box reaches it too. -->
                 <c:PlainEntry x:Name="Input"
                               Text="{Binding Text, Source={x:Reference Root}}"

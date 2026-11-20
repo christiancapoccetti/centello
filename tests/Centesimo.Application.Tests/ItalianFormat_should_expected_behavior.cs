@@ -21,4 +21,11 @@ public sealed class ItalianFormat_should_expected_behavior
         Assert.Equal("Novembre", ItalianFormat.PeriodName(Period.Month(2026, 11)));
         Assert.Equal("Anno", ItalianFormat.PeriodName(Period.Year(2026)));
     }
+
+    [Theory]
+    [InlineData(0, "0")]
+    [InlineData(37, "37")]
+    [InlineData(1218, "1.218")]
+    public void Group_the_thousands_of_a_count(int count, string expected) =>
+        Assert.Equal(expected, ItalianFormat.Count(count));
 }

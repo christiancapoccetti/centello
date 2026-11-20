@@ -11,7 +11,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CategoryListService>();
         services.AddScoped<TagService>();
         services.AddScoped<ExpenseService>();
-        services.AddScoped<BudgetOverviewService>();
         services.AddScoped<HomeOverviewService>();
         services.AddScoped<ExpenseHistoryService>();
         services.AddScoped<CategoryDetailService>();

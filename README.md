@@ -58,11 +58,11 @@ dotnet build src/Centesimo.App/Centesimo.App.csproj -t:Run -f net10.0-android `
 
 Confirm that the target device is available with `adb devices` before running the app. The minimum supported Android API level is 24.
 
-## Quick expense entry with OpenAI
+## Voice entry with OpenAI
 
-Quick entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft. It is optional and uses your own OpenAI API key.
+Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft. It is optional and uses your own OpenAI API key.
 
-- **Setup:** enter the key in Settings ("Inserimento rapido con OpenAI"). A consent dialog must be accepted before the key is saved; the key can be removed at any time.
+- **Setup:** enter the key in Settings, under "Inserimento vocale". A consent dialog must be accepted before the key is saved; the key can be removed at any time.
 - **Key handling:** the key is stored in Android SecureStorage and sent only to the OpenAI API. It lives on the client, so it is not a server-held secret: use it for personal use only.
 - **Flow:** hold the microphone button (up to 20 seconds). Audio is transcribed with `gpt-transcribe`, and the text is then interpreted by `gpt-6-luna` with a strict JSON schema that only admits your own category and tag keys, and the result is validated deterministically.
 - **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent.

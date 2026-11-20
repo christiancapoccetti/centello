@@ -20,6 +20,14 @@ public sealed record RecurringPaymentList(IReadOnlyList<RecurringPaymentRow> Act
     public bool HasPaused => Paused.Count > 0;
     public bool HasEnded => Ended.Count > 0;
     public bool IsEmpty => !HasActive && !HasPaused && !HasEnded;
+
+    /// <summary>"3 attivi", for the row that leads here.</summary>
+    public string ActiveSummary => Active.Count switch
+    {
+        0 => "Nessuno attivo",
+        1 => "1 attivo",
+        var count => $"{count} attivi"
+    };
 }
 
 public sealed class RecurringPaymentListService(ICategoryRepository categories,

@@ -24,6 +24,9 @@ public static class ItalianFormat
     /// <summary>"1.284,60 €"</summary>
     public static string Money(long cents) => $"{Amount(cents)} €";
 
+    /// <summary>"1.218" for a count of things.</summary>
+    public static string Count(long count) => Grouped(count);
+
     /// <summary>"1.600" for whole euros, "1.600,50" otherwise.</summary>
     public static string Budget(long cents) => cents % 100 == 0 ? Grouped(cents / 100) : Amount(cents);
 
