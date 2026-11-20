@@ -40,7 +40,7 @@ public sealed record WaterfallChart(
     private const char Minus = '−';
     private const char Nbsp = '\u00A0';
 
-    /// <summary>Null when nothing was spent in the compared days, or when nothing changed at all.</summary>
+    /// <summary>Null when nothing was spent in the compared days, or when nothing changed by 1 € or more.</summary>
     internal static WaterfallChart? For(SpendComparison spending)
     {
         if (!spending.IsComparable)
@@ -74,9 +74,12 @@ public sealed record WaterfallChart(
 
         public static Change Fold(long delta) =>
             new(FoldName, CategoryIcons.Fallback.Key, CategoryPalette.Fallback.Key, delta, true);
+
+        public bool IsNamed => !IsFold || Math.Abs(Delta) >= OneEuro;
     }
 
-    /// <summary>The changes of at least 1 € and the residual that closes the total, falls first then by name.</summary>
+    /// <summary>The changes of at least 1 € and the residual that closes the total, falls first then by name. Empty when
+    /// no category changed by 1 € and the residual is under 1 €: that is noise, not a chart.</summary>
     private static List<Change> Changes(SpendComparison spending)
     {
         var changed = spending.Categories
@@ -86,7 +89,8 @@ public sealed record WaterfallChart(
             .ToList();
         var (kept, fold) = Fold(changed, spending.Spent - spending.Compared);
         var changes = kept.Select(Change.Of).ToList();
-        if (fold != 0)
+        var isNoise = kept.Count == 0 && Math.Abs(fold) < OneEuro;
+        if (fold != 0 && !isNoise)
             changes.Add(Change.Fold(fold));
 
         return [.. changes.OrderBy(change => change.Delta).ThenBy(change => change.Name)];
@@ -175,9 +179,10 @@ public sealed record WaterfallChart(
         };
     }
 
-    /// <summary>The changes that went <paramref name="direction"/> (-1 a fall, 1 a rise), largest first.</summary>
+    /// <summary>The changes that went <paramref name="direction"/> (-1 a fall, 1 a rise), largest first. The sentence
+    /// never names a fold under 1 €, which stays on the chart as a column only.</summary>
     private static List<Change> Ranked(IReadOnlyList<Change> changes, int direction) => changes
-        .Where(change => Math.Sign(change.Delta) == direction)
+        .Where(change => change.IsNamed && Math.Sign(change.Delta) == direction)
         .OrderByDescending(change => Math.Abs(change.Delta))
         .ThenBy(change => change.Name)
         .ToList();

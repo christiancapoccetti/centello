@@ -38,6 +38,32 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.False(overview.HasWaterfall);
     }
 
+    // A residual of 0,99 € is noise, whichever way it goes and wherever it comes from.
+    [Theory]
+    [InlineData(10_000, 10_040, Standing.Active)]
+    [InlineData(10_000, 10_099, Standing.Active)]
+    [InlineData(10_099, 10_000, Standing.Active)]
+    [InlineData(10_000, 10_099, Standing.Archived)]
+    [InlineData(0, 99, Standing.Unknown)]
+    public async Task Should_leave_out_the_waterfall_when_only_a_residual_under_one_euro_changed(
+        long previous, long current, Standing standing)
+    {
+        var overview = await Overview([new Line("A", previous, current, standing), new Line("Casa", 5_000, 5_000)]);
+
+        Assert.Null(overview.Waterfall);
+        Assert.False(overview.HasWaterfall);
+    }
+
+    [Fact]
+    public async Task Should_draw_a_residual_of_one_euro_when_no_category_changed()
+    {
+        var chart = await Chart(new Line("Archiviata", 10_000, 10_100, Standing.Archived));
+
+        var fold = Assert.Single(chart.Steps);
+
+        Assert.Equal(("Altre categorie", 100, "+1"), (fold.Name, fold.DeltaCents, fold.Value));
+    }
+
     [Fact]
     public async Task Should_run_from_the_compared_total_to_the_current_total()
     {
@@ -332,17 +358,36 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.Equal(sentence, chart.Sentence);
     }
 
-    // Only the fold moved, by 0,40 €: the total held and there is no pair to name. The plot is cut: 100,00 and 100,40 €
-    // spread 10,04 €, a tenth of the highest, and the floor is 90 €.
+    // A rise of 1 € and a fall of 0,60 € in the fold: the total held, and a fold under 1 € is not named in the pair.
     [Fact]
-    public async Task Should_say_the_total_held_without_naming_a_pair_when_only_the_fold_moved()
+    public async Task Should_say_the_total_held_without_naming_a_pair_when_the_other_side_is_a_residual_under_one_euro()
     {
-        var chart = await Chart(new Line("A", 10_000, 10_040));
+        var chart = await Chart(new Line("A", 10_000, 10_100), new Line("Archiviata", 5_060, 5_000, Standing.Archived));
 
-        var fold = Assert.Single(chart.Steps);
+        Assert.Equal(["Altre categorie", "A"], chart.Steps.Select(step => step.Name));
+        Assert.StartsWith("Il totale è in linea con ottobre. ", chart.Sentence);
+    }
 
-        Assert.Equal(("Altre categorie", "0"), (fold.Name, fold.Value));
-        Assert.Equal($"Il totale è in linea con ottobre. La scala parte da 90{Nbsp}€.", chart.Sentence);
+    // The fold is named from 1 €, as the opposite and as a driver.
+    [Theory]
+    [InlineData(5_099, "A spiega tutto il calo.")]
+    [InlineData(5_100, "A spiega tutto il calo; Altre categorie vanno nella direzione opposta.")]
+    public async Task Should_name_the_fold_as_the_opposite_only_from_one_euro(long current, string sentence)
+    {
+        var chart = await Chart(new Line("A", 50_000, 20_000), new Line("Archiviata", 5_000, current, Standing.Archived));
+
+        Assert.Equal(sentence, chart.Sentence);
+    }
+
+    // A is 1,00 € of the 1,99 € of falls: without the fold it would need to be named to reach 75 %.
+    [Theory]
+    [InlineData(5_099, "A spiega tutto il calo. ")]
+    [InlineData(5_100, "A e Altre categorie spiegano tutto il calo. ")]
+    public async Task Should_name_the_fold_as_a_driver_only_from_one_euro(long previous, string lead)
+    {
+        var chart = await Chart(new Line("A", 10_000, 9_900), new Line("Archiviata", previous, 5_000, Standing.Archived));
+
+        Assert.StartsWith(lead, chart.Sentence);
     }
 
     [Theory]
@@ -372,9 +417,11 @@ public sealed class WaterfallChart_should_expected_behavior
     [Fact]
     public async Task Should_describe_a_year_and_a_step_that_reads_zero()
     {
-        var chart = (await Overview([new Line("A", 10_000, 10_040)], Period.Year(2026))).Waterfall!;
+        var lines = new[] { new Line("A", 10_000, 15_000), new Line("Archiviata", 5_000, 5_040, Standing.Archived) };
 
-        Assert.Equal($"Dal 2025 al 2026, da 100{Nbsp}€ a 100{Nbsp}€: Altre categorie 0{Nbsp}€.", chart.Description);
+        var chart = (await Overview(lines, Period.Year(2026))).Waterfall!;
+
+        Assert.Equal($"Dal 2025 al 2026, da 150{Nbsp}€ a 200{Nbsp}€: Altre categorie 0{Nbsp}€, A più 50{Nbsp}€.", chart.Description);
     }
 
     // The levels 136.660, 130.720, 126.100, 123.420, 123.860, 125.240 and 128.460 cents spread 13.240 cents, under a
