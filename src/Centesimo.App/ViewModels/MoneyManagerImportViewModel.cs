@@ -83,8 +83,7 @@ public sealed class MoneyManagerImportViewModel(IServiceScopeFactory scopeFactor
         Stage = ImportStage.Analysing;
         try
         {
-            using var scope = scopeFactory.CreateScope();
-            var result = await scope.ServiceProvider.GetRequiredService<MoneyManagerImportService>().Preview(backup);
+            var result = await Task.Run(() => Run(service => service.Preview(backup)));
             if (result.IsSuccess)
             {
                 Preview = result.Value;
@@ -112,8 +111,7 @@ public sealed class MoneyManagerImportViewModel(IServiceScopeFactory scopeFactor
         Stage = ImportStage.Importing;
         try
         {
-            using var scope = scopeFactory.CreateScope();
-            var result = await scope.ServiceProvider.GetRequiredService<MoneyManagerImportService>().Import(preview);
+            var result = await Task.Run(() => Run(service => service.Import(preview)));
             if (result.IsFailure)
             {
                 ErrorMessage = result.Error.Message;
@@ -130,6 +128,14 @@ public sealed class MoneyManagerImportViewModel(IServiceScopeFactory scopeFactor
             ErrorMessage = "Non è stato possibile importare il backup.";
             Stage = ImportStage.Preview;
         }
+    }
+
+    // SQLite finishes its work on the calling thread: run on the UI thread, the import would freeze the screen and the
+    // progress bar would never be drawn. Each run gets its own scope, as the context is not shared across threads.
+    private async Task<Result<T>> Run<T>(Func<MoneyManagerImportService, Task<Result<T>>> work)
+    {
+        using var scope = scopeFactory.CreateScope();
+        return await work(scope.ServiceProvider.GetRequiredService<MoneyManagerImportService>());
     }
 
     private void Reject(string message)
