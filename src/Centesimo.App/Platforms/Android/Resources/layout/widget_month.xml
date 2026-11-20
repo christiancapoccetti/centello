@@ -36,14 +36,14 @@
             android:id="@+id/total"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:importantForAccessibility="no"
             android:tint="@color/theme_ink" />
         <FrameLayout
             android:id="@+id/budget"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp">
+            android:layout_marginTop="4dp">
             <ImageView
                 android:id="@+id/budget_day"
                 style="@style/Widget.Centesimo.Day"
@@ -61,7 +61,7 @@
             layout="@layout/widget_comparison"
             android:layout_width="wrap_content"
             android:layout_height="24dp"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="6dp" />
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -69,7 +69,8 @@
         <FrameLayout
             android:id="@+id/line"
             android:layout_width="match_parent"
-            android:layout_height="10dp">
+            android:layout_height="10dp"
+            android:layout_marginTop="6dp">
             <ImageView
                 android:id="@+id/line_day"
                 style="@style/Widget.Centesimo.Day"
