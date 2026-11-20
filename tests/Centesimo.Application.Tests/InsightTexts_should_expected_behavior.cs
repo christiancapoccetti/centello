@@ -2,92 +2,79 @@ namespace Centesimo.Application.Tests;
 
 public sealed class InsightTexts_should_expected_behavior
 {
-    [Fact]
-    public void Should_measure_the_month_of_today_against_the_month_before()
-    {
-        var summary = InsightTexts.Summary(Overview(Period.Month(2026, 11), new DateOnly(2026, 11, 19), -0.0612));
+    private const char Nbsp = '\u00A0';
 
-        Assert.Equal(new BudgetSummary("Hai speso il ", "6% in meno", " di ottobre."), summary);
+    [Fact]
+    public void Should_measure_the_month_of_today_against_the_same_days_of_the_month_before()
+    {
+        var lower = InsightTexts.Summary(Period.Month(2026, 11), true, 128_460, 136_660);
+        var higher = InsightTexts.Summary(Period.Month(2026, 11), true, 140_000, 136_660);
+
+        Assert.Equal(new BudgetSummary("Fino a oggi hai speso ", $"82,00{Nbsp}€ in meno", " degli stessi giorni di ottobre."), lower);
+        Assert.Equal(new BudgetSummary("Fino a oggi hai speso ", $"33,40{Nbsp}€ in più", " degli stessi giorni di ottobre."), higher);
     }
 
     [Fact]
     public void Should_name_a_past_month_and_the_month_before_it()
     {
-        var october = InsightTexts.Summary(Overview(Period.Month(2026, 10), new DateOnly(2026, 10, 31), 0.18));
-        var april = InsightTexts.Summary(Overview(Period.Month(2026, 4), new DateOnly(2026, 4, 30), 0.18));
+        var october = InsightTexts.Summary(Period.Month(2026, 10), false, 159_000, 150_000);
+        var april = InsightTexts.Summary(Period.Month(2026, 4), false, 159_000, 150_000);
 
-        Assert.Equal(new BudgetSummary("A ottobre hai speso il ", "18% in più", " di settembre."), october);
-        Assert.Equal(new BudgetSummary("Ad aprile hai speso il ", "18% in più", " di marzo."), april);
+        Assert.Equal(new BudgetSummary("A ottobre hai speso ", $"90,00{Nbsp}€ in più", " di settembre."), october);
+        Assert.Equal(new BudgetSummary("Ad aprile hai speso ", $"90,00{Nbsp}€ in più", " di marzo."), april);
     }
 
     [Fact]
     public void Should_measure_the_year_of_today_against_the_same_part_of_the_year_before()
     {
-        var summary = InsightTexts.Summary(Overview(Period.Year(2026), new DateOnly(2026, 11, 19), 0.04));
+        var summary = InsightTexts.Summary(Period.Year(2026), true, 1_800_000, 1_850_000);
 
-        Assert.Equal(new BudgetSummary("Da gennaio a oggi hai speso il ", "4% in più", " dello stesso periodo del 2025."), summary);
+        Assert.Equal(new BudgetSummary("Da gennaio a oggi hai speso ", $"500,00{Nbsp}€ in meno", " dello stesso periodo del 2025."), summary);
     }
 
     [Fact]
     public void Should_measure_a_past_year_against_the_whole_year_before()
     {
-        var summary = InsightTexts.Summary(Overview(Period.Year(2025), new DateOnly(2025, 12, 31), -0.5));
+        var summary = InsightTexts.Summary(Period.Year(2025), false, 2_000_000, 4_000_000);
 
-        Assert.Equal(new BudgetSummary("Nel 2025 hai speso il ", "50% in meno", " del 2024."), summary);
+        Assert.Equal(new BudgetSummary("Nel 2025 hai speso ", $"20.000,00{Nbsp}€ in meno", " del 2024."), summary);
     }
 
     [Fact]
-    public void Should_say_the_spending_is_the_same_when_the_change_rounds_to_nothing()
+    public void Should_say_the_spending_is_the_same_when_nothing_changed()
     {
-        var month = InsightTexts.Summary(Overview(Period.Month(2026, 11), new DateOnly(2026, 11, 19), 0.004));
-        var year = InsightTexts.Summary(Overview(Period.Year(2026), new DateOnly(2026, 11, 19), -0.004));
-        var pastYear = InsightTexts.Summary(Overview(Period.Year(2025), new DateOnly(2025, 12, 31), 0));
+        var month = InsightTexts.Summary(Period.Month(2026, 11), true, 136_660, 136_660);
+        var pastMonth = InsightTexts.Summary(Period.Month(2026, 10), false, 150_000, 150_000);
+        var year = InsightTexts.Summary(Period.Year(2026), true, 1_850_000, 1_850_000);
+        var pastYear = InsightTexts.Summary(Period.Year(2025), false, 4_000_000, 4_000_000);
 
-        Assert.Equal(new BudgetSummary("Hai speso ", "quanto", " a ottobre."), month);
+        Assert.Equal(new BudgetSummary("Fino a oggi hai speso ", "quanto", " negli stessi giorni di ottobre."), month);
+        Assert.Equal(new BudgetSummary("A ottobre hai speso ", "quanto", " a settembre."), pastMonth);
         Assert.Equal(new BudgetSummary("Da gennaio a oggi hai speso ", "quanto", " nello stesso periodo del 2025."), year);
         Assert.Equal(new BudgetSummary("Nel 2025 hai speso ", "quanto", " nel 2024."), pastYear);
     }
 
     [Fact]
+    public void Should_state_a_difference_of_one_cent()
+    {
+        var summary = InsightTexts.Summary(Period.Month(2026, 11), true, 136_661, 136_660);
+
+        Assert.Equal($"0,01{Nbsp}€ in più", summary.Emphasis);
+    }
+
+    [Fact]
     public void Should_say_there_is_nothing_to_compare_with()
     {
-        var month = InsightTexts.Summary(Overview(Period.Month(2026, 11), new DateOnly(2026, 11, 19), null));
-        var year = InsightTexts.Summary(Overview(Period.Year(2026), new DateOnly(2026, 11, 19), null));
+        var month = InsightTexts.Summary(Period.Month(2026, 11), true, 128_460, null);
+        var year = InsightTexts.Summary(Period.Year(2026), true, 1_800_000, null);
 
-        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare a ottobre.", "", ""), month);
-        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare nel 2025.", "", ""), year);
-    }
+        var pastMonth = InsightTexts.Summary(Period.Month(2026, 10), false, 128_460, null);
+        var pastYear = InsightTexts.Summary(Period.Year(2025), false, 1_800_000, null);
 
-    [Fact]
-    public void Should_label_the_month_of_today_by_the_days_that_are_compared()
-    {
-        var november = InsightTexts.WindowLabels(Overview(Period.Month(2026, 11), new DateOnly(2026, 11, 19), 0.1));
-        var firstDay = InsightTexts.WindowLabels(Overview(Period.Month(2026, 11), new DateOnly(2026, 11, 1), 0.1));
-        var march = InsightTexts.WindowLabels(Overview(Period.Month(2025, 3), new DateOnly(2025, 3, 30), 0.1));
-
-        Assert.Equal(("1–19 nov", "1–19 ott"), november);
-        Assert.Equal(("1 nov", "1 ott"), firstDay);
-        Assert.Equal(("1–30 mar", "1–28 feb"), march);
-    }
-
-    [Fact]
-    public void Should_label_a_past_month_and_a_past_year_whole()
-    {
-        var month = InsightTexts.WindowLabels(Overview(Period.Month(2026, 1), new DateOnly(2026, 1, 31), 0.1));
-        var year = InsightTexts.WindowLabels(Overview(Period.Year(2025), new DateOnly(2025, 12, 31), 0.1));
-
-        Assert.Equal(("Gennaio", "Dicembre"), month);
-        Assert.Equal(("2025", "2024"), year);
-    }
-
-    [Fact]
-    public void Should_label_the_year_of_today_by_the_months_that_are_compared()
-    {
-        var november = InsightTexts.WindowLabels(Overview(Period.Year(2026), new DateOnly(2026, 11, 19), 0.1));
-        var january = InsightTexts.WindowLabels(Overview(Period.Year(2026), new DateOnly(2026, 1, 9), 0.1));
-
-        Assert.Equal(("gen–nov 26", "gen–nov 25"), november);
-        Assert.Equal(("gen 26", "gen 25"), january);
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare negli stessi giorni di ottobre.", "", ""), month);
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare nello stesso periodo del 2025.", "", ""), year);
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare a settembre.", "", ""), pastMonth);
+        Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare nel 2024.", "", ""), pastYear);
     }
 
     [Theory]
@@ -106,8 +93,4 @@ public sealed class InsightTexts_should_expected_behavior
         Assert.Equal(new InsightChange("uguale", InsightChangeTone.Same), InsightTexts.Change(0.004));
         Assert.Equal(new InsightChange("nuovo", InsightChangeTone.New), InsightTexts.Change(null));
     }
-
-    private static InsightsOverview Overview(Period period, DateOnly today, double? change) =>
-        new(period, new HomeNavigation(period.Previous(), null, period), period.Start, today, today < period.End, 10_000,
-            change.HasValue ? 9_000 : null, change, [], []);
 }

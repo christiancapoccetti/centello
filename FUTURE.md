@@ -30,8 +30,9 @@ Items are not commitments and will be prioritized after the core manual expense 
 
 ## Insights
 
-- Next step: review the Insight section (content, structure and how it relates to the home and the category detail).
 - Configurable budget alerts.
+- "Una nuova abitudine" per tag, not only per category.
+- Move the home and the category detail onto one shared spending model, and delete `SpendBuckets` and the home's own comparison.
 
 ## Categories and recurring payments
 
@@ -40,3 +41,5 @@ Items are not commitments and will be prioritized after the core manual expense 
 ## Technical follow-ups
 
 - Clear the DbContext change tracker after a failed save in `RepositoryBase`, so rejected entities do not linger in later saves.
+- `CategoryListService` repeats the positive-budget check that `PeriodBudget` owns; use `PeriodBudget` there.
+- `InsightsViewModel.EmptyTitle` still builds its wording from the period in the view model; move that wording next to the other period texts in `InsightTexts`.

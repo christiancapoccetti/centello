@@ -27,7 +27,7 @@ internal static class RowLabels
         (Title(expense.Note, NameOf(category)).Title, Detail(tag?.Name ?? "", AutomaticMark(expense)));
 
     /// <summary>Marks an expense a recurring payment created.</summary>
-    public static string AutomaticMark(Expense expense) => expense.RecurringPaymentId.HasValue ? "automatica" : "";
+    public static string AutomaticMark(Expense expense) => expense.IsAutomatic ? "automatica" : "";
 
     /// <summary>"Ieri · Svago · automatica": the parts that say something, in the order given.</summary>
     public static string Detail(params string[] parts) => Join(" · ", parts);

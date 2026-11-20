@@ -18,6 +18,17 @@ public sealed class Expense_should_expected_behavior
     }
 
     [Fact]
+    public void Count_as_automatic_only_when_a_recurring_payment_created_it()
+    {
+        var typed = new Expense(Guid.NewGuid(), Guid.NewGuid(), new Money(999), new DateOnly(2026, 7, 20));
+        var recurring = new Expense(Guid.NewGuid(), Guid.NewGuid(), new Money(999), new DateOnly(2026, 7, 20),
+            recurringPaymentId: Guid.NewGuid());
+
+        Assert.False(typed.IsAutomatic);
+        Assert.True(recurring.IsAutomatic);
+    }
+
+    [Fact]
     public void Reject_zero_amount() => Assert.Throws<ArgumentOutOfRangeException>(() =>
         new Expense(Guid.NewGuid(), Guid.NewGuid(), new Money(0), DateOnly.FromDateTime(DateTime.Today)));
 }

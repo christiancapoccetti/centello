@@ -275,7 +275,7 @@ This is a native Android app (.NET MAUI) locked to portrait. All measures below 
 - Graphite ground (dark reference) or warm paper (light), no shadows anywhere.
 - Archivo throughout, Archivo Condensed ExtraBold only for money shown at display size, tabular figures everywhere.
 - Seven flat pastel category inks, each a dark glyph on a square tile; the app assigns them, the user never picks.
-- Charts are hard-edged flat fills with 3dp gaps, antialiasing off.
+- Charts are hard-edged flat fills with 3dp gaps (2dp between the pace chart's slots), antialiasing off.
 - Actions are pills; selection is an ink ring plus a selected fill, never a colour swap.
 
 ## Colors
@@ -286,7 +286,7 @@ A graphite-and-warm-white neutral world, one coral accent, and a seven-slot past
 - **Signal Coral** (`accent-coral`, light `accent-light`): the add action. The plus of "Aggiungi spesa", the microphone in the split pill, the plus on the extended FAB and tonal button, the on-state of a switch. It marks the one thing the app exists for.
 
 ### Secondary
-- **Pace Periwinkle** (`pace-periwinkle`, light `pace-light`): the dashed daily-average line of the spend chart and its label "media per restare nel budget". Used nowhere else.
+- **Pace Periwinkle** (`pace-periwinkle`, light `pace-light`): the dashed daily-average line of the home spend chart and its label "media per restare nel budget". Used nowhere else: the Insight charts draw their previous-period line in ink.
 
 ### Tertiary
 - **Alert** (`alert`, light `alert-light`): errors, inline field errors, the destructive outlined button, and an over-budget category in the home key. In dark it shares the coral hue; in light it deepens to a true red (#C8261A) so it never reads as the accent.
@@ -296,18 +296,18 @@ A graphite-and-warm-white neutral world, one coral accent, and a seven-slot past
 - **Graphite Ground** (`graphite-ground`, light `paper-ground-light`): every page, the shell, the tab bar, bottom sheets, and the backing of labels that sit over chart bars.
 - **Raised Graphite** (`graphite-raised`, light `paper-raised-light`): the one raised tone: split pill, extended FAB, tonal button, menus, info cards, comparison chip, badges.
 - **Selected** (`graphite-selected`, light `paper-selected-light`): the fill under a selected chip, segment or picker cell.
-- **Warm White Ink** (`warm-white-ink`, light `ink-light`): primary text, icons, filled buttons, today's bar, focus and selection rings.
-- **Mute** (`signal-grey-mute`, light `mute-light`): secondary text, captions, helper text, unselected tabs, field outlines at rest, empty-state glyphs.
+- **Warm White Ink** (`warm-white-ink`, light `ink-light`): primary text, icons, filled buttons, today's bar, focus and selection rings, and in the Insight charts the previous-period line, the gap marker and the waterfall's end bar.
+- **Mute** (`signal-grey-mute`, light `mute-light`): secondary text, captions, helper text, unselected tabs, field outlines at rest, empty-state glyphs, and the automatic part of the pace chart's bars.
 - **Hairline** (`hairline`, light `hairline-light`): 1dp row dividers, card strokes, future-day stubs, read-only field outlines.
-- **Outline** (`outline`, light `outline-light`): strokes of raised surfaces (pill, FAB, menu, unselected chip) and the split pill's divider.
-- **Chart Bar** (`chart-bar`, light `chart-bar-light`): past days in the spend chart.
+- **Outline** (`outline`, light `outline-light`): strokes of raised surfaces (pill, FAB, menu, unselected chip), the split pill's divider, the pace chart's budget hairline and the waterfall's connectors.
+- **Chart Bar** (`chart-bar`, light `chart-bar-light`): past days in the spend chart, the pace chart's bars and the waterfall's start bar.
 - **Tile Ink** (`tile-ink`, light `tile-ink-light`): the dark glyph on a category tile, in both schemes.
 - **Scrim** (`scrim`): 50% black behind a bottom sheet.
 
 ### Category palette
 Slots, stored by key in `Categories.Color`: coral (Corallo), peri (Pervinca), butter (Burro), mint (Menta), lilac (Lilla), sky (Celeste), and grey (Grigio). The six chromatic slots are a little deeper in the light scheme; grey is the fallback for a missing or unknown key.
 
-**The Category Owns Its Ink Rule.** Palette colours appear only where a category is shown: its tile, its swatch in a key, its segment of the category line, its bars and fraction bars. Interface chrome never borrows a palette colour, and a palette colour never carries interface meaning.
+**The Category Owns Its Ink Rule.** Palette colours appear only where a category is shown: its tile, its swatch in a key, its segment of the category line, its bars, its fraction bars and its step in the waterfall. Interface chrome never borrows a palette colour, and a palette colour never carries interface meaning.
 
 **The App Assigns the Colour Rule.** A new category gets the chromatic slot the fewest categories hold (first in palette order on a tie). There is no colour picker, and grey is never handed out; it only shows what has no known colour.
 
@@ -348,7 +348,7 @@ A single portrait column with a 24dp side gutter on every page. The home is a fi
 
 Lists are rows, not cards: an expense row is 58dp high (36dp tile, 14dp gap, title over caption, amount right-aligned) with a 1dp hairline under it; a settings row is at least 64dp with the same 36/14 rhythm. Empty states are centred stacks with 32dp sides and 56dp of top room under a 40sp mute glyph. Form field labels start 24dp below what is above them.
 
-The spacing rhythm is 4, 6, 8, 12, 14, 16, 24dp, with 3dp gaps inside charts. Every touch target is at least 48 by 48dp; where a visual element is smaller (a 32dp chip, a key item, the "Vedi tutte" link) padding makes up the target and negative margins give the room back, so the visual rhythm is not loosened to fit the finger.
+The spacing rhythm is 4, 6, 8, 12, 14, 16, 24dp, with 3dp gaps inside charts (2dp between the 31 slots of the pace chart). Every touch target is at least 48 by 48dp; where a visual element is smaller (a 32dp chip, a key item, the "Vedi tutte" link) padding makes up the target and negative margins give the room back, so the visual rhythm is not loosened to fit the finger.
 
 **The Rows Not Cards Rule.** Collections are hairline-divided rows on the ground. A bordered card is for an isolated message (an error, a note), not for list items.
 
@@ -370,7 +370,7 @@ Two families that never mix: pills for what you press, and square or barely roun
 - **Card** (16dp): the bordered surface card.
 - **Sheet** (28dp top corners only): bottom sheets.
 
-**The Hard Edge Rule.** Data graphics are drawn with antialiasing off, flat fills and 3dp gaps (2dp between days in a category's bars). Small values keep a visible minimum (2dp sliver, 4dp future stub) instead of vanishing.
+**The Hard Edge Rule.** Data graphics are drawn with antialiasing off, flat fills and 3dp gaps (2dp between days in a category's bars and between the pace chart's slots). Small values keep a visible minimum (2dp sliver, 4dp future stub) instead of vanishing.
 
 ## Components
 
@@ -429,6 +429,16 @@ In the home key, an over-budget category gets the filled Error glyph at 14sp in 
 
 ### Daily spend chart (signature)
 104dp of bars plus 22dp of headroom: past days in chart-bar grey, today in ink, future days as 4dp hairline stubs, a 1.5dp dashed periwinkle pace line (4dp dash, 3dp gap) with its SemiBold 12sp label on a ground backing, and 12sp axis labels (start and end in mute, today's label in bold ink, the end labels giving way when it would touch them).
+
+### Pace chart (signature)
+"Spesa accumulata" (for a month or a year), the first chart of Insight. One slot per day (31) or month (12), 148dp of plot plus 22dp of headroom for labels, 2dp between slots. Each past slot is a cumulative bar in chart-bar grey. The automatic part (recurring payments) sits at its foot in mute, under a 2dp ground band, so the two read as separate pieces. Today is an ink bar, future slots are 4dp hairline stubs, and a slot with spending never draws thinner than 2dp.
+
+The previous period is a 2dp dashed ink step line (4dp dash, 3dp gap) on the same scale, with its closing amount in 12sp mute on a ground backing. The budget is a 1dp outline hairline with its 12sp mute label. The gap at today is a 2dp ink marker beside today's slot. It spans the compared total and the spent total, with the euro difference in Bold 13sp ink over a 12sp mute caption. The axis is 12sp: start and end in mute, today in bold ink, the end labels giving way when it would touch them. Below it comes a key of 10dp swatches (a 14dp dashed one for the previous period) and 13sp mute names, each amount in SemiBold ink. No sentence follows the chart.
+
+### Waterfall chart (signature)
+"Da ottobre a novembre" (or "Dal 2025 al 2026"): how the to-date total moved between the compared periods, one column per bar with 3dp between columns, 134dp of plot plus 22dp of headroom. The start total is a chart-bar bar and the end total an ink bar, each with a Bold 12sp ink value and its period name in SemiBold 13sp underneath. Between them, each category that changed by at least 1 € floats as a step in its own ink, from the level before to the level after. Its SemiBold 12sp value sits above a rise or below a fall, and a 24dp category tile sits in the foot row under it. The rest folds into one "Altre categorie" step. A 1dp outline connector crosses each 3dp gap at the shared level, and a step never draws thinner than 2dp.
+
+When the levels are close, the scale does not start at zero and both end bars are cut: a body, a 3dp break and a 3dp base at the foot, so a bar never claims to start at zero. A 12sp mute label under the foot row, aligned to the chart's left edge, names the floor ("Scala da 1.150 €"), and the screen-reader description says it too. It is empty and hidden when the scale starts at zero. No sentence follows the chart.
 
 ### Comparison chip
 26dp raised chip after the budget sentence: an arrow glyph (east, north-east or south-east) and a SemiBold label. When spending is lower than last month it takes the positive container and on-positive text.

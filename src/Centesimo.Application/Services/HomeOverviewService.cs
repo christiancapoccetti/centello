@@ -122,7 +122,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     {
         var periodExpenses = expenses.Where(expense => period.Contains(expense.OccurredOn)).ToList();
         var spent = periodExpenses.Sum(expense => expense.Amount.Cents);
-        var budget = BudgetOf(period, categories);
+        var budget = PeriodBudget.OfActive(period, categories);
         return new HomeOverview(period, HomeNavigation.For(period, today), ItalianFormat.Amount(spent),
             categories.Count == 0 ? NothingYet(period) : Summarize(spent, budget), Compare(period, window, expenses),
             Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget),
@@ -136,16 +136,6 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     private static long SpentBetween(IReadOnlyList<Expense> expenses, DateOnly from, DateOnly to) => expenses
         .Where(expense => expense.OccurredOn >= from && expense.OccurredOn <= to)
         .Sum(expense => expense.Amount.Cents);
-
-    // A year budget is twelve monthly budgets. A total of zero is "no budget": nothing to measure against.
-    private static long? BudgetOf(Period period, IReadOnlyList<Category> categories)
-    {
-        var monthly = categories
-            .Where(category => !category.IsArchived)
-            .Sum(category => category.MonthlyBudget?.Cents ?? 0);
-        var total = period.Kind == PeriodKind.Year ? monthly * 12 : monthly;
-        return total > 0 ? total : null;
-    }
 
     private static BudgetSummary Summarize(long spent, long? budget)
     {
@@ -203,11 +193,10 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
         var spentByCategory = periodExpenses
             .GroupBy(expense => expense.CategoryId)
             .ToDictionary(group => group.Key, group => group.Sum(expense => expense.Amount.Cents));
-        var yearFactor = period.Kind == PeriodKind.Year ? 12 : 1;
         var ranked = categories
             .Where(category => !category.IsArchived && spentByCategory.ContainsKey(category.CategoryId))
             .Select(category => new RankedCategory(category, spentByCategory[category.CategoryId],
-                (category.MonthlyBudget?.Cents ?? 0) * yearFactor))
+                PeriodBudget.Of(period, category.MonthlyBudget) ?? 0))
             .OrderByDescending(item => item.Spent)
             .ThenBy(item => item.Category.Name)
             .ToList();

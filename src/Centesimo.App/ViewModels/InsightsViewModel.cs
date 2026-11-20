@@ -1,16 +1,10 @@
 using Centesimo.Application;
-using Centesimo.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App.ViewModels;
 
-/// <summary>One observation of "Cosa è cambiato". The action names where its target leads and is empty when it
-/// leads nowhere.</summary>
-public sealed record InsightRow(string Glyph, string Title, string Description, string Action, InsightTarget Target)
-{
-    public bool HasAction => Action.HasValue();
-    public bool HasNoAction => Action.IsEmpty();
-}
+/// <summary>One observation of "Da tenere d'occhio". The action names where its target leads.</summary>
+public sealed record InsightRow(string Glyph, string Title, string Description, string Action, InsightTarget Target);
 
 /// <summary>One row of "Per categoria". ShareOfTop is the spending against the category that spent most, which is
 /// what the small bar draws.</summary>
@@ -45,15 +39,6 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
         ? "Ancora nessuna spesa"
         : $"Nessuna spesa {ItalianFormat.InPeriod(Overview.Period)}";
     public string Total => ItalianFormat.Amount(Overview?.SpentCents ?? 0);
-    public BudgetSummary? Summary => Overview is null ? null : InsightTexts.Summary(Overview);
-    public bool HasComparison => Overview?.ComparedSpentCents is not null;
-    public string CurrentLabel => Overview is null ? "" : InsightTexts.WindowLabels(Overview).Current;
-    public string PreviousLabel => Overview is null ? "" : InsightTexts.WindowLabels(Overview).Previous;
-    public string CurrentAmount => ItalianFormat.Money(Overview?.SpentCents ?? 0);
-    public string PreviousAmount => ItalianFormat.Money(Overview?.ComparedSpentCents ?? 0);
-    public double CurrentFraction => FractionOfLarger(Overview?.SpentCents ?? 0);
-    public double PreviousFraction => FractionOfLarger(Overview?.ComparedSpentCents ?? 0);
-    public string ComparisonDescription => $"{CurrentLabel} {CurrentAmount}, {PreviousLabel} {PreviousAmount}";
     public IReadOnlyList<InsightRow> Insights => Overview?.Insights.Select(ToRow).ToList() ?? [];
     public bool HasInsights => Overview is { Insights.Count: > 0 };
     public IReadOnlyList<InsightCategoryRow> Categories => Overview is null ? [] : Overview.Categories.Select(ToRow).ToList();
@@ -97,29 +82,14 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
         Overview = result.Value;
     }
 
-    private double FractionOfLarger(long cents)
-    {
-        var larger = Math.Max(Overview?.SpentCents ?? 0, Overview?.ComparedSpentCents ?? 0);
-        return larger == 0 ? 0 : (double)cents / larger;
-    }
-
     private static InsightRow ToRow(LocalInsight insight) => new(GlyphOf(insight.Kind), insight.Title, insight.Description,
-        insight.Target switch
-        {
-            InsightTarget.ExpenseTarget => "Apri la spesa",
-            InsightTarget.CategoryTarget => "Vedi le spese",
-            _ => ""
-        }, insight.Target);
+        insight.Target is InsightTarget.ExpenseTarget ? "Apri la spesa" : "Vedi le spese", insight.Target);
 
     // No discard arm: CS8524 is suppressed in the csproj, so a kind without a glyph fails the build.
     private static string GlyphOf(InsightKind kind) => kind switch
     {
-        InsightKind.Increased => MaterialSymbols.TrendingUp,
-        InsightKind.Decreased => MaterialSymbols.TrendingDown,
-        InsightKind.TopCategory => MaterialSymbols.PieChart,
         InsightKind.NewHabit => MaterialSymbols.EventRepeat,
-        InsightKind.UnusualExpense => MaterialSymbols.Flag,
-        InsightKind.Stable => MaterialSymbols.TrendingFlat
+        InsightKind.UnusualExpense => MaterialSymbols.Flag
     };
 
     private InsightCategoryRow ToRow(InsightCategory category) => new(category.CategoryId, category.Name,

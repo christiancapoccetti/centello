@@ -31,24 +31,22 @@
                     <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="{Binding Summary.Lead}" />
-                                <Span Text="{Binding Summary.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
-                                <Span Text="{Binding Summary.Tail}" />
+                                <Span Text="{Binding Overview.Summary.Lead}" />
+                                <Span Text="{Binding Overview.Summary.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
+                                <Span Text="{Binding Overview.Summary.Tail}" />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
 
-                    <!-- What was spent against the period before it, on one scale. -->
-                    <Grid Margin="24,20,24,0" ColumnDefinitions="76,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="10" IsVisible="{Binding HasComparison}" SemanticProperties.Description="{Binding ComparisonDescription}">
-                        <Label Text="{Binding CurrentLabel}" Style="{StaticResource Hint}" VerticalOptions="Center" LineBreakMode="NoWrap" />
-                        <c:FractionBar Grid.Column="1" HeightRequest="10" VerticalOptions="Center" Fraction="{Binding CurrentFraction}" />
-                        <Label Grid.Column="2" Text="{Binding CurrentAmount}" FontFamily="{x:Static t:Fonts.Bold}" HorizontalTextAlignment="End" VerticalOptions="Center" />
-                        <Label Grid.Row="1" Text="{Binding PreviousLabel}" Style="{StaticResource Hint}" VerticalOptions="Center" LineBreakMode="NoWrap" />
-                        <c:FractionBar Grid.Row="1" Grid.Column="1" HeightRequest="10" VerticalOptions="Center" Color="ChartBar" Fraction="{Binding PreviousFraction}" />
-                        <Label Grid.Row="1" Grid.Column="2" Text="{Binding PreviousAmount}" FontFamily="{x:Static t:Fonts.Bold}" HorizontalTextAlignment="End" VerticalOptions="Center" />
-                    </Grid>
+                    <Label Text="{Binding Overview.Pace.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
+                    <c:PaceChartView Margin="24,16,24,0" Chart="{Binding Overview.Pace}" />
 
-                    <Label Text="Cosa è cambiato" Style="{StaticResource SectionTitle}" Margin="24,22,24,1" IsVisible="{Binding HasInsights}" SemanticProperties.HeadingLevel="Level2" />
+                    <VerticalStackLayout IsVisible="{Binding Overview.HasWaterfall}">
+                        <Label Text="{Binding Overview.Waterfall.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
+                        <c:WaterfallChartView Margin="24,16,24,0" Chart="{Binding Overview.Waterfall}" />
+                    </VerticalStackLayout>
+
+                    <Label Text="Da tenere d'occhio" Style="{StaticResource SectionTitle}" Margin="24,22,24,1" IsVisible="{Binding HasInsights}" SemanticProperties.HeadingLevel="Level2" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Insights}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
@@ -58,8 +56,7 @@
                                         <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" />
                                         <Label Text="{Binding Description}" Style="{StaticResource BodyMedium}" />
                                         <!-- The link ends the row: its padding is the room under it and its touch target. -->
-                                        <c:ActionLink Text="{Binding Action}" Padding="0,8,16,14" HorizontalOptions="Start" IsVisible="{Binding HasAction}" Tapped="OnInsightTapped" />
-                                        <BoxView HeightRequest="14" Color="Transparent" IsVisible="{Binding HasNoAction}" />
+                                        <c:ActionLink Text="{Binding Action}" Padding="0,8,16,14" HorizontalOptions="Start" Tapped="OnInsightTapped" />
                                     </VerticalStackLayout>
                                     <BoxView Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
                                 </Grid>

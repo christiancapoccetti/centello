@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insight · tre opzioni</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#FAFAF8;--raised:#EFEFEA;--fg:#16161A;--mute:#62626A;--line:#E4E4DF;--outline:#DCDCD6;--bar:#C9C9C3;--tile-ink:#16161A;
+ --ok-bg:#E3F2EA;--ok:#0B5A3D;--alert:#C8261A;
+ --coral:#F47A68;--peri:#7C95F2;--butter:#EDC14F;--mint:#57C493;--lilac:#C597E6;--sky:#79C2E6;--grey:#9A9DA3;
+ --page:#E9E9E4;--page-fg:#16161A;--page-mute:#5E5E66;
+}
+.dark{
+ --bg:#141516;--raised:#26282B;--fg:#F4F4F0;--mute:#A0A3A9;--line:#2A2C2F;--outline:#3A3D41;--bar:#55585E;--tile-ink:#141516;
+ --ok-bg:#16302A;--ok:#7FD6A8;--alert:#FF8A7A;
+ --coral:#FF8A7A;--peri:#8EA6FF;--butter:#F5D06B;--mint:#6ED3A6;--lilac:#D4A8F0;--sky:#8FD0F0;--grey:#8A8D93;
+ --page:#0B0B0C;--page-fg:#F4F4F0;--page-mute:#A0A3A9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--page)}
+body{font-family:Archivo,sans-serif;color:var(--page-fg);background:var(--page);font-variant-numeric:tabular-nums;padding:32px 24px 56px}
+::selection{background:var(--fg);color:var(--bg)}
+.ms{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;font-size:24px;line-height:1;font-variation-settings:'FILL' 1,'wght' 500;display:inline-block;white-space:nowrap}
+.ms.o{font-variation-settings:'FILL' 0,'wght' 500}
+
+/* Comparison page chrome */
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;max-width:1340px}
+h1{font-size:28px;font-weight:800}
+.intro{margin-top:8px;max-width:72ch;color:var(--page-mute);font-size:16px;line-height:1.5}
+.theme{display:flex;border:1px solid var(--outline);border-radius:9999px;overflow:hidden}
+.theme button{font:600 14px Archivo,sans-serif;color:var(--page-mute);background:none;border:0;padding:10px 18px;cursor:pointer;min-height:44px}
+.theme button[aria-pressed="true"]{background:var(--page-fg);color:var(--page)}
+.theme button:focus-visible{outline:2px solid var(--page-fg);outline-offset:2px}
+.grid{display:flex;flex-wrap:wrap;gap:36px;margin-top:28px}
+figure{width:412px}
+figcaption{margin-bottom:14px;min-height:118px}
+figcaption b{display:block;font-size:20px;font-weight:800}
+figcaption p{margin-top:6px;font-size:15px;line-height:1.45;color:var(--page-mute)}
+figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
+.notes{margin-top:14px;font-size:14px;line-height:1.5;color:var(--page-mute)}
+.notes b{color:var(--page-fg);font-weight:600}
+
+/* Phone */
+.phone{width:412px;height:915px;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;border-radius:28px;overflow:hidden;outline:1px solid var(--outline)}
+.status{height:32px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600}
+.status .ms{font-size:18px}
+.scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--outline) transparent}
+.title{height:56px;padding:0 24px;display:flex;align-items:center;font-size:20px;font-weight:700}
+.period{height:48px;padding:0 8px 0 24px;display:flex;align-items:center;justify-content:space-between}
+.period b{font-size:18px;font-weight:700}
+.period b small{font-size:16px;font-weight:500;color:var(--mute);margin-left:6px}
+.period b .ms{font-size:20px;vertical-align:-4px;color:var(--mute);margin-left:2px}
+.ib{width:48px;height:48px;display:inline-grid;place-items:center}
+.sum{padding:4px 24px 0}
+.sum b{display:block;font-stretch:75%;font-weight:800;font-size:48px;letter-spacing:-.02em;line-height:1}
+.sum b span{font-size:28px;margin-left:3px}
+.sum p{margin-top:8px;font-size:16px;line-height:1.4;color:var(--mute)}
+.sum p em{font-style:normal;color:var(--fg);font-weight:700}
+h2{padding:30px 24px 2px;font-size:18px;font-weight:700}
+.lead{padding:2px 24px 0;font-size:14px;line-height:1.4;color:var(--mute)}
+.chart{display:block;margin:16px 24px 0;overflow:visible}
+.chart text{font-family:Archivo,sans-serif;font-variant-numeric:tabular-nums}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;margin:12px 24px 0;font-size:13px;color:var(--mute)}
+.key span{display:flex;align-items:center;gap:6px}
+.key i{width:10px;height:10px;display:block}
+.key i.ln{height:2px;width:14px}
+
+/* Insight rows */
+.ins{display:grid;grid-template-columns:24px 1fr;column-gap:14px;margin:0 24px;padding:11px 0 0;border-bottom:1px solid var(--line)}
+.ins>.ms{margin-top:4px;color:var(--mute)}
+.ins b{display:block;font-size:16px;font-weight:600;line-height:1.25}
+.ins p{font-size:14px;line-height:1.4;margin-top:1px}
+.ins a{display:inline-flex;align-items:center;gap:2px;padding:8px 16px 14px 0;font-size:14px;font-weight:700;color:var(--fg);text-decoration:none}
+.ins a .ms{font-size:18px}
+.ins .pad{height:14px}
+.ins .tile{margin-top:2px}
+
+/* Category rows */
+.row{display:flex;align-items:center;gap:14px;min-height:64px;margin:0 24px;border-bottom:1px solid var(--line)}
+.tile{width:36px;height:36px;display:grid;place-items:center;color:var(--tile-ink);flex:none}
+.tile .ms{font-size:21px}
+.tile.s{width:24px;height:24px}
+.tile.s .ms{font-size:14px}
+.what{flex:1;min-width:0;padding:8px 0}
+.what b{display:block;font-size:16px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.what small{display:flex;align-items:center;gap:8px;margin-top:3px;font-size:13px;color:var(--mute)}
+.amt{font-size:16px;font-weight:700;white-space:nowrap}
+.chev{margin:0 -4px 0 -8px;font-size:20px;color:var(--mute)}
+.badge{display:inline-flex;align-items:center;height:20px;padding:0 6px;background:var(--raised);color:var(--fg);font-size:12px;font-weight:700}
+.badge.low{background:var(--ok-bg);color:var(--ok)}
+.badge.same{color:var(--mute)}
+.frac{display:block;height:4px;width:96px;background:var(--line);position:relative}
+.frac i{position:absolute;left:0;top:0;bottom:0;display:block}
+
+.split{display:flex;gap:3px;height:14px;margin:16px 24px 0}
+.split i{display:block}
+.foot{padding:28px 24px 24px;font-size:13px;color:var(--mute)}
+
+.navb{height:69px;flex:none;display:flex;border-top:1px solid var(--line);background:var(--bg)}
+.nv{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--mute)}
+.nv .ms{font-variation-settings:'FILL' 0,'wght' 500}
+.nv.on{color:var(--fg)}
+.nv.on .ms{font-variation-settings:'FILL' 1,'wght' 600}
+.gest{height:24px;flex:none;display:grid;place-items:center;background:var(--bg)}
+.gest::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--fg)}
+
+@media (max-width:480px){body{padding:24px 16px 40px}figure,.phone{width:100%}.phone{max-width:412px}}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>Insight: tre opzioni con grafici</h1>
+    <p class="intro">Stesso mondo della home: grafite, inchiostri delle categorie, barre piatte con 3dp di stacco. La home mostra già la forma del mese (linea delle categorie e spesa giorno per giorno), quindi qui ogni grafico risponde a una domanda che la home non copre. Gli insight testuali restano in tutte e tre. Ogni telefono si scorre.</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+
+<div class="grid">
+  <figure>
+    <figcaption>
+      <b>A · Il passo del mese</b>
+      <p><em>Sto spendendo più in fretta del mese scorso?</em> La spesa che si accumula giorno per giorno, novembre sopra ottobre, con lo scarto di oggi. Sotto, per ogni categoria, quanto è cambiata e in che direzione.</p>
+    </figcaption>
+    <div class="phone" id="A"></div>
+    <p class="notes"><b>In vista anno:</b> la stessa curva per mese, 2026 sopra 2025.<br><b>Rischio:</b> nei primi giorni del mese la curva è corta e dice poco.</p>
+  </figure>
+
+  <figure>
+    <figcaption>
+      <b>B · L'anno in barre</b>
+      <p><em>Questo mese è normale per me?</em> Gli ultimi dodici mesi in fila con la media, toccando una barra si apre quel mese. Ogni categoria porta i suoi ultimi sei mesi: si vede subito cosa cresce.</p>
+    </figcaption>
+    <div class="phone" id="B"></div>
+    <p class="notes"><b>In vista anno:</b> gli ultimi anni affiancati, le categorie con le barre per anno.<br><b>Rischio:</b> il mese in corso è parziale e la sua barra sembra sempre bassa finché il mese non finisce.</p>
+  </figure>
+
+  <figure>
+    <figcaption>
+      <b>C · Perché è cambiato</b>
+      <p><em>Da dove viene la differenza con ottobre?</em> Una cascata che parte dal totale di ottobre e arriva a novembre, una categoria alla volta. Poi quanto è già impegnato dalle spese automatiche e quanto dipende da te.</p>
+    </figcaption>
+    <div class="phone" id="C"></div>
+    <p class="notes"><b>In vista anno:</b> la cascata va dal 2025 al 2026.<br><b>Rischio:</b> la scala non parte da zero (è dichiarato sotto il grafico); con molte categorie servono solo le più grandi più «Altre».</p>
+  </figure>
+</div>
+
+<script>
+// Synthetic demo data: November 2026 up to the 19th, compared with October 1–19.
+const CATS=[
+ {n:'Spesa',     ic:'shopping_basket',c:'coral', now:412.30,prev:398.50,six:[560,540,610,520,500,412.30]},
+ {n:'Casa',      ic:'home',           c:'peri',  now:380.00,prev:380.00,six:[380,380,380,380,380,380]},
+ {n:'Trasporti', ic:'directions_bus', c:'butter',now:146.20,prev:205.60,six:[240,310,420,230,250,146.20]},
+ {n:'Ristoranti',ic:'restaurant',     c:'mint',  now:128.40,prev:96.20, six:[150,210,260,140,160,128.40]},
+ {n:'Svago',     ic:'movie',          c:'lilac', now:96.10, prev:142.30,six:[160,230,190,150,145,96.10]},
+ {n:'Salute',    ic:'medication',     c:'sky',   now:61.20, prev:88.00, six:[90,40,70,120,95,61.20]},
+ {n:'Altro',     ic:'more_horiz',     c:'grey',  now:60.40, prev:56.00, six:[60,80,90,40,60,60.40]},
+];
+const TOTAL=1284.60, PREV=1366.60, OCT_FULL=1590, BUDGET=1600;
+const NOV=[403.20,18.40,42.10,12.60,91.30,28.90,128.40,9.80,22.50,78.00,15.10,110.30,25.60,13.90,146.40,36.20,19.80,55.10];
+NOV.push(+(TOTAL-NOV.reduce((a,b)=>a+b,0)).toFixed(2));
+const OCT=[395,22,35,48,15,90,30,12,64,40,18,110,27,60,33,140,20,45];
+OCT.push(+(PREV-OCT.reduce((a,b)=>a+b,0)).toFixed(2));
+const OCT_TAIL=[12,28,35,9,22,18,30,14,20,11,15];
+OCT_TAIL.push(+(OCT_FULL-PREV-OCT_TAIL.reduce((a,b)=>a+b,0)).toFixed(2));
+const OCT_ALL=OCT.concat(OCT_TAIL);
+const YEAR=[['D',1520],['G',1180],['F',1240],['M',1310],['A',1450],['M',1390],['G',1640],['L',1790],['A',2020],['S',1580],['O',1590],['N',TOTAL]];
+const YEAR_NAMES=['dicembre','gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre'];
+
+const W=364;
+// Italian grouping on four-digit amounts too, as the app's ItalianFormat does.
+const eur=(v,d=2)=>{const [i,f]=Math.abs(v).toFixed(d).split('.');return (v<0?'-':'')+i.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+(f?','+f:'');};
+const signed=(v,d=2)=>(v>0?'+':v<0?'−':'')+eur(Math.abs(v),d);
+const pct=(a,b)=>Math.round((a-b)/b*100);
+const tile=(c,small)=>`<span class="tile${small?' s':''}" style="background:var(--${c.c})"><span class="ms">${c.ic}</span></span>`;
+const svg=(h,body,label)=>`<svg class="chart" width="${W}" height="${h}" viewBox="0 0 ${W} ${h}" shape-rendering="crispEdges" role="img" aria-label="${label}">${body}</svg>`;
+const txt=(x,y,s,{a='start',w=400,fill='var(--mute)',size=12,bg=false}={})=>
+  (bg?`<rect x="${a==='end'?x-s.length*6.4-6:a==='middle'?x-s.length*3.2-4:x-4}" y="${y-12}" width="${s.length*6.4+10}" height="16" fill="var(--bg)"/>`:'')+
+  `<text x="${x}" y="${y}" text-anchor="${a}" font-size="${size}" font-weight="${w}" fill="${fill}">${s}</text>`;
+
+const chrome=(inner)=>`
+ <div class="status"><span>9:41</span><span><span class="ms">signal_cellular_alt</span> <span class="ms">wifi</span> <span class="ms">battery_full</span></span></div>
+ <div class="scroll">
+  <div class="title">Insight</div>
+  <div class="period"><b>Novembre<small>2026</small><span class="ms o">unfold_more</span></b><span><span class="ib"><span class="ms o">chevron_left</span></span><span class="ib" style="opacity:.3"><span class="ms o">chevron_right</span></span></span></div>
+  <div class="sum"><b>${eur(TOTAL)}<span>€</span></b><p>Fino a oggi hai speso <em>${eur(PREV-TOTAL)} € in meno</em> degli stessi giorni di ottobre.</p></div>
+  ${inner}
+  <p class="foot">I tuoi insight vengono elaborati solo su questo dispositivo.</p>
+ </div>
+ <nav class="navb"><div class="nv"><span class="ms">today</span>Oggi</div><div class="nv on"><span class="ms">bar_chart</span>Insight</div><div class="nv"><span class="ms">category</span>Categorie</div><div class="nv"><span class="ms">settings</span>Impostazioni</div></nav>
+ <div class="gest"></div>`;
+
+const insight=(glyph,title,desc,action,lead)=>`<div class="ins">${lead||`<span class="ms o">${glyph}</span>`}<div><b>${title}</b><p>${desc}</p>${action?`<a href="#" onclick="return false">${action}<span class="ms o">chevron_right</span></a>`:'<div class="pad"></div>'}</div></div>`;
+const byName=n=>CATS.find(c=>c.n===n);
+
+const INSIGHTS_ALL=[
+ insight('flag','Una spesa da rivedere','Cena da Marchesi, 64,00 €, è molto più alta delle altre spese di Ristoranti.','Apri la spesa'),
+ insight('trending_up','Spese in aumento','Per Ristoranti hai speso il 33% in più rispetto agli stessi giorni di ottobre.','Vedi le spese'),
+ insight('trending_down','Spese in diminuzione','Per Svago hai speso il 32% in meno rispetto agli stessi giorni di ottobre.','Vedi le spese'),
+].join('');
+
+/* ---------- A · cumulative pace ---------- */
+function chartPace(){
+  // November as cumulative day bars (the home's bar language), October as a step line over them.
+  const h=184, top=14, bottom=h-22, max=1700, days=31, gap=2, bw=(W-gap*(days-1))/days;
+  const X=i=>[Math.round(i*(bw+gap)),Math.round(i*(bw+gap)+bw)];
+  const y=v=>Math.round(bottom-(v/max)*(bottom-top));
+  let b='', cum=0;
+  const by=y(BUDGET)+.5;
+  b+=`<line x1="0" x2="${W}" y1="${by}" y2="${by}" stroke="var(--outline)" stroke-width="1"/>`;
+  b+=txt(0,by-6,'budget 1.600 €');
+  for(let i=0;i<30;i++){
+    const [x0,x1]=X(i);
+    if(i<NOV.length){cum+=NOV[i];b+=`<rect x="${x0}" y="${y(cum)}" width="${x1-x0}" height="${bottom-y(cum)}" fill="${i===NOV.length-1?'var(--fg)':'var(--bar)'}"/>`;}
+    else b+=`<rect x="${x0}" y="${bottom-4}" width="${x1-x0}" height="4" fill="var(--line)"/>`;
+  }
+  let oc=0, pts=[[0,bottom]];
+  OCT_ALL.forEach((v,i)=>{oc+=v;const [x0]=X(i);pts.push([x0,pts[pts.length-1][1]],[x0,y(oc)]);});
+  pts.push([W,y(oc)]);
+  b+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--fg)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  // today's gap with October on the same day
+  const [, tx1]=X(NOV.length-1), tx=tx1+5, yn=y(TOTAL), yo=y(PREV);
+  b+=`<rect x="${tx}" y="${yo+3}" width="2" height="${yn-yo-3}" fill="var(--fg)"/>`;
+  b+=txt(tx+8,yn+22,'82 € in meno',{w:700,fill:'var(--fg)',size:13});
+  b+=txt(tx+8,yn+38,'di ottobre a oggi');
+  b+=txt(W,y(OCT_FULL)-8,'ottobre ha chiuso a 1.590 €',{a:'end'});
+  b+=txt(0,h-4,'1 nov');
+  b+=txt((X(18)[0]+X(18)[1])/2,h-4,'oggi',{a:'middle',w:700,fill:'var(--fg)'});
+  b+=txt(W,h-4,'30 nov',{a:'end'});
+  return svg(h,b,'Spesa accumulata: novembre 1.284,60 euro al 19, ottobre 1.366,60 euro allo stesso giorno');
+}
+function divergingRows(){
+  const maxD=Math.max(...CATS.map(c=>Math.abs(c.now-c.prev)));
+  return CATS.map(c=>{
+    const d=c.now-c.prev, half=56, len=Math.max(d===0?0:2,Math.round(Math.abs(d)/maxD*half));
+    const bar=d===0?'':`<i style="position:absolute;top:0;bottom:0;${d>0?`left:${half+1}px`:`left:${half-len}px`};width:${len}px;background:var(--${c.c})"></i>`;
+    return `<div class="row">${tile(c)}<div class="what"><b>${c.n}</b><small><span style="position:relative;display:block;width:${half*2+1}px;height:8px;flex:none">
+      <i style="position:absolute;left:${half}px;top:-3px;bottom:-3px;width:1px;background:var(--outline)"></i>${bar}</span><span style="color:var(--fg);font-weight:600">${d===0?'uguale':signed(d,0)+' €'}</span></small></div><span class="amt">${eur(c.now)} €</span><span class="ms o chev">chevron_right</span></div>`;
+  }).join('');
+}
+document.getElementById('A').innerHTML=chrome(`
+  <h2>Il passo del mese</h2>
+  ${chartPace()}
+  <div class="key"><span><i style="background:var(--bar)"></i>Novembre, giorno per giorno</span><span><i class="ln" style="background:repeating-linear-gradient(90deg,var(--fg) 0 4px,transparent 4px 7px)"></i>Ottobre</span></div>
+  <h2>Cosa è cambiato</h2>
+  ${INSIGHTS_ALL}
+  <h2>Rispetto a ottobre</h2>
+  <p class="lead">A sinistra dell'asse hai speso meno, a destra di più.</p>
+  ${divergingRows()}
+`);
+
+/* ---------- B · twelve months ---------- */
+function chartYear(){
+  const h=168, top=22, bottom=h-22, max=2100, n=12, gap=3, bw=(W-gap*(n-1))/n;
+  const y=v=>Math.round(bottom-(v/max)*(bottom-top));
+  const avg=YEAR.slice(0,11).reduce((a,[,v])=>a+v,0)/11;
+  let b='';
+  YEAR.forEach(([l,v],i)=>{
+    const x0=Math.round(i*(bw+gap)), x1=Math.round(i*(bw+gap)+bw), cur=i===n-1;
+    b+=`<rect x="${x0}" y="${y(v)}" width="${x1-x0}" height="${bottom-y(v)}" fill="${cur?'var(--fg)':'var(--bar)'}"/>`;
+    b+=txt((x0+x1)/2,h-4,l,{a:'middle',w:cur?700:400,fill:cur?'var(--fg)':'var(--mute)'});
+    if(i===8) b+=txt((x0+x1)/2,y(v)-6,'2.020',{a:'middle',w:600,fill:'var(--fg)'});
+  });
+  const ay=y(avg)+.5;
+  b+=`<line x1="0" x2="${W}" y1="${ay}" y2="${ay}" stroke="var(--fg)" stroke-width="1" stroke-dasharray="4 3"/>`;
+  b+=txt(2,ay-5,'media '+eur(Math.round(avg),0)+' €',{w:600,fill:'var(--fg)',bg:true});
+  return svg(h,b,'Spesa degli ultimi dodici mesi, novembre parziale');
+}
+function sixMonthRows(){
+  return CATS.map(c=>{
+    const max=Math.max(...c.six), bw=8, gap=2, h=26;
+    const bars=c.six.map((v,i)=>{const bh=Math.max(2,Math.round(v/max*h));return `<rect x="${i*(bw+gap)}" y="${h-bh}" width="${bw}" height="${bh}" fill="${i===5?`var(--${c.c})`:'var(--bar)'}"/>`;}).join('');
+    const ch=pct(c.now,c.prev);
+    const badge=ch===0?'<span class="badge same">=</span>':`<span class="badge${ch<0?' low':''}">${ch>0?'+':'−'}${Math.abs(ch)}%</span>`;
+    return `<div class="row">${tile(c)}<div class="what"><b>${c.n}</b><small>${Math.round(c.now/TOTAL*100)}% ${badge}</small></div>
+      <svg width="58" height="${h}" viewBox="0 0 58 ${h}" shape-rendering="crispEdges" aria-hidden="true">${bars}</svg>
+      <span class="amt" style="min-width:76px;text-align:right">${eur(c.now)} €</span><span class="ms o chev">chevron_right</span></div>`;
+  }).join('');
+}
+document.getElementById('B').innerHTML=chrome(`
+  <h2>Gli ultimi dodici mesi</h2>
+  ${chartYear()}
+  <p class="lead" style="margin-top:12px">Novembre è fino a oggi. Agosto è stato il mese più alto. Tocca una barra per aprire quel mese.</p>
+  <h2>Cosa è cambiato</h2>
+  ${INSIGHTS_ALL}
+  <h2>Per categoria</h2>
+  <p class="lead">Le barre sono giugno–novembre; il colore è il mese in corso.</p>
+  ${sixMonthRows()}
+`);
+
+/* ---------- C · waterfall ---------- */
+function chartWaterfall(){
+  const h=196, top=24, bottom=h-38, lo=1150, hi=1400;
+  const y=v=>Math.round(bottom-((v-lo)/(hi-lo))*(bottom-top));
+  const moves=CATS.filter(c=>c.now!==c.prev).map(c=>({c,d:c.now-c.prev})).sort((a,b)=>a.d-b.d);
+  const cols=moves.length+2, gap=3, bw=(W-gap*(cols-1))/cols;
+  const X=i=>[Math.round(i*(bw+gap)),Math.round(i*(bw+gap)+bw)];
+  let b='', run=PREV;
+  const end=(i,v,fill,label,val)=>{
+    const [x0,x1]=X(i);
+    // the bar is cut at the foot: the scale does not start from zero
+    b+=`<rect x="${x0}" y="${y(v)}" width="${x1-x0}" height="${bottom-6-y(v)}" fill="${fill}"/><rect x="${x0}" y="${bottom-3}" width="${x1-x0}" height="3" fill="${fill}"/>`;
+    b+=txt((x0+x1)/2,y(v)-7,val,{a:'middle',w:700,fill:'var(--fg)'});
+    b+=txt((x0+x1)/2,bottom+20,label,{a:'middle',w:600,fill:'var(--fg)',size:13});
+  };
+  end(0,PREV,'var(--bar)','ott','1.367');
+  moves.forEach(({c,d},k)=>{
+    const [x0,x1]=X(k+1), a=y(run), z=y(run+d);
+    b+=`<rect x="${x0}" y="${Math.min(a,z)}" width="${x1-x0}" height="${Math.max(2,Math.abs(z-a))}" fill="var(--${c.c})"/>`;
+    b+=`<rect x="${X(k)[1]}" y="${a}" width="${gap}" height="1" fill="var(--outline)"/>`;
+    b+=d<0?txt((x0+x1)/2,Math.max(a,z)+15,signed(d,0),{a:'middle',w:600,fill:'var(--fg)'}):txt((x0+x1)/2,Math.min(a,z)-6,signed(d,0),{a:'middle',w:600,fill:'var(--fg)'});
+    b+=`<foreignObject x="${Math.round((x0+x1)/2-12)}" y="${bottom+6}" width="24" height="24">${tile(c,true).replace('class="tile','xmlns="http://www.w3.org/1999/xhtml" class="tile')}</foreignObject>`;
+    run+=d;
+  });
+  b+=`<rect x="${X(cols-2)[1]}" y="${y(run)}" width="${gap}" height="1" fill="var(--outline)"/>`;
+  end(cols-1,TOTAL,'var(--fg)','nov','1.285');
+  return svg(h,b,'Da ottobre a novembre: Trasporti meno 59, Svago meno 46, Salute meno 27, Altro più 4, Spesa più 14, Ristoranti più 32 euro');
+}
+const AUTO=412.99;
+document.getElementById('C').innerHTML=chrome(`
+  <h2>Da ottobre a novembre</h2>
+  ${chartWaterfall()}
+  <p class="lead" style="margin-top:12px">Trasporti e Svago spiegano quasi tutto il calo; Ristoranti va nella direzione opposta. Casa è invariata. La scala parte da 1.150 €.</p>
+  <h2>Automatiche e variabili</h2>
+  <div class="split" aria-label="Spese automatiche ${eur(AUTO)} euro, variabili ${eur(TOTAL-AUTO)} euro">
+    <i style="flex:${AUTO};background:var(--bar)"></i><i style="flex:${TOTAL-AUTO};background:var(--fg)"></i>
+  </div>
+  <div class="key"><span><i style="background:var(--bar)"></i>Automatiche ${eur(AUTO)} €</span><span><i style="background:var(--fg)"></i>Variabili ${eur(TOTAL-AUTO)} €</span></div>
+  <p class="lead" style="margin-top:10px">Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.</p>
+  <h2>Da tenere d'occhio</h2>
+  ${insight('','Una spesa da rivedere','Cena da Marchesi, 64,00 €, è molto più alta delle altre spese di Ristoranti.','Apri la spesa','<span class="ms o">flag</span>')}
+  ${insight('','La categoria principale','Spesa è il 32% delle spese di novembre.','Vedi le spese','<span class="ms o">pie_chart</span>')}
+  <h2>Per categoria</h2>
+  ${CATS.map(c=>{const ch=pct(c.now,c.prev);const badge=ch===0?'<span class="badge same">=</span>':`<span class="badge${ch<0?' low':''}">${ch>0?'+':'−'}${Math.abs(ch)}%</span>`;
+    return `<div class="row">${tile(c)}<div class="what"><b>${c.n}</b><small><span class="frac"><i style="width:${Math.round(c.now/412.3*96)}px;background:var(--${c.c})"></i></span>${Math.round(c.now/TOTAL*100)}% ${badge}</small></div><span class="amt">${eur(c.now)} €</span><span class="ms o chev">chevron_right</span></div>`;}).join('')}
+`);
+
+// #lungo shows every screen at full length, without the inner scroll.
+if(location.hash.includes('lungo')){document.querySelectorAll('.phone').forEach(p=>p.style.height='auto');document.querySelectorAll('.scroll').forEach(s=>s.style.overflow='visible');}
+if(location.hash.includes('chiaro')) document.documentElement.classList.remove('dark');
+
+/* theme toggle */
+document.querySelectorAll('.theme button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.documentElement.classList.toggle('dark',btn.dataset.theme==='dark');
+  document.querySelectorAll('.theme button').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+}));
+</script>
+</body>
+</html>

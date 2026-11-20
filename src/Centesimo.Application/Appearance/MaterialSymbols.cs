@@ -59,7 +59,6 @@ public static class MaterialSymbols
     public const string Pause = "\uE034";
     public const string PauseCircle = "\uE1A2";
     public const string Pets = "\uE91D";
-    public const string PieChart = "\uE6C4";
     public const string PlayArrow = "\uE037";
     public const string ReceiptLong = "\uEF6E";
     public const string Redeem = "\uE8F6";
@@ -77,9 +76,6 @@ public static class MaterialSymbols
     public const string SportsSoccer = "\uEA2F";
     public const string Subscriptions = "\uE064";
     public const string Today = "\uE8DF";
-    public const string TrendingDown = "\uE8E3";
-    public const string TrendingFlat = "\uE8E4";
-    public const string TrendingUp = "\uE8E5";
     public const string UploadFile = "\uE9FC";
     public const string Visibility = "\uE8F4";
     public const string VisibilityOff = "\uE8F5";
