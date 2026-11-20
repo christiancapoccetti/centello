@@ -1,4 +1,5 @@
 using Centesimo.App.ViewModels;
+using Centesimo.Application;
 
 namespace Centesimo.App.Pages;
 
@@ -17,9 +18,14 @@ public partial class BackupPage : ContentPage
 
     private async void OnBackClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("..");
 
-    private async void OnExportCsvTapped(object? sender, EventArgs e)
+    private async void OnCreateBackupTapped(object? sender, EventArgs e) =>
+        await Present(await _viewModel.CreateBackup(), "File di backup");
+
+    private async void OnExportCsvTapped(object? sender, EventArgs e) =>
+        await Present(await _viewModel.ExportExpenses(), "Esporta spese");
+
+    private async Task Present(Result<ExportedFile>? result, string title)
     {
-        var result = await _viewModel.ExportExpenses();
         if (result is null)
             return;
 
@@ -31,7 +37,7 @@ public partial class BackupPage : ContentPage
 
         await Share.Default.RequestAsync(new ShareFileRequest
         {
-            Title = "Esporta spese",
+            Title = title,
             File = new ShareFile(result.Value.FilePath, result.Value.ContentType)
         });
     }

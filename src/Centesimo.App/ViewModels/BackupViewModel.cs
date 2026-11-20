@@ -7,8 +7,15 @@ public sealed class BackupViewModel(IServiceScopeFactory scopeFactory) : Observa
 {
     private bool _isBusy;
 
-    /// <returns>Null when an export is already running: the tap is ignored.</returns>
-    public async Task<Result<ExportedFile>?> ExportExpenses()
+    public Task<Result<ExportedFile>?> ExportExpenses() =>
+        Run<ExpenseExportService>((service, directory) => service.Export(directory));
+
+    public Task<Result<ExportedFile>?> CreateBackup() =>
+        Run<IDataBackup>((service, directory) => service.Create(directory));
+
+    /// <returns>Null when another file is being made: the tap is ignored.</returns>
+    private async Task<Result<ExportedFile>?> Run<TService>(
+        Func<TService, string, Task<Result<ExportedFile>>> create) where TService : notnull
     {
         if (_isBusy)
             return null;
@@ -20,7 +27,7 @@ public sealed class BackupViewModel(IServiceScopeFactory scopeFactory) : Observa
             return await Task.Run(async () =>
             {
                 using var scope = scopeFactory.CreateScope();
-                return await scope.ServiceProvider.GetRequiredService<ExpenseExportService>().Export(directory);
+                return await create(scope.ServiceProvider.GetRequiredService<TService>(), directory);
             });
         }
         finally
