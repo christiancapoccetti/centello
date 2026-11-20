@@ -1,121 +1,130 @@
-using System.Collections.ObjectModel;
-using System.Globalization;
-using Centesimo.App.Controls;
 using Centesimo.Application;
 using Centesimo.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App.ViewModels;
 
+/// <summary>One observation of "Cosa è cambiato". The action names where its target leads and is empty when it
+/// leads nowhere.</summary>
+public sealed record InsightRow(string Glyph, string Title, string Description, string Action, InsightTarget Target)
+{
+    public bool HasAction => Action.HasValue();
+    public bool HasNoAction => Action.IsEmpty();
+}
+
+/// <summary>One row of "Per categoria". ShareOfTop is the spending against the category that spent most, which is
+/// what the small bar draws.</summary>
+public sealed record InsightCategoryRow(Guid CategoryId, string Name, string IconKey, string ColorKey, string Amount,
+    string Share, double ShareOfTop, InsightChange Change)
+{
+    public string Description => $"{Name}, {Amount}, {Share}, {Change.Text}";
+}
+
 public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : ObservableObject
 {
-    private static readonly CultureInfo ItalianCulture = CultureInfo.GetCultureInfo("it-IT");
-    private InsightPeriod _period = InsightPeriod.Month;
+    // Null follows the month that contains today, so a page left open moves on when the month changes.
+    private Period? _selected;
+    private InsightsOverview? _overview;
     private bool _isLoading;
     private string _errorMessage = "";
-    private string _total = FormatMoney(0);
-    private string _comparison = "Continua a registrare le spese per confrontare questo periodo.";
-    private bool _showAllInsights;
-    public ObservableCollection<InsightCardViewModel> Insights { get; } = [];
-    public ObservableCollection<InsightCardViewModel> AllInsights { get; } = [];
-    public ObservableCollection<CategoryBreakdownItemViewModel> Categories { get; } = [];
-    public string SummaryLabel => _period == InsightPeriod.Month ? "QUESTO MESE" : "QUESTO ANNO";
-    public string Total { get => _total; private set => SetProperty(ref _total, value); }
-    public string Comparison { get => _comparison; private set => SetProperty(ref _comparison, value); }
-    public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
-    public string ErrorMessage { get => _errorMessage; private set { if (SetProperty(ref _errorMessage, value)) OnPropertyChanged(nameof(HasError)); } }
-    public bool HasError => ErrorMessage.HasValue();
-    public bool IsEmpty => !IsLoading && !HasError && Categories.Count == 0;
-    public bool HasInsights => Insights.Count > 0;
-    public bool HasCategories => Categories.Count > 0;
-    public bool IsMonthly => _period == InsightPeriod.Month;
-    public string MonthSelectorDescription => IsMonthly ? "Questo mese, selezionato" : "Questo mese, non selezionato";
-    public string YearSelectorDescription => IsMonthly ? "Questo anno, non selezionato" : "Questo anno, selezionato";
-    public bool HasMoreInsights => AllInsights.Count > 3 && !_showAllInsights;
-    public string MoreInsightsText => "Mostra tutti gli insight";
-    public double ComparisonProgress { get; private set; }
-    public bool HasComparison => ComparisonProgress > 0;
-    public string ComparisonDescription => Comparison.HasValue()
-        ? $"Confronto: {Comparison}"
-        : "Nessun confronto disponibile.";
-    public Task Load() => Load(_period); public Task ShowMonth() => Load(InsightPeriod.Month); public Task ShowYear() => Load(InsightPeriod.Year);
-    public void ShowAllInsights()
+
+    public InsightsOverview? Overview
     {
-        _showAllInsights = true;
-        RefreshInsights();
+        get => _overview;
+        private set
+        {
+            if (SetProperty(ref _overview, value))
+                // Everything the page shows is read from the overview.
+                OnPropertyChanged("");
+        }
     }
-    private async Task Load(InsightPeriod period)
+    public bool HasSpending => Overview is { SpentCents: > 0 };
+    public bool IsEmpty => Overview is { SpentCents: 0 };
+    /// <summary>The period of today can still fill up. A past one without expenses stays empty.</summary>
+    public string EmptyTitle => Overview is null || !Overview.Navigation.HasNext
+        ? "Ancora nessuna spesa"
+        : $"Nessuna spesa {ItalianFormat.InPeriod(Overview.Period)}";
+    public string Total => ItalianFormat.Amount(Overview?.SpentCents ?? 0);
+    public BudgetSummary? Summary => Overview is null ? null : InsightTexts.Summary(Overview);
+    public bool HasComparison => Overview?.ComparedSpentCents is not null;
+    public string CurrentLabel => Overview is null ? "" : InsightTexts.WindowLabels(Overview).Current;
+    public string PreviousLabel => Overview is null ? "" : InsightTexts.WindowLabels(Overview).Previous;
+    public string CurrentAmount => ItalianFormat.Money(Overview?.SpentCents ?? 0);
+    public string PreviousAmount => ItalianFormat.Money(Overview?.ComparedSpentCents ?? 0);
+    public double CurrentFraction => FractionOfLarger(Overview?.SpentCents ?? 0);
+    public double PreviousFraction => FractionOfLarger(Overview?.ComparedSpentCents ?? 0);
+    public string ComparisonDescription => $"{CurrentLabel} {CurrentAmount}, {PreviousLabel} {PreviousAmount}";
+    public IReadOnlyList<InsightRow> Insights => Overview?.Insights.Select(ToRow).ToList() ?? [];
+    public bool HasInsights => Overview is { Insights.Count: > 0 };
+    public IReadOnlyList<InsightCategoryRow> Categories => Overview is null ? [] : Overview.Categories.Select(ToRow).ToList();
+    public string ErrorMessage { get => _errorMessage; private set => SetProperty(ref _errorMessage, value); }
+
+    public Task Load() => LoadPeriod(_selected);
+
+    public Task ShowPrevious() => Navigate(Overview?.Navigation.Previous);
+
+    public Task ShowNext() => Navigate(Overview?.Navigation.Next);
+
+    public Task TogglePeriod() => Navigate(Overview?.Navigation.Toggle);
+
+    private async Task Navigate(Period? target)
     {
-        if (IsLoading) return;
-        _period = period; IsLoading = true; ErrorMessage = "";
-        await using var scope = scopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<IInsightsService>();
-        var result = await service.Get(period);
-        Insights.Clear();
-        AllInsights.Clear();
-        Categories.Clear();
+        if (target is not null)
+            await LoadPeriod(target);
+    }
+
+    private async Task LoadPeriod(Period? period)
+    {
+        if (_isLoading)
+            return;
+
+        _isLoading = true;
+        ErrorMessage = "";
+        Result<InsightsOverview> result;
+        using (var scope = scopeFactory.CreateScope())
+            result = await scope.ServiceProvider.GetRequiredService<IInsightsService>().Get(period);
+
+        _isLoading = false;
         if (result.IsFailure)
         {
-            Total = FormatMoney(0);
-            Comparison = "";
-            ComparisonProgress = 0;
             ErrorMessage = result.Error.Message;
+            return;
         }
-        else
-            Apply(result.Value);
-        IsLoading = false;
-        OnPropertyChanged(nameof(SummaryLabel));
-        OnPropertyChanged(nameof(IsMonthly));
-        OnPropertyChanged(nameof(MonthSelectorDescription));
-        OnPropertyChanged(nameof(YearSelectorDescription));
-        OnPropertyChanged(nameof(HasInsights));
-        OnPropertyChanged(nameof(HasCategories));
-        OnPropertyChanged(nameof(IsEmpty));
-        OnPropertyChanged(nameof(ComparisonProgress));
-        OnPropertyChanged(nameof(HasComparison));
-        OnPropertyChanged(nameof(ComparisonDescription));
-        OnPropertyChanged(nameof(HasMoreInsights));
-    }
-    private void Apply(InsightsOverview overview)
-    {
-        Total = FormatMoney(overview.SpentCents);
-        Comparison = FormatComparison(overview);
-        ComparisonProgress = overview.ComparedSpentCents.HasValue
-            ? (double)overview.SpentCents / Math.Max(overview.SpentCents, overview.ComparedSpentCents.Value)
-            : 0;
-        _showAllInsights = false;
-        foreach (var item in overview.Insights)
-            AllInsights.Add(new(item.Title, item.Description, item.CategoryId, item.ExpenseId,
-                item.ExpenseId.HasValue || (_period == InsightPeriod.Month && item.CategoryId.HasValue)));
-        RefreshInsights();
-        foreach (var category in overview.Categories)
-            Categories.Add(new(category.CategoryId, category.Name, category.Icon, category.Color,
-                FormatMoney(category.SpentCents), $"{category.Percentage:P0} del totale",
-                category.ChangePercentage.HasValue ? $"{(category.ChangePercentage >= 0 ? "+" : "")}{category.ChangePercentage:P0} {(category.ChangePercentage >= 0 ? "in più" : "in meno")}" : "Nessun confronto",
-                category.Percentage, _period == InsightPeriod.Month));
-    }
-    private static string FormatMoney(long cents) => (cents / 100m).ToString("C", ItalianCulture);
-    private static string FormatComparison(InsightsOverview overview)
-    {
-        if (!overview.ChangePercentage.HasValue)
-            return "Nessun periodo equivalente da confrontare.";
 
-        var current = overview.To.ToDateTime(TimeOnly.MinValue);
-        var change = $"{(overview.ChangePercentage >= 0 ? "+" : "")}{overview.ChangePercentage:P0}";
-        if (overview.Period.Kind == PeriodKind.Month)
-            return $"{current.ToString("MMMM", ItalianCulture)} rispetto a {current.AddMonths(-1).ToString("MMMM", ItalianCulture)}: {change}";
-
-        return $"gennaio–{current.ToString("MMMM", ItalianCulture)} {current.Year} rispetto allo stesso periodo del {current.Year - 1}: {change}";
-    }
-    private void RefreshInsights()
-    {
-        Insights.Clear();
-        foreach (var item in _showAllInsights ? AllInsights : AllInsights.Take(3))
-            Insights.Add(item);
-        OnPropertyChanged(nameof(HasInsights));
-        OnPropertyChanged(nameof(HasMoreInsights));
+        // The current month has no next period. Reaching it again with the arrows must not pin the page to it.
+        var followsToday = result.Value.Period.Kind == PeriodKind.Month && !result.Value.Navigation.HasNext;
+        _selected = followsToday ? null : result.Value.Period;
+        Overview = result.Value;
     }
 
-    public sealed record InsightCardViewModel(string Title, string Description, Guid? CategoryId, Guid? ExpenseId,
-        bool IsActionable);
+    private double FractionOfLarger(long cents)
+    {
+        var larger = Math.Max(Overview?.SpentCents ?? 0, Overview?.ComparedSpentCents ?? 0);
+        return larger == 0 ? 0 : (double)cents / larger;
+    }
+
+    private static InsightRow ToRow(LocalInsight insight) => new(GlyphOf(insight.Kind), insight.Title, insight.Description,
+        insight.Target switch
+        {
+            InsightTarget.ExpenseTarget => "Apri la spesa",
+            InsightTarget.CategoryTarget => "Vedi le spese",
+            _ => ""
+        }, insight.Target);
+
+    // No discard arm: CS8524 is suppressed in the csproj, so a kind without a glyph fails the build.
+    private static string GlyphOf(InsightKind kind) => kind switch
+    {
+        InsightKind.Increased => MaterialSymbols.TrendingUp,
+        InsightKind.Decreased => MaterialSymbols.TrendingDown,
+        InsightKind.TopCategory => MaterialSymbols.PieChart,
+        InsightKind.NewHabit => MaterialSymbols.EventRepeat,
+        InsightKind.UnusualExpense => MaterialSymbols.Flag,
+        InsightKind.Stable => MaterialSymbols.TrendingFlat
+    };
+
+    private InsightCategoryRow ToRow(InsightCategory category) => new(category.CategoryId, category.Name,
+        CategoryIcons.Resolve(category.Icon).Key, CategoryPalette.Resolve(category.Color).Key,
+        ItalianFormat.Money(category.SpentCents), InsightTexts.Share(category.Percentage),
+        // The categories come largest first, so the first one is the measure of the others.
+        (double)category.SpentCents / Overview!.Categories[0].SpentCents, InsightTexts.Change(category.ChangePercentage));
 }

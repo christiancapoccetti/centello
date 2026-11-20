@@ -33,11 +33,13 @@ public static class MaterialSymbols
     public const string Edit = "\uE3C9";
     public const string Error = "\uE000";
     public const string EventBusy = "\uE615";
+    public const string EventRepeat = "\uEB7B";
     public const string ExpandLess = "\uE5CE";
     public const string ExpandMore = "\uE5CF";
     public const string FamilyRestroom = "\uF1A2";
     public const string Favorite = "\uE87D";
     public const string FitnessCenter = "\uEB43";
+    public const string Flag = "\uE153";
     public const string Flight = "\uE539";
     public const string Handyman = "\uF10B";
     public const string Home = "\uE88A";
@@ -54,6 +56,7 @@ public static class MaterialSymbols
     public const string Pause = "\uE034";
     public const string PauseCircle = "\uE1A2";
     public const string Pets = "\uE91D";
+    public const string PieChart = "\uE6C4";
     public const string PlayArrow = "\uE037";
     public const string ReceiptLong = "\uEF6E";
     public const string Redeem = "\uE8F6";
@@ -71,5 +74,8 @@ public static class MaterialSymbols
     public const string SportsSoccer = "\uEA2F";
     public const string Subscriptions = "\uE064";
     public const string Today = "\uE8DF";
+    public const string TrendingDown = "\uE8E3";
+    public const string TrendingFlat = "\uE8E4";
+    public const string TrendingUp = "\uE8E5";
     public const string Work = "\uE8F9";
 }

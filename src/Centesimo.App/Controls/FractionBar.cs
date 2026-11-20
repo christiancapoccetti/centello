@@ -1,0 +1,32 @@
+using Centesimo.App.Theming;
+
+namespace Centesimo.App.Controls;
+
+/// <summary>A flat bar that fills a fraction of its width from the left: how one amount stands against another.
+/// It is drawn in the color of a category when a color key is given, in a theme color otherwise.</summary>
+public sealed class FractionBar : ThemedDrawingView
+{
+    public static readonly BindableProperty FractionProperty = BindableProperty.Create(nameof(Fraction), typeof(double),
+        typeof(FractionBar), 0d, propertyChanged: (bar, _, _) => ((FractionBar)bar).Invalidate());
+    public static readonly BindableProperty ColorKeyProperty = BindableProperty.Create(nameof(ColorKey), typeof(string),
+        typeof(FractionBar), "", propertyChanged: (bar, _, _) => ((FractionBar)bar).Invalidate());
+    public static readonly BindableProperty ColorProperty = BindableProperty.Create(nameof(Color), typeof(ThemeColor),
+        typeof(FractionBar), ThemeColor.Ink, propertyChanged: (bar, _, _) => ((FractionBar)bar).Invalidate());
+
+    // An amount too small to see still leaves a mark.
+    private const float MinimumWidth = 4;
+
+    public double Fraction { get => (double)GetValue(FractionProperty); set => SetValue(FractionProperty, value); }
+    public string ColorKey { get => (string)GetValue(ColorKeyProperty); set => SetValue(ColorKeyProperty, value); }
+    public ThemeColor Color { get => (ThemeColor)GetValue(ColorProperty); set => SetValue(ColorProperty, value); }
+
+    protected override void Draw(ICanvas canvas, RectF bounds)
+    {
+        if (Fraction <= 0)
+            return;
+
+        canvas.Antialias = false;
+        canvas.FillColor = ColorKey.Length > 0 ? Palette(ColorKey) : Token(Color);
+        canvas.FillRectangle(bounds.Left, bounds.Top, Math.Max(MinimumWidth, (float)Math.Min(Fraction, 1) * bounds.Width), bounds.Height);
+    }
+}

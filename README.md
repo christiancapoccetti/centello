@@ -11,7 +11,7 @@ Centesimo is a simple Android expense tracker built with .NET MAUI. Its goal is 
 - Review monthly or yearly spending and category budget progress from the home dashboard, with category details available for both periods.
 - Configure weekly, monthly, or yearly recurring payments, with optional end dates. Due expenses are created when the app is opened, and upcoming payments generate Android notifications.
 - Create an expense draft from a spoken Italian phrase using OpenAI with your own API key, plus explicit confirmation in the expense editor.
-- Review local spending trends, category comparisons, and history-based insights for the current month or year.
+- Review local spending trends, category comparisons, and history-based insights for any month or year.
 - Store application data locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a quick-entry phrase, and only when you enable OpenAI quick entry.
 
 Receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.

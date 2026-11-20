@@ -72,6 +72,17 @@
         <Setter Property="CornerRadius" Value="24" />
         <Setter Property="Padding" Value="24,0" />
     </Style>
+    <!-- The one action of an empty page: quieter than the primary button, with the plus of the floating one. -->
+    <Style x:Key="TonalButton" TargetType="Button" BasedOn="{StaticResource OutlinedButton}">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="BorderColor" Value="{t:Theme Outline}" />
+        <Setter Property="ContentLayout" Value="Left,8" />
+        <Setter Property="ImageSource">
+            <Setter.Value>
+                <FontImageSource Glyph="{x:Static app:MaterialSymbols.Add}" FontFamily="{x:Static t:Fonts.Icons}" Size="20" Color="{t:Theme Accent}" />
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style x:Key="DangerOutlinedButton" TargetType="Button" BasedOn="{StaticResource OutlinedButton}">
         <Setter Property="BorderColor" Value="{t:Theme Alert}" />
         <Setter Property="TextColor" Value="{t:Theme Alert}" />
@@ -183,10 +194,5 @@
     <Style x:Key="Hairline" TargetType="BoxView">
         <Setter Property="Color" Value="{t:Theme Hairline}" />
         <Setter Property="HeightRequest" Value="1" />
-    </Style>
-    <Style x:Key="EmptyStateLayout" TargetType="VerticalStackLayout">
-        <Setter Property="Spacing" Value="8" />
-        <Setter Property="HorizontalOptions" Value="Center" />
-        <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 </ResourceDictionary>
