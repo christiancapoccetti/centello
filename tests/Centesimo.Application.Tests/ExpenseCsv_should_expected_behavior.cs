@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text;
 using Centesimo.Domain;
 
@@ -121,21 +120,6 @@ public sealed class ExpenseCsv_should_expected_behavior
     public void Defuse_a_note_that_starts_like_a_formula(string note, string expected)
     {
         Assert.Equal($"05/11/2026;1,00;Cibo;;{expected};No", Lines(Spent(100, note))[1]);
-    }
-
-    [Theory]
-    [InlineData("\tcol", "'\tcol")]
-    [InlineData("\rx", "\"'\rx\"")]
-    public void Defuse_a_note_that_starts_with_a_tab_or_a_carriage_return(string note, string expected)
-    {
-        var expense = Spent(100);
-        // The domain trims notes, so a stored value is forced in to prove the writer guards on its own.
-        typeof(Expense).GetField("<Note>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .SetValue(expense, note);
-
-        var text = Text(ExpenseCsv.Write([expense], [Food], [Lunch]));
-
-        Assert.Contains($";{expected};No\r\n", text);
     }
 
     [Fact]

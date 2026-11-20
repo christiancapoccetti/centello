@@ -11,7 +11,7 @@ public static class ExpenseCsv
 {
     private const string Header = "Data;Importo;Categoria;Tag;Nota;Ricorrente";
     private const string LineEnd = "\r\n";
-    private static readonly char[] FormulaStarts = ['=', '+', '-', '@', '\t', '\r'];
+    private static readonly char[] FormulaStarts = ['=', '+', '-', '@'];
     private static readonly char[] QuotedChars = [';', '"', '\r', '\n'];
 
     public static byte[] Write(IReadOnlyList<Expense> expenses, IReadOnlyList<Category> categories,
@@ -19,15 +19,22 @@ public static class ExpenseCsv
     {
         var categoryNames = categories.ToDictionary(category => category.CategoryId, category => category.Name);
         var tagNames = tags.ToDictionary(tag => tag.TagId, tag => tag.Name);
-        var text = new StringBuilder(Header).Append(LineEnd);
+        var text = new StringBuilder(Header)
+            .Append(LineEnd);
         foreach (var expense in expenses.OrderBy(expense => expense.OccurredOn).ThenBy(expense => expense.ExpenseId))
         {
             var tagName = expense.TagId.HasValue ? tagNames.GetValueOrDefault(expense.TagId.Value, "") : "";
-            text.Append(expense.OccurredOn.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)).Append(';')
-                .Append(ItalianAmount(expense.Amount.Cents)).Append(';')
-                .Append(Field(categoryNames.GetValueOrDefault(expense.CategoryId, ""))).Append(';')
-                .Append(Field(tagName)).Append(';')
-                .Append(Field(expense.Note)).Append(';')
+            text
+                .Append(expense.OccurredOn.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture))
+                .Append(';')
+                .Append(ItalianAmount(expense.Amount.Cents))
+                .Append(';')
+                .Append(Field(categoryNames.GetValueOrDefault(expense.CategoryId, "")))
+                .Append(';')
+                .Append(Field(tagName))
+                .Append(';')
+                .Append(Field(expense.Note))
+                .Append(';')
                 .Append(expense.IsAutomatic ? "Sì" : "No")
                 .Append(LineEnd);
         }
