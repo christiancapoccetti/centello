@@ -15,9 +15,10 @@ public static class ThemeColors
 
     public static Color Resolve(ThemeColor color, bool isDark) => isDark ? Dark(color) : Light(color);
 
-    /// <summary>For transient paint only (press feedback): it does not follow a later theme change.</summary>
+    /// <summary>For transient paint only (press feedback): it does not follow a later theme change. Before the MAUI
+    /// application exists (the voice panel can start the process) the system theme decides.</summary>
     public static Color Current(ThemeColor color) =>
-        Resolve(color, Microsoft.Maui.Controls.Application.Current?.RequestedTheme == AppTheme.Dark);
+        Resolve(color, (Microsoft.Maui.Controls.Application.Current?.RequestedTheme ?? AppInfo.Current.RequestedTheme) == AppTheme.Dark);
 
     public static Color ResolvePalette(string? colorKey, bool isDark)
     {
