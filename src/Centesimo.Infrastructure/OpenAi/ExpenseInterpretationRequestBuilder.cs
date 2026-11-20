@@ -12,7 +12,7 @@ public static class ExpenseInterpretationRequestBuilder
         Request(PhraseInstructions(catalog, today), text, catalog);
 
     public static JsonObject Build(ExpenseDocument document, ExpenseInterpretationCatalog catalog, DateOnly today) =>
-        Request(PhotoInstructions(catalog, today), new JsonArray(ImagePart(document)), catalog);
+        Request(DocumentInstructions(catalog, today), new JsonArray(ContentPart(document)), catalog);
 
     private static JsonObject Request(string instructions, JsonNode userContent, ExpenseInterpretationCatalog catalog) => new()
     {
@@ -40,13 +40,27 @@ public static class ExpenseInterpretationRequestBuilder
         ["content"] = content
     };
 
+    private static JsonObject ContentPart(ExpenseDocument document) =>
+        document.IsPdf ? FilePart(document) : ImagePart(document);
+
     // Receipts print small; "high" keeps the total legible after OpenAI scales the image.
     private static JsonObject ImagePart(ExpenseDocument document) => new()
     {
         ["type"] = "input_image",
-        ["image_url"] = $"data:{document.MediaType};base64,{Convert.ToBase64String(document.Bytes.Span)}",
+        ["image_url"] = DataUrl(document),
         ["detail"] = "high"
     };
+
+    private static JsonObject FilePart(ExpenseDocument document) => new()
+    {
+        ["type"] = "input_file",
+        ["filename"] = "spesa.pdf",
+        ["file_data"] = DataUrl(document),
+        ["detail"] = "high"
+    };
+
+    private static string DataUrl(ExpenseDocument document) =>
+        $"data:{document.MediaType};base64,{Convert.ToBase64String(document.Bytes.Span)}";
 
     // Strict structured outputs require every property to be listed as required and nullable ones to admit "null".
     private static JsonObject Schema(ExpenseInterpretationCatalog catalog) => new()
@@ -101,20 +115,20 @@ public static class ExpenseInterpretationRequestBuilder
         - note: solo i dettagli che non sono già importo, categoria, tag o data. Altrimenti stringa vuota.
         """;
 
-    private static string PhotoInstructions(ExpenseInterpretationCatalog catalog, DateOnly today) => $"""
-        Compili la bozza di una spesa a partire dalla foto di uno scontrino, di una ricevuta, di una fattura o della schermata di un pagamento.
+    private static string DocumentInstructions(ExpenseInterpretationCatalog catalog, DateOnly today) => $"""
+        Compili la bozza di una spesa a partire dalla foto o dal PDF di uno scontrino, di una ricevuta, di una fattura o della schermata di un pagamento.
         Oggi è {Day(today)}.
 
         Categorie e tag dell'utente. Usa solo queste chiavi:
         {Keys(catalog)}
 
         Regole:
-        - Una foto è una sola spesa. Se ne mostra più di una, usa quella più in evidenza.
+        - Un documento è una sola spesa. Se ne mostra più di una, usa quella più in evidenza.
         - amount: il totale effettivamente pagato, in euro, come numero (di solito la riga TOTALE, TOTALE EURO o IMPORTO PAGATO). Non usare subtotali, righe IVA, sconti, contanti versati o resto. null se il totale non è leggibile o se la valuta non è l'euro.
         - categoryKey: chiave della categoria che corrisponde chiaramente al negozio o a ciò che è stato comprato. null se nessuna corrisponde o se più categorie sono plausibili. Non indovinare.
         - tagKey: chiave di un tag della categoria scelta, solo se corrisponde chiaramente. Altrimenti null.
         - date: data del documento nel formato AAAA-MM-GG. Sui documenti italiani la data è scritta GG/MM/AAAA. null se manca o non è leggibile. Non usare la data di oggi.
         - note: il nome del negozio o del fornitore, se leggibile. Altrimenti stringa vuota.
-        - Se la foto non mostra una spesa, tutti i campi sono null e note è una stringa vuota.
+        - Se il documento non mostra una spesa, tutti i campi sono null e note è una stringa vuota.
         """;
 }

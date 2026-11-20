@@ -284,4 +284,51 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
 
         Assert.Equal(expected.ToJsonString(), request.ToJsonString());
     }
+
+    private static readonly byte[] PdfBytes = [.. "%PDF-1.7"u8, 0x0A, 0x01, 0x02];
+
+    private static JsonObject BuildPdf(ExpenseInterpretationCatalog? catalog = null) =>
+        ExpenseInterpretationRequestBuilder.Build(ExpenseDocument.Read(PdfBytes).Value, catalog ?? Catalog, Today);
+
+    [Fact]
+    public void Send_a_pdf_as_a_file_data_url()
+    {
+        var input = BuildPdf()["input"]!.AsArray();
+
+        Assert.Equal(2, input.Count);
+        var part = Assert.Single(input[1]!["content"]!.AsArray())!;
+        Assert.Equal("input_file", part["type"]!.GetValue<string>());
+        Assert.Equal("spesa.pdf", part["filename"]!.GetValue<string>());
+        Assert.Equal("high", part["detail"]!.GetValue<string>());
+        Assert.Null(part["image_url"]);
+        var url = part["file_data"]!.GetValue<string>();
+        const string prefix = "data:application/pdf;base64,";
+        Assert.StartsWith(prefix, url);
+        Assert.Equal(PdfBytes, Convert.FromBase64String(url[prefix.Length..]));
+    }
+
+    [Fact]
+    public void Use_the_same_schema_for_a_phrase_a_photo_and_a_pdf()
+    {
+        var phrase = Build()["text"]!["format"]!.ToJsonString();
+
+        Assert.Equal(phrase, BuildPhoto()["text"]!["format"]!.ToJsonString());
+        Assert.Equal(phrase, BuildPdf()["text"]!["format"]!.ToJsonString());
+    }
+
+    [Fact]
+    public void Name_the_pdf_in_the_document_instructions()
+    {
+        const string intro = "dalla foto o dal PDF di uno scontrino, di una ricevuta, di una fattura o della schermata di un pagamento.";
+
+        Assert.Contains(intro, SystemInstructions(BuildPdf()));
+        Assert.Contains(intro, SystemInstructions(BuildPhoto()));
+        Assert.DoesNotContain("PDF", SystemInstructions(Build()));
+    }
+
+    [Fact]
+    public void Give_a_pdf_the_same_instructions_as_a_photo()
+    {
+        Assert.Equal(SystemInstructions(BuildPhoto()), SystemInstructions(BuildPdf()));
+    }
 }
