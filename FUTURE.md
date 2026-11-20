@@ -24,6 +24,7 @@ Items are not commitments and will be prioritized after the core manual expense 
 ## Data portability
 
 - Export a local backup of application data.
+- Export expenses to CSV (for spreadsheets), for a chosen period.
 - Restore data and attachments from a backup.
 - Optional encrypted backup files.
 
