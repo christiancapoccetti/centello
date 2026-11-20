@@ -38,7 +38,7 @@ public sealed record DraftCapture
 
     public DraftCapture ChoosePhoto() => IsIdle ? new(Phase.Choosing, DraftSource.Photo, "", "") : this;
 
-    public DraftCapture PickPhoto() => IsChoosingPhoto ? new(Phase.Picking, DraftSource.Photo, "", "") : this;
+    public DraftCapture Pick(DraftSource source) => IsChoosingPhoto ? new(Phase.Picking, source, "", "") : this;
 
     public DraftCapture Listen() => IsIdle ? new(Phase.Listening, DraftSource.Voice, "", "") : this;
 

@@ -178,7 +178,7 @@ public partial class TodayPage : ContentPage
         if (!_viewModel.Capture.IsChoosingPhoto)
             return;
 
-        _viewModel.Capture = _viewModel.Capture.PickPhoto();
+        _viewModel.Capture = _viewModel.Capture.Pick(DraftSource.Photo);
         try
         {
             var photo = await take();

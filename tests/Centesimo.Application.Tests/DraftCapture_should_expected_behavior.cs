@@ -7,7 +7,9 @@ public sealed class DraftCapture_should_expected_behavior
     private static DraftCapture Listening => DraftCapture.Idle.Listen();
     private static DraftCapture ReadingVoice => Listening.Read(DraftSource.Voice);
     private static DraftCapture Choosing => DraftCapture.Idle.ChoosePhoto();
-    private static DraftCapture Picking => Choosing.PickPhoto();
+    private static DraftCapture Picking => Choosing.Pick(DraftSource.Photo);
+    private static DraftCapture PickingPdf => Choosing.Pick(DraftSource.Pdf);
+    private static DraftCapture ReadingPdf => PickingPdf.Read(DraftSource.Pdf);
     private static DraftCapture ReadingPhoto => Picking.Read(DraftSource.Photo);
     private static DraftCapture Failed => ReadingVoice.Fail(Failure, "cento euro");
 
@@ -57,6 +59,17 @@ public sealed class DraftCapture_should_expected_behavior
         Assert.True(capture.IsReading);
         Assert.True(capture.IsSheetVisible);
         Assert.Same(DraftSource.Photo, capture.Source);
+        Assert.True(capture.HasReadingLine);
+    }
+
+    [Fact]
+    public void Read_a_pdf_on_the_sheet_with_the_pdf_source()
+    {
+        var capture = ReadingPdf;
+
+        Assert.True(capture.IsReading);
+        Assert.True(capture.IsSheetVisible);
+        Assert.Same(DraftSource.Pdf, capture.Source);
         Assert.True(capture.HasReadingLine);
     }
 
@@ -143,12 +156,12 @@ public sealed class DraftCapture_should_expected_behavior
     [Fact]
     public void Pick_a_photo_once_from_the_menu()
     {
-        var picking = Choosing.PickPhoto();
+        var picking = Choosing.Pick(DraftSource.Photo);
 
         Assert.False(picking.IsChoosingPhoto);
         Assert.False(picking.IsIdle);
         Assert.False(picking.IsSheetVisible);
-        Assert.Same(picking, picking.PickPhoto());
+        Assert.Same(picking, picking.Pick(DraftSource.Photo));
     }
 
     [Fact]
@@ -168,7 +181,7 @@ public sealed class DraftCapture_should_expected_behavior
     {
         var idle = DraftCapture.Idle;
 
-        Assert.Same(idle, idle.PickPhoto());
+        Assert.Same(idle, idle.Pick(DraftSource.Photo));
         Assert.Same(idle, idle.Finish());
         Assert.Same(idle, idle.Fail(Failure));
         Assert.Same(idle, idle.Close());
@@ -180,7 +193,7 @@ public sealed class DraftCapture_should_expected_behavior
         var listening = Listening;
         Assert.Same(listening, listening.Finish());
         Assert.Same(listening, listening.Fail(Failure));
-        Assert.Same(listening, listening.PickPhoto());
+        Assert.Same(listening, listening.Pick(DraftSource.Photo));
     }
 
     [Fact]
@@ -201,6 +214,9 @@ public sealed class DraftCapture_should_expected_behavior
 
         Assert.Same(listening, listening.Read(DraftSource.Photo));
         Assert.Same(picking, picking.Read(DraftSource.Voice));
+        Assert.Same(picking, picking.Read(DraftSource.Pdf));
+        var pickingPdf = PickingPdf;
+        Assert.Same(pickingPdf, pickingPdf.Read(DraftSource.Photo));
     }
 
     [Fact]
