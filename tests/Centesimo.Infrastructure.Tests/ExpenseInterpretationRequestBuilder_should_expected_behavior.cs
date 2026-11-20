@@ -25,6 +25,11 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
     private static string SystemInstructions(JsonObject request) =>
         request["input"]![0]!["content"]!.GetValue<string>();
 
+    private static readonly byte[] PhotoBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02, 0x03];
+
+    private static JsonObject BuildPhoto(ExpenseInterpretationCatalog? catalog = null) =>
+        ExpenseInterpretationRequestBuilder.Build(ExpensePhoto.Read(PhotoBytes).Value, catalog ?? Catalog, Today);
+
     [Fact]
     public void Target_the_interpretation_model_without_reasoning_or_storage()
     {
@@ -151,5 +156,77 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
         var reparsed = JsonNode.Parse(Build(catalog).ToJsonString())!.AsObject();
 
         Assert.Contains("c1: Città \"vecchia\"", SystemInstructions(reparsed));
+    }
+
+    [Fact]
+    public void Send_the_photo_as_an_image_data_url()
+    {
+        var input = BuildPhoto()["input"]!.AsArray();
+
+        Assert.Equal(2, input.Count);
+        Assert.Equal("system", input[0]!["role"]!.GetValue<string>());
+        Assert.Equal("user", input[1]!["role"]!.GetValue<string>());
+        var part = Assert.Single(input[1]!["content"]!.AsArray())!;
+        Assert.Equal("input_image", part["type"]!.GetValue<string>());
+        Assert.Equal("high", part["detail"]!.GetValue<string>());
+        var url = part["image_url"]!.GetValue<string>();
+        const string prefix = "data:image/jpeg;base64,";
+        Assert.StartsWith(prefix, url);
+        Assert.Equal(PhotoBytes, Convert.FromBase64String(url[prefix.Length..]));
+    }
+
+    [Fact]
+    public void Use_the_same_schema_for_a_photo_and_a_phrase()
+    {
+        Assert.Equal(
+            Build()["text"]!["format"]!.ToJsonString(),
+            BuildPhoto()["text"]!["format"]!.ToJsonString());
+    }
+
+    [Fact]
+    public void Ask_for_the_total_paid_on_a_receipt()
+    {
+        var instructions = SystemInstructions(BuildPhoto());
+
+        Assert.Contains("TOTALE", instructions);
+        Assert.Contains("in euro", instructions);
+        Assert.DoesNotContain("frase in italiano", instructions);
+    }
+
+    [Fact]
+    public void Ask_for_null_instead_of_guessing_on_a_photo()
+    {
+        var instructions = SystemInstructions(BuildPhoto());
+
+        Assert.Contains("Non indovinare", instructions);
+        Assert.Contains("null", instructions);
+        Assert.Contains("Non usare la data di oggi.", instructions);
+    }
+
+    [Fact]
+    public void Tell_the_model_todays_date_for_a_photo()
+    {
+        var instructions = SystemInstructions(BuildPhoto());
+
+        Assert.Contains("2026-11-19", instructions);
+        Assert.Contains("giovedì", instructions);
+    }
+
+    [Fact]
+    public void List_the_catalog_for_a_photo()
+    {
+        var instructions = SystemInstructions(BuildPhoto());
+
+        foreach (var line in Catalog.PromptLines)
+            Assert.Contains(line, instructions);
+    }
+
+    [Fact]
+    public void Admit_only_null_keys_for_a_photo_without_categories()
+    {
+        var request = BuildPhoto(new ExpenseInterpretationCatalog([]));
+
+        Assert.Equal([null], AllowedValues(request, "categoryKey"));
+        Assert.Contains("(nessuna categoria)", SystemInstructions(request));
     }
 }
