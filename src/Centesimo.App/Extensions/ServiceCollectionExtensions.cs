@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
+        services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
