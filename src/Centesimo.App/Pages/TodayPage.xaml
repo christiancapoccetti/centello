@@ -68,13 +68,14 @@
                     </Border>
 
                     <c:CategoryLineView Margin="0,24,0,0" HeightRequest="14" Segments="{Binding Overview.Categories.Segments}" IsVisible="{Binding Overview.Categories.HasSegments}" SemanticProperties.Description="{Binding Overview.Categories.Description}" />
-                    <!-- An item opens its category. Its padding makes the touch target 41 high and the negative
-                         margins of the row give that room back. -->
-                    <FlexLayout Margin="0,-6,0,-6" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Overview.Categories.Key}">
+                    <!-- One line: the items that fit whole, in the order of the key. An item opens its category. Its
+                         padding makes the touch target 41 high and the negative margins of the row give that room back.
+                         The padding to the right is the gap between items. An item that is dropped is zero wide, and
+                         clipping keeps its content from drawing outside it. -->
+                    <c:OneLineLayout Margin="0,-6,0,-6" BindableLayout.ItemsSource="{Binding Overview.Categories.Key}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
-                                <!-- The gap between items is padding: FlexLayout counts an item margin twice. -->
-                                <HorizontalStackLayout Padding="0,12,14,12" Spacing="6" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria">
+                                <HorizontalStackLayout Padding="0,12,14,12" Spacing="6" IsClippedToBounds="True" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria">
                                     <HorizontalStackLayout.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnCategoryKeyTapped" />
                                     </HorizontalStackLayout.GestureRecognizers>
@@ -91,7 +92,7 @@
                                 </HorizontalStackLayout>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
-                    </FlexLayout>
+                    </c:OneLineLayout>
 
                     <VerticalStackLayout IsVisible="{Binding Overview.HasCategories}">
                         <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
