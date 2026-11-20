@@ -50,8 +50,6 @@ public sealed class RefreshCoalescer_should_expected_behavior
         }
     }
 
-    private static async Task<T> Within<T>(Task<T> task) => await task.WaitAsync(TimeSpan.FromSeconds(5));
-
     private static Task Within(Task task) => task.WaitAsync(TimeSpan.FromSeconds(5));
 
     [Fact]

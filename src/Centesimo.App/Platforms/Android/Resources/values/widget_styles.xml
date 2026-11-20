@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.Centesimo.Day" parent="">
+        <item name="android:visibility">visible</item>
+    </style>
+    <style name="Widget.Centesimo.Night" parent="">
+        <item name="android:visibility">gone</item>
+    </style>
+</resources>
