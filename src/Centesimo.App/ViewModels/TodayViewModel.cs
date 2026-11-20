@@ -23,12 +23,8 @@ public sealed class TodayViewModel : ObservableObject
     private HomeOverview? _overview;
     private bool _isLoading;
     private string _errorMessage = "";
-    private bool _isSpeechSheetVisible;
-    private bool _isSpeechListening;
-    private bool _isSpeechProcessing;
-    private bool _isSpeechAvailable;
-    private string _speechTranscription = "";
-    private string _speechErrorMessage = "";
+    private DraftCapture _capture = DraftCapture.Idle;
+    private bool _isCaptureAvailable;
 
     public TodayViewModel(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
@@ -58,40 +54,18 @@ public sealed class TodayViewModel : ObservableObject
         }
     }
     public bool HasError => ErrorMessage.HasValue();
-    public bool IsSpeechSheetVisible { get => _isSpeechSheetVisible; set => SetProperty(ref _isSpeechSheetVisible, value); }
-    public bool IsSpeechListening { get => _isSpeechListening; set => SetProperty(ref _isSpeechListening, value); }
-    public bool IsSpeechProcessing
+    public DraftCapture Capture { get => _capture; set => SetProperty(ref _capture, value); }
+    public bool IsCaptureAvailable
     {
-        get => _isSpeechProcessing;
+        get => _isCaptureAvailable;
         set
         {
-            if (SetProperty(ref _isSpeechProcessing, value))
-                OnPropertyChanged(nameof(IsSpeechIdle));
+            if (SetProperty(ref _isCaptureAvailable, value))
+                OnPropertyChanged(nameof(IsCaptureUnavailable));
         }
     }
-    public bool IsSpeechIdle => !IsSpeechProcessing;
-    public bool IsSpeechAvailable
-    {
-        get => _isSpeechAvailable;
-        set
-        {
-            if (SetProperty(ref _isSpeechAvailable, value))
-                OnPropertyChanged(nameof(IsSpeechUnavailable));
-        }
-    }
-    public bool IsSpeechUnavailable => !IsSpeechAvailable;
-    public string SpeechTranscription
-    {
-        get => _speechTranscription;
-        set
-        {
-            if (SetProperty(ref _speechTranscription, value))
-                OnPropertyChanged(nameof(HasSpeechTranscription));
-        }
-    }
-    public bool HasSpeechTranscription => SpeechTranscription.HasValue();
-    public string SpeechErrorMessage { get => _speechErrorMessage; set { if (SetProperty(ref _speechErrorMessage, value)) OnPropertyChanged(nameof(HasSpeechError)); } }
-    public bool HasSpeechError => SpeechErrorMessage.HasValue();
+    public bool IsCaptureUnavailable => !IsCaptureAvailable;
+    public bool CanTakePhoto { get; set; }
 
     public Task Load() => LoadPeriod(_selected);
 

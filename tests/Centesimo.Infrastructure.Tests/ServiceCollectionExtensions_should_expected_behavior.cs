@@ -22,7 +22,7 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     {
         using var provider = BuildProvider();
 
-        Assert.IsType<OpenAiExpenseTextInterpreter>(provider.GetRequiredService<IExpenseTextInterpreter>());
+        Assert.IsType<OpenAiExpenseInterpreter>(provider.GetRequiredService<IExpenseInterpreter>());
         Assert.IsType<OpenAiSpeechTranscriber>(provider.GetRequiredService<ISpeechTranscriber>());
     }
 
@@ -39,7 +39,7 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     {
         using var provider = BuildProvider();
 
-        Assert.NotNull(provider.GetRequiredService<SpeechExpenseDraftService>());
+        Assert.NotNull(provider.GetRequiredService<ExpenseDraftService>());
     }
 
     [Fact]

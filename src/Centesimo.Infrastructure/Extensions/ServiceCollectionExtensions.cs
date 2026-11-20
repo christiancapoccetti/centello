@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
             new HttpClient(),
             provider.GetRequiredService<IOpenAiApiKeyProvider>()));
         services.AddSingleton<ISpeechTranscriber, OpenAiSpeechTranscriber>();
-        services.AddSingleton<IExpenseTextInterpreter, OpenAiExpenseTextInterpreter>();
+        services.AddSingleton<IExpenseInterpreter, OpenAiExpenseInterpreter>();
         return services;
     }
 }

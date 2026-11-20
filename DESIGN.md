@@ -283,7 +283,7 @@ This is a native Android app (.NET MAUI) locked to portrait. All measures below 
 A graphite-and-warm-white neutral world, one coral accent, and a seven-slot pastel palette that only categories may wear. Every colour has a dark and a light value; the dark one is the reference and the `-light` sibling in the frontmatter is its paper-scheme twin. `src/Centesimo.App/Theming/ThemeColors.cs` is the only colour table in the app; `CategoryPalette.cs` is the only palette.
 
 ### Primary
-- **Signal Coral** (`accent-coral`, light `accent-light`): the add action. The plus of "Aggiungi spesa", the microphone in the split pill, the plus on the extended FAB and tonal button, the on-state of a switch. It marks the one thing the app exists for.
+- **Signal Coral** (`accent-coral`, light `accent-light`): the add action. The plus of "Aggiungi spesa", the microphone and camera in the split pill, the plus on the extended FAB and tonal button, the on-state of a switch. It marks the one thing the app exists for.
 
 ### Secondary
 - **Pace Periwinkle** (`pace-periwinkle`, light `pace-light`): the dashed daily-average line of the home spend chart and its label "media per restare nel budget". Used nowhere else: the Insight charts draw their previous-period line in ink.
@@ -386,7 +386,7 @@ Confident ink pills, no elevation.
 - **Disabled:** a disabled primary or the first-run split pill drops to 38% opacity.
 
 ### Split pill (signature)
-The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, a 1dp outline divider, and a 76dp right segment with the coral microphone (26sp). Hold the microphone to dictate; while listening, a small outlined raised toast ("Registra… rilascia per inviare") floats 36dp above it.
+The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, and two 64dp icon segments on the right, each behind a 1dp outline divider: the coral microphone and the coral camera (26sp). Hold the microphone to dictate; while listening, a small outlined raised toast ("Registra… rilascia per inviare") floats 36dp above it. Tapping the camera opens a menu above it (the menu surface below, 48dp rows with a 22sp glyph and a SemiBold 16sp label): "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria", "Scegli un PDF". Both icon segments share one disabled state: with no OpenAI key saved they look disabled and tapping them leads to Settings.
 
 ### Extended FAB
 Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action that floats over a list.
@@ -403,7 +403,7 @@ Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action th
 - **Surface card:** ground fill, 1dp hairline stroke, 16dp radius, 18dp padding: errors and notes.
 - **Info card:** raised fill, no stroke, 12dp radius, 16dp padding.
 - **Menu surface:** raised fill, outline stroke, 4dp radius, 8dp vertical padding, 220dp minimum width.
-- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim.
+- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim. The reading sheet is shared by voice, photo and PDF ("Inserimento vocale", "Lettura della foto", "Lettura del PDF"): title, a progress bar and one privacy line (for example "Foto inviata a OpenAI, Centesimo non la salva").
 
 ### Inputs / Fields
 - **Style:** outlined box, 4dp radius, 56dp, transparent fill, 16sp text, 16dp sides; the SemiBold 12sp label sits on the top edge with a ground-coloured backing.

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foto scontrino · barra</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#FAFAF8;--raised:#EFEFEA;--fg:#16161A;--mute:#62626A;--line:#E4E4DF;--outline:#DCDCD6;--bar:#C9C9C3;--tile-ink:#16161A;
+ --ok-bg:#E3F2EA;--ok:#0B5A3D;--accent:#E0503D;--scrim:rgba(22,22,26,.42);
+ --coral:#F47A68;--peri:#7C95F2;--butter:#EDC14F;--mint:#57C493;--lilac:#C597E6;--sky:#79C2E6;--grey:#9A9DA3;
+ --page:#E9E9E4;--page-fg:#16161A;--page-mute:#5E5E66;
+}
+.dark{
+ --bg:#141516;--raised:#26282B;--fg:#F4F4F0;--mute:#A0A3A9;--line:#2A2C2F;--outline:#3A3D41;--bar:#55585E;--tile-ink:#141516;
+ --ok-bg:#16302A;--ok:#7FD6A8;--accent:#FF8A7A;--scrim:rgba(0,0,0,.6);
+ --coral:#FF8A7A;--peri:#8EA6FF;--butter:#F5D06B;--mint:#6ED3A6;--lilac:#D4A8F0;--sky:#8FD0F0;--grey:#8A8D93;
+ --page:#0B0B0C;--page-fg:#F4F4F0;--page-mute:#A0A3A9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--page)}
+body{font-family:Archivo,sans-serif;color:var(--page-fg);background:var(--page);font-variant-numeric:tabular-nums;padding:32px 24px 56px}
+::selection{background:var(--fg);color:var(--bg)}
+.ms{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;font-size:24px;line-height:1;font-variation-settings:'FILL' 1,'wght' 500;display:inline-block;white-space:nowrap}
+
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;max-width:1340px}
+h1{font-size:28px;font-weight:800}
+.intro{margin-top:8px;max-width:72ch;color:var(--page-mute);font-size:16px;line-height:1.5}
+.theme{display:flex;border:1px solid var(--outline);border-radius:9999px;overflow:hidden}
+.theme button{font:600 14px Archivo,sans-serif;color:var(--page-mute);background:none;border:0;padding:10px 18px;cursor:pointer;min-height:44px}
+.theme button[aria-pressed="true"]{background:var(--page-fg);color:var(--page)}
+.theme button:focus-visible{outline:2px solid var(--page-fg);outline-offset:2px}
+.grid{display:flex;flex-wrap:wrap;gap:36px;margin-top:28px}
+figure{width:412px}
+figcaption{margin-bottom:14px;min-height:150px}
+figcaption b{display:block;font-size:20px;font-weight:800}
+figcaption p{margin-top:6px;font-size:15px;line-height:1.45;color:var(--page-mute)}
+figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
+.notes{margin-top:14px;font-size:14px;line-height:1.5;color:var(--page-mute)}
+.notes b{color:var(--page-fg);font-weight:600}
+.zoom{margin-top:18px;padding:20px 24px;background:var(--bg);outline:1px solid var(--outline);border-radius:20px}
+.zoom small{display:block;margin-bottom:12px;font-size:13px;color:var(--mute)}
+
+.phone{position:relative;width:412px;height:915px;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;border-radius:28px;overflow:hidden;outline:1px solid var(--outline)}
+.status{height:32px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600}
+.status .ms{font-size:18px}
+.scroll{flex:1;overflow:hidden}
+.period{height:56px;padding:0 8px 0 24px;display:flex;align-items:center;justify-content:space-between}
+.period b{font-size:20px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px}
+.period b .ms{font-size:20px;vertical-align:-4px;color:var(--mute);margin-left:2px}
+.period span{display:flex}
+.ib{width:48px;height:48px;display:inline-grid;place-items:center;color:var(--mute)}
+.total{padding:0 24px}
+.total b{display:block;font-stretch:75%;font-weight:800;font-size:68px;letter-spacing:-.02em;line-height:1}
+.total b span{font-size:38px;margin-left:4px}
+.total p{margin-top:6px;font-size:16px;line-height:1.4;color:var(--mute)}
+.total p em{font-style:normal;color:var(--fg);font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:4px;height:26px;margin-top:8px;padding:0 10px 0 6px;background:var(--ok-bg);color:var(--ok);font-size:14px;font-weight:600}
+.chip .ms{font-size:18px}
+.line{display:flex;gap:3px;height:14px;margin:24px 24px 0}
+.line i{display:block}
+.key{display:flex;gap:14px;margin:12px 24px 0;font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden}
+.key span{display:flex;align-items:center;gap:6px}
+.key i{width:10px;height:10px;display:block;flex:none}
+.days{display:flex;align-items:flex-end;gap:3px;height:96px;margin:22px 24px 0;position:relative}
+.days i{flex:1;display:block;background:var(--bar)}
+.days i.today{background:var(--fg)}
+.days i.stub{height:3px!important;background:var(--line)}
+.days::after{content:"";position:absolute;left:0;right:0;bottom:38px;border-top:1px dashed var(--mute)}
+h2{display:flex;justify-content:space-between;align-items:baseline;padding:22px 24px 2px;font-size:18px;font-weight:700}
+h2 a{font-size:14px;color:var(--fg);text-decoration:none}
+.row{display:flex;align-items:center;gap:14px;min-height:64px;margin:0 24px;border-bottom:1px solid var(--line)}
+.tile{width:36px;height:36px;display:grid;place-items:center;color:var(--tile-ink);flex:none}
+.tile .ms{font-size:21px}
+.what{flex:1;min-width:0}
+.what b{display:block;font-size:16px;font-weight:600;line-height:1.25}
+.what small{display:block;margin-top:3px;font-size:13px;color:var(--mute)}
+.amt{font-size:16px;font-weight:700;white-space:nowrap}
+
+/* Dock: the split pill of DESIGN.md, 60dp, raised tone and outline, no shadow. */
+.dock{flex:none;padding:12px 24px;position:relative;background:var(--bg)}
+.pill{display:flex;height:60px;background:var(--raised);border:1px solid var(--outline);border-radius:30px;overflow:hidden}
+.pill .seg{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--fg);font-size:17px;font-weight:700}
+.pill .seg .ms{color:var(--accent)}
+.pill .main{flex:1}
+.pill .icon .ms{font-size:26px}
+.pill .rule{width:1px;background:var(--outline);flex:none}
+.pill .pressed{background:var(--outline)}
+.pill.eq .seg{flex:1}
+.pill.eq .seg .ms{font-size:28px}
+.w76{width:76px;flex:none}
+.w64{width:64px;flex:none}
+.menu{position:absolute;right:24px;bottom:84px;display:flex;flex-direction:column;padding:6px 0;background:var(--raised);border:1px solid var(--outline);border-radius:12px}
+.menu span.item{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 20px 0 14px;font-size:16px;font-weight:600}
+.menu .ms{color:var(--fg);font-size:22px}
+.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:84px;display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--raised);border:1px solid var(--outline);border-radius:18px;font-size:14px;font-weight:600;white-space:nowrap}
+.toast .ms{font-size:18px;color:var(--accent)}
+
+.navb{height:69px;flex:none;display:flex;border-top:1px solid var(--line);background:var(--bg)}
+.nv{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--mute)}
+.nv .ms{font-variation-settings:'FILL' 0,'wght' 500}
+.nv.on{color:var(--fg)}
+.nv.on .ms{font-variation-settings:'FILL' 1,'wght' 600}
+.gest{height:24px;flex:none;display:grid;place-items:center;background:var(--bg)}
+.gest::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--fg)}
+
+/* The reading sheet, the voice sheet generalised. */
+.scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-end}
+.sheet{width:100%;background:var(--bg);border-radius:28px 28px 0 0;padding:24px 24px 28px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.sheet b{font-size:22px;font-weight:700}
+.sheet p{font-size:14px;line-height:1.4;color:var(--mute)}
+.bar{width:100%;height:4px;background:var(--line);position:relative;overflow:hidden}
+.bar::after{content:"";position:absolute;top:0;bottom:0;left:0;width:38%;background:var(--accent);animation:run 1.4s cubic-bezier(.16,1,.3,1) infinite}
+@keyframes run{from{transform:translateX(-100%)}to{transform:translateX(270%)}}
+@media (prefers-reduced-motion:reduce){.bar::after{animation:none;left:31%}}
+.cloud{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.cloud .ms{font-size:18px;color:var(--mute)}
+.close{min-height:48px;padding:0 20px;font:700 16px Archivo,sans-serif;color:var(--fg);background:none;border:0}
+
+@media (max-width:480px){body{padding:24px 16px 40px}figure,.phone{width:100%}.phone{max-width:412px}}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>La barra in basso con la fotocamera</h1>
+    <p class="intro">Le tre varianti cambiano solo la barra in basso della home: tutte e tre le azioni aprono la form di inserimento, precompilata da voce o da foto. Il microfono resta “tieni premuto”, la fotocamera si tocca. Sotto ogni telefono c'è la barra com'è a 360 dp, il telefono Android più stretto comune. L'ultimo riquadro mostra cosa succede dopo lo scatto, uguale per tutte. Dati inventati.</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+
+<div class="grid">
+  <figure>
+    <figcaption>
+      <b>A · Tre icone uguali</b>
+      <p>La pillola è divisa in tre parti uguali: <em>più</em>, <em>microfono</em>, <em>fotocamera</em>. Nessuna etichetta, nessuna azione in primo piano.</p>
+    </figcaption>
+    <div class="phone" data-dock="A"></div>
+    <div class="zoom"><small>Su un telefono da 360 dp</small><div style="width:312px" data-pill="A"></div></div>
+    <p class="notes"><b>Pro:</b> simmetrica, entra in qualsiasi larghezza.<br><b>Contro:</b> sparisce “Aggiungi spesa”, cioè l'azione che userai 9 volte su 10. Le tre icone sembrano funzionare allo stesso modo, ma il microfono va tenuto premuto.</p>
+  </figure>
+
+  <figure>
+    <figcaption>
+      <b>B · La pillola di oggi, con un segmento in più</b>
+      <p><em>+ Aggiungi spesa</em> resta largo a sinistra, poi microfono e fotocamera separati da una linea sottile. I due segmenti con l'icona scendono da 76 a 64 dp. La fotocamera apre subito la macchina fotografica.</p>
+    </figcaption>
+    <div class="phone" data-dock="B"></div>
+    <div class="zoom"><small>Su un telefono da 360 dp</small><div style="width:312px" data-pill="B"></div></div>
+    <p class="notes"><b>Pro:</b> l'azione principale resta riconoscibile, cambia poco rispetto a oggi.<br><b>Contro:</b> niente galleria: per uno screenshot di una bolletta o di un ordine non c'è un modo.</p>
+  </figure>
+
+  <figure>
+    <figcaption>
+      <b>C · Come B, con un piccolo menu</b>
+      <p>Uguale a B. Toccando la fotocamera si apre sopra il segmento un menu con due voci: <em>Scatta una foto</em> e <em>Scegli dalla galleria</em>. Un tocco fuori lo chiude. Qui è mostrato aperto.</p>
+    </figcaption>
+    <div class="phone" data-dock="C"></div>
+    <div class="zoom"><small>Su un telefono da 360 dp</small><div style="width:312px" data-pill="B"></div></div>
+    <p class="notes"><b>Pro:</b> copre anche screenshot e PDF salvati come immagine, senza un quarto pulsante.<br><b>Contro:</b> un tocco in più per ogni foto, che però è già la strada lenta.</p>
+  </figure>
+
+  <figure>
+    <figcaption>
+      <b>Dopo lo scatto</b>
+      <p>Il pannello di oggi per la voce diventa uno solo per voce e foto. Mentre legge mostra una barra di avanzamento; poi si apre la form con i campi trovati. Se la foto è illeggibile, la form si apre vuota con la data di oggi.</p>
+    </figcaption>
+    <div class="phone" data-dock="B" data-sheet="1"></div>
+    <p class="notes"><b>Testo:</b> “Foto inviata a OpenAI, non viene salvata”, al posto di “Audio e testo inviati a OpenAI”.</p>
+  </figure>
+</div>
+
+<script>
+const ms = n => `<span class="ms" aria-hidden="true">${n}</span>`;
+const pills = {
+  A: `<div class="pill eq">
+        <div class="seg">${ms('add')}</div><div class="rule"></div>
+        <div class="seg">${ms('mic')}</div><div class="rule"></div>
+        <div class="seg">${ms('photo_camera')}</div>
+      </div>`,
+  B: `<div class="pill">
+        <div class="seg main">${ms('add')}Aggiungi spesa</div><div class="rule"></div>
+        <div class="seg icon w64">${ms('mic')}</div><div class="rule"></div>
+        <div class="seg icon w64">${ms('photo_camera')}</div>
+      </div>`,
+  C: `<div class="pill">
+        <div class="seg main">${ms('add')}Aggiungi spesa</div><div class="rule"></div>
+        <div class="seg icon w64">${ms('mic')}</div><div class="rule"></div>
+        <div class="seg icon w64 pressed">${ms('photo_camera')}</div>
+      </div>
+      <div class="menu" role="menu">
+        <span class="item" role="menuitem">${ms('photo_camera')}Scatta una foto</span>
+        <span class="item" role="menuitem">${ms('photo_library')}Scegli dalla galleria</span>
+      </div>`
+};
+
+const days = [22,8,41,15,0,63,12,30,9,18,55,7,26,14,38,0,11,47,20];
+const bars = Array.from({length:30},(_,i)=> i<19
+  ? `<i class="${i===18?'today':''}" style="height:${Math.max(days[i],2)}px"></i>`
+  : `<i class="stub"></i>`).join('');
+
+const home = dock => `
+  <div class="status"><span>9:41</span><span>${ms('signal_cellular_alt')} ${ms('wifi')} ${ms('battery_full')}</span></div>
+  <div class="scroll">
+    <div class="period"><b>Novembre 2026 ${ms('expand_more')}</b><span><span class="ib">${ms('chevron_left')}</span><span class="ib" style="opacity:.38">${ms('chevron_right')}</span></span></div>
+    <div class="total">
+      <b>812,40<span>€</span></b>
+      <p>Ne restano <em>387,60 €</em> su 1.200 di budget</p>
+      <span class="chip">${ms('south_east')}12% rispetto a ottobre</span>
+    </div>
+    <div class="line"><i style="flex:38;background:var(--coral)"></i><i style="flex:24;background:var(--peri)"></i><i style="flex:16;background:var(--butter)"></i><i style="flex:12;background:var(--mint)"></i><i style="flex:10;background:var(--lilac)"></i></div>
+    <div class="key"><span><i style="background:var(--coral)"></i>Spesa 38%</span><span><i style="background:var(--peri)"></i>Casa 24%</span><span><i style="background:var(--butter)"></i>Ristoranti 16%</span></div>
+    <div class="days">${bars}</div>
+    <h2>Ultime spese <a href="#">Vedi tutte</a></h2>
+    <div class="row"><div class="tile" style="background:var(--coral)">${ms('shopping_cart')}</div><div class="what"><b>Supermercato</b><small>Oggi · Spesa</small></div><span class="amt">34,80 €</span></div>
+    <div class="row"><div class="tile" style="background:var(--butter)">${ms('restaurant')}</div><div class="what"><b>Pizza</b><small>Ieri · Ristoranti</small></div><span class="amt">12,00 €</span></div>
+    <div class="row"><div class="tile" style="background:var(--peri)">${ms('bolt')}</div><div class="what"><b>Bolletta luce</b><small>17 nov · Casa</small></div><span class="amt">68,15 €</span></div>
+  </div>
+  <div class="dock">${pills[dock]}</div>
+  <div class="navb">
+    <div class="nv on">${ms('today')}Oggi</div><div class="nv">${ms('insights')}Insight</div><div class="nv">${ms('category')}Categorie</div><div class="nv">${ms('settings')}Impostazioni</div>
+  </div>
+  <div class="gest"></div>`;
+
+const sheet = `<div class="scrim"><div class="sheet">
+    <b>Lettura scontrino</b>
+    <div class="bar" role="progressbar" aria-label="Lettura in corso"></div>
+    <p>Cerco importo, data e negozio…</p>
+    <span class="cloud">${ms('cloud')}Foto inviata a OpenAI, non viene salvata</span>
+    <button class="close" type="button" disabled style="opacity:.38">Chiudi</button>
+  </div></div>`;
+
+document.querySelectorAll('.phone').forEach(p => {
+  p.innerHTML = home(p.dataset.dock) + (p.dataset.sheet ? sheet : '');
+});
+document.querySelectorAll('[data-pill]').forEach(z => {
+  z.innerHTML = pills[z.dataset.pill];
+});
+
+document.querySelectorAll('.theme button').forEach(b => b.addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark', b.dataset.theme === 'dark');
+  document.querySelectorAll('.theme button').forEach(x => x.setAttribute('aria-pressed', x === b));
+}));
+</script>
+</body>
+</html>

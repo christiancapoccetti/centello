@@ -11,7 +11,7 @@ namespace Centesimo.Infrastructure;
 public sealed class OpenAiClient
 {
     private static readonly Uri BaseAddress = new("https://api.openai.com/v1/");
-    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
     private readonly HttpClient _http;
     private readonly IOpenAiApiKeyProvider _apiKeys;
 
@@ -29,7 +29,7 @@ public sealed class OpenAiClient
     {
         var apiKey = await _apiKeys.GetApiKey();
         if (apiKey.IsEmpty())
-            return Result<string>.Failure(SpeechErrors.MissingApiKey);
+            return Result<string>.Failure(DraftErrors.MissingApiKey);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = content };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
@@ -43,7 +43,7 @@ public sealed class OpenAiClient
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result<string>.Failure(SpeechErrors.Canceled);
+            return Result<string>.Failure(DraftErrors.Canceled);
         }
         catch (Exception exception) when (exception is OperationCanceledException or HttpRequestException)
         {

@@ -20,7 +20,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Positioning
 
-- **Fastest entry.** Logging an expense takes seconds. Today is the home screen, and voice entry ("Inserimento vocale") turns a spoken Italian phrase such as "ieri 12 euro di pizza" into a pre-filled draft constrained to the user's own categories and tags.
+- **Fastest entry.** Logging an expense takes seconds. Today is the home screen, and voice entry ("Inserimento vocale") turns a spoken Italian phrase such as "ieri 12 euro di pizza" into a pre-filled draft constrained to the user's own categories and tags. A photo of a receipt or a PDF does the same.
 - **Spending awareness, not budget planning.** Centesimo shows trends, comparisons between periods and categories, and history-based insights. Category budgets exist but stay light; the app must not turn into a planning or alerting tool.
 
 ## Operating Context
@@ -28,15 +28,16 @@ Success means expenses actually get logged, because entry is fast enough that sk
 - Single-handed phone use, often outdoors or in a shop, right after paying.
 - Bottom navigation with four tabs: `Oggi`, `Insight`, `Categorie`, `Impostazioni`.
 - Voice entry: hold the microphone for up to 20 seconds; typing a phrase was removed on purpose. The draft always opens in the expense editor, and nothing is saved without explicit confirmation.
+- Photo and PDF entry: the camera segment of the home dock opens a menu to take a photo (Android 13 and later), choose one from the gallery or choose a PDF (up to 5 MB). Like voice, it opens a pre-filled draft in the expense editor, never saves on its own, and stores neither the photo nor the PDF.
 - Recurring payments create due expenses when the app opens and send Android notifications for upcoming ones.
 
 ## Capabilities and Constraints
 
 - Categories with optional monthly budgets (create, edit, archive, restore); tags within a category; expenses with amount, date, category, optional tag and note; monthly history with edit and delete; monthly and yearly overviews; recurring payments (weekly, monthly, yearly, optional end date); Insight for any month or year.
-- Local-first by construction: SQLite on the device, no account, no backend, no sync. Android Auto Backup copies only the database to the user's own Google account (the OpenAI key is excluded); a backup file and a CSV of every expense can be saved in the Download folder, and a backup file can be restored after a preview. The only data that leaves the phone is the voice-entry audio and its transcript, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
+- Local-first by construction: SQLite on the device, no account, no backend, no sync. Android Auto Backup copies only the database to the user's own Google account (the OpenAI key is excluded); a backup file and a CSV of every expense can be saved in the Download folder, and a backup file can be restored after a preview. Apart from that, the only data that leaves the phone is the voice-entry audio and its transcript, or the photo or PDF chosen for entry, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
 - Stack: .NET 10 MAUI, Android only (min API 24), MVVM, Clean Architecture, Result Pattern.
 - User-facing text is Italian and currently hardcoded; amounts are in euros with Italian formatting (`486,20 €`).
-- Not in scope yet (see `FUTURE.md`): receipt photos, localization/English, configurable budget alerts, biometric lock.
+- Not in scope yet (see `FUTURE.md`): storing receipt photos, localization/English, configurable budget alerts, biometric lock.
 
 ## Brand Commitments
 

@@ -149,39 +149,70 @@
                     <Setter Property="InputTransparent" Value="True" />
                 </DataTrigger>
             </Border.Triggers>
-            <Grid ColumnDefinitions="*,1,76">
+            <Grid ColumnDefinitions="*,1,64,1,64">
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
                     <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Add}" TextColor="{t:Theme Accent}" />
                     <Label Text="Aggiungi spesa" FontFamily="{x:Static t:Fonts.Bold}" FontSize="17" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
                 </HorizontalStackLayout>
                 <Button BackgroundColor="Transparent" Text="" Clicked="OnAddExpenseClicked" SemanticProperties.Description="Aggiungi spesa" />
                 <BoxView Grid.Column="1" Color="{t:Theme Outline}" />
-                <Grid Grid.Column="2">
-                    <Button Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsSpeechAvailable}" Pressed="OnSpeechPressed" Released="OnSpeechReleased" SemanticProperties.Description="Tieni premuto per dettare" />
-                    <Button IsVisible="{Binding IsSpeechUnavailable}" BackgroundColor="Transparent" Text="" Clicked="OnInactiveSpeechClicked" SemanticProperties.Description="Comando vocale non configurato" />
-                </Grid>
+                <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsCaptureAvailable}" Pressed="OnSpeechPressed" Released="OnSpeechReleased" SemanticProperties.Description="Tieni premuto per dettare" />
+                <BoxView Grid.Column="3" Color="{t:Theme Outline}" />
+                <Button Grid.Column="4" Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.PhotoCamera}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsCaptureAvailable}" Clicked="OnCameraClicked" SemanticProperties.Description="Fotografa una spesa">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding Capture.IsChoosingPhoto}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{t:Theme Outline}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Grid.Column="2" Grid.ColumnSpan="3" IsVisible="{Binding IsCaptureUnavailable}" BackgroundColor="Transparent" Text="" Clicked="OnInactiveCaptureClicked" SemanticProperties.Description="Voce e foto non configurate" />
             </Grid>
         </Border>
 
-        <Border Grid.Row="2" IsVisible="{Binding IsSpeechListening}" InputTransparent="True" HorizontalOptions="Center" VerticalOptions="Start" TranslationY="-36" Padding="14,6" BackgroundColor="{t:Theme SurfaceRaised}" Stroke="{t:Theme Outline}" StrokeThickness="1" StrokeShape="RoundRectangle 18">
+        <Border Grid.Row="2" IsVisible="{Binding Capture.IsListening}" InputTransparent="True" HorizontalOptions="Center" VerticalOptions="Start" TranslationY="-36" Padding="14,6" BackgroundColor="{t:Theme SurfaceRaised}" Stroke="{t:Theme Outline}" StrokeThickness="1" StrokeShape="RoundRectangle 18">
             <HorizontalStackLayout Spacing="8">
                 <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" />
                 <Label Text="Registra… rilascia per inviare" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center" />
             </HorizontalStackLayout>
         </Border>
 
-        <Grid Grid.RowSpan="3" IsVisible="{Binding IsSpeechSheetVisible}" BackgroundColor="{t:Theme Scrim}">
+        <Grid Grid.RowSpan="3" IsVisible="{Binding Capture.IsChoosingPhoto}" BackgroundColor="Transparent">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnPhotoMenuDismissed" />
+            </Grid.GestureRecognizers>
+            <Border Style="{StaticResource MenuSurface}" Margin="0,0,24,84" HorizontalOptions="End" VerticalOptions="End">
+                <VerticalStackLayout>
+                    <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="14" IsVisible="{Binding CanTakePhoto}">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.PhotoCamera}" />
+                        <Label Grid.Column="1" Text="Scatta una foto" FontSize="16" FontFamily="{x:Static t:Fonts.SemiBold}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
+                        <Button Grid.ColumnSpan="2" Margin="-16,0" BackgroundColor="Transparent" Text="" Clicked="OnTakePhotoClicked" SemanticProperties.Description="Scatta una foto" />
+                    </Grid>
+                    <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.PhotoLibrary}" />
+                        <Label Grid.Column="1" Text="Scegli dalla galleria" FontSize="16" FontFamily="{x:Static t:Fonts.SemiBold}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
+                        <Button Grid.ColumnSpan="2" Margin="-16,0" BackgroundColor="Transparent" Text="" Clicked="OnPickPhotoClicked" SemanticProperties.Description="Scegli dalla galleria" />
+                    </Grid>
+                    <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.PictureAsPdf}" />
+                        <Label Grid.Column="1" Text="Scegli un PDF" FontSize="16" FontFamily="{x:Static t:Fonts.SemiBold}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
+                        <Button Grid.ColumnSpan="2" Margin="-16,0" BackgroundColor="Transparent" Text="" Clicked="OnPickPdfClicked" SemanticProperties.Description="Scegli un PDF" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+        <Grid Grid.RowSpan="3" IsVisible="{Binding Capture.IsSheetVisible}" BackgroundColor="{t:Theme Scrim}">
             <Border VerticalOptions="End" BackgroundColor="{t:Theme Ground}" StrokeThickness="0" StrokeShape="RoundRectangle 28,28,0,0" Padding="24,24,24,28">
                 <VerticalStackLayout Spacing="16">
-                    <Label Text="Inserimento vocale" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" />
-                    <ActivityIndicator IsVisible="{Binding IsSpeechProcessing}" IsRunning="{Binding IsSpeechProcessing}" />
-                    <Label Text="{Binding SpeechTranscription, StringFormat='Ho sentito: “{0}”'}" IsVisible="{Binding HasSpeechTranscription}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
-                    <Label Text="{Binding SpeechErrorMessage}" IsVisible="{Binding HasSpeechError}" TextColor="{t:Theme Alert}" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding Capture.Source.SheetTitle}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" />
+                    <c:IndeterminateBar IsVisible="{Binding Capture.IsReading}" />
+                    <Label Text="{Binding Capture.Source.ReadingLine}" IsVisible="{Binding Capture.HasReadingLine}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding Capture.Heard, StringFormat='Ho sentito: “{0}”'}" IsVisible="{Binding Capture.HasHeard}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding Capture.ErrorMessage}" IsVisible="{Binding Capture.HasError}" TextColor="{t:Theme Alert}" HorizontalTextAlignment="Center" />
                     <HorizontalStackLayout HorizontalOptions="Center" Spacing="6">
                         <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Cloud}" TextColor="{t:Theme Mute}" />
-                        <Label Text="Audio e testo inviati a OpenAI" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center" />
+                        <Label Text="{Binding Capture.Source.PrivacyNote}" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center" />
                     </HorizontalStackLayout>
-                    <Button Text="Chiudi" Clicked="OnCloseSpeechClicked" IsEnabled="{Binding IsSpeechIdle}" Style="{StaticResource TextActionButton}" />
+                    <Button Text="Chiudi" Clicked="OnCloseCaptureClicked" IsEnabled="{Binding Capture.HasError}" Style="{StaticResource TextActionButton}" />
                 </VerticalStackLayout>
             </Border>
         </Grid>

@@ -2,15 +2,15 @@ namespace Centesimo.Application.Tests;
 
 public sealed class ExpenseInterpretationCatalog_should_expected_behavior
 {
-    private static readonly SpeechCategory Car = new(
+    private static readonly DraftCategory Car = new(
         Guid.NewGuid(),
         "Auto",
-        [new SpeechTag(Guid.NewGuid(), "Carburante"), new SpeechTag(Guid.NewGuid(), "Tagliando")]);
+        [new DraftTag(Guid.NewGuid(), "Carburante"), new DraftTag(Guid.NewGuid(), "Tagliando")]);
 
-    private static readonly SpeechCategory Home = new(
+    private static readonly DraftCategory Home = new(
         Guid.NewGuid(),
         "Casa",
-        [new SpeechTag(Guid.NewGuid(), "Altro")]);
+        [new DraftTag(Guid.NewGuid(), "Altro")]);
 
     [Fact]
     public void Assign_category_and_tag_keys_in_input_order()
@@ -24,8 +24,8 @@ public sealed class ExpenseInterpretationCatalog_should_expected_behavior
     [Fact]
     public void Keep_tag_keys_unique_across_categories_with_the_same_tag_name()
     {
-        var first = new SpeechCategory(Guid.NewGuid(), "Auto", [new SpeechTag(Guid.NewGuid(), "Altro")]);
-        var second = new SpeechCategory(Guid.NewGuid(), "Casa", [new SpeechTag(Guid.NewGuid(), "Altro")]);
+        var first = new DraftCategory(Guid.NewGuid(), "Auto", [new DraftTag(Guid.NewGuid(), "Altro")]);
+        var second = new DraftCategory(Guid.NewGuid(), "Casa", [new DraftTag(Guid.NewGuid(), "Altro")]);
         var catalog = new ExpenseInterpretationCatalog([first, second]);
 
         Assert.Equal(["t1", "t2"], catalog.TagKeys);
@@ -84,7 +84,7 @@ public sealed class ExpenseInterpretationCatalog_should_expected_behavior
     [Fact]
     public void List_distinct_names_as_transcription_keywords()
     {
-        var other = new SpeechCategory(Guid.NewGuid(), "Svago", [new SpeechTag(Guid.NewGuid(), "ALTRO")]);
+        var other = new DraftCategory(Guid.NewGuid(), "Svago", [new DraftTag(Guid.NewGuid(), "ALTRO")]);
         var catalog = new ExpenseInterpretationCatalog([Car, Home, other]);
 
         Assert.Equal(["Auto", "Carburante", "Tagliando", "Casa", "Altro", "Svago"], catalog.Keywords);

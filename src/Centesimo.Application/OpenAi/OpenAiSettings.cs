@@ -12,8 +12,8 @@ public interface IOpenAiApiKeyProvider
 public sealed class OpenAiSettings(IOpenAiApiKeyStore store) : IOpenAiApiKeyProvider
 {
     public const string ConsentMessage =
-        "Usando OpenAI, l'audio registrato e il testo della spesa vengono inviati a OpenAI per la trascrizione e l'interpretazione. " +
-        "Le tue spese restano salvate solo sul dispositivo. " +
+        "Usando OpenAI, l'audio registrato, le foto e i PDF delle spese e il testo della spesa vengono inviati a OpenAI per la trascrizione e la lettura. " +
+        "Centesimo non salva né l'audio né le foto né i PDF: le tue spese restano solo sul dispositivo. " +
         "La chiave è conservata in modo sicuro sul telefono, ma una chiave su un'app non ha le garanzie di un server: usala solo per uso personale.";
 
     public Task<string> GetApiKey() => store.GetApiKey();
@@ -23,10 +23,10 @@ public sealed class OpenAiSettings(IOpenAiApiKeyStore store) : IOpenAiApiKeyProv
     public async Task<Result> SaveApiKey(string apiKey, bool consentAccepted)
     {
         if (!consentAccepted)
-            return Result.Failure(SpeechErrors.ConsentRequired);
+            return Result.Failure(DraftErrors.ConsentRequired);
 
         if (apiKey.IsEmpty())
-            return Result.Failure(SpeechErrors.EmptyApiKey);
+            return Result.Failure(DraftErrors.EmptyApiKey);
 
         await store.SetApiKey(apiKey.Trim());
         return Result.Success();
