@@ -122,7 +122,7 @@ public partial class TodayPage : ContentPage
         }
         catch
         {
-            return Result.Failure(new Centesimo.Application.Error("Speech.StartFailed", "Non riesco ad avviare il riconoscimento vocale."));
+            return Result.Failure(SpeechErrors.StartFailed);
         }
     }
 
@@ -167,7 +167,7 @@ public partial class TodayPage : ContentPage
                 return;
             }
 
-            var result = await _speechDraftService.StopAndPrepare();
+            var result = await _speechDraftService.StopAndPrepare(WhenFull.Refuse);
             _viewModel.SpeechTranscription = _speechDraftService.LastTranscription;
             if (result.IsFailure)
             {
@@ -182,7 +182,7 @@ public partial class TodayPage : ContentPage
         }
         catch
         {
-            _viewModel.SpeechErrorMessage = "Non riesco a elaborare il comando vocale.";
+            _viewModel.SpeechErrorMessage = SpeechErrors.Failed.Message;
         }
         finally
         {
