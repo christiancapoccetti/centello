@@ -8,8 +8,8 @@
              Title="{Binding Detail.Name}"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
-             SafeAreaEdges="All">
-    <Grid RowDefinitions="56,48,*">
+             Style="{StaticResource EdgeToEdgePage}">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,48,*">
         <Grid Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Detail.Name}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
@@ -46,14 +46,18 @@
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
-                    <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0" FontFamily="{x:Static t:Fonts.SemiBold}" TextColor="{t:Theme Alert}" IsVisible="{Binding Detail.IsOverBudget, FallbackValue=False}">
-                        <Label.FormattedText>
-                            <FormattedString>
-                                <Span Text="{Binding Detail.Budget.Lead}" />
-                                <Span Text="{Binding Detail.Budget.Emphasis}" />
-                            </FormattedString>
-                        </Label.FormattedText>
-                    </Label>
+                    <Grid Margin="24,8,24,0" ColumnDefinitions="Auto,*" ColumnSpacing="6" IsVisible="{Binding Detail.IsOverBudget, FallbackValue=False}">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.Error}" TextColor="{t:Theme Alert}" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Style="{StaticResource BodyLarge}" FontFamily="{x:Static t:Fonts.SemiBold}" TextColor="{t:Theme Alert}">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding Detail.Budget.Lead}" />
+                                    <Span Text="{Binding Detail.Budget.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" />
+                                    <Span Text="{Binding Detail.Budget.Tail}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </Grid>
                     <c:CategoryBarsView Margin="24,24,24,0" HeightRequest="56" Bars="{Binding Detail.Bars}" ColorKey="{Binding Detail.ColorKey}" SemanticProperties.Description="{Binding BarsDescription}" />
                     <ScrollView Margin="0,12,0,0" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding HasTagChips}">
                         <HorizontalStackLayout Padding="24,0" Spacing="8" BindableLayout.ItemsSource="{Binding Detail.Tags}">
@@ -81,7 +85,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
             <CollectionView.Footer>
-                <BoxView HeightRequest="24" Color="Transparent" />
+                <c:ListEnd />
             </CollectionView.Footer>
         </CollectionView>
     </Grid>

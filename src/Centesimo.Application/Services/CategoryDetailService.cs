@@ -84,7 +84,7 @@ public sealed class CategoryDetailService(ICategoryRepository categories, ITagRe
             return null;
 
         return spent > total
-            ? new BudgetSummary("Oltre il budget di ", ItalianFormat.Money(spent - total), "")
+            ? new BudgetSummary("Hai superato il budget di ", ItalianFormat.Money(spent - total), $" su {ItalianFormat.Budget(total)}")
             : new BudgetSummary("Ne restano ", ItalianFormat.Money(total - spent), $" su {ItalianFormat.Budget(total)}");
     }
 

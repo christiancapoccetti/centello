@@ -7,9 +7,10 @@ public sealed record CategoryList(IReadOnlyList<CategoryRow> Active, IReadOnlyLi
 
 /// <summary>Detail is "Novembre: 128,50 € · budget 100 €" for a category in use, with "Nessun budget" when it has
 /// none, and "Archiviata" for an archived one.</summary>
-public sealed record CategoryRow(Guid CategoryId, string Name, string Detail, string IconKey, string ColorKey)
+public sealed record CategoryRow(Guid CategoryId, string Name, string Detail, string IconKey, string ColorKey,
+    bool IsOverBudget = false)
 {
-    public string Description => RowLabels.Description(Name, Detail);
+    public string Description => RowLabels.Description(Name, Detail, IsOverBudget ? "oltre il budget" : "");
 }
 
 public sealed class CategoryListService(ICategoryRepository categories, IExpenseRepository expenses,
@@ -40,7 +41,11 @@ public sealed class CategoryListService(ICategoryRepository categories, IExpense
         return Result<CategoryList>.Success(new CategoryList(
             byName
                 .Where(category => !category.IsArchived)
-                .Select(category => ToRow(category, InUse(category, month, spentByCategory.GetValueOrDefault(category.CategoryId))))
+                .Select(category =>
+                {
+                    var spent = spentByCategory.GetValueOrDefault(category.CategoryId);
+                    return ToRow(category, InUse(category, month, spent), IsOverBudget(category, spent));
+                })
                 .ToList(),
             byName
                 .Where(category => category.IsArchived)
@@ -56,6 +61,10 @@ public sealed class CategoryListService(ICategoryRepository categories, IExpense
         return $"{ItalianFormat.PeriodName(month)}: {ItalianFormat.Money(spent)} · {budget}";
     }
 
-    private static CategoryRow ToRow(Category category, string detail) => new(category.CategoryId, category.Name, detail,
-        CategoryIcons.Resolve(category.Icon).Key, CategoryPalette.Resolve(category.Color).Key);
+    private static bool IsOverBudget(Category category, long spent) =>
+        category.MonthlyBudget is { Cents: > 0 } monthly && spent > monthly.Cents;
+
+    private static CategoryRow ToRow(Category category, string detail, bool isOverBudget = false) => new(category.CategoryId,
+        category.Name, detail, CategoryIcons.Resolve(category.Icon).Key, CategoryPalette.Resolve(category.Color).Key,
+        isOverBudget);
 }

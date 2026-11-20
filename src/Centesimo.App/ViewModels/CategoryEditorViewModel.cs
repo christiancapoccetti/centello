@@ -139,7 +139,7 @@ public sealed class CategoryEditorViewModel : ObservableObject
     public string ErrorMessage { get => _errorMessage; private set => SetProperty(ref _errorMessage, value); }
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
     /// <summary>True while the form differs from what is stored, or from the empty form of a new category. The tags
-    /// of a stored category are saved one by one as they change, so they never count.</summary>
+    /// of a stored category are saved one by one as they change, so only a tag still being typed counts.</summary>
     public bool IsDirty => CanEdit && Snapshot() != _original;
     public string ArchiveQuestion => $"Archiviare {_storedName}?";
 
@@ -302,12 +302,16 @@ public sealed class CategoryEditorViewModel : ObservableObject
 
     private async Task Save()
     {
+        // A tag that was typed but not confirmed is still part of what the person sees, so it is not dropped.
+        if (NewTagName.HasValue())
+            await AddTag();
+
         var budget = MoneyInputParser.ParseOptional(Budget, ItalianCulture);
         // Both checks run, so every field that stops the save says so at once.
         NameError = Name.IsEmpty() ? ApplicationErrors.InvalidName.Message : "";
         BudgetError = budget.IsFailure ? budget.Error.Message : "";
         ErrorMessage = "";
-        if (NameError.HasValue() || budget.IsFailure)
+        if (NameError.HasValue() || BudgetError.HasValue() || TagError.HasValue())
         {
             Rejected?.Invoke(this, EventArgs.Empty);
             return;
@@ -345,9 +349,9 @@ public sealed class CategoryEditorViewModel : ObservableObject
     }
 
     private FormState Snapshot() =>
-        new(Name.Trim(), SelectedIcon, Budget.Trim(), string.Join('\n', PendingTags));
+        new(Name.Trim(), SelectedIcon, Budget.Trim(), string.Join('\n', PendingTags), NewTagName.Trim());
 
-    private readonly record struct FormState(string Name, string Icon, string Budget, string PendingTags);
+    private readonly record struct FormState(string Name, string Icon, string Budget, string PendingTags, string TypedTag);
 
     /// <summary>What the editor says and allows for a new category, a stored one and an archived one.</summary>
     private sealed record Mode(string Title, bool CanEdit, bool CanArchive, bool CanRestore)

@@ -401,9 +401,46 @@ public sealed class InsightsService_should_expected_behavior
 
         var descriptions = result.Value.Insights.ToDictionary(x => x.Kind, x => x.Description);
         Assert.Equal("Cibo è il 59% delle spese di luglio.", descriptions[InsightKind.TopCategory]);
-        Assert.Equal("Hai registrato 3 spese in Abbonamenti a luglio; a giugno nessuna.", descriptions[InsightKind.NewHabit]);
+        Assert.Equal("Hai registrato 3 spese in Abbonamenti a luglio; nello stesso periodo di giugno nessuna.", descriptions[InsightKind.NewHabit]);
         Assert.Equal($"1.200,00{Nbsp}€ il 3 luglio è molto più alta delle altre spese di Abbonamenti.",
             descriptions[InsightKind.UnusualExpense]);
+    }
+
+    [Theory]
+    [InlineData(2026, 7, "Hai registrato 3 spese in Abbonamenti a luglio; a giugno nessuna.")]
+    [InlineData(2026, 8, "Hai registrato 3 spese in Abbonamenti ad agosto; nello stesso periodo di luglio nessuna.")]
+    public async Task Say_a_new_habit_was_absent_only_over_the_days_that_were_compared(int year, int month, string expected)
+    {
+        var category = new Category(Guid.NewGuid(), "Abbonamenti", "tech", "#196D61");
+        var expenses = new FakeExpenseRepository();
+        var inMonth = new DateOnly(year, month, 1);
+        expenses.Items.AddRange([
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(100), inMonth.AddDays(1)),
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(100), inMonth.AddDays(2)),
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(100), inMonth.AddDays(3))
+        ]);
+
+        var result = await CreateService(new DateOnly(2026, 8, 20), category, expenses).Get(Period.Month(year, month));
+
+        Assert.Equal(expected, result.Value.Insights.Single(x => x.Kind == InsightKind.NewHabit).Description);
+    }
+
+    [Theory]
+    [InlineData(2026, "Hai registrato 3 spese in Abbonamenti nel 2026; nello stesso periodo del 2025 nessuna.")]
+    [InlineData(2025, "Hai registrato 3 spese in Abbonamenti nel 2025; nel 2024 nessuna.")]
+    public async Task Say_a_new_habit_was_absent_over_the_same_months_of_the_previous_year(int year, string expected)
+    {
+        var category = new Category(Guid.NewGuid(), "Abbonamenti", "tech", "#196D61");
+        var expenses = new FakeExpenseRepository();
+        expenses.Items.AddRange([
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(100), new DateOnly(year, 3, 2)),
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(100), new DateOnly(year, 3, 3)),
+            new Expense(Guid.NewGuid(), category.CategoryId, new Money(100), new DateOnly(year, 3, 4))
+        ]);
+
+        var result = await CreateService(new DateOnly(2026, 8, 20), category, expenses).Get(Period.Year(year));
+
+        Assert.Equal(expected, result.Value.Insights.Single(x => x.Kind == InsightKind.NewHabit).Description);
     }
 
     private static async Task<(long Spent, long? Compared, DateOnly From, DateOnly To)> Summary(InsightsService service, Period period) =>

@@ -74,6 +74,9 @@ public sealed class RecurringPaymentService(
         if (found.Value is null)
             return Result.Failure(ApplicationErrors.RecurringPaymentNotFound);
 
+        // Ending a paused payment resumes it first: the missed occurrences are skipped as on any resume, and the last
+        // expense must be created, which a payment that stays paused never does.
+        found.Value.Resume(_today());
         if (endsOn < found.Value.NextDueOn)
             return Result.Failure(ApplicationErrors.InvalidEndDate);
 
@@ -81,9 +84,9 @@ public sealed class RecurringPaymentService(
         return await recurringPayments.Update(found.Value, cancellationToken);
     }
 
-    /// <summary>What "Termina" does: it ends the payment on its next due date (<c>End(paymentId, NextDueOn)</c>), so
-    /// the occurrence due on that date is the last expense the payment creates. For a paused payment that expense
-    /// is created once it resumes.</summary>
+    /// <summary>What "Termina" does: it ends the payment on its next due date (<c>End(paymentId, LastExpenseOn)</c>),
+    /// so the occurrence due on that date is the last expense the payment creates. A paused payment skips the
+    /// occurrences missed during the pause, so its last expense is the first one on or after today.</summary>
     public async Task<Result<RecurringEndPreview>> PreviewEnd(Guid paymentId,
         CancellationToken cancellationToken = default)
     {
@@ -94,11 +97,12 @@ public sealed class RecurringPaymentService(
         if (found.Value is not { } payment)
             return Result<RecurringEndPreview>.Failure(ApplicationErrors.RecurringPaymentNotFound);
 
-        if (payment.IsEnded)
+        var lastExpenseOn = payment.IsSuspended ? payment.UpcomingDueOn(_today()) : payment.NextDueOn;
+        if (payment.EndsOn < lastExpenseOn)
             return Result<RecurringEndPreview>.Failure(ApplicationErrors.RecurringPaymentAlreadyEnded);
 
-        return Result<RecurringEndPreview>.Success(new RecurringEndPreview(payment.NextDueOn,
-            $"L'ultima spesa sarà quella {ItalianFormat.OfLongDate(payment.NextDueOn)}, poi non ne verranno create altre."));
+        return Result<RecurringEndPreview>.Success(new RecurringEndPreview(lastExpenseOn,
+            $"L'ultima spesa sarà quella {ItalianFormat.OfLongDate(lastExpenseOn)}, poi non ne verranno create altre."));
     }
 
     public async Task<Result<int>> ProcessDue(DateOnly today,

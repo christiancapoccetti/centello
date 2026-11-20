@@ -127,7 +127,7 @@
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </FlexLayout>
-                        <Button Text="Crea categorie" Style="{StaticResource PrimaryActionButton}" Margin="0,12,0,0" FontSize="16" HeightRequest="48" MinimumHeightRequest="48" MaximumHeightRequest="48" CornerRadius="24" IsEnabled="{Binding CanCreateSuggested}" Clicked="OnCreateSuggestedClicked">
+                        <Button Text="Crea categorie" Style="{StaticResource FilledButton}" Margin="0,12,0,0" IsEnabled="{Binding CanCreateSuggested}" Clicked="OnCreateSuggestedClicked">
                             <Button.Triggers>
                                 <Trigger TargetType="Button" Property="IsEnabled" Value="False">
                                     <Setter Property="Opacity" Value="0.38" />

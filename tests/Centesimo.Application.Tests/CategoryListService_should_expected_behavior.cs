@@ -80,6 +80,37 @@ public sealed class CategoryListService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_mark_a_category_that_spent_more_than_its_monthly_budget()
+    {
+        var over = NewCategory("Spesa", budgetCents: 10_000);
+        var exact = NewCategory("Casa", budgetCents: 10_000);
+        var unbudgeted = NewCategory("Altro");
+        var lastMonth = NewCategory("Svago", budgetCents: 10_000);
+        var expenses = new[]
+        {
+            Spend(over, 10_001, Today),
+            Spend(exact, 10_000, Today),
+            Spend(unbudgeted, 99_999, Today),
+            Spend(lastMonth, 99_999, new DateOnly(2026, 10, 31))
+        };
+
+        var list = await List([over, exact, unbudgeted, lastMonth], expenses);
+
+        Assert.Equal([("Altro", false), ("Casa", false), ("Spesa", true), ("Svago", false)],
+            list.Active.Select(row => (row.Name, row.IsOverBudget)));
+    }
+
+    [Fact]
+    public async Task Should_say_to_a_screen_reader_that_a_row_is_over_its_budget()
+    {
+        var over = NewCategory("Spesa", budgetCents: 10_000);
+
+        var list = await List([over], [Spend(over, 12_000, Today)]);
+
+        Assert.Equal($"Spesa, Novembre: 120,00{Nbsp}€ · budget 100{Nbsp}€, oltre il budget", list.Active.Single().Description);
+    }
+
+    [Fact]
     public async Task Should_return_the_repository_failure()
     {
         var categoryFailure = await new CategoryListService(new FakeCategoryRepository { Failure = Failed },
