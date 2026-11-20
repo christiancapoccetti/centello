@@ -32,6 +32,12 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
     private const float ShrinkStep = 0.96f;
     private const float BodyLineHeight = 1.35f;
     private const float ParagraphLineHeight = 1.25f;
+    private const float ChartPaceRiseDp = 14;
+    private const float ChartAxisDp = 20;
+    private const float ChartLabelDp = 12;
+    private const float PaceLabelLiftDp = 6;
+    private const float PaceLabelPaddingDp = 4;
+    private const float AxisBaselineInsetDp = 2;
 
     private readonly float _density = context.Resources!.DisplayMetrics!.Density;
     private readonly int _densityDpi = (int)context.Resources!.DisplayMetrics!.DensityDpi;
@@ -164,9 +170,9 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
     public DayNight CategoryLine(IReadOnlyList<CategorySegment> segments, float widthDp, float heightDp) =>
         Pair(widthDp, heightDp, (canvas, bounds, isDark) => CategoryLinePainter.Draw(canvas, bounds, segments, isDark));
 
-    /// <summary>A sentence in the mute colour with one bold ink amount, wrapped to <paramref name="widthDp"/>. The
-    /// amount stays whole: it never breaks between its figures and the euro sign.</summary>
-    public DayNight Sentence(string lead, string emphasis, float widthDp, float sizeDp)
+    /// <summary>A sentence in the mute colour with one bold ink amount, wrapped to <paramref name="maxWidthDp"/> and
+    /// as wide as its longest line. The amount stays whole: it never breaks between its figures and the euro sign.</summary>
+    public DayNight Sentence(string lead, string emphasis, string tail, float maxWidthDp, float sizeDp)
     {
         using var regular = PaintOf(new WidgetTextStyle(Fonts.Regular, sizeDp));
         using var bold = PaintOf(new WidgetTextStyle(Fonts.Bold, sizeDp));
@@ -177,13 +183,84 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
         if (emphasis.HasValue())
             words.Add(new Word(emphasis, bold, ThemeColor.Ink));
 
+        words.AddRange(tail
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(word => new Word(word, regular, ThemeColor.Mute)));
         var space = regular.MeasureText(" ");
-        var lines = Wrap(words, widthDp * _density, space);
+        var lines = Wrap(words, maxWidthDp * _density, space);
         var lineHeight = sizeDp * BodyLineHeight * _density;
         var height = (int)Math.Ceiling(lines.Count * lineHeight);
-        AndroidBitmap Painted(bool isDark) => Argb(Px(widthDp), height, canvas =>
+        var width = (int)Math.Ceiling(lines.Max(line => LineWidth(line, space))) + 2;
+        AndroidBitmap Painted(bool isDark) => Argb(width, height, canvas =>
             DrawLines(canvas, lines, lineHeight, space, word => ThemeColors.Resolve(word.Color, isDark).ToPlatform()));
         return new DayNight(Painted(false), Painted(true));
+    }
+
+    /// <summary>The width in dp that <see cref="Text"/> takes with no limit.</summary>
+    public float TextWidthDp(string text, WidgetTextStyle style)
+    {
+        using var paint = PaintOf(style);
+        return (float)Math.Ceiling(paint.MeasureText(text) / _density) + 2;
+    }
+
+    /// <summary>The daily spend chart at the widget's size: the Home's bars and dashed pace line, the pace label on a
+    /// ground backing just above its line on the right, and the axis under the bars with today's label placed as the
+    /// Home places it.</summary>
+    public DayNight Chart(SpendChart chart, float widthDp, float heightDp) =>
+        new(Chart(chart, widthDp, heightDp, false), Chart(chart, widthDp, heightDp, true));
+
+    private AndroidBitmap Chart(SpendChart chart, float widthDp, float heightDp, bool isDark)
+    {
+        var plot = new RectF(0, ChartPaceRiseDp, widthDp, heightDp - ChartAxisDp - ChartPaceRiseDp);
+        var bitmap = Painted(widthDp, heightDp, isDark,
+            (canvas, _, dark) => SpendBarsPainter.Draw(canvas, plot, chart, dark));
+        using var native = new AndroidCanvas(bitmap);
+        if (chart.PaceFraction is { } pace)
+            DrawPaceLabel(native, chart.PaceLabel, SpendBarsPainter.PaceY(plot, pace), widthDp, isDark);
+
+        DrawAxis(native, chart, widthDp, heightDp, isDark);
+        return bitmap;
+    }
+
+    private void DrawPaceLabel(AndroidCanvas canvas, string label, float lineYDp, float widthDp, bool isDark)
+    {
+        if (label.IsEmpty())
+            return;
+
+        using var paint = PaintOf(new WidgetTextStyle(Fonts.SemiBold, ChartLabelDp));
+        paint.Color = ThemeColors.Resolve(ThemeColor.Pace, isDark).ToPlatform();
+        var width = paint.MeasureText(label);
+        var baseline = Math.Max(-paint.Ascent(), (lineYDp - PaceLabelLiftDp) * _density);
+        var right = widthDp * _density;
+        using var backing = new AndroidPaint
+        {
+            Color = ThemeColors.Resolve(ThemeColor.Ground, isDark).ToPlatform()
+        };
+        canvas.DrawRect(right - width - PaceLabelPaddingDp * _density, baseline + paint.Ascent(), right,
+            baseline + paint.Descent(), backing);
+        canvas.DrawText(label, right - width, baseline, paint);
+    }
+
+    private void DrawAxis(AndroidCanvas canvas, SpendChart chart, float widthDp, float heightDp, bool isDark)
+    {
+        using var regular = PaintOf(new WidgetTextStyle(Fonts.Regular, ChartLabelDp));
+        using var bold = PaintOf(new WidgetTextStyle(Fonts.Bold, ChartLabelDp));
+        regular.Color = ThemeColors.Resolve(ThemeColor.Mute, isDark).ToPlatform();
+        bold.Color = ThemeColors.Resolve(ThemeColor.Ink, isDark).ToPlatform();
+        var baseline = (heightDp - AxisBaselineInsetDp) * _density;
+        var startWidth = regular.MeasureText(chart.StartLabel);
+        var endWidth = regular.MeasureText(chart.EndLabel);
+        var highlightWidth = bold.MeasureText(chart.HighlightLabel);
+        var placement = ChartAxisLayout.Place(widthDp, chart.HighlightPosition, chart.HasHighlight,
+            highlightWidth / _density, startWidth / _density, endWidth / _density);
+        if (placement.ShowStart)
+            canvas.DrawText(chart.StartLabel, 0, baseline, regular);
+
+        if (placement.ShowEnd)
+            canvas.DrawText(chart.EndLabel, widthDp * _density - endWidth, baseline, regular);
+
+        if (chart.HasHighlight)
+            canvas.DrawText(chart.HighlightLabel, (float)placement.HighlightLeft * _density, baseline, bold);
     }
 
     /// <summary>One colour of text wrapped to <paramref name="maxWidthDp"/>, as wide as its longest line.</summary>

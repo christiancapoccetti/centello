@@ -31,7 +31,7 @@ public sealed class MonthWidget : CentesimoWidgetProvider
         views.SetImageViewBitmap(Resource.Id.month, art.Text(month.Month, new WidgetTextStyle(Fonts.Bold, MonthDp)));
         views.SetImageViewBitmap(Resource.Id.year, art.Text(month.Year, new WidgetTextStyle(Fonts.Regular, MonthDp)));
         views.SetImageViewBitmap(Resource.Id.total, art.Total(month.Total, TotalDp, EuroDp, width));
-        Budget.Show(views, art.Sentence(month.Budget.Lead, month.Budget.Emphasis, width, BudgetDp));
+        Budget.Show(views, art.Sentence(month.Budget.Lead, month.Budget.Emphasis, "", width, BudgetDp));
         WidgetViews.Comparison(views, art, month.Comparison, month.Comparison?.Short);
         if (month.Segments.Count > 0)
             Line.Show(views, art.CategoryLine(month.Segments, width, LineHeightDp));

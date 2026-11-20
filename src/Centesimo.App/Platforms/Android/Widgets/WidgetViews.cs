@@ -14,6 +14,8 @@ internal static class WidgetViews
     private const float OverTextDp = 12;
     private const float OverGapDp = 4;
 
+    internal static WidgetTextStyle ChipText => new(Fonts.SemiBold, ChipTextDp);
+
     /// <summary>The comparison chip of layout/widget_comparison.xml. Lower takes the positive container with its own
     /// text colour and south_east; Higher and Same the raised chip with north_east or east. No comparison hides it.</summary>
     public static void Comparison(RemoteViews views, WidgetArt art, PeriodComparison? comparison, string? text)
@@ -31,7 +33,7 @@ internal static class WidgetViews
         views.SetImageViewBitmap(lower ? Resource.Id.comparison_glyph_low : Resource.Id.comparison_glyph,
             art.Glyph(Arrow(comparison.Trend), ChipGlyphDp));
         views.SetImageViewBitmap(lower ? Resource.Id.comparison_text_low : Resource.Id.comparison_text,
-            art.Text(text, new WidgetTextStyle(Fonts.SemiBold, ChipTextDp)));
+            art.Text(text, ChipText));
     }
 
     /// <summary>The Error glyph and the sentence in alert, wrapped inside <paramref name="widthDp"/>; hidden when
