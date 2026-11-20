@@ -18,8 +18,12 @@ public partial class RestorePage : ContentPage
 
     private async void OnBackClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("..");
 
-    private async void OnTodayClicked(object? sender, EventArgs e) =>
+    // A tab keeps its own stack: leaving it for Oggi would bring this finished page back under Impostazioni.
+    private async void OnTodayClicked(object? sender, EventArgs e)
+    {
+        await Navigation.PopToRootAsync(false);
         await Shell.Current.GoToAsync($"//{nameof(TodayPage)}");
+    }
 
     private async void OnChooseClicked(object? sender, EventArgs e)
     {
