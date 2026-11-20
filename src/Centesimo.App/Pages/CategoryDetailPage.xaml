@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
+             x:Class="Centesimo.App.Pages.CategoryDetailPage"
+             Title="{Binding Detail.Name}"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             SafeAreaEdges="All">
+    <Grid RowDefinitions="56,48,*">
+        <Grid Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
+            <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
+            <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Detail.Name}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+            <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Edit}" Clicked="OnEditClicked" SemanticProperties.Description="Modifica categoria" />
+        </Grid>
+
+        <c:PeriodSwitcher Grid.Row="1" Margin="24,0,8,0" Period="{Binding Detail.Period}" HasNext="{Binding Detail.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
+
+        <!-- The summary scrolls away with the expenses, so a long list has the whole page. -->
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Groups}" IsGrouped="True" SelectionMode="None">
+            <CollectionView.Header>
+                <VerticalStackLayout>
+                    <c:InlineError Margin="24,8,24,0" Text="{Binding ErrorMessage}" />
+                    <Grid Margin="24,12,24,0" ColumnDefinitions="36,*" ColumnSpacing="14">
+                        <c:CategoryTile IconKey="{Binding Detail.IconKey}" ColorKey="{Binding Detail.ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                        <!-- Android keeps the font ascent above a 48sp line and the descent below it. The negative
+                             margins take that room back. -->
+                        <Label Grid.Column="1" Style="{StaticResource SummaryDisplay}" Margin="0,-8,0,-8" VerticalOptions="Center">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding Detail.Total}" />
+                                    <Span Text=" " FontSize="12" />
+                                    <Span Text="€" FontSize="28" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </Grid>
+                    <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0" IsVisible="{Binding IsWithinBudget}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="{Binding Detail.Budget.Lead}" />
+                                <Span Text="{Binding Detail.Budget.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
+                                <Span Text="{Binding Detail.Budget.Tail}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0" FontFamily="{x:Static t:Fonts.SemiBold}" TextColor="{t:Theme Alert}" IsVisible="{Binding Detail.IsOverBudget, FallbackValue=False}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="{Binding Detail.Budget.Lead}" />
+                                <Span Text="{Binding Detail.Budget.Emphasis}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <c:CategoryBarsView Margin="24,24,24,0" HeightRequest="56" Bars="{Binding Detail.Bars}" ColorKey="{Binding Detail.ColorKey}" SemanticProperties.Description="{Binding BarsDescription}" />
+                    <ScrollView Margin="0,12,0,0" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding HasTagChips}">
+                        <HorizontalStackLayout Padding="24,0" Spacing="8" BindableLayout.ItemsSource="{Binding Detail.Tags}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <c:Chip Text="{Binding Label}" IsSelected="{Binding IsSelected}" Tapped="OnTagChipTapped" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </ScrollView>
+                    <VerticalStackLayout Padding="32,56,32,24" IsVisible="{Binding IsEmpty}">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.SearchOff}" TextColor="{t:Theme Mute}" />
+                        <Label Text="{Binding Detail.EmptyText}" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </CollectionView.Header>
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate>
+                    <c:ExpenseGroupHeader />
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <c:ExpenseRow Margin="24,0" Opened="OnExpenseOpened" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.Footer>
+                <BoxView HeightRequest="24" Color="Transparent" />
+            </CollectionView.Footer>
+        </CollectionView>
+    </Grid>
+</ContentPage>

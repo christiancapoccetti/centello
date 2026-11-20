@@ -4,19 +4,11 @@ namespace Centesimo.Application;
 
 public sealed class TagService(ICategoryRepository categories, ITagRepository tags)
 {
-    public async Task<Result<IReadOnlyList<Tag>>> GetActive(Guid categoryId,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await tags.GetByCategory(categoryId, cancellationToken);
-        if (result.IsFailure)
-            return Result<IReadOnlyList<Tag>>.Failure(result.Error);
+    public Task<Result<IReadOnlyList<Tag>>> GetActive(Guid categoryId,
+        CancellationToken cancellationToken = default) => GetByState(categoryId, false, cancellationToken);
 
-        var activeTags = result.Value
-            .Where(tag => !tag.IsArchived)
-            .OrderBy(tag => tag.Name)
-            .ToList();
-        return Result<IReadOnlyList<Tag>>.Success(activeTags);
-    }
+    public Task<Result<IReadOnlyList<Tag>>> GetArchived(Guid categoryId,
+        CancellationToken cancellationToken = default) => GetByState(categoryId, true, cancellationToken);
 
     public async Task<Result<Tag>> Create(Guid categoryId, string name,
         CancellationToken cancellationToken = default)
@@ -39,7 +31,27 @@ public sealed class TagService(ICategoryRepository categories, ITagRepository ta
         return saved.IsFailure ? Result<Tag>.Failure(saved.Error) : Result<Tag>.Success(tag);
     }
 
-    public async Task<Result> Archive(Guid tagId, CancellationToken cancellationToken = default)
+    public Task<Result> Archive(Guid tagId, CancellationToken cancellationToken = default) =>
+        Change(tagId, tag => tag.Archive(), cancellationToken);
+
+    public Task<Result> Restore(Guid tagId, CancellationToken cancellationToken = default) =>
+        Change(tagId, tag => tag.Restore(), cancellationToken);
+
+    private async Task<Result<IReadOnlyList<Tag>>> GetByState(Guid categoryId, bool archived,
+        CancellationToken cancellationToken)
+    {
+        var result = await tags.GetByCategory(categoryId, cancellationToken);
+        if (result.IsFailure)
+            return Result<IReadOnlyList<Tag>>.Failure(result.Error);
+
+        var matching = result.Value
+            .Where(tag => tag.IsArchived == archived)
+            .OrderBy(tag => tag.Name)
+            .ToList();
+        return Result<IReadOnlyList<Tag>>.Success(matching);
+    }
+
+    private async Task<Result> Change(Guid tagId, Action<Tag> change, CancellationToken cancellationToken)
     {
         var found = await tags.Get(tagId, cancellationToken);
         if (found.IsFailure)
@@ -48,7 +60,7 @@ public sealed class TagService(ICategoryRepository categories, ITagRepository ta
         if (found.Value is null)
             return Result.Failure(ApplicationErrors.TagNotFound);
 
-        found.Value.Archive();
+        change(found.Value);
         return await tags.Update(found.Value, cancellationToken);
     }
 }

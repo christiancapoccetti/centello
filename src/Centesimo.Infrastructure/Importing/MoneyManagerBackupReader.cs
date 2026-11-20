@@ -13,8 +13,33 @@ public sealed class MoneyManagerBackupReader : IMoneyManagerBackupReader
     private const int MaximumEntries = 32;
     private const int MaximumRowsPerTable = 100_000;
     private const int MaximumUidLength = 200;
-    private static readonly string[] Icons = ["cart", "home", "car", "heart", "more"];
-    private static readonly string[] Colors = ["#176B5B", "#8B4A5D", "#725C00", "#4F5F7A", "#6A4F88"];
+    private static readonly char[] Digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+    // Money Manager icon names, matched whole once trailing digits are dropped ("electronics1").
+    // A substring match would draw "cart" as "car".
+    private static readonly Dictionary<string, string> MoneyManagerIcons = new(StringComparer.Ordinal)
+    {
+        ["cafe"] = "coffee",
+        ["bill"] = "bills",
+        ["travels"] = "travel",
+        ["transport"] = "car",
+        ["education"] = "school",
+        ["products"] = "cart",
+        ["present"] = "gift",
+        ["electronics"] = "tech",
+        ["canister"] = "fuel",
+        ["health"] = "health",
+        ["sport"] = "sport",
+        ["family"] = "family",
+        ["home"] = "home",
+        ["heart"] = "heart",
+        ["car"] = "car",
+        ["cart"] = "cart",
+        ["food"] = "food"
+    };
+
+    // Grey means "unknown color", so an imported category only gets one of the other slots.
+    private static readonly string[] ImportColors = [.. CategoryPalette.Chromatic.Select(color => color.Key)];
 
     public async Task<Result<MoneyManagerImportData>> Read(Stream backup,
         CancellationToken cancellationToken = default)
@@ -226,7 +251,7 @@ public sealed class MoneyManagerBackupReader : IMoneyManagerBackupReader
     {
         var result = new Dictionary<string, MoneyManagerCategory>(StringComparer.Ordinal);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT uid,title,icon,color,limitAmount FROM category WHERE isRemoved=0 AND type='Expense' LIMIT 100001";
+        command.CommandText = "SELECT uid,title,icon,limitAmount FROM category WHERE isRemoved=0 AND type='Expense' LIMIT 100001";
         await using var reader = await command.ExecuteReaderAsync(token);
         while (await reader.ReadAsync(token))
         {
@@ -237,10 +262,8 @@ public sealed class MoneyManagerBackupReader : IMoneyManagerBackupReader
                 continue;
 
             var icon = ReadText(reader, 2, 100, true) ?? "";
-            var color = ReadScalarText(reader, 3, 20);
-            var monthlyBudget = ReadOptionalPositiveInt64(reader, 4);
-            result.TryAdd(uid, new MoneyManagerCategory(uid, name, MapIcon(icon, uid), MapColor(color, uid),
-                monthlyBudget));
+            var monthlyBudget = ReadOptionalPositiveInt64(reader, 3);
+            result.TryAdd(uid, new MoneyManagerCategory(uid, name, MapIcon(icon), MapColor(uid), monthlyBudget));
         }
 
         return result;
@@ -474,17 +497,6 @@ public sealed class MoneyManagerBackupReader : IMoneyManagerBackupReader
         return value.Length <= maximumLength ? value : value[..maximumLength];
     }
 
-    private static string ReadScalarText(SqliteDataReader reader, int ordinal, int maximumLength)
-    {
-        if (reader.IsDBNull(ordinal))
-            return "";
-        var value = reader.GetValue(ordinal);
-        if (value is byte[])
-            throw new MoneyManagerDataException();
-        var text = Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
-        return text.Length <= maximumLength ? text : text[..maximumLength];
-    }
-
     private static bool TryReadInt64(SqliteDataReader reader, int ordinal, out long value)
     {
         value = 0;
@@ -517,24 +529,10 @@ public sealed class MoneyManagerBackupReader : IMoneyManagerBackupReader
             throw new BackupLimitException();
     }
 
-    private static string MapIcon(string icon, string uid)
-    {
-        var normalized = icon.ToLowerInvariant();
-        if (normalized.Contains("home"))
-            return "home";
-        if (normalized.Contains("car") || normalized.Contains("transport"))
-            return "car";
-        if (normalized.Contains("heart") || normalized.Contains("health"))
-            return "heart";
-        if (normalized.Contains("cart") || normalized.Contains("food"))
-            return "cart";
-        return Icons[StableIndex(uid, Icons.Length)];
-    }
+    private static string MapIcon(string icon) =>
+        MoneyManagerIcons.GetValueOrDefault(icon.ToLowerInvariant().TrimEnd(Digits), CategoryIcons.Fallback.Key);
 
-    private static string MapColor(string color, string uid) =>
-        Colors.Contains(color, StringComparer.OrdinalIgnoreCase)
-            ? Colors.First(value => value.Equals(color, StringComparison.OrdinalIgnoreCase))
-            : Colors[StableIndex(uid, Colors.Length)];
+    private static string MapColor(string uid) => ImportColors[StableIndex(uid, ImportColors.Length)];
 
     private static int StableIndex(string value, int length) =>
         MoneyManagerImportIds.Create("fallback", value).ToByteArray()[0] % length;

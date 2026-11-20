@@ -14,6 +14,20 @@ public sealed class RecurringPayment
     public int AnchorMonth { get; private set; }
     public int AnchorDay { get; private set; }
 
+    /// <summary>True once the next occurrence falls after the end date, so no further expense will be created.</summary>
+    public bool IsEnded => EndsOn.HasValue && NextDueOn > EndsOn.Value;
+
+    /// <summary>What the payment is doing now. A payment past its end is ended even if it was paused before.</summary>
+    public RecurringPaymentStatus Status => IsEnded
+        ? RecurringPaymentStatus.Ended
+        : IsSuspended ? RecurringPaymentStatus.Paused : RecurringPaymentStatus.Active;
+
+    // For loading a stored payment. The public constructor checks what a new schedule must satisfy, and a payment
+    // that has ended is stored with its next occurrence after its end date, which a new schedule may not have.
+    private RecurringPayment()
+    {
+    }
+
     public RecurringPayment(Guid recurringPaymentId, Guid categoryId, Money amount,
         RecurrenceFrequency frequency, DateOnly nextDueOn, Guid? tagId = null,
         string note = "", DateOnly? endsOn = null)
@@ -51,7 +65,19 @@ public sealed class RecurringPayment
     }
 
     public void Suspend() => IsSuspended = true;
-    public void Resume() => IsSuspended = false;
+
+    /// <summary>Resumes a paused payment from the first occurrence on or after <paramref name="today"/>. The occurrences
+    /// missed during the pause are skipped, not created late. A payment whose end date passes while skipping is ended.</summary>
+    public void Resume(DateOnly today)
+    {
+        if (!IsSuspended)
+            return;
+
+        IsSuspended = false;
+        while (NextDueOn < today && !IsEnded)
+            MoveToNextOccurrence();
+    }
+
     public void End(DateOnly endsOn) => EndsOn = endsOn;
 
     public void MoveToNextOccurrence()

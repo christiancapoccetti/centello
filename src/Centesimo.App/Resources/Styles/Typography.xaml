@@ -1,57 +1,86 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
-    <Style x:Key="DisplaySmall" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="36" />
-        <Setter Property="LineHeight" Value="1.15" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:t="clr-namespace:Centesimo.App.Theming">
+    <Style x:Key="BaseText" TargetType="Label">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
     </Style>
-    <Style x:Key="HeadlineLarge" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+    <Style x:Key="TotalDisplay" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
+        <Setter Property="FontSize" Value="68" />
+        <Setter Property="LineHeight" Value="1" />
+    </Style>
+    <Style x:Key="SummaryDisplay" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
+        <Setter Property="FontSize" Value="48" />
+        <Setter Property="LineHeight" Value="1" />
+    </Style>
+    <Style x:Key="HeadlineLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="28" />
         <Setter Property="LineHeight" Value="1.2" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
     </Style>
-    <Style x:Key="HeadlineSmall" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="24" />
-        <Setter Property="LineHeight" Value="1.2" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+    <Style x:Key="TitleLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="LineHeight" Value="1.25" />
     </Style>
-    <Style x:Key="TitleMedium" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+    <Style x:Key="SectionTitle" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+    <Style x:Key="TitleMedium" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="LineHeight" Value="1.25" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
     </Style>
-    <Style x:Key="TitleLarge" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="22" />
-        <Setter Property="LineHeight" Value="1.25" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
-    </Style>
-    <Style x:Key="BodyLarge" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansRegular" />
+    <Style x:Key="BodyLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontSize" Value="16" />
         <Setter Property="LineHeight" Value="1.4" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
     </Style>
-    <Style x:Key="BodyMedium" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansRegular" />
-        <Setter Property="FontSize" Value="14" />
+    <Style x:Key="Lead" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="LineHeight" Value="1.3" />
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style x:Key="BodyMedium" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="LineHeight" Value="1.4" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariantLight}, Dark={StaticResource OnSurfaceVariantDark}}" />
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
     </Style>
-    <Style x:Key="BodySmall" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansRegular" />
+    <Style x:Key="Caption" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style x:Key="BodySmall" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="LineHeight" Value="1.3" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariantLight}, Dark={StaticResource OnSurfaceVariantDark}}" />
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
     </Style>
-    <Style x:Key="LabelLarge" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="14" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+    <Style x:Key="LabelLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
+    </Style>
+    <!-- A field label starts 24 under what is above it. Android puts 3 of font padding over a 14sp line, so the
+         margin is 21. What follows the label takes back the 3 under it. -->
+    <Style x:Key="FieldLabel" TargetType="Label" BasedOn="{StaticResource LabelLarge}">
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+        <Setter Property="Margin" Value="24,21,24,0" />
+    </Style>
+    <Style x:Key="Hint" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style x:Key="AmountLabel" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style x:Key="IconGlyph" TargetType="Label">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Icons}" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="AutomationProperties.IsInAccessibleTree" Value="False" />
     </Style>
 </ResourceDictionary>

@@ -1,4 +1,6 @@
 using Centesimo.App.Pages;
+using Centesimo.App.Theming;
+using Centesimo.Application;
 
 namespace Centesimo.App;
 
@@ -8,20 +10,21 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
         Routing.RegisterRoute(nameof(ExpenseEditorPage), typeof(ExpenseEditorPage));
-        Routing.RegisterRoute(nameof(CategorySpendingPage), typeof(CategorySpendingPage));
-        Routing.RegisterRoute(nameof(TagExpensesPage), typeof(TagExpensesPage));
+        Routing.RegisterRoute(nameof(ExpensesPage), typeof(ExpensesPage));
+        Routing.RegisterRoute(nameof(CategoryEditorPage), typeof(CategoryEditorPage));
+        Routing.RegisterRoute(nameof(CategoryDetailPage), typeof(CategoryDetailPage));
         Routing.RegisterRoute(nameof(RecurringPaymentsPage), typeof(RecurringPaymentsPage));
         Routing.RegisterRoute(nameof(RecurringPaymentEditorPage), typeof(RecurringPaymentEditorPage));
-        Routing.RegisterRoute(nameof(OpenSourceLicensesPage), typeof(OpenSourceLicensesPage));
-        Routing.RegisterRoute(nameof(LicensePage), typeof(LicensePage));
+        Routing.RegisterRoute(nameof(MoneyManagerImportPage), typeof(MoneyManagerImportPage));
+        Routing.RegisterRoute(nameof(LicensesPage), typeof(LicensesPage));
         Items.Add(new TabBar
         {
             Items =
             {
-                CreateTab("Oggi", "TodayPage", "⌂", todayPage),
-                CreateTab("Insight", "InsightsPage", "〽", insightsPage),
-                CreateTab("Categorie", "CategoriesPage", "▦", categoriesPage),
-                CreateTab("Impostazioni", "SettingsPage", "⚙", settingsPage)
+                CreateTab("Oggi", "TodayPage", MaterialSymbols.Today, todayPage),
+                CreateTab("Insight", "InsightsPage", MaterialSymbols.BarChart, insightsPage),
+                CreateTab("Categorie", "CategoriesPage", MaterialSymbols.Category, categoriesPage),
+                CreateTab("Impostazioni", "SettingsPage", MaterialSymbols.Settings, settingsPage)
             }
         });
     }
@@ -30,7 +33,7 @@ public partial class AppShell : Shell
     {
         Title = title,
         Route = route,
-        Icon = new FontImageSource { Glyph = glyph, FontFamily = "OpenSansSemibold", Size = 24 },
+        Icon = new FontImageSource { Glyph = glyph, FontFamily = Fonts.Icons, Size = 24 },
         Content = page
     };
 }

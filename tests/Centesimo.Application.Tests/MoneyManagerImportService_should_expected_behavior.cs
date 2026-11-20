@@ -34,6 +34,12 @@ public sealed class MoneyManagerImportService_should_expected_behavior
         Assert.True(imported.IsSuccess);
     }
 
+    [Fact]
+    public void Summarize_a_report_in_one_sentence_with_grouped_counts() =>
+        Assert.Equal(
+            "Importazione completata: 1.218 spese, 3 pagamenti regolari, 4 categorie e 9 tag aggiunti. Ignorati: 37; senza categoria: 0.",
+            new MoneyManagerImportReport(4, 9, 1218, 3, 37, 0).Summary);
+
     private sealed class StubReader(MoneyManagerImportData data) : IMoneyManagerBackupReader
     {
         public Task<Result<MoneyManagerImportData>> Read(Stream backup,

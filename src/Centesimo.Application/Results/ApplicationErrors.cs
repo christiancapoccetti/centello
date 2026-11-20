@@ -13,4 +13,5 @@ public static class ApplicationErrors
     public static readonly Error InvalidName = new("Validation.InvalidName", "Il nome è obbligatorio.");
     public static readonly Error RecurringPaymentNotFound = new("RecurringPayment.NotFound", "Il pagamento regolare non esiste.");
     public static readonly Error InvalidEndDate = new("RecurringPayment.InvalidEndDate", "La data di fine non è valida.");
+    public static readonly Error RecurringPaymentAlreadyEnded = new("RecurringPayment.AlreadyEnded", "Il pagamento regolare è già terminato.");
 }

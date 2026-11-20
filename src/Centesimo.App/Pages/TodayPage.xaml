@@ -1,16 +1,188 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:controls="clr-namespace:Centesimo.App.Controls" x:Class="Centesimo.App.Pages.TodayPage" Title="Oggi" SafeAreaEdges="All">
- <Grid Padding="22,14,22,16" RowDefinitions="*,56" RowSpacing="12">
-  <ScrollView><VerticalStackLayout Spacing="24" Padding="0,8,0,14">
-    <Grid ColumnDefinitions="*,Auto"><VerticalStackLayout Spacing="2"><Label Text="Ciao!" Style="{StaticResource HeadlineLarge}" /><Label Text="{Binding HomeSubtitle}" Style="{StaticResource BodyMedium}" /></VerticalStackLayout><Border Grid.Column="1" Style="{StaticResource CategoryIconContainer}" BackgroundColor="{StaticResource PrimaryContainerLight}" VerticalOptions="Center"><Label Text="€" Style="{StaticResource TitleLarge}" TextColor="{StaticResource PrimaryLight}" HorizontalOptions="Center" VerticalOptions="Center" /></Border></Grid>
-    <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-    <Border Style="{StaticResource SurfaceCard}" IsVisible="{Binding HasError}"><Label Text="{Binding ErrorMessage}" TextColor="{StaticResource ErrorLight}" /></Border>
-    <VerticalStackLayout Spacing="12"><Grid ColumnDefinitions="40,*,40"><Button Text="‹" Style="{StaticResource IconButton}" IsEnabled="{Binding CanGoPrevious}" Clicked="OnPreviousMonthClicked" /><Button Grid.Column="1" WidthRequest="184" HorizontalOptions="Center" Text="{Binding MonthTitle}" BackgroundColor="{StaticResource PrimaryContainerLight}" TextColor="{StaticResource OnPrimaryContainerLight}" FontFamily="OpenSansSemibold" FontSize="16" Padding="20,0" MinimumHeightRequest="48" CornerRadius="24" Command="{Binding ToggleOverviewCommand}" SemanticProperties.Description="Cambia visualizzazione tra mese e anno" /><Button Grid.Column="2" Text="›" Style="{StaticResource IconButton}" IsEnabled="{Binding CanGoNext}" Clicked="OnNextMonthClicked" /></Grid><Border Style="{StaticResource TonalCard}" Padding="22"><VerticalStackLayout Spacing="8"><Label Text="{Binding SummaryLabel}" Style="{StaticResource LabelLarge}" TextColor="{StaticResource OnPrimaryContainerLight}" /><Label Text="{Binding MonthlyTotal}" Style="{StaticResource DisplaySmall}" TextColor="{StaticResource OnPrimaryContainerLight}" /><Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0"><Label Text="{Binding BudgetSummary}" Style="{StaticResource BodyMedium}" /><Label Grid.Column="1" Text="Budget" Style="{StaticResource LabelLarge}" /></Grid><ProgressBar Progress="{Binding BudgetProgress}" HeightRequest="6" ProgressColor="{StaticResource PrimaryLight}" /></VerticalStackLayout></Border></VerticalStackLayout>
-    <VerticalStackLayout Spacing="10" IsVisible="{Binding HasCategories}"><Label Text="Per categoria" Style="{StaticResource TitleLarge}" /><controls:CategoryBreakdownList ItemsSource="{Binding Categories}" CategoryClicked="OnCategoryClicked" /></VerticalStackLayout>
-   </VerticalStackLayout></ScrollView>
-<Grid Grid.Row="1" ColumnDefinitions="*,56" ColumnSpacing="10"><Button Text="Aggiungi spesa" Clicked="OnAddExpenseClicked" Style="{StaticResource PrimaryActionButton}" HeightRequest="56" /><Grid Grid.Column="1"><Button IsEnabled="{Binding IsSpeechAvailable}" Pressed="OnSpeechPressed" Released="OnSpeechReleased" Style="{StaticResource VoiceActionButton}" SemanticProperties.Description="Comando vocale"><Button.ImageSource><FileImageSource File="microphone.svg" /></Button.ImageSource></Button><Button IsVisible="{Binding IsSpeechUnavailable}" BackgroundColor="Transparent" Text="" Clicked="OnInactiveSpeechClicked" /></Grid></Grid>
-<Border Grid.Row="1" IsVisible="{Binding IsSpeechListening}" InputTransparent="True" TranslationY="-42" BackgroundColor="#E8F3F0" Stroke="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="12,6"><HorizontalStackLayout HorizontalOptions="Center" Spacing="8"><Label Text="●" TextColor="{StaticResource ErrorLight}"/><Label Text="Registra… rilascia per inviare" Style="{StaticResource LabelLarge}"/><Label Text="▮▯▮▯▮" TextColor="{StaticResource PrimaryLight}"/></HorizontalStackLayout></Border>
-  <Grid Grid.RowSpan="2" IsVisible="{Binding IsSpeechSheetVisible}" BackgroundColor="#80000000"><Border VerticalOptions="End" BackgroundColor="{StaticResource SurfaceLight}" Stroke="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 28,28,0,0" Padding="22,24,22,28"><VerticalStackLayout Spacing="16"><Label Text="Inserimento rapido" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" /><ActivityIndicator IsVisible="{Binding IsSpeechProcessing}" IsRunning="{Binding IsSpeechProcessing}" /><Label Text="{Binding SpeechTranscription, StringFormat='Ho sentito: “{0}”'}" IsVisible="{Binding HasSpeechTranscription}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" /><Label Text="{Binding SpeechErrorMessage}" IsVisible="{Binding HasSpeechError}" TextColor="{StaticResource ErrorLight}" HorizontalTextAlignment="Center" /><Label Text="☁  Audio e testo inviati a OpenAI" Style="{StaticResource LabelLarge}" HorizontalTextAlignment="Center" /><Button Text="Chiudi" Clicked="OnCloseSpeechClicked" IsEnabled="{Binding IsSpeechIdle}" Style="{StaticResource TextActionButton}" /></VerticalStackLayout></Border></Grid>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:local="clr-namespace:Centesimo.App"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
+             x:Class="Centesimo.App.Pages.TodayPage"
+             Title="Oggi"
+             SafeAreaEdges="All">
+    <Grid RowDefinitions="56,*,Auto">
 
- </Grid>
+        <c:PeriodSwitcher Margin="24,0,8,0" VerticalOptions="Center" IsPageTitle="True" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24,0,24,24">
+                <Border Style="{StaticResource SurfaceCard}" Margin="0,16,0,0" IsVisible="{Binding HasError}">
+                    <Label Text="{Binding ErrorMessage}" TextColor="{t:Theme Alert}" />
+                </Border>
+
+                <VerticalStackLayout IsVisible="{Binding HasOverview}">
+                    <!-- Android keeps the font ascent above a 68sp line and the descent below it, about 20dp each.
+                         The negative margins here and on the next label take that room back. -->
+                    <Label Style="{StaticResource TotalDisplay}" Margin="0,-3,0,0">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="{Binding Overview.Total}" />
+                                <Span Text=" " FontSize="18" />
+                                <Span Text="€" FontSize="38" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Label Style="{StaticResource BodyLarge}" Margin="0,-12,0,0">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="{Binding Overview.Budget.Lead}" />
+                                <Span Text="{Binding Overview.Budget.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
+                                <Span Text="{Binding Overview.Budget.Tail}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Border Margin="0,6,0,0" Padding="6,0,10,0" HeightRequest="26" HorizontalOptions="Start" StrokeThickness="0" BackgroundColor="{t:Theme SurfaceRaised}" IsVisible="{Binding Overview.HasComparison}" SemanticProperties.Description="{Binding Overview.Comparison.Description}">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
+                                <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                            <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.East}">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
+                                        <Setter Property="Text" Value="{x:Static app:MaterialSymbols.SouthEast}" />
+                                        <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Higher}">
+                                        <Setter Property="Text" Value="{x:Static app:MaterialSymbols.NorthEast}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                            <Label Text="{Binding Overview.Comparison.Text}" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
+                                        <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <c:CategoryLineView Margin="0,24,0,0" HeightRequest="14" Segments="{Binding Overview.Categories.Segments}" IsVisible="{Binding Overview.Categories.HasSegments}" SemanticProperties.Description="{Binding Overview.Categories.Description}" />
+                    <!-- An item opens its category. Its padding makes the touch target 41 high and the negative
+                         margins of the row give that room back. -->
+                    <FlexLayout Margin="0,-6,0,-6" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Overview.Categories.Key}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <!-- The gap between items is padding: FlexLayout counts an item margin twice. -->
+                                <HorizontalStackLayout Padding="0,12,14,12" Spacing="6" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria">
+                                    <HorizontalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCategoryKeyTapped" />
+                                    </HorizontalStackLayout.GestureRecognizers>
+                                    <c:PaletteSwatch ColorKey="{Binding ColorKey}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                                    <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Error}" FontSize="14" TextColor="{t:Theme Alert}" VerticalOptions="Center" IsVisible="{Binding IsOverBudget}" />
+                                    <Label Text="{Binding Text}" Style="{StaticResource Caption}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsOverBudget}" Value="True">
+                                                <Setter Property="TextColor" Value="{t:Theme Alert}" />
+                                                <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+
+                    <VerticalStackLayout IsVisible="{Binding Overview.HasCategories}">
+                        <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
+
+                        <!-- The link is as high as the whole header, so the touch target is 47 high and its words sit on
+                             the line of the title. -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
+                            <c:ActionLink Grid.Column="1" Text="Vedi tutte" Padding="10,24,0,3" Margin="0,0,-4,0" Tapped="OnAllExpensesTapped" />
+                        </Grid>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Overview.Latest}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <c:ExpenseRow Opened="OnExpenseOpened" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <Label Text="Ancora nessuna spesa in questo periodo." Style="{StaticResource BodyMedium}" Margin="0,8,0,0" IsVisible="{Binding Overview.HasNoLatest}" />
+                    </VerticalStackLayout>
+
+                    <!-- The first run: without a category there is nothing an expense could go to, so the home
+                         offers the common ones instead of an empty chart. -->
+                    <VerticalStackLayout IsVisible="{Binding Overview.IsFirstRun}">
+                        <Label Text="Crea le tue categorie per iniziare" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
+                        <Label Text="Le più comuni sono già scelte. Togli quelle che non ti servono: potrai cambiarle quando vuoi." Style="{StaticResource Lead}" Margin="0,4,0,0" />
+                        <FlexLayout Margin="0,4,-8,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Suggestions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- The gap between chips is padding: FlexLayout counts an item margin twice. -->
+                                    <ContentView Padding="0,0,8,0">
+                                        <c:Chip Text="{Binding Name}" IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" IsSelected="{Binding IsSelected}" HasCheck="False" Tapped="OnSuggestionTapped" />
+                                    </ContentView>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                        <Button Text="Crea categorie" Style="{StaticResource PrimaryActionButton}" Margin="0,12,0,0" FontSize="16" HeightRequest="48" MinimumHeightRequest="48" MaximumHeightRequest="48" CornerRadius="24" IsEnabled="{Binding CanCreateSuggested}" Clicked="OnCreateSuggestedClicked">
+                            <Button.Triggers>
+                                <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.38" />
+                                </Trigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Crea a mano" Style="{StaticResource TextActionButton}" Margin="0,8,0,0" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" Clicked="OnCreateByHandClicked" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Border Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}" local:SnackbarAnchor.IsAnchor="True">
+            <Border.Triggers>
+                <!-- Until a category exists there is nothing to add an expense to. -->
+                <DataTrigger TargetType="Border" Binding="{Binding Overview.IsFirstRun}" Value="True">
+                    <Setter Property="Opacity" Value="0.38" />
+                    <Setter Property="InputTransparent" Value="True" />
+                </DataTrigger>
+            </Border.Triggers>
+            <Grid ColumnDefinitions="*,1,76">
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                    <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Add}" TextColor="{t:Theme Accent}" />
+                    <Label Text="Aggiungi spesa" FontFamily="{x:Static t:Fonts.Bold}" FontSize="17" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
+                </HorizontalStackLayout>
+                <Button BackgroundColor="Transparent" Text="" Clicked="OnAddExpenseClicked" SemanticProperties.Description="Aggiungi spesa" />
+                <BoxView Grid.Column="1" Color="{t:Theme Outline}" />
+                <Grid Grid.Column="2">
+                    <Button Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsSpeechAvailable}" Pressed="OnSpeechPressed" Released="OnSpeechReleased" SemanticProperties.Description="Tieni premuto per dettare" />
+                    <Button IsVisible="{Binding IsSpeechUnavailable}" BackgroundColor="Transparent" Text="" Clicked="OnInactiveSpeechClicked" SemanticProperties.Description="Comando vocale non configurato" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" IsVisible="{Binding IsSpeechListening}" InputTransparent="True" HorizontalOptions="Center" VerticalOptions="Start" TranslationY="-36" Padding="14,6" BackgroundColor="{t:Theme SurfaceRaised}" Stroke="{t:Theme Outline}" StrokeThickness="1" StrokeShape="RoundRectangle 18">
+            <HorizontalStackLayout Spacing="8">
+                <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" />
+                <Label Text="Registra… rilascia per inviare" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+        </Border>
+
+        <Grid Grid.RowSpan="3" IsVisible="{Binding IsSpeechSheetVisible}" BackgroundColor="{t:Theme Scrim}">
+            <Border VerticalOptions="End" BackgroundColor="{t:Theme Ground}" StrokeThickness="0" StrokeShape="RoundRectangle 28,28,0,0" Padding="24,24,24,28">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Inserimento vocale" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" />
+                    <ActivityIndicator IsVisible="{Binding IsSpeechProcessing}" IsRunning="{Binding IsSpeechProcessing}" />
+                    <Label Text="{Binding SpeechTranscription, StringFormat='Ho sentito: “{0}”'}" IsVisible="{Binding HasSpeechTranscription}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding SpeechErrorMessage}" IsVisible="{Binding HasSpeechError}" TextColor="{t:Theme Alert}" HorizontalTextAlignment="Center" />
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="6">
+                        <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Cloud}" TextColor="{t:Theme Mute}" />
+                        <Label Text="Audio e testo inviati a OpenAI" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
+                    <Button Text="Chiudi" Clicked="OnCloseSpeechClicked" IsEnabled="{Binding IsSpeechIdle}" Style="{StaticResource TextActionButton}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </Grid>
 </ContentPage>

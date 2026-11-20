@@ -17,33 +17,41 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<CategoriesPage>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<SettingsPage>();
-        services.AddTransient<OpenSourceLicensesPage>();
-        services.AddTransient<LicensePage>();
+        services.AddTransient<LicensesViewModel>();
+        services.AddTransient<LicensesPage>();
         services.AddSingleton<RecurringPaymentAutomation>();
+        services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
 #if ANDROID
         services.AddSingleton<ISpeechRecorder, AndroidAudioRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
+        services.AddSingleton<IConfirmation, MaterialConfirmation>();
+        services.AddSingleton<ISnackbar, MaterialSnackbar>();
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
+        services.AddSingleton<IConfirmation, AlertConfirmation>();
+        services.AddSingleton<ISnackbar, NoSnackbar>();
 #endif
         services.AddSingleton<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>
             () => provider.GetRequiredService<AppShell>());
-        services.AddSingleton<CategoryEditorViewModel>();
-        services.AddSingleton<CategoryEditorPage>();
-        services.AddTransient<CategorySpendingViewModel>();
-        services.AddTransient<CategorySpendingPage>();
-        services.AddTransient<TagExpensesViewModel>();
-        services.AddTransient<TagExpensesPage>();
+        services.AddTransient<CategoryEditorViewModel>();
+        services.AddTransient<CategoryEditorPage>();
+        services.AddTransient<CategoryDetailViewModel>();
+        services.AddTransient<CategoryDetailPage>();
+        services.AddTransient<CategoryTagPicker>();
         services.AddTransient<ExpenseEditorViewModel>();
         services.AddTransient<ExpenseEditorPage>();
+        services.AddTransient<ExpensesViewModel>();
+        services.AddTransient<ExpensesPage>();
         services.AddTransient<RecurringPaymentsViewModel>();
         services.AddTransient<RecurringPaymentsPage>();
         services.AddTransient<RecurringPaymentEditorViewModel>();
         services.AddTransient<RecurringPaymentEditorPage>();
+        services.AddTransient<MoneyManagerImportViewModel>();
+        services.AddTransient<MoneyManagerImportPage>();
         return services;
     }
 }

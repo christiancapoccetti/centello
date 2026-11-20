@@ -1,6 +1,8 @@
 using Centesimo.App.ViewModels;
-using Centesimo.App.Controls;
+using Centesimo.Application;
+
 namespace Centesimo.App.Pages;
+
 public partial class InsightsPage : ContentPage
 {
     private readonly InsightsViewModel _viewModel;
@@ -18,31 +20,36 @@ public partial class InsightsPage : ContentPage
         await _viewModel.Load();
     }
 
-    private async void OnMonthClicked(object? sender, EventArgs e) => await _viewModel.ShowMonth();
-    private async void OnYearClicked(object? sender, EventArgs e) => await _viewModel.ShowYear();
-    private async void OnRetryClicked(object? sender, EventArgs e) => await _viewModel.Load();
-    private void OnMoreInsightsClicked(object? sender, EventArgs e) => _viewModel.ShowAllInsights();
-    private async void OnAddExpenseClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+    private async void OnPreviousTapped(object? sender, EventArgs e) => await _viewModel.ShowPrevious();
 
-    private async void OnInsightClicked(object? sender, EventArgs e)
+    private async void OnNextTapped(object? sender, EventArgs e) => await _viewModel.ShowNext();
+
+    private async void OnPeriodToggled(object? sender, EventArgs e) => await _viewModel.TogglePeriod();
+
+    private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+
+    // An observation about one expense opens it. One about a category leads to its expenses: the history of the
+    // month with the category as filter, or the category itself when the period is a year.
+    private async void OnInsightTapped(object? sender, EventArgs e)
     {
-        if (sender is not Button { CommandParameter: InsightsViewModel.InsightCardViewModel insight })
+        if (sender is not BindableObject { BindingContext: InsightRow insight })
             return;
-        if (insight.ExpenseId.HasValue)
+
+        var route = insight.Target switch
         {
-            await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={insight.ExpenseId}");
-            return;
-        }
-        if (!insight.CategoryId.HasValue || !_viewModel.IsMonthly)
-            return;
-        await Shell.Current.GoToAsync($"{nameof(CategorySpendingPage)}?categoryId={insight.CategoryId}&year={DateTime.Today.Year}&month={DateTime.Today.Month}");
+            InsightTarget.ExpenseTarget expense => $"{nameof(ExpenseEditorPage)}?expenseId={expense.ExpenseId}",
+            InsightTarget.CategoryTarget { Period.Kind: PeriodKind.Month } category => ExpensesPage.Route(category.Period, category.CategoryId),
+            InsightTarget.CategoryTarget category => CategoryDetailPage.Route(category.CategoryId, category.Period),
+            _ => ""
+        };
+        if (route.Length > 0)
+            await Shell.Current.GoToAsync(route);
     }
 
-    private async void OnCategoryClicked(object? sender, CategoryBreakdownItemClickedEventArgs e)
+    private async void OnCategoryClicked(object? sender, EventArgs e)
     {
-        if (!_viewModel.IsMonthly)
-            return;
-
-        await Shell.Current.GoToAsync($"{nameof(CategorySpendingPage)}?categoryId={e.Category.CategoryId}&year={DateTime.Today.Year}&month={DateTime.Today.Month}");
+        if (sender is Button { CommandParameter: InsightCategoryRow category } && _viewModel.Overview is { } overview)
+            await Shell.Current.GoToAsync(CategoryDetailPage.Route(category.CategoryId, overview.Period));
     }
 }

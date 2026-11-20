@@ -1,17 +1,16 @@
 using Centesimo.App.ViewModels;
+using Centesimo.Application;
 
 namespace Centesimo.App.Pages;
 
 public partial class CategoriesPage : ContentPage
 {
     private readonly CategoriesViewModel _viewModel;
-    private readonly CategoryEditorPage _editorPage;
 
-    public CategoriesPage(CategoriesViewModel viewModel, CategoryEditorPage editorPage)
+    public CategoriesPage(CategoriesViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _editorPage = editorPage;
         BindingContext = viewModel;
     }
 
@@ -21,52 +20,13 @@ public partial class CategoriesPage : ContentPage
         await _viewModel.Load();
     }
 
-    private async void OnNewCategoryClicked(object? sender, EventArgs e)
+    private async void OnNewCategoryClicked(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(CategoryEditorPage.Route());
+
+    // The editor opens a category in use to change it and an archived one only to read and restore it.
+    private async void OnCategoryClicked(object? sender, EventArgs e)
     {
-        _editorPage.OpenNew();
-        await Navigation.PushModalAsync(_editorPage, false);
-    }
-
-    private async void OnActiveClicked(object? sender, EventArgs e) => await _viewModel.ShowActive();
-
-    private async void OnArchivedClicked(object? sender, EventArgs e) => await _viewModel.ShowArchived();
-
-    private async void OnEditClicked(object? sender, EventArgs e)
-    {
-        if (sender is not Button { CommandParameter: CategoryItemViewModel category })
-            return;
-
-        _editorPage.OpenEdit(category);
-        await Navigation.PushModalAsync(_editorPage, false);
-    }
-
-    private void OnCardPressed(object? sender, EventArgs e) =>
-        InteractionFeedback.Press(sender);
-
-    private void OnCardReleased(object? sender, EventArgs e) =>
-        InteractionFeedback.Release(sender);
-
-    private async void OnArchiveClicked(object? sender, EventArgs e)
-    {
-        if (sender is not Button { CommandParameter: CategoryItemViewModel category })
-            return;
-
-        var confirmed = await DisplayAlertAsync(
-            "Archivia categoria",
-            $"Vuoi archiviare {category.Name}? Le spese esistenti resteranno disponibili.",
-            "Archivia",
-            "Annulla");
-        if (!confirmed)
-            return;
-
-        await _viewModel.Archive(category.CategoryId);
-    }
-
-    private async void OnRestoreClicked(object? sender, EventArgs e)
-    {
-        if (sender is not Button { CommandParameter: CategoryItemViewModel category })
-            return;
-
-        await _viewModel.Restore(category.CategoryId);
+        if (sender is Button { CommandParameter: CategoryRow category })
+            await Shell.Current.GoToAsync(CategoryEditorPage.Route(category.CategoryId));
     }
 }

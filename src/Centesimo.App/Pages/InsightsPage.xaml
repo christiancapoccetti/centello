@@ -1,12 +1,122 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="Centesimo.App.Pages.InsightsPage" Title="Insight" SafeAreaEdges="All">
- <ScrollView><VerticalStackLayout Padding="22,22,22,16" Spacing="16">
-  <VerticalStackLayout Spacing="2"><Label Text="Insight" Style="{StaticResource HeadlineLarge}"/><Label Text="Guarda come cambiano le tue spese." Style="{StaticResource BodyMedium}"/></VerticalStackLayout>
-  <HorizontalStackLayout HorizontalOptions="Center"><Button Text="Questo mese" Clicked="OnMonthClicked" Style="{StaticResource TextActionButton}" BackgroundColor="{Binding MonthSelectorBackground}" SemanticProperties.Description="{Binding MonthSelectorDescription}"/><Button Text="Questo anno" Clicked="OnYearClicked" Style="{StaticResource TextActionButton}" BackgroundColor="{Binding YearSelectorBackground}" SemanticProperties.Description="{Binding YearSelectorDescription}"/></HorizontalStackLayout>
-  <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"/><Border Style="{StaticResource TonalCard}" SemanticProperties.Description="{Binding ComparisonDescription}"><VerticalStackLayout Spacing="8"><Label Text="{Binding SummaryLabel}" Style="{StaticResource LabelLarge}"/><Label Text="{Binding Total}" Style="{StaticResource DisplaySmall}"/><Label Text="{Binding Comparison}" Style="{StaticResource BodyMedium}"/><ProgressBar Progress="{Binding ComparisonProgress}" ProgressColor="{StaticResource PrimaryLight}" HeightRequest="6" IsVisible="{Binding HasComparison}"/></VerticalStackLayout></Border>
-  <Border Style="{StaticResource SurfaceCard}" IsVisible="{Binding HasError}"><VerticalStackLayout><Label Text="{Binding ErrorMessage}" TextColor="{StaticResource ErrorLight}"/><Button Text="Riprova" Clicked="OnRetryClicked" Style="{StaticResource TextActionButton}"/></VerticalStackLayout></Border>
-  <VerticalStackLayout Spacing="10" IsVisible="{Binding HasInsights}"><Label Text="I tuoi insight" Style="{StaticResource TitleLarge}"/><VerticalStackLayout BindableLayout.ItemsSource="{Binding Insights}" Spacing="10"><BindableLayout.ItemTemplate><DataTemplate><Border Style="{StaticResource SurfaceCard}"><Grid><VerticalStackLayout Spacing="4"><Label Text="{Binding Title}" Style="{StaticResource TitleMedium}"/><Label Text="{Binding Description}" Style="{StaticResource BodyMedium}"/></VerticalStackLayout><Button BackgroundColor="Transparent" Text="" Clicked="OnInsightClicked" CommandParameter="{Binding .}" IsVisible="{Binding IsActionable}" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri il dettaglio disponibile"/></Grid></Border></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout><Button Text="{Binding MoreInsightsText}" IsVisible="{Binding HasMoreInsights}" Clicked="OnMoreInsightsClicked" Style="{StaticResource TextActionButton}"/></VerticalStackLayout>
-  <VerticalStackLayout xmlns:controls="clr-namespace:Centesimo.App.Controls" Spacing="10" IsVisible="{Binding HasCategories}"><Label Text="Per categoria" Style="{StaticResource TitleLarge}"/><controls:CategoryBreakdownList ItemsSource="{Binding Categories}" CategoryClicked="OnCategoryClicked"/></VerticalStackLayout>
-  <VerticalStackLayout IsVisible="{Binding IsEmpty}" Style="{StaticResource EmptyStateLayout}"><Label Text="Ancora nessuna spesa" Style="{StaticResource TitleLarge}"/><Label Text="Aggiungi una spesa per iniziare a vedere i tuoi insight." Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center"/><Button Text="Aggiungi spesa" Clicked="OnAddExpenseClicked" Style="{StaticResource PrimaryActionButton}"/></VerticalStackLayout><Label Text="I tuoi insight vengono elaborati solo su questo dispositivo." Style="{StaticResource BodySmall}" HorizontalTextAlignment="Center"/>
- </VerticalStackLayout></ScrollView>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
+             x:Class="Centesimo.App.Pages.InsightsPage"
+             Title="Insight"
+             SafeAreaEdges="All">
+    <Grid RowDefinitions="56,48,*">
+        <Label Margin="24,0" Text="Insight" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
+
+        <c:PeriodSwitcher Grid.Row="1" Margin="24,0,8,0" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
+
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="0,0,0,24">
+                <c:InlineError Margin="24,8,24,0" Text="{Binding ErrorMessage}" />
+
+                <VerticalStackLayout IsVisible="{Binding HasSpending}">
+                    <!-- Android keeps the font ascent above a 48sp line and the descent below it. The negative
+                         margins take that room back. -->
+                    <Label Style="{StaticResource SummaryDisplay}" Margin="24,4,24,-8">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="{Binding Total}" />
+                                <Span Text=" " FontSize="12" />
+                                <Span Text="€" FontSize="28" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="{Binding Summary.Lead}" />
+                                <Span Text="{Binding Summary.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
+                                <Span Text="{Binding Summary.Tail}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <!-- What was spent against the period before it, on one scale. -->
+                    <Grid Margin="24,20,24,0" ColumnDefinitions="76,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="10" IsVisible="{Binding HasComparison}" SemanticProperties.Description="{Binding ComparisonDescription}">
+                        <Label Text="{Binding CurrentLabel}" Style="{StaticResource Hint}" VerticalOptions="Center" LineBreakMode="NoWrap" />
+                        <c:FractionBar Grid.Column="1" HeightRequest="10" VerticalOptions="Center" Fraction="{Binding CurrentFraction}" />
+                        <Label Grid.Column="2" Text="{Binding CurrentAmount}" FontFamily="{x:Static t:Fonts.Bold}" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                        <Label Grid.Row="1" Text="{Binding PreviousLabel}" Style="{StaticResource Hint}" VerticalOptions="Center" LineBreakMode="NoWrap" />
+                        <c:FractionBar Grid.Row="1" Grid.Column="1" HeightRequest="10" VerticalOptions="Center" Color="ChartBar" Fraction="{Binding PreviousFraction}" />
+                        <Label Grid.Row="1" Grid.Column="2" Text="{Binding PreviousAmount}" FontFamily="{x:Static t:Fonts.Bold}" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                    </Grid>
+
+                    <Label Text="Cosa è cambiato" Style="{StaticResource SectionTitle}" Margin="24,22,24,1" IsVisible="{Binding HasInsights}" SemanticProperties.HeadingLevel="Level2" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Insights}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="24,0" ColumnDefinitions="24,*" ColumnSpacing="14" RowDefinitions="Auto,1">
+                                    <Label Style="{StaticResource IconGlyph}" Margin="0,15,0,0" Text="{Binding Glyph}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
+                                    <VerticalStackLayout Grid.Column="1" Padding="0,11,0,0">
+                                        <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" />
+                                        <Label Text="{Binding Description}" Style="{StaticResource BodyMedium}" />
+                                        <!-- The link ends the row: its padding is the room under it and its touch target. -->
+                                        <c:ActionLink Text="{Binding Action}" Padding="0,8,16,14" HorizontalOptions="Start" IsVisible="{Binding HasAction}" Tapped="OnInsightTapped" />
+                                        <BoxView HeightRequest="14" Color="Transparent" IsVisible="{Binding HasNoAction}" />
+                                    </VerticalStackLayout>
+                                    <BoxView Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Label Text="Per categoria" Style="{StaticResource SectionTitle}" Margin="24,22,24,1" SemanticProperties.HeadingLevel="Level2" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Categories}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto,Auto" ColumnSpacing="14" RowDefinitions="*,1">
+                                    <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                                    <VerticalStackLayout Grid.Column="1" Padding="0,8" VerticalOptions="Center">
+                                        <Label Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" />
+                                        <!-- The bar is the spending against the largest category, the number is the share of the total. -->
+                                        <HorizontalStackLayout Spacing="8" Margin="0,2,0,0">
+                                            <c:FractionBar WidthRequest="96" HeightRequest="4" VerticalOptions="Center" Fraction="{Binding ShareOfTop}" ColorKey="{Binding ColorKey}" />
+                                            <Label Text="{Binding Share}" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                                            <Border Style="{StaticResource Badge}" VerticalOptions="Center">
+                                                <Border.Triggers>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
+                                                        <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
+                                                    </DataTrigger>
+                                                </Border.Triggers>
+                                                <Label Text="{Binding Change.Text}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" VerticalTextAlignment="Center">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
+                                                            <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Same}">
+                                                            <Setter Property="TextColor" Value="{t:Theme Mute}" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </Border>
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource AmountLabel}" VerticalOptions="Center" />
+                                    <Label Grid.Column="3" Margin="-8,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" />
+                                    <BoxView Grid.Row="1" Grid.ColumnSpan="4" Style="{StaticResource Hairline}" />
+                                    <Button Grid.RowSpan="2" Grid.ColumnSpan="4" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Label Text="I tuoi insight vengono elaborati solo su questo dispositivo." Style="{StaticResource Caption}" Margin="24,28,24,8" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Padding="32,56,32,24" IsVisible="{Binding IsEmpty}">
+                    <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.BarChart}" TextColor="{t:Theme Mute}" />
+                    <Label Text="{Binding EmptyTitle}" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+                    <Label Text="Aggiungi una spesa per vedere come cambiano le tue spese." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
+                    <Button Text="Aggiungi spesa" Style="{StaticResource TonalButton}" Margin="0,20,0,0" HorizontalOptions="Center" Clicked="OnAddExpenseClicked" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

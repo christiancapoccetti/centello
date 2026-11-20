@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
+             x:Class="Centesimo.App.Controls.PeriodSwitcher"
+             x:Name="Root">
+    <Grid HeightRequest="48" ColumnDefinitions="*,48,48">
+        <HorizontalStackLayout x:Name="TitleArea" HorizontalOptions="Start" Spacing="2">
+            <HorizontalStackLayout.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTitleTapped" />
+            </HorizontalStackLayout.GestureRecognizers>
+            <Label x:Name="Title" FontFamily="{x:Static t:Fonts.Bold}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span x:Name="PeriodName" />
+                        <Span Text=" " />
+                        <Span x:Name="Year" FontFamily="{x:Static t:Fonts.Regular}" TextColor="{t:Theme Mute}" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Label x:Name="Cue" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ExpandMore}" TextColor="{t:Theme Mute}" />
+        </HorizontalStackLayout>
+        <Button x:Name="Previous" Grid.Column="1" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ChevronLeft}" Clicked="OnPreviousClicked" />
+        <Button x:Name="Next" Grid.Column="2" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ChevronRight}" IsEnabled="{Binding HasNext, Source={x:Reference Root}}" Clicked="OnNextClicked" />
+    </Grid>
+</ContentView>

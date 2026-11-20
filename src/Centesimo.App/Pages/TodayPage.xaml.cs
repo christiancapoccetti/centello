@@ -1,5 +1,4 @@
 using Centesimo.App.ViewModels;
-using Centesimo.App.Controls;
 using Centesimo.Application;
 
 namespace Centesimo.App.Pages;
@@ -8,14 +7,17 @@ public partial class TodayPage : ContentPage
 {
     private readonly TodayViewModel _viewModel;
     private readonly SpeechExpenseDraftService _speechDraftService;
+    private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;
     private int _speechSession;
+    private long _speechPressedAt;
 
-    public TodayPage(TodayViewModel viewModel, SpeechExpenseDraftService speechDraftService)
+    public TodayPage(TodayViewModel viewModel, SpeechExpenseDraftService speechDraftService, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _speechDraftService = speechDraftService;
+        _snackbar = snackbar;
         BindingContext = viewModel;
     }
 
@@ -40,25 +42,52 @@ public partial class TodayPage : ContentPage
         _viewModel.IsSpeechSheetVisible = false;
     }
 
-    private async void OnPreviousMonthClicked(object? sender, EventArgs e) =>
-        await _viewModel.PreviousMonth();
+    private async void OnPreviousTapped(object? sender, EventArgs e) =>
+        await _viewModel.ShowPrevious();
 
-    private async void OnNextMonthClicked(object? sender, EventArgs e) =>
-        await _viewModel.NextMonth();
+    private async void OnNextTapped(object? sender, EventArgs e) =>
+        await _viewModel.ShowNext();
 
-    private async void OnCategoryClicked(object? sender, CategoryBreakdownItemClickedEventArgs e)
+    private async void OnPeriodToggled(object? sender, EventArgs e) =>
+        await _viewModel.TogglePeriod();
+
+    private async void OnExpenseOpened(object? sender, Guid expenseId) =>
+        await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expenseId}");
+
+    private async void OnCategoryKeyTapped(object? sender, TappedEventArgs e)
     {
-        var period = _viewModel.IsYearlyOverview ? "&period=year" : "";
-        await Shell.Current.GoToAsync($"{nameof(CategorySpendingPage)}?categoryId={e.Category.CategoryId}&year={_viewModel.SelectedYear}&month={_viewModel.SelectedMonth}{period}");
+        if (sender is BindableObject { BindingContext: CategoryKeyItem category } && _viewModel.Overview is { } overview)
+            await Shell.Current.GoToAsync(CategoryDetailPage.Route(category.CategoryId, overview.Period));
     }
-    private void OnCardPressed(object? sender, EventArgs e) =>
-        InteractionFeedback.Press(sender);
 
-    private void OnCardReleased(object? sender, EventArgs e) =>
-        InteractionFeedback.Release(sender);
+    private async void OnAllExpensesTapped(object? sender, EventArgs e)
+    {
+        if (_viewModel.HistoryMonth is { } month)
+            await Shell.Current.GoToAsync(ExpensesPage.Route(month));
+    }
 
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+
+    private void OnSuggestionTapped(object? sender, EventArgs e)
+    {
+        if (sender is BindableObject { BindingContext: SuggestedCategoryChip chip })
+            _viewModel.Toggle(chip);
+    }
+
+    private async void OnCreateSuggestedClicked(object? sender, EventArgs e)
+    {
+        var created = await _viewModel.CreateSuggested();
+        if (created.IsFailure)
+            return;
+
+        _snackbar.Show(created.Value == 1
+            ? "1 categoria creata: ora puoi aggiungere le spese"
+            : $"{created.Value} categorie create: ora puoi aggiungere le spese");
+    }
+
+    private async void OnCreateByHandClicked(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(CategoryEditorPage.Route());
 
     private void OnSpeechPressed(object? sender, EventArgs e)
     {
@@ -66,6 +95,7 @@ public partial class TodayPage : ContentPage
             return;
 
         var session = ++_speechSession;
+        _speechPressedAt = Environment.TickCount64;
         _speechStart = StartSpeech(session);
     }
 
@@ -119,6 +149,12 @@ public partial class TodayPage : ContentPage
             return;
 
         _speechStart = null;
+        if (SpeechRecordingLimits.IsTap(TimeSpan.FromMilliseconds(Environment.TickCount64 - _speechPressedAt)))
+        {
+            await ExplainHold(start);
+            return;
+        }
+
         try
         {
             var startResult = await start;
@@ -157,6 +193,17 @@ public partial class TodayPage : ContentPage
         }
     }
 
+    // A tap is not a dictation: whatever started to record is dropped and the gesture is explained instead.
+    private async Task ExplainHold(Task<Result> start)
+    {
+        var started = await start;
+        if (started.IsSuccess)
+            await _speechDraftService.Cancel();
+
+        _viewModel.IsSpeechListening = false;
+        _snackbar.Show("Tieni premuto il microfono per dettare una spesa");
+    }
+
     private void OnCloseSpeechClicked(object? sender, EventArgs e)
     {
         _viewModel.IsSpeechListening = false;
@@ -169,7 +216,7 @@ public partial class TodayPage : ContentPage
     private async void OnInactiveSpeechClicked(object? sender, EventArgs e)
     {
         var openSettings = await DisplayAlertAsync(
-            "Inserimento rapido",
+            "Inserimento vocale",
             "Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.",
             "Apri impostazioni",
             "Annulla");

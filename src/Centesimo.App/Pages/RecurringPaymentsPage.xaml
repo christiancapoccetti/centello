@@ -1,8 +1,79 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="Centesimo.App.Pages.RecurringPaymentsPage" Title="Pagamenti regolari" SafeAreaEdges="All">
- <Grid Padding="20,16" RowDefinitions="Auto,*,Auto" RowSpacing="16">
-  <Grid ColumnDefinitions="Auto,*"><Button Text="Chiudi" Style="{StaticResource TextActionButton}" Clicked="OnBackClicked" SemanticProperties.Description="Torna alle impostazioni"/><VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center"><Label Text="Pagamenti regolari" Style="{StaticResource HeadlineLarge}" SemanticProperties.HeadingLevel="Level1"/><Label Text="Le spese vengono create automaticamente alla scadenza." Style="{StaticResource BodyMedium}"/></VerticalStackLayout></Grid>
-  <CollectionView Grid.Row="1" ItemsSource="{Binding Payments}" SelectionMode="None" Margin="0,8"><CollectionView.Header><VerticalStackLayout Spacing="8"><ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"/><Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource ErrorLight}"/><Border Style="{StaticResource SurfaceCard}" IsVisible="{Binding IsEmpty}"><Label Text="Nessun pagamento regolare. Aggiungine uno per automatizzare le spese." Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center"/></Border></VerticalStackLayout></CollectionView.Header><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource SurfaceCard}" Margin="0,6"><VerticalStackLayout Spacing="8"><Grid ColumnDefinitions="*,Auto"><Label Text="{Binding Amount}" Style="{StaticResource TitleLarge}"/><Label Grid.Column="1" Text="{Binding Status}" Style="{StaticResource BodyMedium}"/></Grid><Label Text="{Binding Schedule}" Style="{StaticResource BodyMedium}"/><Label Text="{Binding NextDue}" Style="{StaticResource BodyMedium}"/><Grid ColumnDefinitions="*,*,*"><Button Text="Modifica" Style="{StaticResource TextActionButton}" Clicked="OnEditClicked" CommandParameter="{Binding .}"/><Button Grid.Column="1" Text="{Binding SuspendResumeText}" IsVisible="{Binding CanChangeState}" Style="{StaticResource TextActionButton}" Clicked="OnSuspendResumeClicked" CommandParameter="{Binding .}"/><Button Grid.Column="2" Text="Termina" IsVisible="{Binding CanChangeState}" Style="{StaticResource TextActionButton}" TextColor="{StaticResource ErrorLight}" Clicked="OnEndClicked" CommandParameter="{Binding .}"/></Grid></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
-  <Button Grid.Row="2" Text="Aggiungi pagamento" Style="{StaticResource PrimaryActionButton}" Clicked="OnAddClicked"/>
- </Grid>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:local="clr-namespace:Centesimo.App"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
+             x:Class="Centesimo.App.Pages.RecurringPaymentsPage"
+             Title="Pagamenti regolari"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             SafeAreaEdges="All">
+    <ContentPage.Resources>
+        <!-- One row for every section: what the payment is, what it does and how much. A tap opens it in the editor. -->
+        <DataTemplate x:Key="PaymentRow">
+            <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
+                <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                <VerticalStackLayout Grid.Column="1" Padding="0,8" VerticalOptions="Center">
+                    <!-- A long title gives way and the badge keeps its place beside it. -->
+                    <FlexLayout Direction="Row" AlignItems="Center">
+                        <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="1" FlexLayout.Shrink="1" />
+                        <!-- The gap is padding: FlexLayout counts an item margin twice. -->
+                        <ContentView Padding="6,0,0,0" FlexLayout.Shrink="0" IsVisible="{Binding HasBadge}">
+                            <Border Style="{StaticResource Badge}">
+                                <Label Text="{Binding Badge}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" TextColor="{t:Theme Mute}" VerticalTextAlignment="Center" />
+                            </Border>
+                        </ContentView>
+                    </FlexLayout>
+                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" />
+                </VerticalStackLayout>
+                <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource AmountLabel}" VerticalOptions="Center" />
+                <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
+                <Button Grid.RowSpan="2" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnPaymentClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri il pagamento" />
+            </Grid>
+        </DataTemplate>
+    </ContentPage.Resources>
+    <Grid RowDefinitions="56,*">
+        <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
+            <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
+            <Label Grid.Column="1" Margin="4,0,0,0" Text="Pagamenti regolari" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <c:InlineError Grid.Row="1" Margin="24,8" VerticalOptions="Start" Text="{Binding ErrorMessage}" />
+
+        <ScrollView Grid.Row="1" IsVisible="{Binding HasPayments}">
+            <!-- The last 88 keep the last row clear of the button that floats over the list. -->
+            <VerticalStackLayout Padding="0,0,0,88">
+                <Label Text="Creano la spesa da soli alla scadenza." Style="{StaticResource Lead}" Margin="24,1,24,3" />
+                <Label Text="Attivi" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" IsVisible="{Binding List.HasActive}" SemanticProperties.HeadingLevel="Level2" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding List.Active}" BindableLayout.ItemTemplate="{StaticResource PaymentRow}" />
+                <Label Text="In pausa" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" IsVisible="{Binding List.HasPaused}" SemanticProperties.HeadingLevel="Level2" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding List.Paused}" BindableLayout.ItemTemplate="{StaticResource PaymentRow}" />
+                <Grid Margin="24,24,24,2" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8" MinimumHeightRequest="48" IsVisible="{Binding List.HasEnded}">
+                    <Label Text="Terminati" Style="{StaticResource SectionTitle}" VerticalOptions="Center" />
+                    <Border Grid.Column="1" Style="{StaticResource Badge}" VerticalOptions="Center">
+                        <Label Text="{Binding EndedCount}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" TextColor="{t:Theme Mute}" VerticalTextAlignment="Center" />
+                    </Border>
+                    <Label Grid.Column="3" Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.ExpandMore}" TextColor="{t:Theme Mute}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsEndedOpen}" Value="True">
+                                <Setter Property="Text" Value="{x:Static app:MaterialSymbols.ExpandLess}" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                    <Button Grid.ColumnSpan="4" Margin="-24,0" BackgroundColor="Transparent" Text="" Clicked="OnEndedToggled" SemanticProperties.Description="Terminati" SemanticProperties.Hint="Mostra o nascondi i pagamenti terminati" />
+                </Grid>
+                <VerticalStackLayout IsVisible="{Binding IsEndedOpen}" BindableLayout.ItemsSource="{Binding List.Ended}" BindableLayout.ItemTemplate="{StaticResource PaymentRow}" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="1" Padding="32,56,32,24" IsVisible="{Binding IsEmpty}">
+            <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.Repeat}" TextColor="{t:Theme Mute}" />
+            <Label Text="Nessun pagamento regolare" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+            <Label Text="Affitto, abbonamenti, bollette: aggiungili una volta e la spesa si crea da sola alla scadenza." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <Button Grid.Row="1" Text="Nuovo pagamento" Style="{StaticResource ExtendedFab}" Margin="0,0,16,16" HorizontalOptions="End" VerticalOptions="End" Clicked="OnAddClicked" local:SnackbarAnchor.IsAnchor="True" />
+    </Grid>
 </ContentPage>

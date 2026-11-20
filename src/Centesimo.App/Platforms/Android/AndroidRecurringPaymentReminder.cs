@@ -104,10 +104,10 @@ public sealed class RecurringPaymentReminderReceiver : BroadcastReceiver
         if (id is null)
             return;
 
-        var amount = intent.GetLongExtra(AmountCentsExtra, 0) / 100m;
-        var dueOn = intent.GetStringExtra(DueOnExtra) ?? "";
+        var amountCents = intent.GetLongExtra(AmountCentsExtra, 0);
+        var dueOnText = intent.GetStringExtra(DueOnExtra);
         var manager = context.GetSystemService(Android.Content.Context.NotificationService) as NotificationManager;
-        if (manager is null)
+        if (manager is null || !DateOnly.TryParseExact(dueOnText, "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dueOn))
         {
             ProcessDueInBackground();
             return;
@@ -121,8 +121,8 @@ public sealed class RecurringPaymentReminderReceiver : BroadcastReceiver
             : new Notification.Builder(context);
         manager.Notify(AndroidRecurringPaymentReminder.GetNotificationId(id), builder
             .SetContentTitle("Pagamento in arrivo")
-            .SetContentText($"Una spesa di {amount:C} scade il {dueOn}.")
-            .SetSmallIcon(Android.Resource.Drawable.IcDialogInfo)
+            .SetContentText(ItalianFormat.PaymentDue(amountCents, dueOn))
+            .SetSmallIcon(Resource.Drawable.ic_stat_centesimo)
             .SetAutoCancel(true)
             .Build());
 
