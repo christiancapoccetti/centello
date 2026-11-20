@@ -33,10 +33,10 @@ Success means expenses actually get logged, because entry is fast enough that sk
 ## Capabilities and Constraints
 
 - Categories with optional monthly budgets (create, edit, archive, restore); tags within a category; expenses with amount, date, category, optional tag and note; monthly history with edit and delete; monthly and yearly overviews; recurring payments (weekly, monthly, yearly, optional end date); Insight for any month or year.
-- Local-first by construction: SQLite on the device, no account, no backend, no sync. The only data that leaves the phone is the voice-entry audio and its transcript, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
+- Local-first by construction: SQLite on the device, no account, no backend, no sync. Android Auto Backup copies only the database to the user's own Google account (the OpenAI key is excluded); a backup file and a CSV of every expense can be saved in the Download folder, and a backup file can be restored after a preview. The only data that leaves the phone is the voice-entry audio and its transcript, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
 - Stack: .NET 10 MAUI, Android only (min API 24), MVVM, Clean Architecture, Result Pattern.
 - User-facing text is Italian and currently hardcoded; amounts are in euros with Italian formatting (`486,20 €`).
-- Not in scope yet (see `FUTURE.md`): receipt photos, localization/English, backup export and restore, configurable budget alerts, biometric lock.
+- Not in scope yet (see `FUTURE.md`): receipt photos, localization/English, configurable budget alerts, biometric lock.
 
 ## Brand Commitments
 
@@ -52,7 +52,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 1. **Entry speed is the product.** Any change that adds a tap or a field to logging an expense has to justify itself against that cost.
 2. **Show, don't plan.** Help people notice how their spending changes. Do not push budgets, thresholds or guilt.
-3. **The user confirms.** Automation (voice entry, recurring payments, import) proposes; nothing ambiguous is saved silently.
+3. **The user confirms.** Automation (voice entry, recurring payments) proposes; nothing ambiguous is saved silently, and a restore shows what the phone would lose before it replaces anything.
 4. **Local by default.** Data stays on the phone. Anything that would leave it is opt-in, explained in plain Italian, and reversible.
 5. **Built for an audience of strangers.** Even with two users, every screen should be clear to someone who has never seen the app before.
 

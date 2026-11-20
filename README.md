@@ -11,11 +11,12 @@ Centesimo is a simple Android expense tracker built with .NET MAUI, designed and
 - Category detail with tag filters, and `Insight` for any month or year: the total against the previous period, a pace chart of cumulative spending (automatic and variable) with the budget, a waterfall of what changed per category, and history-based insights.
 - Weekly, monthly or yearly recurring payments with optional end date. Due expenses are created when the app opens. A paused payment skips the occurrences missed while paused when it is resumed. Reminder notifications arrive at 09:00 on the due day.
 - Voice entry (`Inserimento vocale`): create an expense draft from a spoken Italian phrase using OpenAI with your own API key, with explicit confirmation in the expense editor.
-- Settings are grouped as `Dati` (recurring payments), `Inserimento vocale` and `Informazioni` (version, `Licenze`).
+- Settings are grouped as `Dati` (recurring payments, `Backup ed export`), `Inserimento vocale` and `Informazioni` (version, `Licenze`).
+- Backup and export (`Backup ed export`): create a backup file (`centesimo-yyyy-MM-dd.backup`) and export every expense to CSV (`;` separated, UTF-8 with BOM, for Excel or Sheets). Both are saved in the Download folder (on Android 9 and older the share sheet is used instead). `Ripristina backup` picks a backup file, compares what the file and the phone hold, and replaces the phone's data in one transaction after confirmation.
 - Dark and light theme following the Android setting; the app is locked to portrait.
 - Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a voice-entry phrase, and only when you enable voice entry.
 
-Android backs the expenses up to your Google account (Auto Backup), so a new phone with the same account gets them back. Receipt photos, localization, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
+Android Auto Backup saves the database (and only the database) to your own Google account, so a new phone with the same account gets the expenses back. The OpenAI key, the reminder settings and the preferences are not backed up: enter the key again on the new phone, and the reminders are rebuilt at first launch. Receipt photos, localization, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
 
 ## Design
 
@@ -26,10 +27,9 @@ The visual system (colours, Archivo typography, components) is recorded in [DESI
 The solution follows a pragmatic Clean Architecture approach with MVVM and the Result Pattern:
 
 - `Centesimo.Domain`: entities, value objects, and domain rules.
-- `Centesimo.Application`: use cases, repository contracts, and application services.
-- `Centesimo.Infrastructure`: EF Core and SQLite persistence.
-- `Centesimo.App`: .NET MAUI Android UI and view models.
-- `tests`: domain, application, and infrastructure test projects.
+- `Centesimo.Application`: use cases, repository contracts, and application services. `RecurringPaymentAutomation` runs behind an exclusive gate so a restore cannot overlap with creating due expenses.
+- `Centesimo.Infrastructure`: EF Core and SQLite persistence. `SqliteDataBackup` is the only code besides EF that touches the database files (backup copy with `VACUUM INTO`, validation and migration on a private copy, replacement in one transaction). Editor view models share one window-lifetime `DbContext`, so `RepositoryBase` clears the change tracker after every save.
+- `Centesimo.App`: .NET MAUI Android UI and view models.- `tests`: domain, application, and infrastructure test projects.
 
 ## Prerequisites
 
@@ -71,7 +71,7 @@ Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft
 - **Key handling:** the key is stored in Android SecureStorage and sent only to the OpenAI API. It lives on the client, so it is not a server-held secret: use it for personal use only.
 - **Flow:** hold the microphone button (up to 20 seconds). Audio is transcribed with `gpt-transcribe`, and the text is then interpreted by `gpt-6-luna` with a strict JSON schema that only admits your own category and tag keys, and the result is validated deterministically.
 - **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent.
-- **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync.
+- **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync; the only copy outside the phone is Android Auto Backup to your own Google account, which does not include the OpenAI key.
 - **Confirmation:** the draft opens in the expense editor and nothing is saved until you save it; saving still requires a category.
 - **Availability:** voice entry is unavailable until a key is configured, and reports an error without an Internet connection. Manual entry always works.
 

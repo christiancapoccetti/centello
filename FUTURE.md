@@ -24,7 +24,7 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Developer account: one-time fee and identity verification. The contact email becomes public, and the package name `it.christiancapoccetti.centesimo` cannot change after the first upload.
 - Share with family through the **internal testing** track (up to 100 testers, available within minutes, no full review). A new personal account must run a closed test with at least 12 testers for 14 days before it can publish to production.
 - Privacy policy on a public URL (for example GitHub Pages), in Italian. Required because the app records audio and sends it to OpenAI.
-- Data safety form: voice audio, its transcript and the category and tag names are sent to OpenAI only when voice entry is enabled, encrypted in transit; expenses never leave the device.
+- Data safety form: voice audio, its transcript and the category and tag names are sent to OpenAI only when voice entry is enabled, encrypted in transit; expenses leave the device only through Android Auto Backup to the user's own Google account.
 - Financial features declaration: Centesimo tracks expenses and provides no financial services.
 - Content rating questionnaire, target audience, and the ads declaration (no ads).
 - Store listing: short and full description, at least two screenshots made with placeholder data, a 1024×500 feature graphic, and the 512 px icon already in `docs/brand/`.
@@ -35,7 +35,6 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 ### Product gaps for other users
 
-- Backup file and restore (see Data portability): Android Auto Backup is on, but there is still no backup file you can keep and no restore screen, so uninstalling or leaving Google's backup loses every expense.
 - Voice entry needs the user's own OpenAI API key, which family members are unlikely to have: explain it in the listing and keep manual entry as the main path.
 
 ## Accessibility and input
@@ -58,9 +57,8 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 ## Data portability
 
-- Export a local backup of application data.
-- Export expenses to CSV (for spreadsheets), for a chosen period.
-- Restore data and attachments from a backup.
+- Export expenses to CSV for a chosen period (today the export covers every expense).
+- Include attachments in the backup and restore them, once attachments exist.
 - Optional encrypted backup files.
 
 ## Home screen widgets
