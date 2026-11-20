@@ -34,7 +34,7 @@
                 </VerticalStackLayout>
                 <HorizontalStackLayout Margin="24,12,24,0" Spacing="8">
                     <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Cloud}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
-                    <Label Text="Audio, foto e testo della spesa vengono inviati a OpenAI e non vengono salvati; le spese restano sul telefono." Style="{StaticResource Caption}" LineHeight="1.45" MaximumWidthRequest="320" />
+                    <Label Text="Audio, foto e testo della spesa vengono inviati a OpenAI; Centesimo non salva né l'audio né le foto e le spese restano sul telefono." Style="{StaticResource Caption}" LineHeight="1.45" MaximumWidthRequest="320" />
                 </HorizontalStackLayout>
 
                 <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
