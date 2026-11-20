@@ -16,7 +16,10 @@ public sealed class HomeScreenWidgets : IStoreChangeListener
 {
     private const string LogTag = "Centesimo.Widgets";
 
-    internal static readonly WidgetSpec[] Widgets = [];
+    internal static readonly WidgetSpec[] Widgets =
+    [
+        new(typeof(AddWidget), AddWidget.Render)
+    ];
 
     private readonly IServiceScopeFactory _scopes;
     private readonly IFontManager _fonts;
