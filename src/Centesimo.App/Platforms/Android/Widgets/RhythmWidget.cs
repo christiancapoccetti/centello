@@ -16,8 +16,9 @@ public sealed class RhythmWidget : CentesimoWidgetProvider
     // The layout's margin and padding on both sides, then the rows above the chart: the month and the total, the
     // budget and the chip. The chart takes what is left.
     private const float FrameWidthDp = 2 * 8 + 18 + 16;
-    private const float FrameHeightDp = 2 * 8 + 14 + 54 + 30 + 10;
-    private const float MinChartHeightDp = 60;
+    private const float FrameHeightDp = 2 * 8 + 14 + 54 + 6 + 10;
+    private const float ChipHeightDp = 24;
+    private const float MinChartHeightDp = 50;
     private const float MaxChartHeightDp = 100;
     private const float MonthDp = 14;
     private const float TotalDp = 44;
@@ -35,15 +36,17 @@ public sealed class RhythmWidget : CentesimoWidgetProvider
         var month = frame.Data.Month;
         var art = frame.Art;
         var width = frame.Size.WidthDp - FrameWidthDp;
-        var chartHeight = Math.Clamp(frame.Size.HeightDp - FrameHeightDp, MinChartHeightDp, MaxChartHeightDp);
         var views = new RemoteViews(frame.Context.PackageName, Resource.Layout.widget_rhythm);
         views.SetImageViewBitmap(Resource.Id.month, art.Text(month.Month, new WidgetTextStyle(Fonts.Bold, MonthDp)));
         views.SetImageViewBitmap(Resource.Id.year, art.Text(month.Year, new WidgetTextStyle(Fonts.Regular, MonthDp)));
         views.SetImageViewBitmap(Resource.Id.total, art.Total(month.Total, TotalDp, EuroDp, width));
         views.SetImageViewBitmap(Resource.Id.fab_glyph, art.Glyph(MaterialSymbols.Add, PlusDp));
         views.SetOnClickPendingIntent(Resource.Id.fab, WidgetLinks.Open(frame.Context, frame.Data.AddEntry()));
-        Budget.Show(views, art.Sentence(month.Budget.Lead, month.Budget.Emphasis, month.Budget.Tail,
-            width - ChipReserve(art, month.Comparison), BudgetDp));
+        var budget = art.Sentence(month.Budget.Lead, month.Budget.Emphasis, month.Budget.Tail,
+            width - ChipReserve(art, month.Comparison), BudgetDp);
+        Budget.Show(views, budget);
+        var rowHeight = Math.Max(ChipHeightDp, budget.Day.Height * 160f / budget.Day.Density);
+        var chartHeight = Math.Clamp(frame.Size.HeightDp - FrameHeightDp - rowHeight, MinChartHeightDp, MaxChartHeightDp);
         WidgetViews.Comparison(views, art, month.Comparison, month.Comparison?.Text);
         Chart.Show(views, art.Chart(month.Chart, width, chartHeight));
         views.SetOnClickPendingIntent(Resource.Id.root, WidgetLinks.Open(frame.Context, new AppEntry.Today()));
