@@ -274,7 +274,7 @@ This is a native Android app (.NET MAUI) locked to portrait. All measures below 
 **Key Characteristics:**
 - Graphite ground (dark reference) or warm paper (light), no shadows anywhere.
 - Archivo throughout, Archivo Condensed ExtraBold only for money shown at display size, tabular figures everywhere.
-- Seven flat pastel category inks, each a dark glyph on a square tile; the app assigns them, the user never picks.
+- Seven flat pastel category inks, each a dark glyph on a square tile; the app suggests one, the user picks from the six chromatic ones.
 - Charts are hard-edged flat fills with 3dp gaps, antialiasing off.
 - Actions are pills; selection is an ink ring plus a selected fill, never a colour swap.
 
@@ -309,7 +309,7 @@ Slots, stored by key in `Categories.Color`: coral (Corallo), peri (Pervinca), bu
 
 **The Category Owns Its Ink Rule.** Palette colours appear only where a category is shown: its tile, its swatch in a key, its segment of the category line, its bars and fraction bars. Interface chrome never borrows a palette colour, and a palette colour never carries interface meaning.
 
-**The App Assigns the Colour Rule.** A new category gets the chromatic slot the fewest categories hold (first in palette order on a tie). There is no colour picker, and grey is never handed out; it only shows what has no known colour.
+**The App Suggests the Colour Rule.** A new category opens with the chromatic slot the fewest active categories hold (first in palette order on a tie) already selected, and the user may pick any of the six chromatic slots instead. Grey is never offered; it only shows a missing or legacy colour, which an edit keeps until the user picks a palette colour.
 
 **The One Coral Rule.** Coral as an interface colour means "add an expense". Do not use it for emphasis, links or decoration.
 
@@ -419,7 +419,7 @@ Shell tab bar on the ground with no navigation bar above pages; selected tab and
 A pushed list page (Spese, a category's page, Pagamenti regolari, Licenze, Importa) draws under the transparent navigation bar: its list scrolls behind the gesture handle and ends above it, never on a hard line. The page takes only the top and side insets (`EdgeToEdgePage`, root grid `EdgeToEdgeRoot`); the bottom inset is taken by the scrolling content, as `ListScroll` on a scroll view and the `ListEnd` footer on a collection, and by what floats over the list, such as the Nuovo pagamento button.
 
 ### Category tile (signature)
-The only place a category's icon and colour become pixels: a square (0 radius) tile in the category's palette ink, with a filled Material Symbols Rounded glyph in tile ink at 58% of the tile size. 36dp in rows and the picker, 24dp inside chips. The catalog holds 31 icons plus the "Altro" fallback; unknown keys fall back to "more" and grey.
+The only place a category's icon and colour become pixels: a square (0 radius) tile in the category's palette ink, with a filled Material Symbols Rounded glyph in tile ink at 58% of the tile size. 36dp in rows, 48dp in the icon picker, 56dp as the editor's preview, 24dp inside chips. In the icon picker an unselected tile is neutral: the raised tone with a Mute glyph, so it reads as an icon on offer. Only the selected tile wears the category's ink, with the tile-ink glyph, inside its ring. The catalog holds 31 icons plus the "Altro" fallback; unknown keys fall back to "more" and grey.
 
 ### Category line (signature)
 A full-width 14dp line under the home total: one flat segment per category, as wide as its share of spending, 3dp gaps, a 2dp minimum. Below it, a key on one line, never wrapped: 10dp swatch and 13sp caption per category, each opening its category. Over-budget categories come first (the furthest over first), then the others by spending; the key shows as many whole items as fit the width and drops the rest whole, never clipping one. A screen reader still hears every category in the line's description.
@@ -434,15 +434,18 @@ In the home key, an over-budget category gets the filled Error glyph at 14sp in 
 26dp raised chip after the budget sentence: an arrow glyph (east, north-east or south-east) and a SemiBold label. When spending is lower than last month it takes the positive container and on-positive text.
 
 ### Picker cells
-Category grid: four columns of tile and 12sp name in a 76dp cell with 12dp radius; the selected cell takes a 2dp ink ring and the selected fill. Ring cells (icon picker) reserve 5dp of room (3dp gap and 2dp ring) so choosing never moves the pictures.
+Category grid: four columns of tile and 12sp name in a 76dp cell with 12dp radius; the selected cell takes a 2dp ink ring and the selected fill. Ring cells (icon and colour pickers) reserve 5dp of room (3dp gap and 2dp ring) so choosing never moves the pictures.
+
+### Colour picker
+The category's colour in the editor, under a "Colore" field label between the name and the icon picker. The six chromatic slots, never grey, as 40dp square swatches (0 radius) in ring cells. They sit in one row with the first on the left gutter, the last on the right gutter and equal gaps between, so the row lines up with the six columns of the icon grid below. The chosen swatch takes the 2dp ink ring. Each cell is described by the colour's Italian name and, when chosen, "Selezionato". While creating a category, a 13sp Mute caption under the row says "Consigliato il colore usato da meno categorie." and the suggestion starts selected; when editing there is no caption. Choosing a colour repaints the preview tile and the selected icon at once. An archived category shows neither picker.
 
 ## Do's and Don'ts
 
 ### Do:
 - **Do** take every colour from `ThemeColors` and `CategoryPalette`; give each new token a dark and a light value, with dark as the reference.
 - **Do** keep pages on the graphite ground with a 24dp gutter, and separate list rows with 1dp hairlines.
-- **Do** show a category as its square tile (dark glyph on its pastel ink) wherever it appears in a list or picker.
-- **Do** let the app assign a new category its least-used palette slot.
+- **Do** show a category as its square tile (dark glyph on its pastel ink) wherever it appears in a list, and in the editor's icon picker only for the selected icon, the others staying neutral.
+- **Do** suggest the least-used chromatic slot for a new category by preselecting it, and let the user pick another of the six.
 - **Do** mark selection and focus with a 2dp ink ring and compensating padding, so nothing shifts.
 - **Do** keep every touch target at least 48 by 48dp, using padding and negative margins rather than enlarging the visual.
 - **Do** pair every glyph with text or an accessibility description; tile and chip glyphs stay out of the accessibility tree and the container carries the label.
@@ -451,7 +454,7 @@ Category grid: four columns of tile and 12sp name in a 76dp cell with 12dp radiu
 ### Don't:
 - **Don't** use shadows, blur, glows or gradients; raise a surface with the raised tone and an outline instead.
 - **Don't** use palette colours for interface chrome, or coral for anything but the add action.
-- **Don't** offer a colour picker for categories, and don't assign grey.
+- **Don't** offer grey as a choice for a category, and don't paint every icon in the picker with the category's colour.
 - **Don't** wrap list items in cards, or bring back tonal Material cards and progress bars over category card lists.
 - **Don't** use Archivo Condensed ExtraBold for headings, or any face outside Archivo and Material Symbols Rounded.
 - **Don't** add uppercase labels, letter-spacing, or kickers above titles.

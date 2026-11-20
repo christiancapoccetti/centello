@@ -7,7 +7,7 @@ Centesimo is a simple Android expense tracker built with .NET MAUI. Its goal is 
 - Home (`Oggi`): month total, remaining budget, comparison with the previous period, category line, daily spending chart, latest expenses and a split button to add an expense by hand or by voice.
 - Add, edit and delete expenses with an amount, date, category, optional tag and optional note. The `Spese` screen lists the expense history by month.
 - Create, edit, archive and restore categories with optional monthly budgets, and tags within a category. Archived categories are unavailable for new expenses, while existing expenses keep their category. On first run the app suggests common categories to create in one tap.
-- Each category gets a pastel colour from the app (the least-used slot of the palette, not chosen by the user) and an icon from a 32-icon catalog.
+- Each category has a pastel colour and an icon from a 32-icon catalog. The editor suggests the least-used of the six palette colours and the user may pick another.
 - Category detail with tag filters, and `Insight` for any month or year: totals, comparisons between periods and categories, and history-based insights.
 - Weekly, monthly or yearly recurring payments with optional end date. Due expenses are created when the app opens. A paused payment skips the occurrences missed while paused when it is resumed. Reminder notifications arrive at 09:00 on the due day.
 - Voice entry (`Inserimento vocale`): create an expense draft from a spoken Italian phrase using OpenAI with your own API key, with explicit confirmation in the expense editor.
