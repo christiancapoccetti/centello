@@ -499,6 +499,110 @@ public sealed class PaceChart_should_expected_behavior
         Assert.Equal([PaceSeries.Automatic, PaceSeries.Variable], split.Key.Select(item => item.Series));
     }
 
+    [Theory]
+    [InlineData(38_000, 50_000, 38_000, 91_000, SplitVerdict.OnlyVariableMoved,
+        "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
+    [InlineData(38_000, 91_000, 38_000, 50_000, SplitVerdict.OnlyVariableMoved,
+        "Le automatiche sono uguali a ottobre: tutto l'aumento viene dalle spese variabili.")]
+    [InlineData(38_100, 50_000, 38_000, 91_000, SplitVerdict.OnlyVariableMoved,
+        "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
+    [InlineData(38_700, 50_000, 38_000, 91_000, SplitVerdict.OnlyVariableMoved,
+        "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
+    [InlineData(38_000, 90_000, 38_000, 90_000, SplitVerdict.BothSame,
+        "Automatiche e variabili sono in linea con ottobre.")]
+    [InlineData(38_100, 90_049, 38_000, 90_000, SplitVerdict.BothSame,
+        "Automatiche e variabili sono in linea con ottobre.")]
+    [InlineData(40_000, 90_000, 38_000, 90_000, SplitVerdict.OnlyAutomaticMoved,
+        "Le automatiche sono 20 € più alte di ottobre; le variabili sono uguali.")]
+    [InlineData(36_000, 90_049, 38_000, 90_000, SplitVerdict.OnlyAutomaticMoved,
+        "Le automatiche sono 20 € più basse di ottobre; le variabili sono uguali.")]
+    [InlineData(39_000, 90_000, 38_000, 90_000, SplitVerdict.OnlyAutomaticMoved,
+        "Le automatiche sono 10 € più alte di ottobre; le variabili sono uguali.")]
+    [InlineData(40_000, 50_000, 38_000, 75_000, SplitVerdict.BothMoved,
+        "Le automatiche sono 20 € più alte di ottobre, le variabili 250 € più basse.")]
+    [InlineData(36_000, 80_000, 38_000, 75_000, SplitVerdict.BothMoved,
+        "Le automatiche sono 20 € più basse di ottobre, le variabili 50 € più alte.")]
+    [InlineData(38_000, 50_000, 0, 100_000, SplitVerdict.OnlyOneSide,
+        "Negli stessi giorni di ottobre non risultano spese automatiche.")]
+    [InlineData(0, 90_000, 38_000, 50_000, SplitVerdict.OnlyOneSide,
+        "Ancora nessuna spesa automatica; negli stessi giorni di ottobre erano 380,00 €.")]
+    [InlineData(0, 90_000, 0, 100_000, SplitVerdict.NoAutomatic, "")]
+    [InlineData(38_000, 50_000, 0, 0, SplitVerdict.NothingToCompare, "")]
+    public async Task Should_decide_how_automatic_and_variable_spending_moved_and_word_it(long automatic, long variable,
+        long comparedAutomatic, long comparedVariable, SplitVerdict verdict, string sentence)
+    {
+        var ledger = Mixed(Period.Month(2026, 11), automatic, variable, comparedAutomatic, comparedVariable);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(verdict, pace.Split);
+        Assert.Equal(sentence.Replace(" €", $"{Nbsp}€"), pace.Sentence);
+        Assert.Equal(sentence.Length > 0, pace.HasSentence);
+    }
+
+    [Theory]
+    [InlineData(2026, 10, 38_000, 50_000, 0, 100_000, "A settembre non risultano spese automatiche.")]
+    [InlineData(2026, 0, 38_000, 50_000, 0, 100_000, "Nello stesso periodo del 2025 non risultano spese automatiche.")]
+    [InlineData(2025, 0, 38_000, 50_000, 0, 100_000, "Nel 2024 non risultano spese automatiche.")]
+    [InlineData(2026, 10, 0, 90_000, 38_000, 50_000, "Nessuna spesa automatica; a settembre erano 380,00 €.")]
+    [InlineData(2026, 0, 0, 90_000, 38_000, 50_000,
+        "Ancora nessuna spesa automatica; nello stesso periodo del 2025 erano 380,00 €.")]
+    [InlineData(2025, 0, 0, 90_000, 38_000, 50_000, "Nessuna spesa automatica; nel 2024 erano 380,00 €.")]
+    [InlineData(2026, 10, 38_000, 50_000, 38_000, 91_000,
+        "Le automatiche sono uguali a settembre: tutto il calo viene dalle spese variabili.")]
+    [InlineData(2026, 5, 38_000, 50_000, 38_000, 91_000,
+        "Le automatiche sono uguali ad aprile: tutto il calo viene dalle spese variabili.")]
+    [InlineData(2026, 0, 38_000, 50_000, 38_000, 91_000,
+        "Le automatiche sono uguali al 2025: tutto il calo viene dalle spese variabili.")]
+    [InlineData(2025, 0, 38_000, 50_000, 38_000, 91_000,
+        "Le automatiche sono uguali al 2024: tutto il calo viene dalle spese variabili.")]
+    [InlineData(2026, 10, 40_000, 90_000, 38_000, 90_000,
+        "Le automatiche sono 20 € più alte di settembre; le variabili sono uguali.")]
+    [InlineData(2026, 0, 40_000, 90_000, 38_000, 90_000,
+        "Le automatiche sono 20 € più alte del 2025; le variabili sono uguali.")]
+    [InlineData(2026, 10, 38_000, 90_000, 38_000, 90_000, "Automatiche e variabili sono in linea con settembre.")]
+    [InlineData(2026, 0, 38_000, 90_000, 38_000, 90_000, "Automatiche e variabili sono in linea con il 2025.")]
+    public async Task Should_name_the_compared_period_in_the_split_sentence(int year, int month, long automatic,
+        long variable, long comparedAutomatic, long comparedVariable, string sentence)
+    {
+        var period = month == 0 ? Period.Year(year) : Period.Month(year, month);
+        var ledger = Mixed(period, automatic, variable, comparedAutomatic, comparedVariable);
+
+        var pace = await ledger.Pace(period, Today);
+
+        Assert.Equal(sentence.Replace(" €", $"{Nbsp}€"), pace.Sentence);
+    }
+
+    [Fact]
+    public async Task Should_say_nothing_to_compare_when_the_compared_days_had_no_spending()
+    {
+        var ledger = new Ledger().Automatic(On(11, 1), 38_000).Spend(On(10, 25), 10_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.NotNull(pace.Previous);
+        Assert.Equal(SplitVerdict.NothingToCompare, pace.Split);
+        Assert.False(pace.HasSentence);
+    }
+
+    // Automatic spending on the first day of each period and variable spending on the second, for both windows.
+    private static Ledger Mixed(Period period, long automatic, long variable, long comparedAutomatic, long comparedVariable)
+    {
+        var ledger = new Ledger();
+        Fill(ledger, period.Start, automatic, variable);
+        Fill(ledger, period.Previous().Start, comparedAutomatic, comparedVariable);
+        return ledger;
+    }
+
+    private static void Fill(Ledger ledger, DateOnly firstDay, long automatic, long variable)
+    {
+        if (automatic > 0)
+            ledger.Automatic(firstDay, automatic);
+
+        if (variable > 0)
+            ledger.Spend(firstDay.AddDays(1), variable);
+    }
+
     private static DateOnly On(int month, int day, int year = 2026) => new(year, month, day);
 
     private static IEnumerable<T> Run<T>(T value, int count) => Enumerable.Repeat(value, count);

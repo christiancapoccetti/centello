@@ -86,7 +86,7 @@ public sealed record PaceChart(
     private const char Nbsp = (char)0xA0;
 
     // WholeEuros rounds half up, so a difference under 0,50 € would read "0 €".
-    private const long HalfEuro = 50;
+    internal const long HalfEuro = 50;
 
     public bool HasSentence => Sentence.HasValue();
 
@@ -97,12 +97,13 @@ public sealed record PaceChart(
         long[] heights = [spending.Spent, spending.PreviousClosed, budget ?? 0];
         var scale = new Scale(heights.Max());
         var split = PaceSplit.Of(spending);
+        var verdict = split.Verdict();
         var line = Line(spending, scale);
         return new PaceChart(
             period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
             Bars(spending, compared, scale), line, BudgetLine(budget, scale), GapOf(spending, compared, scale),
             AxisOf(spending, compared), KeyOf(spending, split, line is not null),
-            SplitVerdict.NothingToCompare, "", "");
+            verdict, SentenceOf(spending, split, verdict), "");
     }
 
     /// <summary>Day d of a month is slot d - 1, month m of a year is slot m - 1, for either period.</summary>
@@ -168,6 +169,39 @@ public sealed record PaceChart(
         return key;
     }
 
+    private static string SentenceOf(SpendComparison spending, PaceSplit split, SplitVerdict verdict)
+    {
+        var previous = spending.Period.Previous();
+        return verdict switch
+        {
+            SplitVerdict.OnlyOneSide => OneSidedSentence(spending, split),
+            SplitVerdict.BothSame => $"Automatiche e variabili sono in linea {With(previous)}.",
+            SplitVerdict.OnlyVariableMoved =>
+                $"Le automatiche sono uguali {InsightTexts.ToPeriod(previous)}: tutto {(split.VariableDelta < 0 ? "il calo" : "l'aumento")} viene dalle spese variabili.",
+            SplitVerdict.OnlyAutomaticMoved =>
+                $"Le automatiche sono {Difference(split.AutomaticDelta)} {InsightTexts.OfPeriod(previous)}; le variabili sono uguali.",
+            SplitVerdict.BothMoved =>
+                $"Le automatiche sono {Difference(split.AutomaticDelta)} {InsightTexts.OfPeriod(previous)}, le variabili {Difference(split.VariableDelta)}.",
+            _ => ""
+        };
+    }
+
+    // After an import the earlier months have no automatic expenses, so a change would only be an artifact of the data.
+    private static string OneSidedSentence(SpendComparison spending, PaceSplit split)
+    {
+        var compared = InsightTexts.InComparedPeriod(spending.Period, spending.IsToDate);
+        if (split.ComparedAutomatic == 0)
+            return $"{RowLabels.Sentence(compared)} non risultano spese automatiche.";
+
+        var none = spending.IsToDate ? "Ancora nessuna" : "Nessuna";
+        return $"{none} spesa automatica; {compared} erano {ItalianFormat.Money(split.ComparedAutomatic)}.";
+    }
+
+    /// <summary>"20 € più alte" or "20 € più basse".</summary>
+    private static string Difference(long delta) => $"{Euros(Math.Abs(delta))} {(delta > 0 ? "più alte" : "più basse")}";
+
+    private static string With(Period period) => $"con {Subject(period)}";
+
     private static PaceBudget? BudgetLine(long? budget, Scale scale) => budget is { } cents
         ? new PaceBudget(scale.Of(cents), $"budget {ItalianFormat.Budget(cents)}{Nbsp}€")
         : null;
@@ -187,7 +221,7 @@ public sealed record PaceChart(
     private static string GapCaption(SpendComparison spending, bool inLine)
     {
         var previous = spending.Period.Previous();
-        var against = inLine ? $"con {Subject(previous)}" : InsightTexts.OfPeriod(previous);
+        var against = inLine ? With(previous) : InsightTexts.OfPeriod(previous);
         return spending.IsToDate ? $"{against} a oggi" : against;
     }
 
@@ -233,8 +267,14 @@ public sealed record PaceChart(
 /// <summary>The automatic and the variable spending of the two compared windows, in cents.</summary>
 internal sealed record PaceSplit(long Automatic, long Variable, long ComparedAutomatic, long ComparedVariable)
 {
+    private const long AutomaticToleranceCents = 100;
+    private const long AutomaticTolerancePercent = 2;
+
     /// <summary>Either window holds automatic spending, so the bars and the key tell the two kinds apart.</summary>
     public bool IsShown => Automatic > 0 || ComparedAutomatic > 0;
+
+    public long AutomaticDelta => Automatic - ComparedAutomatic;
+    public long VariableDelta => Variable - ComparedVariable;
 
     public static PaceSplit Of(SpendComparison spending)
     {
@@ -242,6 +282,34 @@ internal sealed record PaceSplit(long Automatic, long Variable, long ComparedAut
         var comparedAutomatic = AutomaticIn(spending.Previous);
         return new PaceSplit(automatic, spending.Spent - automatic, comparedAutomatic,
             spending.Compared - comparedAutomatic);
+    }
+
+    public SplitVerdict Verdict()
+    {
+        if (ComparedAutomatic + ComparedVariable == 0)
+            return SplitVerdict.NothingToCompare;
+
+        if (Automatic == 0 && ComparedAutomatic == 0)
+            return SplitVerdict.NoAutomatic;
+
+        if (Automatic == 0 || ComparedAutomatic == 0)
+            return SplitVerdict.OnlyOneSide;
+
+        return (AutomaticMoved(), Math.Abs(VariableDelta) >= PaceChart.HalfEuro) switch
+        {
+            (false, false) => SplitVerdict.BothSame,
+            (false, true) => SplitVerdict.OnlyVariableMoved,
+            (true, false) => SplitVerdict.OnlyAutomaticMoved,
+            _ => SplitVerdict.BothMoved
+        };
+    }
+
+    // A small change of price must not break "le automatiche sono uguali".
+    private bool AutomaticMoved()
+    {
+        var tolerance = Math.Max(AutomaticToleranceCents,
+            Math.Max(Automatic, ComparedAutomatic) * AutomaticTolerancePercent / 100);
+        return Math.Abs(AutomaticDelta) > tolerance;
     }
 
     private static long AutomaticIn(IEnumerable<Expense> expenses) => expenses
