@@ -206,6 +206,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         public ExpenseDraft Draft { get; set; } = new(null, null, null, null, "", DraftSource.Voice, "");
         public Error? Failure { get; set; }
         public string Phrase { get; private set; } = "";
+        public ExpensePhoto? Photo { get; private set; }
         public IReadOnlyCollection<DraftCategory> Categories { get; private set; } = [];
         public int CallCount { get; private set; }
 
@@ -217,6 +218,20 @@ public sealed class ExpenseDraftService_should_expected_behavior
         {
             CallCount++;
             Phrase = phrase;
+            Categories = categories;
+            return Task.FromResult(Failure is null
+                ? Result<ExpenseDraft>.Success(Draft)
+                : Result<ExpenseDraft>.Failure(Failure));
+        }
+
+        public Task<Result<ExpenseDraft>> Interpret(
+            ExpensePhoto photo,
+            IReadOnlyCollection<DraftCategory> categories,
+            DateOnly today,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            Photo = photo;
             Categories = categories;
             return Task.FromResult(Failure is null
                 ? Result<ExpenseDraft>.Success(Draft)

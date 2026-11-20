@@ -27,6 +27,11 @@ public sealed class OpenAiExpenseInterpreter_should_expected_behavior
         CancellationToken cancellationToken = default) =>
         CreateInterpreter(handler, apiKey).Interpret(phrase, Categories, Today, cancellationToken);
 
+    private static readonly byte[] PhotoBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02, 0x03];
+
+    private static Task<Result<ExpenseDraft>> InterpretPhoto(FakeHttpMessageHandler handler, string apiKey = ApiKey) =>
+        CreateInterpreter(handler, apiKey).Interpret(ExpensePhoto.Read(PhotoBytes).Value, Categories, Today);
+
     [Fact]
     public async Task Turn_a_natural_phrase_into_a_draft_with_the_users_own_ids()
     {
@@ -198,5 +203,71 @@ public sealed class OpenAiExpenseInterpreter_should_expected_behavior
 
         Assert.Equal(DraftErrors.MissingApiKey, result.Error);
         Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task Turn_a_receipt_photo_into_a_photo_draft()
+    {
+        var handler = FakeHttpMessageHandler.Responding(
+            HttpStatusCode.OK,
+            OpenAiResponses.Interpretation(amount: "12.5", categoryKey: "c2", tagKey: null, date: "2026-11-18", note: "Conad"));
+
+        var result = await InterpretPhoto(handler);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1_250, result.Value.AmountCents);
+        Assert.Equal(HomeId, result.Value.CategoryId);
+        Assert.Equal(new DateOnly(2026, 11, 18), result.Value.OccurredOn);
+        Assert.Equal("Conad", result.Value.Note);
+        Assert.Same(DraftSource.Photo, result.Value.Source);
+        Assert.Equal("", result.Value.Heard);
+    }
+
+    [Fact]
+    public async Task Post_the_photo_to_the_responses_endpoint()
+    {
+        var handler = FakeHttpMessageHandler.Responding(HttpStatusCode.OK, OpenAiResponses.Interpretation());
+
+        await InterpretPhoto(handler);
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal("https://api.openai.com/v1/responses", request.Uri!.ToString());
+        Assert.Equal(ApiKey, request.Authorization!.Parameter);
+        using var json = request.Json;
+        var input = json.RootElement.GetProperty("input");
+        Assert.Contains("c1: Auto", input[0].GetProperty("content").GetString());
+        var part = input[1].GetProperty("content")[0];
+        Assert.Equal("input_image", part.GetProperty("type").GetString());
+        Assert.StartsWith("data:image/jpeg;base64,", part.GetProperty("image_url").GetString());
+    }
+
+    [Fact]
+    public async Task Open_an_empty_draft_when_the_photo_shows_no_expense()
+    {
+        var handler = FakeHttpMessageHandler.Responding(
+            HttpStatusCode.OK,
+            OpenAiResponses.Interpretation(amount: "null", categoryKey: null, tagKey: null));
+
+        var result = await InterpretPhoto(handler);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.AmountCents);
+        Assert.Null(result.Value.CategoryId);
+        Assert.Null(result.Value.TagId);
+        Assert.Null(result.Value.OccurredOn);
+        Assert.Equal("", result.Value.Note);
+        Assert.Same(DraftSource.Photo, result.Value.Source);
+    }
+
+    [Fact]
+    public async Task Map_an_http_failure_on_a_photo_to_a_user_facing_error()
+    {
+        var handler = FakeHttpMessageHandler.Responding(HttpStatusCode.TooManyRequests);
+
+        var result = await InterpretPhoto(handler);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("OpenAi.RateLimited", result.Error.Code);
+        Assert.DoesNotContain(ApiKey, result.Error.Message);
     }
 }
