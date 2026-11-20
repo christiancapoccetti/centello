@@ -244,7 +244,7 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
   <figure>
     <figcaption>
       <b>4 · Il ritmo <small>4×2</small></b>
-      <p>Il mese con il grafico giornaliero di Oggi: <em>i giorni passati in grigio, oggi in bianco, la media che tiene il budget tratteggiata</em>. In alto a destra il più, per aggiungere senza passare da Oggi.</p>
+      <p>Il mese con il grafico giornaliero di Oggi: <em>i giorni passati in grigio, oggi in bianco, la media che tiene il budget tratteggiata</em>, la stessa di Oggi (budget diviso i giorni del mese). In alto a destra il più, per aggiungere senza passare da Oggi.</p>
     </figcaption>
     <div class="home">
       <small>4×2</small>
@@ -311,7 +311,7 @@ const TOTAL=486.2;
   const svg=document.getElementById('rhythm');
   const W=330,H=74,PLOT=54,AX=16,DAYS=30,TODAY=20,GAP=3;
   const spend=[12.5,34,8.9,0,46.2,18,22.4,61.3,9.5,14,0,27.8,38.6,11.2,19.9,52.4,7.3,23,31.7,47.5];
-  const pace=(800-TOTAL)/(DAYS-TODAY);
+  const pace=800/DAYS;
   const max=64;
   const bw=(W-GAP*(DAYS-1))/DAYS;
   const y=v=>PLOT-v/max*PLOT;
@@ -329,7 +329,7 @@ const TOTAL=486.2;
   }
   const py=y(pace);
   s+=`<line x1="0" x2="${W}" y1="${py}" y2="${py}" stroke="var(--pace)" stroke-width="1.5" stroke-dasharray="4 3" shape-rendering="auto"/>`;
-  const label='31 € al giorno';
+  const label='27 € al giorno';
   s+=`<text x="${W}" y="${py-6}" text-anchor="end" font-size="12" font-weight="600" fill="var(--pace)">${label}</text>`;
   const tx=(TODAY-1)*(bw+GAP)+bw/2;
   s+=`<text x="0" y="${H-2}" font-size="12" fill="var(--mute)">1</text>`;
