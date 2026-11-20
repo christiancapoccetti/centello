@@ -11,6 +11,10 @@ public sealed class Expense
     public string? PhotoPath { get; }
     public Guid? RecurringPaymentId { get; }
 
+    /// <summary>Created by a recurring payment. The link survives edits and cannot be cleared, so an edited automatic
+    /// expense stays automatic. Imported and typed-in expenses never are. Expression-bodied, so EF does not map it.</summary>
+    public bool IsAutomatic => RecurringPaymentId.HasValue;
+
     public Expense(Guid expenseId, Guid categoryId, Money amount, DateOnly occurredOn,
         Guid? tagId = null, string note = "", string? photoPath = null, Guid? recurringPaymentId = null)
     {
