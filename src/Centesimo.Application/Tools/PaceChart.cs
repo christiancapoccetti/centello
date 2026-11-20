@@ -85,6 +85,9 @@ public sealed record PaceChart(
     private const int YearSlots = 12;
     private const char Nbsp = ' ';
 
+    // WholeEuros rounds half up, so a difference under 0,50 € would read "0 €".
+    private const long HalfEuro = 50;
+
     public bool HasSentence => Sentence.HasValue();
 
     internal static PaceChart For(SpendComparison spending, long? budget)
@@ -95,7 +98,7 @@ public sealed record PaceChart(
         var scale = new Scale(heights.Max());
         return new PaceChart(
             period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
-            Bars(spending, compared, scale), Line(spending, scale), null, null,
+            Bars(spending, compared, scale), Line(spending, scale), null, GapOf(spending, compared, scale),
             new PaceAxis(new PaceTick(0, ""), new PaceTick(0, ""), null), [],
             SplitVerdict.NothingToCompare, "", "");
     }
@@ -134,6 +137,25 @@ public sealed record PaceChart(
         return new PaceLine(
             levels.Select(level => scale.Of(level)).ToList(),
             $"{Subject(previous)} ha chiuso a {Euros(spending.PreviousClosed)}");
+    }
+
+    private static PaceGap? GapOf(SpendComparison spending, int compared, Scale scale)
+    {
+        if (!spending.IsComparable)
+            return null;
+
+        var delta = spending.Spent - spending.Compared;
+        var inLine = Math.Abs(delta) < HalfEuro;
+        var amount = inLine ? "In linea" : $"{Euros(Math.Abs(delta))} {(delta < 0 ? "in meno" : "in più")}";
+        return new PaceGap(compared, scale.Of(spending.Compared), scale.Of(spending.Spent), amount,
+            GapCaption(spending, inLine));
+    }
+
+    private static string GapCaption(SpendComparison spending, bool inLine)
+    {
+        var previous = spending.Period.Previous();
+        var against = inLine ? $"con {Subject(previous)}" : InsightTexts.OfPeriod(previous);
+        return spending.IsToDate ? $"{against} a oggi" : against;
     }
 
     private static PaceSlotKind KindOf(int slot, int compared, int last, bool isToDate)

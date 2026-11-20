@@ -216,6 +216,152 @@ public sealed class PaceChart_should_expected_behavior
         Assert.Equal(12_000 / 15_000.0, pace.Previous!.Levels[2], 9);
     }
 
+    [Fact]
+    public async Task Should_start_the_gap_on_the_previous_line_at_today()
+    {
+        var ledger = new Ledger(budgetCents: 100_000)
+            .Spend(On(10, 5), 20_000)
+            .Spend(On(10, 25), 30_000)
+            .Spend(On(11, 3), 15_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(18, pace.Gap!.Slot);
+        Assert.Equal(0.20, pace.Gap.From, 9);
+        Assert.Equal(0.20, pace.Previous!.Levels[18], 9);
+        Assert.Equal(0.15, pace.Gap.To, 9);
+        Assert.Equal(pace.Slots[18].Total, pace.Gap.To, 9);
+        Assert.Equal($"50{Nbsp}€ in meno", pace.Gap.Amount);
+        Assert.Equal("di ottobre a oggi", pace.Gap.Caption);
+    }
+
+    [Fact]
+    public async Task Should_measure_the_year_gap_against_the_same_days_of_the_previous_year()
+    {
+        var ledger = new Ledger()
+            .Spend(On(1, 10, 2025), 10_000)
+            .Spend(On(11, 5, 2025), 20_000)
+            .Spend(On(11, 25, 2025), 15_000)
+            .Spend(On(12, 3, 2025), 5_000)
+            .Spend(On(1, 5), 12_000)
+            .Spend(On(11, 3), 8_000);
+
+        var pace = await ledger.Pace(Period.Year(2026), Today);
+
+        Assert.Equal(10, pace.Gap!.Slot);
+        Assert.Equal(30_000 / 50_000.0, pace.Gap.From, 9);
+        Assert.Equal(20_000 / 50_000.0, pace.Gap.To, 9);
+        Assert.Equal($"100{Nbsp}€ in meno", pace.Gap.Amount);
+        Assert.Equal("del 2025 a oggi", pace.Gap.Caption);
+        Assert.InRange(pace.Gap.From, pace.Previous!.Levels[9], pace.Previous.Levels[10]);
+        Assert.Equal(45_000 / 50_000.0, pace.Previous.Levels[10], 9);
+    }
+
+    [Fact]
+    public async Task Should_compare_a_past_month_at_its_last_day_with_the_whole_previous_month()
+    {
+        var ledger = new Ledger()
+            .Spend(On(10, 10), 10_000)
+            .Spend(On(10, 31), 5_000)
+            .Spend(On(11, 20), 12_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), On(12, 5));
+
+        Assert.Equal(29, pace.Gap!.Slot);
+        Assert.Equal(1.0, pace.Gap.From, 9);
+        Assert.Equal(0.8, pace.Gap.To, 9);
+        Assert.Equal(10_000 / 15_000.0, pace.Previous!.Levels[29], 9);
+        Assert.Equal(1.0, pace.Previous.Levels[30], 9);
+        Assert.Equal($"30{Nbsp}€ in meno", pace.Gap.Amount);
+    }
+
+    [Fact]
+    public async Task Should_put_the_gap_of_a_past_year_on_december()
+    {
+        var ledger = new Ledger().Spend(On(3, 5, 2024), 10_000).Spend(On(3, 3, 2025), 12_000);
+
+        var pace = await ledger.Pace(Period.Year(2025), Today);
+
+        Assert.Equal(11, pace.Gap!.Slot);
+    }
+
+    [Fact]
+    public async Task Should_compare_31_march_with_the_whole_of_february()
+    {
+        var ledger = new Ledger()
+            .Spend(On(2, 10), 10_000)
+            .Spend(On(2, 28), 5_000)
+            .Spend(On(3, 5), 9_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 3), On(3, 31));
+
+        Assert.Equal(30, pace.Gap!.Slot);
+        Assert.Equal(PaceSlotKind.Today, pace.Slots[30].Kind);
+        Assert.Equal(28, pace.Previous!.Levels.Count);
+        Assert.Equal(1.0, pace.Gap.From, 9);
+        Assert.Equal(9_000 / 15_000.0, pace.Gap.To, 9);
+        Assert.Equal($"60{Nbsp}€ in meno", pace.Gap.Amount);
+        Assert.Equal("di febbraio a oggi", pace.Gap.Caption);
+    }
+
+    [Fact]
+    public async Task Should_draw_the_previous_line_but_no_gap_when_the_compared_days_had_no_spending()
+    {
+        var ledger = new Ledger().Spend(On(10, 25), 10_000).Spend(On(11, 3), 5_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.NotNull(pace.Previous);
+        Assert.Null(pace.Gap);
+    }
+
+    [Fact]
+    public async Task Should_leave_out_the_gap_when_the_previous_period_has_no_spending()
+    {
+        var pace = await new Ledger().Spend(On(11, 3), 5_000).Pace(Period.Month(2026, 11), Today);
+
+        Assert.Null(pace.Gap);
+    }
+
+    [Theory]
+    [InlineData(91_800, "82 € in meno")]
+    [InlineData(101_200, "12 € in più")]
+    [InlineData(223_456, "1.235 € in più")]
+    [InlineData(99_950, "1 € in meno")]
+    [InlineData(100_050, "1 € in più")]
+    [InlineData(99_951, "In linea")]
+    [InlineData(100_000, "In linea")]
+    [InlineData(100_049, "In linea")]
+    public async Task Should_label_the_gap_in_whole_euros(long spentCents, string amount)
+    {
+        var ledger = new Ledger().Spend(On(10, 5), 100_000).Spend(On(11, 3), spentCents);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(amount.Replace(" €", $"{Nbsp}€"), pace.Gap!.Amount);
+    }
+
+    [Theory]
+    [InlineData(2026, 11, 90_000, "di ottobre a oggi")]
+    [InlineData(2026, 10, 90_000, "di settembre")]
+    [InlineData(2026, 0, 90_000, "del 2025 a oggi")]
+    [InlineData(2025, 0, 90_000, "del 2024")]
+    [InlineData(2026, 11, 100_000, "con ottobre a oggi")]
+    [InlineData(2026, 10, 100_000, "con settembre")]
+    [InlineData(2026, 0, 100_000, "con il 2025 a oggi")]
+    [InlineData(2025, 0, 100_000, "con il 2024")]
+    public async Task Should_caption_the_gap_for_each_kind_of_period(int year, int month, long spentCents, string caption)
+    {
+        var period = month == 0 ? Period.Year(year) : Period.Month(year, month);
+        var ledger = new Ledger()
+            .Spend(period.Previous().Start.AddDays(4), 100_000)
+            .Spend(period.Start.AddDays(2), spentCents);
+
+        var pace = await ledger.Pace(period, Today);
+
+        Assert.Equal(caption, pace.Gap!.Caption);
+    }
+
     private static DateOnly On(int month, int day, int year = 2026) => new(year, month, day);
 
     private static IEnumerable<T> Run<T>(T value, int count) => Enumerable.Repeat(value, count);
