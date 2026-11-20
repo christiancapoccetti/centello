@@ -17,7 +17,7 @@ public sealed class ExpenseDraftService(
     {
         LastTranscription = "";
         if (!internet.IsAvailable)
-            return Result.Failure(SpeechErrors.NoInternet);
+            return Result.Failure(DraftErrors.NoInternet);
 
         return await recorder.Start(cancellationToken);
     }
@@ -31,7 +31,7 @@ public sealed class ExpenseDraftService(
             return Result<ExpenseDraft>.Failure(audio.Error);
 
         if (!internet.IsAvailable)
-            return Result<ExpenseDraft>.Failure(SpeechErrors.NoInternet);
+            return Result<ExpenseDraft>.Failure(DraftErrors.NoInternet);
 
         var categories = await LoadCategories(cancellationToken);
         if (categories.IsFailure)

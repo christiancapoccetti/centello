@@ -201,7 +201,7 @@ public sealed class OpenAiSpeechTranscriber_should_expected_behavior
         await cancellation.CancelAsync();
         var result = await pending;
 
-        Assert.Equal(SpeechErrors.Canceled, result.Error);
+        Assert.Equal(DraftErrors.Canceled, result.Error);
     }
 
     [Fact]
@@ -211,7 +211,7 @@ public sealed class OpenAiSpeechTranscriber_should_expected_behavior
 
         var result = await Transcribe(handler, apiKey: "");
 
-        Assert.Equal(SpeechErrors.MissingApiKey, result.Error);
+        Assert.Equal(DraftErrors.MissingApiKey, result.Error);
         Assert.Empty(handler.Requests);
     }
 }

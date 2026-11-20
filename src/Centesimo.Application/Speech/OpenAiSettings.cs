@@ -23,10 +23,10 @@ public sealed class OpenAiSettings(IOpenAiApiKeyStore store) : IOpenAiApiKeyProv
     public async Task<Result> SaveApiKey(string apiKey, bool consentAccepted)
     {
         if (!consentAccepted)
-            return Result.Failure(SpeechErrors.ConsentRequired);
+            return Result.Failure(DraftErrors.ConsentRequired);
 
         if (apiKey.IsEmpty())
-            return Result.Failure(SpeechErrors.EmptyApiKey);
+            return Result.Failure(DraftErrors.EmptyApiKey);
 
         await store.SetApiKey(apiKey.Trim());
         return Result.Success();

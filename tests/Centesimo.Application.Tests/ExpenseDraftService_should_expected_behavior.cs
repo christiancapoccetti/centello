@@ -121,7 +121,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         var result = await _service.StartListening();
 
         Assert.True(result.IsFailure);
-        Assert.Equal(SpeechErrors.NoInternet, result.Error);
+        Assert.Equal(DraftErrors.NoInternet, result.Error);
         Assert.Equal(0, _recorder.StartCount);
     }
 
@@ -134,7 +134,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
-        Assert.Equal(SpeechErrors.NoInternet, result.Error);
+        Assert.Equal(DraftErrors.NoInternet, result.Error);
         Assert.Equal(1, _recorder.StopCount);
         Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);

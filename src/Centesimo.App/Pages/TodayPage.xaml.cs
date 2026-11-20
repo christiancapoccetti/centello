@@ -124,7 +124,7 @@ public partial class TodayPage : ContentPage
         }
         catch
         {
-            return Result.Failure(new Centesimo.Application.Error("Speech.StartFailed", "Non riesco ad avviare il riconoscimento vocale."));
+            return Result.Failure(SpeechErrors.StartFailed);
         }
     }
 
@@ -184,7 +184,7 @@ public partial class TodayPage : ContentPage
         }
         catch
         {
-            _viewModel.SpeechErrorMessage = "Non riesco a elaborare il comando vocale.";
+            _viewModel.SpeechErrorMessage = SpeechErrors.ProcessingFailed.Message;
         }
         finally
         {

@@ -76,7 +76,7 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
         if (ApiKeyInput.HasValue())
             return true;
 
-        ApiKeyError = SpeechErrors.EmptyApiKey.Message;
+        ApiKeyError = DraftErrors.EmptyApiKey.Message;
         return false;
     }
 

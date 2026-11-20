@@ -32,7 +32,7 @@ public sealed class OpenAiSettings_should_expected_behavior
         var result = await _settings.SaveApiKey("sk-other", consentAccepted: false);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(SpeechErrors.ConsentRequired, result.Error);
+        Assert.Equal(DraftErrors.ConsentRequired, result.Error);
         Assert.Equal("sk-test", await _settings.GetApiKey());
     }
 
@@ -46,7 +46,7 @@ public sealed class OpenAiSettings_should_expected_behavior
         var result = await _settings.SaveApiKey(key, consentAccepted: true);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(SpeechErrors.EmptyApiKey, result.Error);
+        Assert.Equal(DraftErrors.EmptyApiKey, result.Error);
         Assert.Equal("sk-test", await _settings.GetApiKey());
     }
 
