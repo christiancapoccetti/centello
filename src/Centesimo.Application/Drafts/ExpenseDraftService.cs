@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.Application;
 
-/// <summary>Turns a spoken phrase into the draft the expense editor opens with. Nothing is saved here.</summary>
+/// <summary>Turns a spoken phrase or a photo into the draft the expense editor opens with. Nothing is saved here.</summary>
 public sealed class ExpenseDraftService(
     ISpeechRecorder recorder,
     ISpeechTranscriber transcriber,
@@ -46,8 +46,25 @@ public sealed class ExpenseDraftService(
         return await interpreter.Interpret(
             transcription.Value,
             categories.Value,
-            DateOnly.FromDateTime(DateTime.Today),
+            Today(),
             cancellationToken);
+    }
+
+    /// <summary>Reads the photo and interprets it. The bytes are not kept after the call.</summary>
+    public async Task<Result<ExpenseDraft>> PrepareFromPhoto(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
+    {
+        var photo = ExpensePhoto.Read(image);
+        if (photo.IsFailure)
+            return Result<ExpenseDraft>.Failure(photo.Error);
+
+        if (!internet.IsAvailable)
+            return Result<ExpenseDraft>.Failure(DraftErrors.NoInternet);
+
+        var categories = await LoadCategories(cancellationToken);
+        if (categories.IsFailure)
+            return Result<ExpenseDraft>.Failure(categories.Error);
+
+        return await interpreter.Interpret(photo.Value, categories.Value, Today(), cancellationToken);
     }
 
     private async Task<Result<IReadOnlyList<DraftCategory>>> LoadCategories(CancellationToken cancellationToken)
@@ -74,4 +91,6 @@ public sealed class ExpenseDraftService(
 
         return Result<IReadOnlyList<DraftCategory>>.Success(options);
     }
+
+    private static DateOnly Today() => DateOnly.FromDateTime(DateTime.Today);
 }

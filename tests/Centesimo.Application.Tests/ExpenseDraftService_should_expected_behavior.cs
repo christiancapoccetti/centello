@@ -6,6 +6,7 @@ namespace Centesimo.Application.Tests;
 public sealed class ExpenseDraftService_should_expected_behavior
 {
     private static readonly RecordedAudio Audio = new(new byte[] { 1, 2, 3, 4 });
+    private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02];
     private static readonly Error RecordingFailure = new("Test.Recording", "Registrazione non riuscita.");
     private static readonly Error TranscriptionFailure = new("Test.Transcription", "Trascrizione non riuscita.");
     private static readonly Error InterpretationFailure = new("Test.Interpretation", "Interpretazione non riuscita.");
@@ -152,6 +153,67 @@ public sealed class ExpenseDraftService_should_expected_behavior
 
         Assert.Equal("", _service.LastTranscription);
         Assert.Equal(1, _recorder.StartCount);
+    }
+
+    [Fact]
+    public async Task Interpret_a_photo_with_the_user_categories()
+    {
+        _interpreter.Draft = new ExpenseDraft(1_250, _food.CategoryId, null, new DateOnly(2026, 11, 18), "Conad", DraftSource.Photo, "");
+
+        var result = await _service.PrepareFromPhoto(Jpeg);
+
+        Assert.True(result.IsSuccess);
+        Assert.Same(_interpreter.Draft, result.Value);
+        Assert.Equal(Jpeg, _interpreter.Photo!.Bytes.ToArray());
+        Assert.Equal(["Auto", "Cibo"], _interpreter.Categories.Select(category => category.Name));
+        Assert.Equal(1, _scopes.CreatedCount);
+        Assert.Equal("", _service.LastTranscription);
+    }
+
+    [Fact]
+    public async Task Not_call_openai_for_a_file_that_is_not_an_image()
+    {
+        var result = await _service.PrepareFromPhoto(new byte[] { 0x25, 0x50, 0x44, 0x46 });
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PhotoErrors.Unsupported, result.Error);
+        Assert.Equal(0, _interpreter.CallCount);
+        Assert.Equal(0, _scopes.CreatedCount);
+    }
+
+    [Fact]
+    public async Task Not_call_openai_without_internet_for_a_photo()
+    {
+        _internet.IsAvailable = false;
+
+        var result = await _service.PrepareFromPhoto(Jpeg);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DraftErrors.NoInternet, result.Error);
+        Assert.Equal(0, _interpreter.CallCount);
+    }
+
+    [Fact]
+    public async Task Fail_before_interpreting_a_photo_when_the_categories_cannot_be_loaded()
+    {
+        var failure = new Error("Test.Categories", "Categorie non disponibili.");
+        _categories.Failure = failure;
+
+        var result = await _service.PrepareFromPhoto(Jpeg);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(failure, result.Error);
+        Assert.Equal(0, _interpreter.CallCount);
+    }
+
+    [Fact]
+    public async Task Return_the_interpretation_failure_for_a_photo()
+    {
+        _interpreter.Failure = InterpretationFailure;
+
+        var result = await _service.PrepareFromPhoto(Jpeg);
+
+        Assert.Equal(InterpretationFailure, result.Error);
     }
 
     private sealed class FakeInternetAccess : IInternetAccess
