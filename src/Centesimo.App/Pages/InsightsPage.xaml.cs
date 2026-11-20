@@ -1,5 +1,6 @@
 using Centesimo.App.ViewModels;
 using Centesimo.App.Controls;
+using Centesimo.Application;
 namespace Centesimo.App.Pages;
 public partial class InsightsPage : ContentPage
 {
@@ -35,7 +36,7 @@ public partial class InsightsPage : ContentPage
         }
         if (!insight.CategoryId.HasValue || !_viewModel.IsMonthly)
             return;
-        await Shell.Current.GoToAsync($"{nameof(CategorySpendingPage)}?categoryId={insight.CategoryId}&year={DateTime.Today.Year}&month={DateTime.Today.Month}");
+        await Shell.Current.GoToAsync(CategoryDetailPage.Route(insight.CategoryId.Value, CurrentMonth));
     }
 
     private async void OnCategoryClicked(object? sender, CategoryBreakdownItemClickedEventArgs e)
@@ -43,6 +44,8 @@ public partial class InsightsPage : ContentPage
         if (!_viewModel.IsMonthly)
             return;
 
-        await Shell.Current.GoToAsync($"{nameof(CategorySpendingPage)}?categoryId={e.Category.CategoryId}&year={DateTime.Today.Year}&month={DateTime.Today.Month}");
+        await Shell.Current.GoToAsync(CategoryDetailPage.Route(e.Category.CategoryId, CurrentMonth));
     }
+
+    private static Period CurrentMonth => Period.MonthOf(DateOnly.FromDateTime(DateTime.Today));
 }

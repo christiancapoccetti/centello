@@ -97,6 +97,7 @@ public sealed class CategoryDetailService_should_expected_behavior
         Assert.Null(none.Budget);
         Assert.Null(zero.Budget);
         Assert.False(none.HasBudget);
+        Assert.False(none.IsOverBudget);
     }
 
     [Fact]
@@ -108,6 +109,7 @@ public sealed class CategoryDetailService_should_expected_behavior
 
         Assert.Equal(new BudgetSummary("Ne restano ", "30,00 €", " su 150"), detail.Budget);
         Assert.True(detail.HasBudget);
+        Assert.False(detail.IsOverBudget);
     }
 
     [Fact]
@@ -117,6 +119,7 @@ public sealed class CategoryDetailService_should_expected_behavior
 
         var detail = await Detail(category, Period.Month(2026, 11), expenses: [Spend(category, 15_000, Today)]);
 
+        Assert.False(detail.IsOverBudget);
         Assert.Equal(new BudgetSummary("Ne restano ", "0,00 €", " su 150"), detail.Budget);
     }
 
@@ -127,6 +130,7 @@ public sealed class CategoryDetailService_should_expected_behavior
 
         var detail = await Detail(category, Period.Month(2026, 11), expenses: [Spend(category, 17_850, Today)]);
 
+        Assert.True(detail.IsOverBudget);
         Assert.Equal(new BudgetSummary("Oltre il budget di ", "28,50 €", ""), detail.Budget);
     }
 
@@ -279,7 +283,7 @@ public sealed class CategoryDetailService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_group_expenses_like_the_history()
+    public async Task Should_group_expenses_like_the_history_without_naming_the_category_in_every_row()
     {
         var category = NewCategory("Ristoranti", color: "mint", icon: "food");
         var pizza = new Tag(Guid.NewGuid(), category.CategoryId, "Pizza");
@@ -293,7 +297,7 @@ public sealed class CategoryDetailService_should_expected_behavior
         var year = await Detail(category, Period.Year(2026), tags: [pizza], expenses: expenses);
 
         Assert.Equal(["Oggi", "Ieri"], month.Groups.Select(group => group.Label));
-        Assert.Equal(new HistoryRow(expenses[0].ExpenseId, "Da Mario", "Ristoranti · Pizza", "12,50 €", "food", "mint"),
+        Assert.Equal(new HistoryRow(expenses[0].ExpenseId, "Da Mario", "Pizza", "12,50 €", "food", "mint"),
             month.Groups[0].Rows.Single());
         var automatic = month.Groups[1].Rows.Single();
         Assert.Equal(("Ristoranti", "automatica"), (automatic.Title, automatic.Detail));

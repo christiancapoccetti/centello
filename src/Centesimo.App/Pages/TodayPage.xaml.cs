@@ -51,6 +51,12 @@ public partial class TodayPage : ContentPage
     private async void OnExpenseOpened(object? sender, Guid expenseId) =>
         await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expenseId}");
 
+    private async void OnCategoryKeyTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is BindableObject { BindingContext: CategoryKeyItem category } && _viewModel.Overview is { } overview)
+            await Shell.Current.GoToAsync(CategoryDetailPage.Route(category.CategoryId, overview.Period));
+    }
+
     private async void OnAllExpensesTapped(object? sender, EventArgs e)
     {
         if (_viewModel.HistoryMonth is { } month)

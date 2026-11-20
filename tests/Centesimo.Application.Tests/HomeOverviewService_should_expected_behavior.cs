@@ -391,8 +391,9 @@ public sealed class HomeOverviewService_should_expected_behavior
         var line = (await Overview(categories, expenses)).Categories;
 
         Assert.Equal(
-            [new CategoryKeyItem("Cibo", "mint", false), new CategoryKeyItem("Casa", "coral", false),
-                new CategoryKeyItem("Auto", "peri", false)],
+            [new CategoryKeyItem(categories[0].CategoryId, "Cibo", "mint", false),
+                new CategoryKeyItem(categories[1].CategoryId, "Casa", "coral", false),
+                new CategoryKeyItem(categories[2].CategoryId, "Auto", "peri", false)],
             line.Key);
         Assert.Equal(4, line.Segments.Count);
     }
@@ -408,8 +409,9 @@ public sealed class HomeOverviewService_should_expected_behavior
         var line = (await Overview([over, within, withoutBudget], expenses)).Categories;
 
         Assert.Equal(
-            [new CategoryKeyItem("Auto", "peri", false), new CategoryKeyItem("Cibo oltre", "mint", true),
-                new CategoryKeyItem("Casa", "coral", false)],
+            [new CategoryKeyItem(withoutBudget.CategoryId, "Auto", "peri", false),
+                new CategoryKeyItem(over.CategoryId, "Cibo oltre", "mint", true),
+                new CategoryKeyItem(within.CategoryId, "Casa", "coral", false)],
             line.Key);
     }
 

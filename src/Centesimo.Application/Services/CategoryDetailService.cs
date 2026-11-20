@@ -19,6 +19,7 @@ public sealed record CategoryDetail(
     string Title,                       // "Novembre 2026" | "Anno 2026"
     string Total,                       // "128,50" (the page draws "€")
     BudgetSummary? Budget,              // null when the category has no budget
+    bool IsOverBudget,
     IReadOnlyList<SpendBar> Bars,       // days of the month, or 12 months
     IReadOnlyList<TagChip> Tags,        // "Tutti", the tags with spending, "Senza tag" when there is untagged spending
     IReadOnlyList<HistoryGroup> Groups,
@@ -62,26 +63,31 @@ public sealed class CategoryDetailService(ICategoryRepository categories, ITagRe
         IReadOnlyList<Tag> tags, IReadOnlyList<Expense> categoryExpenses)
     {
         var spent = categoryExpenses.Sum(expense => expense.Amount.Cents);
+        var budget = BudgetOf(category, period);
         var listed = categoryExpenses.Where(expense => selected.Matches(expense.TagId)).ToList();
         var buckets = SpendBuckets.Of(period, today, categoryExpenses);
         return new CategoryDetail(category.CategoryId, category.Name, CategoryIcons.Resolve(category.Icon).Key,
             CategoryPalette.Resolve(category.Color).Key, category.IsArchived, period, HomeNavigation.For(period, today),
-            ItalianFormat.PeriodTitle(period), ItalianFormat.Amount(spent), Summarize(category, period, spent),
+            ItalianFormat.PeriodTitle(period), ItalianFormat.Amount(spent), Summarize(spent, budget), spent > budget,
             buckets.Bars(buckets.Scale()), Chips(selected, tags, categoryExpenses),
-            HistoryGroups.Build(period, today, listed, [category], tags),
+            // The page is the category: a row that named it again would say nothing.
+            HistoryGroups.Build(period, today, listed, [category], tags, nameCategory: false),
             HistoryGroups.EmptyText(period, category.Name, selected, tags));
     }
 
     // A year budget is twelve monthly budgets. A budget of zero is "no budget": nothing to measure against.
-    private static BudgetSummary? Summarize(Category category, Period period, long spent)
+    private static long? BudgetOf(Category category, Period period) => category.MonthlyBudget is { Cents: > 0 } monthly
+        ? monthly.Cents * (period.Kind == PeriodKind.Year ? 12 : 1)
+        : null;
+
+    private static BudgetSummary? Summarize(long spent, long? budget)
     {
-        if (category.MonthlyBudget is not { Cents: > 0 } monthly)
+        if (budget is not { } total)
             return null;
 
-        var budget = monthly.Cents * (period.Kind == PeriodKind.Year ? 12 : 1);
-        return spent > budget
-            ? new BudgetSummary("Oltre il budget di ", ItalianFormat.Money(spent - budget), "")
-            : new BudgetSummary("Ne restano ", ItalianFormat.Money(budget - spent), $" su {ItalianFormat.Budget(budget)}");
+        return spent > total
+            ? new BudgetSummary("Oltre il budget di ", ItalianFormat.Money(spent - total), "")
+            : new BudgetSummary("Ne restano ", ItalianFormat.Money(total - spent), $" su {ItalianFormat.Budget(total)}");
     }
 
     // Tags with spending in the period, largest first, between "Tutti" and "Senza tag". The selected tag stays even

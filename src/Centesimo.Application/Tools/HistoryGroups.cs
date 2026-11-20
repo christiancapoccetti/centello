@@ -17,9 +17,10 @@ public sealed record HistoryRow(Guid ExpenseId, string Title, string Detail, str
 internal static class HistoryGroups
 {
     /// <summary>Newest group first and, within a group, newest expense first. A month period groups by day and a year
-    /// period by month. Archived or missing categories and tags still name their rows.</summary>
+    /// period by month. Archived or missing categories and tags still name their rows. A list of one category passes
+    /// <paramref name="nameCategory"/> false: its rows then say the category only where it is their title.</summary>
     public static IReadOnlyList<HistoryGroup> Build(Period period, DateOnly today, IEnumerable<Expense> expenses,
-        IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags)
+        IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags, bool nameCategory = true)
     {
         var categoryById = categories.ToDictionary(category => category.CategoryId);
         var tagById = tags.ToDictionary(tag => tag.TagId);
@@ -32,7 +33,7 @@ internal static class HistoryGroups
                 byDay ? ItalianFormat.DayHeader(group.Key, today) : ItalianFormat.MonthTitle(group.Key.Month),
                 ItalianFormat.Money(group.Sum(expense => expense.Amount.Cents)),
                 group.Select(expense => ToRow(expense, categoryById.GetValueOrDefault(expense.CategoryId),
-                    expense.TagId.HasValue ? tagById.GetValueOrDefault(expense.TagId.Value) : null)).ToList()))
+                    expense.TagId.HasValue ? tagById.GetValueOrDefault(expense.TagId.Value) : null, nameCategory)).ToList()))
             .ToList();
     }
 
@@ -51,11 +52,11 @@ internal static class HistoryGroups
         _ => ""
     };
 
-    private static HistoryRow ToRow(Expense expense, Category? category, Tag? tag)
+    private static HistoryRow ToRow(Expense expense, Category? category, Tag? tag, bool nameCategory)
     {
         var label = RowLabels.Title(expense.Note, RowLabels.NameOf(category));
         return new HistoryRow(expense.ExpenseId, label.Title,
-            RowLabels.Detail(label.Category, tag?.Name ?? "", RowLabels.AutomaticMark(expense)),
+            RowLabels.Detail(nameCategory ? label.Category : "", tag?.Name ?? "", RowLabels.AutomaticMark(expense)),
             ItalianFormat.Money(expense.Amount.Cents),
             CategoryIcons.Resolve(category?.Icon).Key, CategoryPalette.Resolve(category?.Color).Key);
     }

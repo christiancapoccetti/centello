@@ -32,16 +32,7 @@
         <CollectionView Grid.Row="3" ItemsSource="{Binding Groups}" IsGrouped="True" SelectionMode="None" IsVisible="{Binding HasGroups}">
             <CollectionView.GroupHeaderTemplate>
                 <DataTemplate>
-                    <!-- The header starts 20 under the row above it. Android puts 3 of font padding over a 14sp line. -->
-                    <Label Margin="24,17,24,3" FontSize="14" SemanticProperties.HeadingLevel="Level2">
-                        <Label.FormattedText>
-                            <FormattedString>
-                                <Span Text="{Binding Label}" FontFamily="{x:Static t:Fonts.Bold}" />
-                                <Span Text=" · " FontFamily="{x:Static t:Fonts.SemiBold}" TextColor="{t:Theme Mute}" />
-                                <Span Text="{Binding Total}" FontFamily="{x:Static t:Fonts.SemiBold}" TextColor="{t:Theme Mute}" />
-                            </FormattedString>
-                        </Label.FormattedText>
-                    </Label>
+                    <c:ExpenseGroupHeader />
                 </DataTemplate>
             </CollectionView.GroupHeaderTemplate>
             <CollectionView.ItemTemplate>

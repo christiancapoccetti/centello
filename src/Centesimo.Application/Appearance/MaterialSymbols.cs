@@ -30,6 +30,7 @@ public static class MaterialSymbols
     public const string DirectionsCar = "\uE531";
     public const string Download = "\uF090";
     public const string East = "\uF1DF";
+    public const string Edit = "\uE3C9";
     public const string Error = "\uE000";
     public const string EventBusy = "\uE615";
     public const string ExpandLess = "\uE5CE";

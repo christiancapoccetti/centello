@@ -68,11 +68,16 @@
                     </Border>
 
                     <c:CategoryLineView Margin="0,24,0,0" HeightRequest="14" Segments="{Binding Overview.Categories.Segments}" IsVisible="{Binding Overview.Categories.HasSegments}" SemanticProperties.Description="{Binding Overview.Categories.Description}" />
-                    <FlexLayout Margin="0,6,0,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Overview.Categories.Key}">
+                    <!-- An item opens its category. Its padding makes the touch target 41 high and the negative
+                         margins of the row give that room back. -->
+                    <FlexLayout Margin="0,-6,0,-6" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Overview.Categories.Key}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
                                 <!-- The gap between items is padding: FlexLayout counts an item margin twice. -->
-                                <HorizontalStackLayout Padding="0,0,14,6" Spacing="6">
+                                <HorizontalStackLayout Padding="0,12,14,12" Spacing="6" SemanticProperties.Description="{Binding Text}" SemanticProperties.Hint="Apri la categoria">
+                                    <HorizontalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCategoryKeyTapped" />
+                                    </HorizontalStackLayout.GestureRecognizers>
                                     <c:PaletteSwatch ColorKey="{Binding ColorKey}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
                                     <Label Text="{Binding Text}" Style="{StaticResource Caption}">
                                         <Label.Triggers>
