@@ -1,3 +1,5 @@
+using Centesimo.Domain;
+
 namespace Centesimo.Application;
 
 /// <summary>An end column: the compared total (start) or the current total (end). Level is 0..1 of the plot above
@@ -36,6 +38,7 @@ public sealed record WaterfallChart(
     private const long DriverPercent = 75;
     private const string FoldName = "Altre categorie";
     private const char Minus = '−';
+    private const char Nbsp = ' ';
 
     /// <summary>Null when nothing was spent in the compared days, or when nothing changed at all.</summary>
     internal static WaterfallChart? For(SpendComparison spending)
@@ -57,7 +60,7 @@ public sealed record WaterfallChart(
         return new WaterfallChart(InsightTexts.FromTo(period),
             Total(spending.Compared, scale, InsightTexts.Short(period.Previous())), steps,
             Total(spending.Spent, scale, InsightTexts.Short(period)), scale.IsCut,
-            Explanation(changes, spending.Spent - spending.Compared), "");
+            Say(spending, changes, scale), "");
     }
 
     /// <summary>What a column of the chart changes by: a category, or the rest folded into one. The fold is named in
@@ -111,12 +114,21 @@ public sealed record WaterfallChart(
         return levels;
     }
 
+    /// <summary>What explains the change, which categories did not change and, when the plot is cut, where it starts.</summary>
+    private static string Say(SpendComparison spending, IReadOnlyList<Change> changes, Scale scale) => string.Join(" ",
+        new[]
+        {
+            Explanation(spending.Period, changes, spending.Spent - spending.Compared),
+            Unchanged(spending.Categories),
+            scale.IsCut ? $"La scala parte da {ItalianFormat.Budget(scale.Floor)}{Nbsp}€." : ""
+        }.Where(part => part.HasValue()));
+
     /// <summary>Names what explains the change: the fewest categories that make up 75 % of everything that went the way
-    /// of the net change, then the largest one that went the other way.</summary>
-    private static string Explanation(IReadOnlyList<Change> changes, long net)
+    /// of the net change, then the largest one that went the other way. A net change under 0,50 € is a total that held.</summary>
+    private static string Explanation(Period period, IReadOnlyList<Change> changes, long net)
     {
-        if (net == 0)
-            return "";
+        if (Euros(Math.Abs(net)) == 0)
+            return Held(period, changes);
 
         var movers = Ranked(changes, Math.Sign(net));
         var drivers = Drivers(movers);
@@ -125,6 +137,40 @@ public sealed record WaterfallChart(
             return $"{lead}.";
 
         return $"{lead}; {opposite.Name} {Agree(opposite, "va", "vanno")} nella direzione opposta.";
+    }
+
+    /// <summary>"Il totale è in linea con ottobre: A e B si compensano." The pair is the largest fall and the largest
+    /// rise, and is left out when everything went one way, as when only the fold moved.</summary>
+    private static string Held(Period period, IReadOnlyList<Change> changes)
+    {
+        var held = $"Il totale è in linea con {With(period.Previous())}";
+        if (Ranked(changes, -1).FirstOrDefault() is not { } fall || Ranked(changes, 1).FirstOrDefault() is not { } rise)
+            return $"{held}.";
+
+        return $"{held}: {fall.Name} e {rise.Name} si compensano.";
+    }
+
+    /// <summary>"ottobre" or "il 2025".</summary>
+    private static string With(Period previous) => previous.Kind == PeriodKind.Month
+        ? ItalianFormat.MonthName(previous.Start.Month)
+        : $"il {previous.Start.Year}";
+
+    /// <summary>Categories that spent the same in both windows, down to the cent. A category that moved by less than
+    /// 1 € is in the fold, not here.</summary>
+    private static string Unchanged(IReadOnlyList<CategorySpend> categories)
+    {
+        var names = categories
+            .Where(spend => spend.Delta == 0 && spend.Spent > 0)
+            .Select(spend => spend.Category.Name)
+            .Order()
+            .ToList();
+        return names.Count switch
+        {
+            0 => "",
+            1 => $"{names[0]} è invariata.",
+            2 => $"{names[0]} e {names[1]} sono invariate.",
+            _ => $"{names.Count} categorie sono invariate."
+        };
     }
 
     /// <summary>The changes that went <paramref name="direction"/> (-1 a fall, 1 a rise), largest first.</summary>

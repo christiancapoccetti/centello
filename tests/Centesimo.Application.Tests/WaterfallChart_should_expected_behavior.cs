@@ -6,6 +6,7 @@ namespace Centesimo.Application.Tests;
 public sealed class WaterfallChart_should_expected_behavior
 {
     private const char Minus = '\u2212';
+    private const char Nbsp = '\u00a0';
     private static readonly DateOnly Today = new(2026, 11, 19);
 
     public enum Standing { Active, Archived, Unknown }
@@ -295,6 +296,69 @@ public sealed class WaterfallChart_should_expected_behavior
         }
     };
 
+    // Trasporti and Svago are 105,60 of the 132,40 € of falls, 80 %. Ristoranti is the largest rise.
+    [Fact]
+    public async Task Should_name_what_explains_the_change()
+    {
+        var chart = (await InsightFixtures.November().Overview()).Waterfall!;
+
+        Assert.Equal(
+            $"Trasporti e Svago spiegano quasi tutto il calo; Ristoranti va nella direzione opposta. Casa è invariata. La scala parte da 1.150{Nbsp}€.",
+            chart.Sentence);
+    }
+
+    [Fact]
+    public async Task Should_say_the_total_held_when_steps_cancel_out()
+    {
+        var lines = new[] { new Line("A", 50_000, 20_000), new Line("B", 10_000, 40_000) };
+
+        var month = await Chart(lines);
+        var year = (await Overview(lines, Period.Year(2026))).Waterfall!;
+
+        Assert.Equal("Il totale è in linea con ottobre: A e B si compensano.", month.Sentence);
+        Assert.Equal("Il totale è in linea con il 2025: A e B si compensano.", year.Sentence);
+    }
+
+    // Under 0,50 € the total counts as held, from 0,50 € one side wins.
+    [Theory]
+    [InlineData(40_049, "Il totale è in linea con ottobre: A e B si compensano.")]
+    [InlineData(40_050, "B spiega tutto l'aumento; A va nella direzione opposta.")]
+    [InlineData(39_951, "Il totale è in linea con ottobre: A e B si compensano.")]
+    [InlineData(39_950, "A spiega tutto il calo; B va nella direzione opposta.")]
+    public async Task Should_say_the_total_held_when_the_net_change_rounds_to_zero_euros(long current, string sentence)
+    {
+        var chart = await Chart(new Line("A", 50_000, 20_000), new Line("B", 10_000, current));
+
+        Assert.Equal(sentence, chart.Sentence);
+    }
+
+    // Only the fold moved, by 0,40 €: the total held and there is no pair to name. The plot is cut: 100,00 and 100,40 €
+    // spread 10,04 €, a tenth of the highest, and the floor is 90 €.
+    [Fact]
+    public async Task Should_say_the_total_held_without_naming_a_pair_when_only_the_fold_moved()
+    {
+        var chart = await Chart(new Line("A", 10_000, 10_040));
+
+        var fold = Assert.Single(chart.Steps);
+
+        Assert.Equal(("Altre categorie", "0"), (fold.Name, fold.Value));
+        Assert.Equal($"Il totale è in linea con ottobre. La scala parte da 90{Nbsp}€.", chart.Sentence);
+    }
+
+    [Theory]
+    [InlineData("Casa", "A spiega tutto il calo. Casa è invariata.")]
+    [InlineData("Casa,Bollette", "A spiega tutto il calo. Bollette e Casa sono invariate.")]
+    [InlineData("Casa,Bollette,Auto", "A spiega tutto il calo. 3 categorie sono invariate.")]
+    [InlineData("Casa,Bollette,Auto,Sport,Cibo", "A spiega tutto il calo. 5 categorie sono invariate.")]
+    public async Task Should_name_the_unchanged_categories(string names, string sentence)
+    {
+        var unchanged = names.Split(',').Select(name => new Line(name, 5_000, 5_000));
+
+        var chart = await Chart([new Line("A", 50_000, 20_000), .. unchanged]);
+
+        Assert.Equal(sentence, chart.Sentence);
+    }
+
     // The levels 136.660, 130.720, 126.100, 123.420, 123.860, 125.240 and 128.460 cents spread 13.240 cents, under a
     // tenth of the highest, so the spread counts as a tenth: 13.666 cents. Three times that is under the highest level,
     // so the scale is cut. A quarter of it is 34 €, so the step is 50 €, and 1.234,20 € less 68,33 € rounds down to
@@ -321,6 +385,7 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.Equal(1.0, chart.Start.Level);
         Assert.Equal((1.0, 0.5), (chart.Steps[0].From, chart.Steps[0].To));
         Assert.Equal(0.5, chart.End.Level);
+        Assert.Equal("Spesa spiega tutto il calo.", chart.Sentence);
     }
 
     // From 300 € to 200 € the spread is exactly a third of the highest level and the step is 50 €, so the floor is 150 €.
@@ -334,6 +399,7 @@ public sealed class WaterfallChart_should_expected_behavior
 
         Assert.Equal(isCut, chart.IsCut);
         Assert.Equal(endLevel, chart.End.Level, 12);
+        Assert.Equal(isCut, chart.Sentence.EndsWith($" La scala parte da 150{Nbsp}€."));
     }
 
     [Theory]
@@ -348,6 +414,7 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.True(chart.IsCut);
         Assert.Equal(1.0, chart.Start.Level);
         Assert.Equal((double)(current - floor) / (previous - floor), chart.End.Level, 12);
+        Assert.EndsWith($" La scala parte da {floor / 100}{Nbsp}€.", chart.Sentence);
     }
 
     // Seven changes of at least 1 €, two under it, one category that dropped to zero, one unchanged, and spending in an
