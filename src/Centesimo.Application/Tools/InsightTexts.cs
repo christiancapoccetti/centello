@@ -79,6 +79,20 @@ public static class InsightTexts
         return isToDate ? $"dello stesso periodo del {previous.Start.Year}" : $"del {previous.Start.Year}";
     }
 
+    /// <summary>"a ottobre", "nello stesso periodo di ottobre" or "nel 2025": where the compared spending is looked
+    /// at. The compared window of the period of today covers only the days that have passed, so it is never named as
+    /// the whole month or year.</summary>
+    internal static string InComparedPeriod(Period period, bool isToDate)
+    {
+        var previous = period.Previous();
+        if (!isToDate)
+            return ItalianFormat.InPeriod(previous);
+
+        return period.Kind == PeriodKind.Month
+            ? $"nello stesso periodo di {ItalianFormat.MonthName(previous.Start.Month)}"
+            : $"nello stesso periodo del {previous.Start.Year}";
+    }
+
     /// <summary>"di novembre" or "del 2026": whose spending a share is of.</summary>
     internal static string OfPeriod(Period period) => period.Kind == PeriodKind.Month
         ? $"di {ItalianFormat.MonthName(period.Start.Month)}"

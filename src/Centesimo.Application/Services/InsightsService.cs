@@ -118,7 +118,7 @@ public sealed class InsightsService(ICategoryRepository categories, IExpenseRepo
             .GroupBy(x => x.CategoryId)
             .FirstOrDefault(group => group.Count() >= 3 && !previousExpenses.Any(x => x.CategoryId == group.Key));
         if (newHabit is not null && categories.FirstOrDefault(x => x.CategoryId == newHabit.Key) is { } newCategory)
-            insights.Add(new LocalInsight(InsightKind.NewHabit, "Una nuova abitudine", $"Hai registrato {newHabit.Count()} spese in {newCategory.Name} {ItalianFormat.InPeriod(period)}; {ItalianFormat.InPeriod(period.Previous())} nessuna.", InsightTarget.Category(newCategory.CategoryId, period)));
+            insights.Add(new LocalInsight(InsightKind.NewHabit, "Una nuova abitudine", $"Hai registrato {newHabit.Count()} spese in {newCategory.Name} {ItalianFormat.InPeriod(period)}; {InsightTexts.InComparedPeriod(period, isToDate)} nessuna.", InsightTarget.Category(newCategory.CategoryId, period)));
         var unusual = currentExpenses
             .GroupBy(x => x.CategoryId)
             .Select(group => new { Expenses = group.ToList(), Maximum = group.MaxBy(x => x.Amount.Cents) })
