@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/comparison"
+    android:layout_width="wrap_content"
+    android:layout_height="24dp">
+    <LinearLayout
+        android:id="@+id/comparison_raised"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_chip_raised"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="4dp"
+        android:paddingRight="8dp">
+        <ImageView
+            android:id="@+id/comparison_glyph"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:importantForAccessibility="no"
+            android:tint="@color/theme_ink" />
+        <ImageView
+            android:id="@+id/comparison_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="3dp"
+            android:importantForAccessibility="no"
+            android:tint="@color/theme_ink" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/comparison_positive"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_chip_positive"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="4dp"
+        android:paddingRight="8dp"
+        android:visibility="gone">
+        <ImageView
+            android:id="@+id/comparison_glyph_low"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:importantForAccessibility="no"
+            android:tint="@color/theme_on_positive_container" />
+        <ImageView
+            android:id="@+id/comparison_text_low"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="3dp"
+            android:importantForAccessibility="no"
+            android:tint="@color/theme_on_positive_container" />
+    </LinearLayout>
+</FrameLayout>
