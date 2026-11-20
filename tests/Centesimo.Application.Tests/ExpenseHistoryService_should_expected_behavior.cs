@@ -63,7 +63,7 @@ public sealed class ExpenseHistoryService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_describe_a_row_with_note_category_tag_and_automatic_mark()
+    public async Task Should_title_a_row_with_its_category_and_say_the_note_or_else_the_tag()
     {
         var food = NewCategory("Ristoranti", color: "mint", icon: "food");
         var pizza = new Tag(Guid.NewGuid(), food.CategoryId, "Pizza");
@@ -77,12 +77,12 @@ public sealed class ExpenseHistoryService_should_expected_behavior
         var history = await History(Period.Month(2026, 11), ExpenseFilter.All, [food], expenses, [pizza]);
 
         var rows = history.Groups.SelectMany(group => group.Rows).ToList();
-        Assert.Equal(["Da Mario", "Ristoranti", "Ristoranti"], rows.Select(row => row.Title));
-        Assert.Equal(["Ristoranti · Pizza", "", "Pizza · automatica"], rows.Select(row => row.Detail));
+        Assert.Equal(["Ristoranti", "Ristoranti", "Ristoranti"], rows.Select(row => row.Title));
+        Assert.Equal(["Da Mario", "", "Pizza · automatica"], rows.Select(row => row.Detail));
         Assert.Equal("Ristoranti, 40,00 €", rows[1].Description);
         Assert.Equal(["12,50 €", "40,00 €", "15,99 €"], rows.Select(row => row.Amount));
         Assert.All(rows, row => Assert.Equal(("food", "mint"), (row.IconKey, row.ColorKey)));
-        Assert.Equal("Da Mario, Ristoranti · Pizza, 12,50 €", rows[0].Description);
+        Assert.Equal("Ristoranti, Da Mario, 12,50 €", rows[0].Description);
     }
 
     [Fact]
@@ -100,6 +100,23 @@ public sealed class ExpenseHistoryService_should_expected_behavior
         Assert.Equal(new HistoryRow(orphan.ExpenseId, "Categoria non disponibile", "",
             "5,00 €", "more", "grey"), rows[0]);
         Assert.Equal(("Vecchia", "Affitto", "home", "coral"), (rows[1].Title, rows[1].Detail, rows[1].IconKey, rows[1].ColorKey));
+    }
+
+    [Fact]
+    public async Task Should_lead_the_detail_with_the_day_only_in_a_year_where_the_groups_are_months()
+    {
+        var food = NewCategory("Ristoranti");
+        var expenses = new[]
+        {
+            Spend(food, 1_250, Today, note: "Da Mario"),
+            Spend(food, 4_000, new DateOnly(2026, 11, 18)),
+            Spend(food, 900, new DateOnly(2026, 10, 3), recurringPaymentId: Guid.NewGuid())
+        };
+
+        var year = await History(Period.Year(2026), ExpenseFilter.All, [food], expenses);
+
+        var rows = year.Groups.SelectMany(group => group.Rows).ToList();
+        Assert.Equal(["Oggi · Da Mario", "Ieri", "3 ott · automatica"], rows.Select(row => row.Detail));
     }
 
     [Fact]

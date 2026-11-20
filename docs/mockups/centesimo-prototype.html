@@ -816,13 +816,16 @@ const err = (on, el) => { if (!el) return; el.classList.toggle('err', on); const
 const hasExp = id => EXP.some(e => e.cat === id);
 const ctx = {cat:'ristoranti', exp:'e6', filter:null, tag:null, rec:'netflix', key:true, tagToArchive:'Pizza'};
 
+/* Across categories (cat) the row is titled with its category and says the day (where no group header does), then the
+   note or else the tag. On the page of one category the note (or else the category) is the title and the tag follows. */
 function expRow(e, {date = false, cat = true} = {}) {
   const c = CATS[e.cat], parts = [];
-  if (date) parts.push(dayLabel(e.day));
-  if (cat) parts.push(c.name);
-  if (!date && e.tag) parts.push(e.tag);
+  if (cat) {
+    if (date) parts.push(dayLabel(e.day));
+    if (e.note || e.tag) parts.push(e.note || e.tag);
+  } else if (e.tag) parts.push(e.tag);
   if (e.auto) parts.push('automatica');
-  return `<div class="row tap" role="button" tabindex="0" data-act="go" data-arg="editor-spesa/modifica" data-exp="${e.id}">${tile(e.cat)}<span class="what"><b>${e.note || c.name}</b>${parts.length ? `<small>${parts.join(' · ')}</small>` : ''}</span><span class="amt">${eur(e.amt)}</span></div>`;
+  return `<div class="row tap" role="button" tabindex="0" data-act="go" data-arg="editor-spesa/modifica" data-exp="${e.id}">${tile(e.cat)}<span class="what"><b>${cat ? c.name : e.note || c.name}</b>${parts.length ? `<small>${parts.join(' · ')}</small>` : ''}</span><span class="amt">${eur(e.amt)}</span></div>`;
 }
 function groupBy(list, key, head, rowOpts) {
   const groups = new Map();

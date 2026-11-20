@@ -69,7 +69,7 @@ public sealed class CategoryDetailService(ICategoryRepository categories, ITagRe
             ItalianFormat.Amount(spent), Summarize(spent, budget), spent > budget,
             buckets.Bars(buckets.Scale()), Chips(selected, tags, categoryExpenses),
             // The page is the category: a row that named it again would say nothing.
-            HistoryGroups.Build(period, today, listed, [category], tags, nameCategory: false),
+            HistoryGroups.Build(period, today, listed, [category], tags, acrossCategories: false),
             HistoryGroups.EmptyText(period, category.Name, selected, tags));
     }
 

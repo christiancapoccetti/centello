@@ -675,34 +675,49 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         Assert.True(overview.HasLatest);
         Assert.False(overview.HasNoLatest);
-        Assert.Equal(["Spesa", "Netflix", "Mercato", "Spesa", "Spesa"], overview.Latest.Select(item => item.Title));
+        Assert.Equal(["Spesa", "Svago", "Spesa", "Spesa", "Spesa"], overview.Latest.Select(item => item.Title));
         Assert.Equal(
-            ["Oggi", "Ieri · Svago · automatica", "12 nov · Spesa", "10 nov", "8 nov · automatica"],
+            ["Oggi", "Ieri · Netflix · automatica", "12 nov · Mercato", "10 nov", "8 nov · automatica"],
             overview.Latest.Select(item => item.Detail));
         Assert.Equal(
             ["12,50 €", "15,99 €", "40,00 €", "1,00 €", "2,00 €"],
             overview.Latest.Select(item => item.Amount));
         Assert.Equal(new[] { "food", "leisure", "food", "food", "food" }, overview.Latest.Select(item => item.IconKey));
         Assert.Equal(new[] { "mint", "coral", "mint", "mint", "mint" }, overview.Latest.Select(item => item.ColorKey));
-        Assert.Equal("Netflix, Ieri · Svago · automatica, 15,99 €", overview.Latest[1].Description);
+        Assert.Equal("Svago, Ieri · Netflix · automatica, 15,99 €", overview.Latest[1].Description);
     }
 
     [Fact]
-    public async Task Should_not_name_the_category_twice_when_an_expense_has_no_note()
+    public async Task Should_say_the_note_or_else_the_tag_after_the_day()
     {
         var food = NewCategory("Spesa");
+        var pizza = new Tag(Guid.NewGuid(), food.CategoryId, "Pizza");
         var expenses = new[]
         {
             Spend(food, 1_250, Today),
-            Spend(food, 900, new DateOnly(2026, 11, 18), note: "  "),
-            Spend(food, 500, new DateOnly(2026, 11, 12), note: "Mercato")
+            Spend(food, 900, new DateOnly(2026, 11, 18), note: "  ", tagId: pizza.TagId),
+            Spend(food, 500, new DateOnly(2026, 11, 12), note: "Mercato", tagId: pizza.TagId),
+            Spend(food, 400, new DateOnly(2026, 11, 10), tagId: pizza.TagId, recurringPaymentId: Guid.NewGuid())
         };
 
-        var latest = (await Overview([food], expenses)).Latest;
+        var latest = (await Overview([food], expenses, tags: [pizza])).Latest;
 
-        Assert.Equal([("Spesa", "Oggi"), ("Spesa", "Ieri"), ("Mercato", "12 nov · Spesa")],
+        Assert.Equal([("Spesa", "Oggi"), ("Spesa", "Ieri · Pizza"), ("Spesa", "12 nov · Mercato"),
+                ("Spesa", "10 nov · Pizza · automatica")],
             latest.Select(item => (item.Title, item.Detail)));
         Assert.Equal("Spesa, Oggi, 12,50 €", latest[0].Description);
+    }
+
+    [Fact]
+    public async Task Should_keep_the_tag_name_of_an_archived_tag_in_the_latest_expenses()
+    {
+        var food = NewCategory("Spesa");
+        var old = new Tag(Guid.NewGuid(), food.CategoryId, "Vecchio");
+        old.Archive();
+
+        var latest = (await Overview([food], [Spend(food, 500, Today, tagId: old.TagId)], tags: [old])).Latest;
+
+        Assert.Equal("Oggi · Vecchio", latest.Single().Detail);
     }
 
     [Fact]
@@ -765,9 +780,9 @@ public sealed class HomeOverviewService_should_expected_behavior
         foreach (var note in new[] { "primo", "secondo", "terzo" })
             await service.Create(new SaveExpenseRequest(category.CategoryId, 100, Today, Note: note));
 
-        var overview = await new HomeOverviewService(categories, expenses, () => Today).Get();
+        var overview = await new HomeOverviewService(categories, new FakeTagRepository(), expenses, () => Today).Get();
 
-        Assert.Equal(["terzo", "secondo", "primo"], overview.Value.Latest.Select(item => item.Title));
+        Assert.Equal(["Oggi · terzo", "Oggi · secondo", "Oggi · primo"], overview.Value.Latest.Select(item => item.Detail));
     }
 
     [Fact]
@@ -786,21 +801,31 @@ public sealed class HomeOverviewService_should_expected_behavior
         var failingCategories = new FakeCategoryRepository { Failure = Failed };
         var failingExpenses = new FakeExpenseRepository { Failure = Failed };
 
-        var categoryFailure = await new HomeOverviewService(failingCategories, new FakeExpenseRepository(), () => Today).Get();
-        var expenseFailure = await new HomeOverviewService(new FakeCategoryRepository(), failingExpenses, () => Today).Get();
+        var failingTags = new FakeTagRepository { Failure = Failed };
+
+        var categoryFailure = await new HomeOverviewService(failingCategories, new FakeTagRepository(),
+            new FakeExpenseRepository(), () => Today).Get();
+        var tagFailure = await new HomeOverviewService(new FakeCategoryRepository(), failingTags,
+            new FakeExpenseRepository(), () => Today).Get();
+        var expenseFailure = await new HomeOverviewService(new FakeCategoryRepository(), new FakeTagRepository(),
+            failingExpenses, () => Today).Get();
 
         Assert.Equal(Failed, categoryFailure.Error);
+        Assert.Equal(Failed, tagFailure.Error);
         Assert.Equal(Failed, expenseFailure.Error);
     }
 
     private static async Task<HomeOverview> Overview(IEnumerable<Category>? categories = null,
-        IEnumerable<Expense>? expenses = null, Period? period = null, DateOnly? today = null)
+        IEnumerable<Expense>? expenses = null, Period? period = null, DateOnly? today = null,
+        IEnumerable<Tag>? tags = null)
     {
         var categoryRepository = new FakeCategoryRepository();
         categoryRepository.Items.AddRange(categories ?? []);
         var expenseRepository = new FakeExpenseRepository();
         expenseRepository.Items.AddRange(expenses ?? []);
-        var service = new HomeOverviewService(categoryRepository, expenseRepository, () => today ?? Today);
+        var tagRepository = new FakeTagRepository();
+        tagRepository.Items.AddRange(tags ?? []);
+        var service = new HomeOverviewService(categoryRepository, tagRepository, expenseRepository, () => today ?? Today);
 
         var result = await service.Get(period);
 
@@ -819,7 +844,7 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     private static Expense Spend(Category category, long cents, DateOnly on, string note = "",
-        Guid? recurringPaymentId = null, Guid? expenseId = null) =>
-        new(expenseId ?? Guid.NewGuid(), category.CategoryId, new Money(cents), on, note: note,
+        Guid? recurringPaymentId = null, Guid? expenseId = null, Guid? tagId = null) =>
+        new(expenseId ?? Guid.NewGuid(), category.CategoryId, new Money(cents), on, tagId, note,
             recurringPaymentId: recurringPaymentId);
 }

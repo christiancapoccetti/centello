@@ -78,14 +78,15 @@ public sealed record SpendChart(
     public bool HasHighlight => HighlightLabel.HasValue();
 }
 
-/// <summary>Detail is "Ieri · Svago · automatica". It leaves the category out when the title already is its name.</summary>
+/// <summary>The title is the category. Detail is "Ieri · Netflix · automatica": the day, the note (or else the tag), then
+/// "automatica".</summary>
 public sealed record LatestExpense(Guid ExpenseId, string Title, string Detail, string Amount, string IconKey, string ColorKey)
 {
     public string Description => RowLabels.Description(Title, Detail, Amount);
 }
 
-public sealed class HomeOverviewService(ICategoryRepository categories, IExpenseRepository expenses,
-    Func<DateOnly>? today = null)
+public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepository tags,
+    IExpenseRepository expenses, Func<DateOnly>? today = null)
 {
     private const int LatestCount = 5;
     private const int KeySize = 3;
@@ -101,18 +102,22 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
         if (categoryResult.IsFailure)
             return Result<HomeOverview>.Failure(categoryResult.Error);
 
-        // One range covers the comparison window and the period. The two reads are awaited one after the other:
-        // both repositories share a scoped DbContext, which never allows two operations at once, and
+        // One range covers the comparison window and the period. The reads are awaited one after the other:
+        // the repositories share a scoped DbContext, which never allows two operations at once, and
         // RepositoryBase would turn that violation into a silent "Unexpected".
+        var tagResult = await tags.GetAll(cancellationToken);
+        if (tagResult.IsFailure)
+            return Result<HomeOverview>.Failure(tagResult.Error);
+
         var expenseResult = await expenses.GetBetween(window.PreviousFrom, selected.End, cancellationToken);
         if (expenseResult.IsFailure)
             return Result<HomeOverview>.Failure(expenseResult.Error);
 
-        return Result<HomeOverview>.Success(Build(selected, day, window, categoryResult.Value, expenseResult.Value));
+        return Result<HomeOverview>.Success(Build(selected, day, window, categoryResult.Value, tagResult.Value, expenseResult.Value));
     }
 
     private static HomeOverview Build(Period period, DateOnly today, ComparisonWindow window,
-        IReadOnlyList<Category> categories, IReadOnlyList<Expense> expenses)
+        IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags, IReadOnlyList<Expense> expenses)
     {
         var periodExpenses = expenses.Where(expense => period.Contains(expense.OccurredOn)).ToList();
         var spent = periodExpenses.Sum(expense => expense.Amount.Cents);
@@ -120,7 +125,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
         return new HomeOverview(period, HomeNavigation.For(period, today), ItalianFormat.Amount(spent),
             categories.Count == 0 ? NothingYet(period) : Summarize(spent, budget), Compare(period, window, expenses),
             Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget),
-            Latest(periodExpenses, categories, today), categories.Count > 0);
+            Latest(periodExpenses, categories, tags, today), categories.Count > 0);
     }
 
     // The first run has no budget to speak of: the line under the total says there is nothing to count yet.
@@ -289,23 +294,23 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
     // Within a day the order follows ExpenseId, which sorts by creation time for expenses created since ids became
     // version 7. Older and imported expenses carry random or hashed ids, so their order within a day is arbitrary.
     private static IReadOnlyList<LatestExpense> Latest(IReadOnlyList<Expense> periodExpenses,
-        IReadOnlyList<Category> categories, DateOnly today)
+        IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags, DateOnly today)
     {
-        var byId = categories.ToDictionary(category => category.CategoryId);
+        var categoryById = categories.ToDictionary(category => category.CategoryId);
+        var tagById = tags.ToDictionary(tag => tag.TagId);
         return periodExpenses
             .OrderByDescending(expense => expense.OccurredOn)
             .ThenByDescending(expense => expense.ExpenseId)
             .Take(LatestCount)
-            .Select(expense => ToLatest(expense, byId.GetValueOrDefault(expense.CategoryId), today))
+            .Select(expense => ToLatest(expense, categoryById.GetValueOrDefault(expense.CategoryId),
+                expense.TagId.HasValue ? tagById.GetValueOrDefault(expense.TagId.Value) : null, today))
             .ToList();
     }
 
-    private static LatestExpense ToLatest(Expense expense, Category? category, DateOnly today)
+    private static LatestExpense ToLatest(Expense expense, Category? category, Tag? tag, DateOnly today)
     {
-        var label = RowLabels.Title(expense.Note, RowLabels.NameOf(category));
-        return new LatestExpense(expense.ExpenseId, label.Title,
-            RowLabels.Detail(ItalianFormat.RelativeDay(expense.OccurredOn, today), label.Category, RowLabels.AutomaticMark(expense)),
-            ItalianFormat.Money(expense.Amount.Cents), CategoryIcons.Resolve(category?.Icon).Key,
-            CategoryPalette.Resolve(category?.Color).Key);
+        var (title, detail) = RowLabels.OfExpense(ItalianFormat.RelativeDay(expense.OccurredOn, today), expense, category, tag);
+        return new LatestExpense(expense.ExpenseId, title, detail, ItalianFormat.Money(expense.Amount.Cents),
+            CategoryIcons.Resolve(category?.Icon).Key, CategoryPalette.Resolve(category?.Color).Key);
     }
 }
