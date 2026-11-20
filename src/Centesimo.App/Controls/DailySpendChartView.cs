@@ -25,7 +25,6 @@ public sealed class DailySpendChartView : ContentView
 
     public DailySpendChartView()
     {
-        _pace.Text = "media per restare nel budget";
         _pace.IsVisible = false;
         _pace.HorizontalOptions = LayoutOptions.End;
         _pace.VerticalOptions = LayoutOptions.Start;
@@ -70,6 +69,7 @@ public sealed class DailySpendChartView : ContentView
         _bars.Chart = chart;
         _bars.Invalidate();
         SemanticProperties.SetDescription(_bars, chart.Description);
+        _pace.Text = chart.PaceLabel;
         _pace.IsVisible = chart.HasPace;
         _pace.Margin = new Thickness(0, BarsHeight * (1 - (chart.PaceFraction ?? 0)), 0, 0);
         _start.Text = chart.StartLabel;

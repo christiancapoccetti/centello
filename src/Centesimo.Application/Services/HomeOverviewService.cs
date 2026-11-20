@@ -74,7 +74,8 @@ public sealed record SpendChart(
     string EndLabel,                   // "30 nov" | "dic"
     string HighlightLabel,             // "oggi 27,00 €" | "nov 1.284,60 €" | "" outside the current period
     double HighlightPosition,          // centre of the Current bar, 0..1
-    string Description)                // screen-reader text alternative
+    string Description,                // screen-reader text alternative
+    string PaceLabel)                  // "media per restare nel budget" | "" without a budget
 {
     public bool HasPace => PaceFraction.HasValue;
     public bool HasHighlight => HighlightLabel.HasValue();
@@ -91,6 +92,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
     IExpenseRepository expenses, Func<DateOnly>? today = null)
 {
     private const int LatestCount = 5;
+    private const string PaceLabelText = "media per restare nel budget";
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
 
     /// <summary>Builds the overview for <paramref name="period"/>, or for the month containing today when null.</summary>
@@ -244,7 +246,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
             isMonth ? ItalianFormat.ShortDate(period.Start) : ItalianFormat.ShortMonth(1),
             isMonth ? ItalianFormat.ShortDate(period.End) : ItalianFormat.ShortMonth(12),
             highlight, buckets.HasToday ? (buckets.Current + 0.5) / buckets.Count : 0,
-            DescribeChart(period, buckets.Cents, buckets.Current, pace));
+            DescribeChart(period, buckets.Cents, buckets.Current, pace), pace.HasValue ? PaceLabelText : "");
     }
 
     private static string DescribeChart(Period period, long[] buckets, int current, double? pace)

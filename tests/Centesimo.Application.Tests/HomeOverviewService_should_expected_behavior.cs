@@ -597,6 +597,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         Assert.Equal(0.75, belowPace.Bars[0].Fraction, 6);
         Assert.Equal(0.5, abovePace.PaceFraction!.Value, 6);
         Assert.Equal(1.0, abovePace.Bars[0].Fraction, 6);
+        Assert.Equal("media per restare nel budget", belowPace.PaceLabel);
     }
 
     [Fact]
@@ -608,6 +609,7 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         Assert.False(chart.HasPace);
         Assert.Null(chart.PaceFraction);
+        Assert.Equal("", chart.PaceLabel);
     }
 
     [Fact]
