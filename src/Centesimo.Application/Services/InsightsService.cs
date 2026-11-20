@@ -59,60 +59,78 @@ public sealed class InsightsService(ICategoryRepository categories, IExpenseRepo
         if (expenseResult.IsFailure)
             return Result<InsightsOverview>.Failure(expenseResult.Error);
 
-        var activeCategories = categoryResult.Value.Where(x => !x.IsArchived).ToDictionary(x => x.CategoryId);
-        var currentExpenses = Between(expenseResult.Value, window.CurrentFrom, window.CurrentTo);
-        var previousExpenses = Between(expenseResult.Value, window.PreviousFrom, window.PreviousTo);
-        var total = currentExpenses.Sum(x => x.Amount.Cents);
-        var previousTotal = previousExpenses.Sum(x => x.Amount.Cents);
-        long? comparable = previousTotal > 0 ? previousTotal : null;
-        var comparisonCategories = currentExpenses.Concat(previousExpenses)
-            .GroupBy(x => x.CategoryId)
-            .Where(x => activeCategories.ContainsKey(x.Key))
-            .Select(group =>
-            {
-                var category = activeCategories[group.Key];
-                var spent = currentExpenses.Where(x => x.CategoryId == group.Key).Sum(x => x.Amount.Cents);
-                var prior = previousExpenses.Where(x => x.CategoryId == group.Key).Sum(x => x.Amount.Cents);
-                return new InsightCategory(category.CategoryId, category.Name, category.Icon, category.Color, spent,
-                    total == 0 ? 0 : (double)spent / total, prior == 0 ? null : prior,
-                    prior == 0 ? null : ((double)(spent - prior) / prior));
-            })
-            .OrderByDescending(x => x.SpentCents).ThenBy(x => x.Name).ToList();
-        var categoryItems = comparisonCategories.Where(x => x.SpentCents > 0).ToList();
-        var localInsights = BuildInsights(selected, window.IsPartial, comparisonCategories, currentExpenses,
-            previousExpenses, total);
-        return Result<InsightsOverview>.Success(new InsightsOverview(selected, HomeNavigation.For(selected, day),
-            window.CurrentFrom, window.CurrentTo, window.IsPartial, total, comparable,
-            comparable is null ? null : (double)(total - comparable.Value) / comparable.Value, categoryItems, localInsights));
+        return Result<InsightsOverview>.Success(Build(selected, day, window, categoryResult.Value, expenseResult.Value));
     }
 
-    private static List<Expense> Between(IReadOnlyList<Expense> expenses, DateOnly from, DateOnly to) => expenses
-        .Where(expense => expense.OccurredOn >= from && expense.OccurredOn <= to)
+    private static InsightsOverview Build(Period period, DateOnly today, ComparisonWindow window,
+        IReadOnlyList<Category> categories, IReadOnlyList<Expense> expenses)
+    {
+        var spending = SpendComparison.Of(period, window, categories, expenses);
+        long? compared = spending.IsComparable ? spending.Compared : null;
+        return new InsightsOverview(period, HomeNavigation.For(period, today), window.CurrentFrom, window.CurrentTo,
+            spending.IsToDate, spending.Spent, compared,
+            compared is null ? null : (double)(spending.Spent - compared.Value) / compared.Value,
+            Rows(spending), BuildInsights(spending));
+    }
+
+    // A category that only spent in the compared days is a step of the waterfall, never a row.
+    private static IReadOnlyList<InsightCategory> Rows(SpendComparison spending) => spending.Categories
+        .Where(spend => spend.Spent > 0)
+        .Select(spend => new InsightCategory(spend.Category.CategoryId, spend.Category.Name, spend.Category.Icon,
+            spend.Category.Color, spend.Spent, (double)spend.Spent / spending.Spent,
+            spend.Prior == 0 ? null : spend.Prior, spend.Prior == 0 ? null : (double)spend.Delta / spend.Prior))
         .ToList();
+
+    // Automatic expenses take part in neither: rent is not unusual among groceries, and a subscription is not a new
+    // habit. The pace chart shows what they weigh.
+    private static IReadOnlyList<LocalInsight> BuildInsights(SpendComparison spending)
+    {
+        if (spending.Spent == 0)
+            return [];
+
+        var current = spending.Current.Where(expense => !expense.IsAutomatic).ToList();
+        var previous = spending.Previous.Where(expense => !expense.IsAutomatic).ToList();
+        return new[] { UnusualExpense(spending, current), NewHabit(spending, current, previous) }
+            .OfType<LocalInsight>()
+            .ToList();
+    }
 
     // Every sentence names what it measures against ("di ottobre", "dello stesso periodo del 2025"), so it still
     // reads right on a past period.
-    private static IReadOnlyList<LocalInsight> BuildInsights(Period period, bool isToDate,
-        IReadOnlyList<InsightCategory> categories, IReadOnlyList<Expense> currentExpenses,
-        IReadOnlyList<Expense> previousExpenses, long total)
+    private static LocalInsight? NewHabit(SpendComparison spending, IReadOnlyList<Expense> current,
+        IReadOnlyList<Expense> previous)
     {
-        if (total == 0)
-            return [];
+        var habit = current
+            .GroupBy(expense => expense.CategoryId)
+            .FirstOrDefault(group => group.Count() >= 3 && !previous.Any(expense => expense.CategoryId == group.Key));
+        if (habit is null || CategoryOf(spending, habit.Key) is not { } category)
+            return null;
 
-        var insights = new List<LocalInsight>();
-        var newHabit = currentExpenses
-            .GroupBy(x => x.CategoryId)
-            .FirstOrDefault(group => group.Count() >= 3 && !previousExpenses.Any(x => x.CategoryId == group.Key));
-        if (newHabit is not null && categories.FirstOrDefault(x => x.CategoryId == newHabit.Key) is { } newCategory)
-            insights.Add(new LocalInsight(InsightKind.NewHabit, "Una nuova abitudine", $"Hai registrato {newHabit.Count()} spese in {newCategory.Name} {ItalianFormat.InPeriod(period)}; {InsightTexts.InComparedPeriod(period, isToDate)} nessuna.", InsightTarget.Category(newCategory.CategoryId, period)));
-        var unusual = currentExpenses
-            .GroupBy(x => x.CategoryId)
-            .Select(group => new { Expenses = group.ToList(), Maximum = group.MaxBy(x => x.Amount.Cents) })
-            .FirstOrDefault(group => group.Expenses.Count >= 2 && group.Maximum!.Amount.Cents >= group.Expenses.Average(x => x.Amount.Cents) * 1.8);
-        if (unusual?.Maximum is not null && categories.FirstOrDefault(x => x.CategoryId == unusual.Maximum.CategoryId) is { } unusualCategory)
-            insights.Add(new LocalInsight(InsightKind.UnusualExpense, "Una spesa da rivedere", $"{Name(unusual.Maximum)} è molto più alta delle altre spese di {unusualCategory.Name}.", InsightTarget.Expense(unusual.Maximum.ExpenseId)));
-        return insights;
+        var period = spending.Period;
+        return new LocalInsight(InsightKind.NewHabit, "Una nuova abitudine",
+            $"Hai registrato {habit.Count()} spese in {category.Name} {ItalianFormat.InPeriod(period)}; {InsightTexts.InComparedPeriod(period, spending.IsToDate)} nessuna.",
+            InsightTarget.Category(category.CategoryId, period));
     }
+
+    private static LocalInsight? UnusualExpense(SpendComparison spending, IReadOnlyList<Expense> current)
+    {
+        var unusual = current
+            .GroupBy(expense => expense.CategoryId)
+            .Where(group => group.Count() >= 2
+                && group.Max(expense => expense.Amount.Cents) >= group.Average(expense => expense.Amount.Cents) * 1.8)
+            .Select(group => group.MaxBy(expense => expense.Amount.Cents))
+            .FirstOrDefault();
+        if (unusual is null || CategoryOf(spending, unusual.CategoryId) is not { } category)
+            return null;
+
+        return new LocalInsight(InsightKind.UnusualExpense, "Una spesa da rivedere",
+            $"{Name(unusual)} è molto più alta delle altre spese di {category.Name}.",
+            InsightTarget.Expense(unusual.ExpenseId));
+    }
+
+    private static Category? CategoryOf(SpendComparison spending, Guid categoryId) => spending.Categories
+        .FirstOrDefault(spend => spend.Category.CategoryId == categoryId)
+        ?.Category;
 
     // "Idraulico, 180,00 € il 9 novembre," or, without a note, "180,00 € il 9 novembre".
     private static string Name(Expense expense)

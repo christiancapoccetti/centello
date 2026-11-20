@@ -312,6 +312,59 @@ public sealed class InsightsService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_list_the_unusual_expense_before_the_new_habit()
+    {
+        var leisure = new Category(Guid.NewGuid(), "Svago", "leisure", "#196D61");
+        var subscriptions = new Category(Guid.NewGuid(), "Abbonamenti", "tech", "#196D61");
+        var expenses = new FakeExpenseRepository();
+        expenses.Items.AddRange([
+            new Expense(Guid.NewGuid(), subscriptions.CategoryId, new Money(500), new DateOnly(2026, 7, 2)),
+            new Expense(Guid.NewGuid(), subscriptions.CategoryId, new Money(500), new DateOnly(2026, 7, 3)),
+            new Expense(Guid.NewGuid(), subscriptions.CategoryId, new Money(500), new DateOnly(2026, 7, 5)),
+            new Expense(Guid.NewGuid(), leisure.CategoryId, new Money(100), new DateOnly(2026, 7, 6)),
+            new Expense(Guid.NewGuid(), leisure.CategoryId, new Money(3000), new DateOnly(2026, 7, 4))
+        ]);
+
+        var result = await CreateService(new DateOnly(2026, 7, 20), [leisure, subscriptions], expenses).Get(Period.Month(2026, 7));
+
+        Assert.Equal([InsightKind.UnusualExpense, InsightKind.NewHabit], result.Value.Insights.Select(x => x.Kind));
+    }
+
+    [Fact]
+    public async Task Should_not_flag_an_automatic_expense_as_unusual()
+    {
+        var home = new Category(Guid.NewGuid(), "Casa", "home", "peri");
+        var expenses = new FakeExpenseRepository();
+        expenses.Items.AddRange([
+            new Expense(Guid.NewGuid(), home.CategoryId, new Money(38_000), new DateOnly(2026, 11, 1), recurringPaymentId: Guid.NewGuid()),
+            new Expense(Guid.NewGuid(), home.CategoryId, new Money(2_000), new DateOnly(2026, 11, 3)),
+            new Expense(Guid.NewGuid(), home.CategoryId, new Money(2_000), new DateOnly(2026, 11, 9))
+        ]);
+
+        var result = await CreateService(new DateOnly(2026, 11, 19), home, expenses).Get(Period.Month(2026, 11));
+
+        Assert.Empty(result.Value.Insights);
+        Assert.Equal(42_000, Assert.Single(result.Value.Categories).SpentCents);
+    }
+
+    [Fact]
+    public async Task Should_not_count_automatic_expenses_as_a_new_habit()
+    {
+        var subscriptions = new Category(Guid.NewGuid(), "Abbonamenti", "tech", "#196D61");
+        var payment = Guid.NewGuid();
+        var expenses = new FakeExpenseRepository();
+        expenses.Items.AddRange([
+            new Expense(Guid.NewGuid(), subscriptions.CategoryId, new Money(1_000), new DateOnly(2026, 7, 2), recurringPaymentId: payment),
+            new Expense(Guid.NewGuid(), subscriptions.CategoryId, new Money(1_000), new DateOnly(2026, 7, 9), recurringPaymentId: payment),
+            new Expense(Guid.NewGuid(), subscriptions.CategoryId, new Money(1_000), new DateOnly(2026, 7, 16), recurringPaymentId: payment)
+        ]);
+
+        var result = await CreateService(new DateOnly(2026, 7, 20), subscriptions, expenses).Get(Period.Month(2026, 7));
+
+        Assert.Empty(result.Value.Insights);
+    }
+
+    [Fact]
     public async Task Should_write_amounts_the_italian_way()
     {
         var food = new Category(Guid.NewGuid(), "Cibo", "food", "#196D61");
