@@ -176,7 +176,6 @@
             </HorizontalStackLayout>
         </Border>
 
-        <!-- The photo menu opens above the camera segment. The layer under it takes the tap that closes it. -->
         <Grid Grid.RowSpan="3" IsVisible="{Binding Capture.IsChoosingPhoto}" BackgroundColor="Transparent">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnPhotoMenuDismissed" />

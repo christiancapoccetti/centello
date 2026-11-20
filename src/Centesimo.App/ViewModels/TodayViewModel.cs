@@ -54,9 +54,7 @@ public sealed class TodayViewModel : ObservableObject
         }
     }
     public bool HasError => ErrorMessage.HasValue();
-    /// <summary>The toast and sheet of the dock. Replace it with what a transition returns.</summary>
     public DraftCapture Capture { get => _capture; set => SetProperty(ref _capture, value); }
-    /// <summary>Voice needs the OpenAI key; without it the mic leads to the settings.</summary>
     public bool IsCaptureAvailable
     {
         get => _isCaptureAvailable;

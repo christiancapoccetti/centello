@@ -2,10 +2,6 @@ using Centesimo.Domain;
 
 namespace Centesimo.Application;
 
-/// <summary>
-/// Where a draft comes from. Each source carries the glyph and the words the home sheet and the editor banner show
-/// for it, so a new source is one more instance here and no screen branches on the kind.
-/// </summary>
 public sealed class DraftSource
 {
     public static readonly DraftSource Voice = new(
@@ -35,11 +31,8 @@ public sealed class DraftSource
 
     public string Glyph { get; }
     public string SheetTitle { get; }
-    /// <summary>What the sheet says under the progress bar while OpenAI reads. Empty when the title says enough.</summary>
     public string ReadingLine { get; }
     public string PrivacyNote { get; }
 
-    /// <param name="heard">What the voice heard. A photo has nothing to quote.</param>
-    /// <returns>Empty when the source has nothing to say about the draft.</returns>
     public string Banner(string heard) => _banner(heard);
 }

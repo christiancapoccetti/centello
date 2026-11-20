@@ -1,9 +1,5 @@
 namespace Centesimo.Application;
 
-/// <summary>
-/// An image OpenAI accepts, with its media type read from its first bytes rather than from a file name. Only
-/// <see cref="Read"/> makes one, so an empty, oversized or non-image file never reaches a request.
-/// </summary>
 public sealed class ExpensePhoto
 {
     private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF];
@@ -17,7 +13,6 @@ public sealed class ExpensePhoto
 
     public ReadOnlyMemory<byte> Bytes { get; }
 
-    /// <summary><c>image/jpeg</c>, <c>image/png</c> or <c>image/webp</c>.</summary>
     public string MediaType { get; }
 
     public static Result<ExpensePhoto> Read(ReadOnlyMemory<byte> bytes)

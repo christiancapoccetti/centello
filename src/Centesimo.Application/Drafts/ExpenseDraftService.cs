@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.Application;
 
-/// <summary>Turns a spoken phrase or a photo into the draft the expense editor opens with. Nothing is saved here.</summary>
 public sealed class ExpenseDraftService(
     ISpeechRecorder recorder,
     ISpeechTranscriber transcriber,
@@ -50,7 +49,6 @@ public sealed class ExpenseDraftService(
             cancellationToken);
     }
 
-    /// <summary>Reads the photo and interprets it. The bytes are not kept after the call.</summary>
     public async Task<Result<ExpenseDraft>> PrepareFromPhoto(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
     {
         var photo = ExpensePhoto.Read(image);

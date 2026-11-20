@@ -4,10 +4,6 @@ using Centesimo.Application;
 
 namespace Centesimo.Infrastructure;
 
-/// <summary>
-/// Builds the Responses API request: instructions for the source listing the user's keys, the person's phrase or
-/// photo, and one strict schema that only admits those keys. The schema never depends on the source.
-/// </summary>
 public static class ExpenseInterpretationRequestBuilder
 {
     private static readonly string[] ItalianDays = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
@@ -38,7 +34,6 @@ public static class ExpenseInterpretationRequestBuilder
         }
     };
 
-    // A phrase stays plain string content, so the voice request is byte-identical to the text-only one.
     private static JsonObject Message(string role, JsonNode content) => new()
     {
         ["role"] = role,

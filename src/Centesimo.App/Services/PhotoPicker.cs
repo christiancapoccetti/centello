@@ -3,11 +3,6 @@ using Centesimo.Domain;
 
 namespace Centesimo.App;
 
-/// <summary>
-/// Opens the camera or the gallery and hands back the photo as bytes, scaled, upright and without metadata (so no
-/// GPS position). Nothing outlives the call: every image in the app cache is deleted before and after, which also
-/// removes what a run killed while the camera app was in front left behind.
-/// </summary>
 public sealed class PhotoPicker
 {
     private static readonly MediaPickerOptions Options = new()
@@ -23,7 +18,6 @@ public sealed class PhotoPicker
     // Wider than what ExpensePhoto accepts on purpose: a camera app may leave a HEIC original next to the JPEG copy.
     private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
 
-    /// <returns>The photo, or null when the person backed out.</returns>
     public async Task<Result<byte[]?>> Capture()
     {
         if (!MediaPicker.Default.IsCaptureSupported)
@@ -32,7 +26,6 @@ public sealed class PhotoPicker
         return await Take(() => MediaPicker.Default.CapturePhotoAsync(Options));
     }
 
-    /// <returns>The photo, or null when the person backed out.</returns>
     public Task<Result<byte[]?>> Pick() => Take(PickFirst);
 
     private static async Task<FileResult?> PickFirst() =>
@@ -40,6 +33,7 @@ public sealed class PhotoPicker
 
     private static async Task<Result<byte[]?>> Take(Func<Task<FileResult?>> open)
     {
+        // Android can kill the app while the camera app is in front, so a previous photo may still be in the cache.
         DeleteLeftovers();
         try
         {
@@ -79,7 +73,6 @@ public sealed class PhotoPicker
         return buffer.ToArray();
     }
 
-    // Only the cache is swept: a picked file can be the person's own gallery photo and must never be deleted.
     private static void DeleteLeftovers()
     {
         try

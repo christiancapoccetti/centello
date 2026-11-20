@@ -56,7 +56,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 
         _isLoaded = true;
         await (_draft is { } draft ? _viewModel.Load(draft) : _viewModel.Load(_expenseId));
-        // A new expense starts from its amount. A stored expense or a draft from the voice is there to be read first.
+        // A new expense starts from its amount. A stored expense or a draft from the voice or a photo is there to be read first.
         if (!_viewModel.IsEditMode && _viewModel.Amount.IsEmpty())
             AmountInput.FocusInput();
     }

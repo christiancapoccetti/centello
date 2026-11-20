@@ -241,7 +241,6 @@ public partial class TodayPage : ContentPage
             return;
         }
 
-        // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
         _viewModel.Capture = _viewModel.Capture.Finish();
         await ExpenseEditorPage.OpenDraft(draft.Value);
     }

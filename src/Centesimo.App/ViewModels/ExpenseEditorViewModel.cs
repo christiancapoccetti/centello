@@ -38,7 +38,6 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     }
     public DateTime OccurredOn { get => _occurredOn; set => SetProperty(ref _occurredOn, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
-    /// <summary>The draft a new expense started from, for the banner above the form. Null for a typed expense.</summary>
     public ExpenseDraft? Draft
     {
         get => _draft;
@@ -49,8 +48,6 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         }
     }
     public bool HasDraft => Draft?.Banner.HasValue() == true;
-    /// <summary>True while the form differs from what is stored. A new expense starts from an empty form, so a draft
-    /// from the voice or a photo is unsaved input from the start.</summary>
     public bool IsDirty => Snapshot() != _original;
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
     public string AmountError { get => _amountError; private set => SetProperty(ref _amountError, value); }
