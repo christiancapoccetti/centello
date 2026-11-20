@@ -264,7 +264,7 @@ public partial class TodayPage : ContentPage
     {
         var openSettings = await DisplayAlertAsync(
             "Voce e foto con OpenAI",
-            "Configura la chiave API OpenAI nelle impostazioni per dettare le spese o leggere una spesa da una foto.",
+            "Configura la chiave API OpenAI nelle impostazioni per dettare le spese o leggere una spesa da una foto o da un PDF.",
             "Apri impostazioni",
             "Annulla");
         if (openSettings)
