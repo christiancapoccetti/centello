@@ -103,6 +103,38 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
 .m4 svg{display:block;margin-top:auto;overflow:visible}
 .m4 svg text{font-family:Archivo,sans-serif;font-variant-numeric:tabular-nums}
 
+/* 5 · Il pannello del microfono: a translucent activity over the launcher. */
+.panel{margin-top:56px}
+.panel>h2{font-size:20px;font-weight:800}
+.panel>p{margin-top:6px;max-width:76ch;font-size:15px;line-height:1.45;color:var(--page-mute)}
+.panel>p em{font-style:normal;color:var(--page-fg);font-weight:600}
+.states{display:flex;flex-wrap:wrap;gap:36px;margin-top:20px}
+.states figure figcaption{min-height:66px;margin-bottom:12px}
+.states figcaption b{font-size:16px}
+.states figcaption p{font-size:14px}
+.screen{position:relative;width:412px;height:640px;border-radius:28px;overflow:hidden;background:var(--wall);display:flex;flex-direction:column}
+.screen .launcher{padding:28px 16px 0}
+.screen .launcher .cells{grid-auto-rows:104px}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);color:var(--fg);border-radius:28px 28px 0 0;padding:24px 24px 0}
+.sheet h3{font-size:20px;font-weight:700;line-height:1.25}
+.sheet .lead{margin-top:6px;font-size:15px;line-height:1.35;color:var(--mute)}
+.time{margin-top:22px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;font-size:12px;color:var(--mute)}
+.time b{color:var(--fg);font-weight:700}
+.track{height:4px;background:var(--line);position:relative}
+.track i{position:absolute;left:0;top:0;bottom:0;background:var(--fg);display:block}
+.track.done i{background:var(--mute)}
+.talk{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:26px}
+.talk .mic{width:88px;height:88px;border-radius:50%;background:var(--raised);outline:1px solid var(--outline);outline-offset:-1px;display:grid;place-items:center;color:var(--accent)}
+.talk .mic .ms{font-size:38px}
+.talk span{font-size:14px;font-weight:600}
+.talk.off{opacity:.38}
+.sheet .actions{display:flex;align-items:center;justify-content:space-between;margin-top:18px;min-height:56px}
+.tbtn{height:48px;padding:0 12px;margin-left:-12px;display:inline-flex;align-items:center;font-size:14px;font-weight:600;color:var(--fg)}
+.fbtn{height:48px;padding:0 24px;border-radius:9999px;background:var(--fg);color:var(--bg);display:inline-flex;align-items:center;font-size:16px;font-weight:700}
+.sheet .gest{height:24px;display:grid;place-items:center;margin:4px -24px 0}
+.sheet .gest::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--fg)}
+
 .decide{margin-top:44px;max-width:860px}
 .decide h2{font-size:20px;font-weight:800}
 .decide ol{margin-top:12px;padding-left:20px;display:grid;gap:10px;font-size:15px;line-height:1.5;color:var(--page-mute)}
@@ -247,6 +279,16 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
 
 </div>
 
+<section class="panel">
+  <h2>5 · Il pannello del microfono</h2>
+  <p>Si apre quando tocchi il microfono in Aggiungi: <em>un foglio in basso sopra la Home, senza aprire l'app</em>. L'ascolto parte subito e si ferma quando tocchi di nuovo il microfono, o da solo dopo 20 secondi. Poi l'app si apre direttamente sull'editor con la bozza, da controllare e salvare come oggi. "Annulla" o un tocco fuori dal foglio chiude tutto senza inviare niente.</p>
+  <div class="states" id="states"></div>
+  <div class="notes" style="max-width:860px">
+    <p><b>La prima volta</b> compare la stessa conferma di oggi sull'uso del microfono, con il testo adattato ("solo mentre il pannello è aperto" al posto di "solo mentre tieni premuto il pulsante"), poi la richiesta di permesso di Android.</p>
+    <p><b>Se qualcosa va storto</b> (rete assente, trascrizione vuota, chiave non valida) il foglio mostra lo stesso messaggio dell'app e un pulsante "Riprova".</p>
+  </div>
+</section>
+
 <section class="decide">
   <h2>Deciso</h2>
   <ol>
@@ -294,6 +336,25 @@ const TOTAL=486.2;
   s+=`<text x="${tx}" y="${H-2}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--fg)">oggi</text>`;
   s+=`<text x="${W}" y="${H-2}" text-anchor="end" font-size="12" fill="var(--mute)">30</text>`;
   svg.innerHTML=s;
+})();
+
+(function states(){
+  const launcher=`<div class="launcher"><div class="cells">
+    <div class="w4x1 pillw"><div class="add"><span class="ms" aria-hidden="true">add</span>Aggiungi spesa</div><div class="mic"><span class="ms" aria-hidden="true">mic</span></div></div>
+    <div class="app"><i></i>App</div><div class="app"><i></i>App</div><div class="app"><i></i>App</div><div class="app"><i></i>App</div>
+  </div></div><div class="scrim"></div>`;
+  const time=(at,pct,done)=>`<div class="time"><b>${at}</b><span class="track${done?' done':''}"><i style="width:${pct}%"></i></span><span>0:20</span></div>`;
+  const talk=(label,off)=>`<div class="talk${off?' off':''}"><span class="mic"><span class="ms" aria-hidden="true">mic</span></span><span>${label}</span></div>`;
+  const screens=[
+    ['In ascolto','Parte appena si apre. La linea conta i 20 secondi.',
+      `<h3>Ti ascolto…</h3><p class="lead">Dì cosa hai speso, per esempio “ieri 12 euro di pizza”.</p>${time('0:07',35)}${talk('Tocca per inviare')}<div class="actions"><span class="tbtn">Annulla</span></div>`],
+    ['Preparo la bozza','Dopo il secondo tocco, o allo scadere dei 20 secondi. Poi si apre l\'editor.',
+      `<h3>Preparo la bozza…</h3><p class="lead">Poi la controlli prima di salvarla.</p>${time('0:11',100,true)}${talk('Invio in corso',true)}<div class="actions"><span class="tbtn">Annulla</span></div>`],
+    ['Chiave mancante','Senza chiave OpenAI non registra niente e porta alle impostazioni.',
+      `<h3>Inserimento vocale</h3><p class="lead">Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.</p><div class="actions" style="margin-top:28px"><span class="tbtn">Annulla</span><span class="fbtn">Apri impostazioni</span></div>`]
+  ];
+  document.getElementById('states').innerHTML=screens.map(([t,d,s])=>
+    `<figure><figcaption><b>${t}</b><p>${d}</p></figcaption><div class="screen">${launcher}<div class="sheet">${s}<div class="gest"></div></div></div></figure>`).join('');
 })();
 
 const setTheme=t=>{
