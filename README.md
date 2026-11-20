@@ -11,12 +11,21 @@ Centesimo is a simple Android expense tracker built with .NET MAUI, designed and
 - Category detail with tag filters, and `Insight` for any month or year: the total against the previous period, a pace chart of cumulative spending (automatic and variable) with the budget, a waterfall of what changed per category, and history-based insights.
 - Weekly, monthly or yearly recurring payments with optional end date. Due expenses are created when the app opens. A paused payment skips the occurrences missed while paused when it is resumed. Reminder notifications arrive at 09:00 on the due day.
 - Voice entry (`Inserimento vocale`): create an expense draft from a spoken Italian phrase using OpenAI with your own API key, with explicit confirmation in the expense editor.
+- Home screen widgets: `Aggiungi` (add an expense by hand or by voice), `Scorciatoie` (your four most used categories plus `Altra`), `Il mese` (total, remaining budget, comparison and category line) and `Il ritmo` (the same with Oggi's daily chart). A widget opens the app on the right screen, and the microphone of `Aggiungi` opens a voice panel over the launcher that listens at once. Widgets follow the launcher's light and dark scheme and refresh after every saved change.
 - Settings are grouped as `Dati` (recurring payments, import from Money Manager), `Inserimento vocale` and `Informazioni` (version, `Licenze`).
 - One-time import from a Money Manager `.mmbackup` file, with preview and no duplication.
 - Dark and light theme following the Android setting; the app is locked to portrait.
 - Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a voice-entry phrase, and only when you enable voice entry.
 
 Receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
+
+## Home screen widgets
+
+Widgets compute nothing: their words and numbers come from the same Application services as the Home (`HomeOverviewService`, `CategoryChoiceService`).
+
+- **Opening the app:** a tap sends a typed `AppEntry` link in the intent data to `MainActivity`, and `AppEntryRouter` opens it once the Shell can navigate. An expense editor opened from a widget returns to the home screen when it is saved or closed.
+- **Refresh:** `StoreChangeInterceptor` (EF Core) signals after every committed write and `HomeScreenWidgets` redraws every widget, coalescing signals. It also redraws at midnight, on time and time-zone changes and when the app window activates.
+- **Look:** widget words are drawn in Archivo as tinted masks, and colours are `@color/theme_*` resources generated from `ThemeTokens`, so the scheme switches without the app running. See [DESIGN.md](DESIGN.md).
 
 ## Design
 
@@ -29,7 +38,7 @@ The solution follows a pragmatic Clean Architecture approach with MVVM and the R
 - `Centesimo.Domain`: entities, value objects, and domain rules.
 - `Centesimo.Application`: use cases, repository contracts, and application services.
 - `Centesimo.Infrastructure`: EF Core and SQLite persistence.
-- `Centesimo.App`: .NET MAUI Android UI and view models.
+- `Centesimo.App`: .NET MAUI Android UI and view models. `Platforms/Android/Widgets` holds the widgets and `HomeScreenWidgets`, the one place that redraws them; `Platforms/Android/Voice` holds the voice panel.
 - `tests`: domain, application, and infrastructure test projects.
 
 ## Prerequisites
@@ -73,6 +82,7 @@ Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft
 - **Flow:** hold the microphone button (up to 20 seconds). Audio is transcribed with `gpt-transcribe`, and the text is then interpreted by `gpt-6-luna` with a strict JSON schema that only admits your own category and tag keys, and the result is validated deterministically.
 - **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent.
 - **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync.
+- **Voice panel:** the microphone of the `Aggiungi` widget opens a panel that listens at once. A second tap sends the phrase and it is sent on its own at 20 seconds; `Annulla`, a tap outside, Back or leaving cancels. Oggi's hold-to-talk is unchanged.
 - **Confirmation:** the draft opens in the expense editor and nothing is saved until you save it; saving still requires a category.
 - **Availability:** voice entry is unavailable until a key is configured, and reports an error without an Internet connection. Manual entry always works.
 
