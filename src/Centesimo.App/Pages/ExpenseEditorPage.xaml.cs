@@ -11,8 +11,11 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
     private readonly ISnackbar _snackbar;
     private const string ExpenseIdKey = "expenseId";
     private const string CategoryIdKey = "categoryId";
+    private const string FromKey = "from";
+    private const string Outside = "outside";
     private Guid? _expenseId;
     private Guid? _categoryId;
+    private bool _fromOutside;
     private bool _isLoaded;
 
     public ExpenseEditorPage(ExpenseEditorViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
@@ -27,21 +30,30 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
     }
 
     /// <summary>The route that opens a stored expense, or the empty form of a new one, optionally with a category
-    /// already chosen.</summary>
-    public static string Route(Guid? expenseId = null, Guid? categoryId = null)
+    /// already chosen. An editor opened from outside the app sends the person back to the home screen when it
+    /// closes.</summary>
+    public static string Route(Guid? expenseId = null, Guid? categoryId = null, bool fromOutside = false)
     {
+        List<string> query = [];
         if (expenseId.HasValue)
-            return $"{nameof(ExpenseEditorPage)}?{ExpenseIdKey}={expenseId}";
+            query.Add($"{ExpenseIdKey}={expenseId}");
 
-        return categoryId.HasValue
-            ? $"{nameof(ExpenseEditorPage)}?{CategoryIdKey}={categoryId}"
-            : nameof(ExpenseEditorPage);
+        if (categoryId.HasValue)
+            query.Add($"{CategoryIdKey}={categoryId}");
+
+        if (fromOutside)
+            query.Add($"{FromKey}={Outside}");
+
+        return query.Count == 0
+            ? nameof(ExpenseEditorPage)
+            : $"{nameof(ExpenseEditorPage)}?{string.Join('&', query)}";
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         _expenseId = GuidOf(query, ExpenseIdKey);
         _categoryId = GuidOf(query, CategoryIdKey);
+        _fromOutside = query.TryGetValue(FromKey, out var from) && from?.ToString() == Outside;
     }
 
     private static Guid? GuidOf(IDictionary<string, object> query, string key) =>
@@ -87,7 +99,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
         if (_viewModel.IsDirty && !await _confirmation.AskToDiscard())
             return;
 
-        await Shell.Current.GoToAsync("..");
+        await Pop();
     }
 
     private async void OnCategoryTapped(object? sender, object category)
@@ -128,7 +140,16 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 
     private async Task Leave(string message)
     {
+        await Pop();
+        if (!_fromOutside)
+            _snackbar.Show(message);
+    }
+
+    // From outside nobody would see the snackbar: the person goes back to where they were.
+    private async Task Pop()
+    {
         await Shell.Current.GoToAsync("..");
-        _snackbar.Show(message);
+        if (_fromOutside)
+            BackToLauncher.Go();
     }
 }
