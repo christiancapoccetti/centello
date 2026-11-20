@@ -422,7 +422,7 @@ A pushed list page (Spese, a category's page, Pagamenti regolari, Licenze, Impor
 The only place a category's icon and colour become pixels: a square (0 radius) tile in the category's palette ink, with a filled Material Symbols Rounded glyph in tile ink at 58% of the tile size. 36dp in rows and the picker, 24dp inside chips. The catalog holds 31 icons plus the "Altro" fallback; unknown keys fall back to "more" and grey.
 
 ### Category line (signature)
-A full-width 14dp line under the home total: one flat segment per category, as wide as its share of spending, 3dp gaps, a 2dp minimum. Below it, a wrapping key: 10dp swatch and 13sp caption per category, each opening its category.
+A full-width 14dp line under the home total: one flat segment per category, as wide as its share of spending, 3dp gaps, a 2dp minimum. Below it, a key on one line, never wrapped: 10dp swatch and 13sp caption per category, each opening its category. Over-budget categories come first (the furthest over first), then the others by spending; the key shows as many whole items as fit the width and drops the rest whole, never clipping one. A screen reader still hears every category in the line's description.
 
 ### Over-budget mark
 In the home key, an over-budget category gets the filled Error glyph at 14sp in alert before its name, and the name turns alert in SemiBold. In the Categorie list the row gets the same glyph (16sp, alert) before its name, and its accessibility description adds "oltre il budget". On a category's page the budget sentence takes the home wording ("Hai superato il budget di 28,50 € su 150") in SemiBold alert after a 20sp Error glyph. The mark is the glyph plus the colour, not a word.
