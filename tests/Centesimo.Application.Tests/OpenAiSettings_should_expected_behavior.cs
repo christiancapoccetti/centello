@@ -8,6 +8,13 @@ public sealed class OpenAiSettings_should_expected_behavior
     public OpenAiSettings_should_expected_behavior() => _settings = new OpenAiSettings(_store);
 
     [Fact]
+    public void Tell_the_user_that_receipt_photos_are_sent_to_OpenAI()
+    {
+        Assert.Contains("foto degli scontrini", OpenAiSettings.ConsentMessage);
+        Assert.Contains("non salva", OpenAiSettings.ConsentMessage);
+    }
+
+    [Fact]
     public async Task Have_no_key_until_one_is_saved()
     {
         Assert.False(await _settings.HasApiKey());
