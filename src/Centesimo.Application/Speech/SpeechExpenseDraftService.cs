@@ -9,8 +9,7 @@ public sealed class SpeechExpenseDraftService(
     IExpenseTextInterpreter interpreter,
     OpenAiSettings settings,
     IInternetAccess internet,
-    IServiceScopeFactory scopeFactory,
-    IPendingExpenseSpeechDraft pendingDraft)
+    IServiceScopeFactory scopeFactory)
 {
     public bool IsListening => recorder.IsListening;
     public string LastTranscription { get; private set; } = "";
@@ -28,35 +27,30 @@ public sealed class SpeechExpenseDraftService(
 
     public Task Cancel() => recorder.Cancel();
 
-    public async Task<Result> StopAndPrepare(CancellationToken cancellationToken = default)
+    public async Task<Result<ExpenseSpeechDraft>> StopAndPrepare(CancellationToken cancellationToken = default)
     {
         var audio = await recorder.Stop(cancellationToken);
         if (audio.IsFailure)
-            return Result.Failure(audio.Error);
+            return Result<ExpenseSpeechDraft>.Failure(audio.Error);
 
         if (!internet.IsAvailable)
-            return Result.Failure(SpeechErrors.NoInternet);
+            return Result<ExpenseSpeechDraft>.Failure(SpeechErrors.NoInternet);
 
         var categories = await LoadCategories(cancellationToken);
         if (categories.IsFailure)
-            return Result.Failure(categories.Error);
+            return Result<ExpenseSpeechDraft>.Failure(categories.Error);
 
         var keywords = new ExpenseInterpretationCatalog(categories.Value).Keywords;
         var transcription = await transcriber.Transcribe(audio.Value, keywords, cancellationToken);
         if (transcription.IsFailure)
-            return Result.Failure(transcription.Error);
+            return Result<ExpenseSpeechDraft>.Failure(transcription.Error);
 
         LastTranscription = transcription.Value;
-        var draft = await interpreter.Interpret(
+        return await interpreter.Interpret(
             transcription.Value,
             categories.Value,
             DateOnly.FromDateTime(DateTime.Today),
             cancellationToken);
-        if (draft.IsFailure)
-            return Result.Failure(draft.Error);
-
-        pendingDraft.Set(draft.Value);
-        return Result.Success();
     }
 
     private async Task<Result<IReadOnlyList<SpeechCategory>>> LoadCategories(CancellationToken cancellationToken)

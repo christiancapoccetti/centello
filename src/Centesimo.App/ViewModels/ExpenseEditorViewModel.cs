@@ -9,7 +9,6 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 {
     private static readonly CultureInfo ItalianCulture = CultureInfo.GetCultureInfo("it-IT");
     private readonly ExpenseService _expenseService;
-    private readonly IPendingExpenseSpeechDraft _pendingSpeechDraft;
     private Guid? _expenseId;
     private string _amount = "";
     private DateTime _occurredOn = DateTime.Today;
@@ -60,17 +59,19 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 
     public ExpenseEditorViewModel(
         CategoryTagPicker picker,
-        ExpenseService expenseService,
-        IPendingExpenseSpeechDraft pendingSpeechDraft)
+        ExpenseService expenseService)
     {
         Picker = picker;
         _expenseService = expenseService;
-        _pendingSpeechDraft = pendingSpeechDraft;
         SaveCommand = new AsyncCommand(Save, () => !IsSaving);
         _original = Snapshot();
     }
 
-    public async Task Load(Guid? expenseId = null)
+    public Task Load(Guid? expenseId = null) => Open(expenseId, null);
+
+    public Task Load(ExpenseSpeechDraft draft) => Open(null, draft);
+
+    private async Task Open(Guid? expenseId, ExpenseSpeechDraft? draft)
     {
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
@@ -86,8 +87,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
             await LoadExpense(expenseId.Value);
 
         _original = Snapshot();
-        if (!expenseId.HasValue)
-            await ApplyPendingSpeechDraft();
+        if (draft is not null)
+            await ApplyDraft(draft);
     }
 
     private async Task LoadExpense(Guid expenseId)
@@ -111,12 +112,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         await Picker.Restore(expense.CategoryId, expense.TagId);
     }
 
-    private async Task ApplyPendingSpeechDraft()
+    private async Task ApplyDraft(ExpenseSpeechDraft draft)
     {
-        var draft = _pendingSpeechDraft.Take();
-        if (draft is null)
-            return;
-
         Amount = draft.AmountCents is { } cents ? (cents / 100m).ToString("0.00", ItalianCulture) : "";
         OccurredOn = draft.OccurredOn?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
         Note = draft.Note;

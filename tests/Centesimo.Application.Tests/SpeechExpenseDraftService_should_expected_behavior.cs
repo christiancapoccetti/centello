@@ -17,7 +17,6 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     private readonly FakeSpeechRecorder _recorder = new();
     private readonly FakeSpeechTranscriber _transcriber = new();
     private readonly FakeExpenseTextInterpreter _interpreter = new();
-    private readonly PendingExpenseSpeechDraft _pending = new();
     private readonly CountingScopeFactory _scopes;
     private readonly SpeechExpenseDraftService _service;
     private readonly Category _food = new(Guid.NewGuid(), "Cibo", "food", "#176B5B");
@@ -38,8 +37,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
             _interpreter,
             new OpenAiSettings(_keys),
             _internet,
-            _scopes,
-            _pending);
+            _scopes);
     }
 
     [Fact]
@@ -67,7 +65,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         Assert.Equal("Ho speso 100 euro di carburante", _interpreter.Text);
         Assert.Equal(["Auto", "Cibo"], _interpreter.Categories.Select(category => category.Name));
         Assert.Equal("Ho speso 100 euro di carburante", _service.LastTranscription);
-        Assert.Same(_interpreter.Draft, _pending.Take());
+        Assert.Same(_interpreter.Draft, result.Value);
         Assert.Equal(1, _scopes.CreatedCount);
     }
 
@@ -82,7 +80,6 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         Assert.Equal(RecordingFailure, result.Error);
         Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);
-        Assert.Null(_pending.Take());
     }
 
     [Fact]
@@ -97,7 +94,6 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         Assert.Equal(TranscriptionFailure, result.Error);
         Assert.Equal("", _service.LastTranscription);
         Assert.Equal(0, _interpreter.CallCount);
-        Assert.Null(_pending.Take());
     }
 
     [Fact]
@@ -112,7 +108,6 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
         Assert.True(result.IsFailure);
         Assert.Equal(InterpretationFailure, result.Error);
         Assert.Equal("cento euro carburante", _service.LastTranscription);
-        Assert.Null(_pending.Take());
     }
 
     [Fact]

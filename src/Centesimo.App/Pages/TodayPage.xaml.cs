@@ -178,7 +178,7 @@ public partial class TodayPage : ContentPage
             // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
             _viewModel.IsSpeechSheetVisible = false;
             _viewModel.SpeechTranscription = "";
-            await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+            await ExpenseEditorPage.OpenDraft(result.Value);
         }
         catch
         {
