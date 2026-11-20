@@ -34,6 +34,12 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Check 16 KB memory page support for the native libraries (SQLite) in the Play Console App Bundle explorer, and keep the target SDK at the level Play requires (36 today).
 - Test the Release build end to end before every upload: trimming can break EF Core at runtime.
 
+### Screen sizes and performance
+
+- Check every screen on several Android sizes and densities: a small phone (about 360 dp wide), a large phone, a tablet, the largest system font size and display size, and both themes. Text must not be clipped, the bottom navigation labels must stay visible and the bar must respect the bottom safe area.
+- Measure performance on the Release build on a low-end device: cold start time, scrolling in `Spese` and the Insight charts with several years of expenses (the Money Manager import is a realistic data set, used only locally).
+- Review the Android vitals in the Play Console during internal testing (ANR, crashes, slow startup) before moving to a wider track.
+
 ### Product gaps for other users
 
 - Backup and restore (see Data portability): the manifest sets `allowBackup="false"` and there is no export, so changing phone or uninstalling loses every expense.
