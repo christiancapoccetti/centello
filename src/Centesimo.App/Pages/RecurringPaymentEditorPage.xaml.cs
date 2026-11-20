@@ -54,7 +54,7 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
 
     private async Task Close()
     {
-        if (_viewModel.IsDirty && !await _confirmation.AskToDiscard())
+        if (!await CanDiscardEdits())
             return;
 
         await Shell.Current.GoToAsync("..");
@@ -83,6 +83,9 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
 
     private async void OnPauseClicked(object? sender, EventArgs e)
     {
+        if (!await CanDiscardEdits())
+            return;
+
         var paused = await _viewModel.Pause();
         if (paused.IsSuccess)
             await Leave(_viewModel.Done("in pausa"));
@@ -90,6 +93,9 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
 
     private async void OnResumeClicked(object? sender, EventArgs e)
     {
+        if (!await CanDiscardEdits())
+            return;
+
         var resumed = await _viewModel.Resume();
         if (resumed.IsSuccess)
             await Leave(_viewModel.Done("ripreso"));
@@ -97,6 +103,9 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
 
     private async void OnEndClicked(object? sender, EventArgs e)
     {
+        if (!await CanDiscardEdits())
+            return;
+
         var preview = await _viewModel.PreviewEnd();
         if (preview.IsFailure)
             return;
@@ -114,6 +123,9 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
     private async void OnSaved(object? sender, EventArgs e) => await Leave("Pagamento salvato");
 
     private async void OnRejected(object? sender, EventArgs e) => await InlineError.ShowFirst(Form);
+
+    // Pause, resume and end act on the stored payment, so unsaved edits are lost just as when the page is closed.
+    private async Task<bool> CanDiscardEdits() => !_viewModel.IsDirty || await _confirmation.AskToDiscard();
 
     private async Task Leave(string message)
     {

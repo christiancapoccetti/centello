@@ -65,7 +65,19 @@ public sealed class RecurringPayment
     }
 
     public void Suspend() => IsSuspended = true;
-    public void Resume() => IsSuspended = false;
+
+    /// <summary>Resumes a paused payment from the first occurrence on or after <paramref name="today"/>. The occurrences
+    /// missed during the pause are skipped, not created late. A payment whose end date passes while skipping is ended.</summary>
+    public void Resume(DateOnly today)
+    {
+        if (!IsSuspended)
+            return;
+
+        IsSuspended = false;
+        while (NextDueOn < today && !IsEnded)
+            MoveToNextOccurrence();
+    }
+
     public void End(DateOnly endsOn) => EndsOn = endsOn;
 
     public void MoveToNextOccurrence()

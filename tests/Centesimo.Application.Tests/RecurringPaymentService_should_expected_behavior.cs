@@ -70,7 +70,7 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var expenses = new FakeExpenseRepository();
         var payments = new FakeRecurringPaymentRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
-            payments, new FakeRecurringOccurrenceProcessor(expenses));
+            payments, new FakeRecurringOccurrenceProcessor(expenses), () => new DateOnly(2026, 7, 1));
         var created = await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Monthly, new DateOnly(2026, 7, 20)));
         await service.Suspend(created.Value.RecurringPaymentId);
 
@@ -80,6 +80,66 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         Assert.True(resumed.IsSuccess);
         Assert.False(created.Value.IsSuspended);
         Assert.Equal("RecurringPayment.InvalidEndDate", invalidEnd.Error.Code);
+    }
+
+    [Fact]
+    public async Task Resume_without_creating_the_expenses_missed_while_paused()
+    {
+        var (service, payment, expenses) = await ServiceWithPaymentAndExpenses(
+            RecurrenceFrequency.Monthly, new DateOnly(2026, 6, 15), today: new DateOnly(2026, 9, 10));
+        await service.Suspend(payment.RecurringPaymentId);
+
+        await service.Resume(payment.RecurringPaymentId);
+        await service.ProcessDue(new DateOnly(2026, 9, 10));
+        await service.ProcessDue(new DateOnly(2026, 9, 20));
+
+        Assert.Equal([new DateOnly(2026, 9, 15)], expenses.Items.Select(expense => expense.OccurredOn));
+        Assert.Equal(new DateOnly(2026, 10, 15), payment.NextDueOn);
+    }
+
+    [Fact]
+    public async Task Create_the_occurrence_due_on_the_day_it_is_resumed()
+    {
+        var (service, payment, expenses) = await ServiceWithPaymentAndExpenses(
+            RecurrenceFrequency.Monthly, new DateOnly(2026, 6, 15), today: new DateOnly(2026, 9, 15));
+        await service.Suspend(payment.RecurringPaymentId);
+
+        await service.Resume(payment.RecurringPaymentId);
+        await service.ProcessDue(new DateOnly(2026, 9, 15));
+
+        Assert.Equal([new DateOnly(2026, 9, 15)], expenses.Items.Select(expense => expense.OccurredOn));
+    }
+
+    [Fact]
+    public async Task End_a_payment_whose_end_date_passed_while_it_was_paused()
+    {
+        var (service, payment, expenses) = await ServiceWithPaymentAndExpenses(
+            RecurrenceFrequency.Monthly, new DateOnly(2026, 6, 15), endsOn: new DateOnly(2026, 8, 15),
+            today: new DateOnly(2026, 9, 20));
+        await service.Suspend(payment.RecurringPaymentId);
+
+        await service.Resume(payment.RecurringPaymentId);
+        await service.ProcessDue(new DateOnly(2026, 9, 20));
+
+        Assert.True(payment.IsEnded);
+        Assert.Empty(expenses.Items);
+    }
+
+    [Theory]
+    [InlineData(RecurrenceFrequency.Weekly, "2026-06-01", "2026-06-23", "2026-06-29")]
+    [InlineData(RecurrenceFrequency.Yearly, "2024-03-10", "2026-05-01", "2027-03-10")]
+    public async Task Resume_weekly_and_yearly_payments_from_the_first_occurrence_after_the_pause(
+        RecurrenceFrequency frequency, string dueOn, string today, string expectedNext)
+    {
+        var (service, payment, expenses) = await ServiceWithPaymentAndExpenses(
+            frequency, DateOnly.Parse(dueOn), today: DateOnly.Parse(today));
+        await service.Suspend(payment.RecurringPaymentId);
+
+        await service.Resume(payment.RecurringPaymentId);
+        await service.ProcessDue(DateOnly.Parse(today));
+
+        Assert.Empty(expenses.Items);
+        Assert.Equal(DateOnly.Parse(expectedNext), payment.NextDueOn);
     }
 
     [Fact]
@@ -185,14 +245,16 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
     }
 
     private static async Task<(RecurringPaymentService Service, RecurringPayment Payment, FakeExpenseRepository Expenses)>
-        ServiceWithPaymentAndExpenses(RecurrenceFrequency frequency, DateOnly nextDueOn, DateOnly? endsOn = null)
+        ServiceWithPaymentAndExpenses(RecurrenceFrequency frequency, DateOnly nextDueOn, DateOnly? endsOn = null,
+            DateOnly? today = null)
     {
         var categories = new FakeCategoryRepository();
         var category = new Category(Guid.NewGuid(), "Svago", "leisure", "lilac");
         categories.Items.Add(category);
         var expenses = new FakeExpenseRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
-            new FakeRecurringPaymentRepository(), new FakeRecurringOccurrenceProcessor(expenses));
+            new FakeRecurringPaymentRepository(), new FakeRecurringOccurrenceProcessor(expenses),
+            today.HasValue ? () => today.Value : null);
         var created = await service.Create(new(category.CategoryId, 1_599, frequency, nextDueOn, EndsOn: endsOn));
         return (service, created.Value, expenses);
     }
