@@ -58,38 +58,6 @@ public sealed class InsightTexts_should_expected_behavior
         Assert.Equal(new BudgetSummary("Nessuna spesa da confrontare nel 2025.", "", ""), year);
     }
 
-    [Fact]
-    public void Should_label_the_month_of_today_by_the_days_that_are_compared()
-    {
-        var november = InsightTexts.WindowLabels(Overview(Period.Month(2026, 11), new DateOnly(2026, 11, 19), 0.1));
-        var firstDay = InsightTexts.WindowLabels(Overview(Period.Month(2026, 11), new DateOnly(2026, 11, 1), 0.1));
-        var march = InsightTexts.WindowLabels(Overview(Period.Month(2025, 3), new DateOnly(2025, 3, 30), 0.1));
-
-        Assert.Equal(("1–19 nov", "1–19 ott"), november);
-        Assert.Equal(("1 nov", "1 ott"), firstDay);
-        Assert.Equal(("1–30 mar", "1–28 feb"), march);
-    }
-
-    [Fact]
-    public void Should_label_a_past_month_and_a_past_year_whole()
-    {
-        var month = InsightTexts.WindowLabels(Overview(Period.Month(2026, 1), new DateOnly(2026, 1, 31), 0.1));
-        var year = InsightTexts.WindowLabels(Overview(Period.Year(2025), new DateOnly(2025, 12, 31), 0.1));
-
-        Assert.Equal(("Gennaio", "Dicembre"), month);
-        Assert.Equal(("2025", "2024"), year);
-    }
-
-    [Fact]
-    public void Should_label_the_year_of_today_by_the_months_that_are_compared()
-    {
-        var november = InsightTexts.WindowLabels(Overview(Period.Year(2026), new DateOnly(2026, 11, 19), 0.1));
-        var january = InsightTexts.WindowLabels(Overview(Period.Year(2026), new DateOnly(2026, 1, 9), 0.1));
-
-        Assert.Equal(("gen–nov 26", "gen–nov 25"), november);
-        Assert.Equal(("gen 26", "gen 25"), january);
-    }
-
     [Theory]
     [InlineData(0.324, "32%")]
     [InlineData(0.325, "33%")]

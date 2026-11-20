@@ -34,24 +34,6 @@ public static class InsightTexts
             $" {ComparedTo(period, overview.IsToDate)}.");
     }
 
-    /// <summary>The names of the two amounts that are compared: "1–19 nov" and "1–19 ott" for the month of today,
-    /// "Ottobre" and "Settembre" for a past month, "gen–nov 26" and "gen–nov 25" for the year of today, "2025" and
-    /// "2024" for a past year.</summary>
-    public static (string Current, string Previous) WindowLabels(InsightsOverview overview)
-    {
-        var period = overview.Period;
-        var previous = period.Previous();
-        var to = overview.To;
-        if (period.Kind == PeriodKind.Month)
-            return overview.IsToDate
-                ? (Days(to.Day, period.Start.Month), Days(Math.Min(to.Day, previous.End.Day), previous.Start.Month))
-                : (ItalianFormat.MonthTitle(period.Start.Month), ItalianFormat.MonthTitle(previous.Start.Month));
-
-        return overview.IsToDate
-            ? (Months(to.Month, period.Start.Year), Months(to.Month, previous.Start.Year))
-            : (period.Start.Year.ToString(), previous.Start.Year.ToString());
-    }
-
     /// <summary>"32%"</summary>
     public static string Share(double fraction) => ItalianFormat.Percent(Percent(fraction));
 
@@ -100,13 +82,4 @@ public static class InsightTexts
 
     private static int Percent(double fraction) =>
         (int)Math.Round(Math.Abs(fraction) * 100, MidpointRounding.AwayFromZero);
-
-    private static string Days(int last, int month) =>
-        last == 1 ? $"1 {ItalianFormat.ShortMonth(month)}" : $"1–{last} {ItalianFormat.ShortMonth(month)}";
-
-    private static string Months(int last, int year)
-    {
-        var shortYear = (year % 100).ToString("00");
-        return last == 1 ? $"gen {shortYear}" : $"gen–{ItalianFormat.ShortMonth(last)} {shortYear}";
-    }
 }
