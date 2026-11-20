@@ -8,9 +8,9 @@ public sealed class WaterfallChart_should_expected_behavior
     private const char Minus = '\u2212';
     private static readonly DateOnly Today = new(2026, 11, 19);
 
-    private enum Standing { Active, Archived, Unknown }
+    public enum Standing { Active, Archived, Unknown }
 
-    private sealed record Line(string Name, long Previous, long Current, Standing Standing = Standing.Active,
+    public sealed record Line(string Name, long Previous, long Current, Standing Standing = Standing.Active,
         string Icon = "cart", string Color = "coral");
 
     [Fact]
@@ -236,6 +236,64 @@ public sealed class WaterfallChart_should_expected_behavior
 
         Assert.Equal(current > previous ? "+1" : $"{Minus}1", chart.Steps.Single().Value);
     }
+
+    [Fact]
+    public async Task Should_name_one_category_that_explains_all_of_the_change()
+    {
+        var chart = await Chart(new Line("Svago", 10_000, 30_000));
+
+        Assert.Equal("Svago spiega tutto l'aumento.", chart.Sentence);
+    }
+
+    // The scales of these cases are not cut, so the sentences have no scale clause: every spread is over a third of the
+    // highest level.
+    [Theory]
+    [MemberData(nameof(DriverCases))]
+    public async Task Should_word_each_driver_case(Line[] lines, string sentence)
+    {
+        var chart = await Chart(lines);
+
+        Assert.Equal(sentence, chart.Sentence);
+    }
+
+    public static TheoryData<Line[], string> DriverCases() => new()
+    {
+        // One category reaches 75 % of the movement, 30.000 of 34.000 cents, but not all of it.
+        { [new Line("A", 50_000, 20_000), new Line("B", 10_000, 6_000)], "A spiega quasi tutto il calo." },
+        { [new Line("A", 10_000, 30_000), new Line("B", 10_000, 16_000)], "A spiega quasi tutto l'aumento." },
+        // Two categories, 20.000 of 30.000 cents is short of 75 %, so both are needed and they are all of it.
+        { [new Line("A", 40_000, 20_000), new Line("B", 40_000, 30_000)], "A e B spiegano tutto il calo." },
+        // Two of three: 40.000 of 50.000 cents.
+        {
+            [new Line("A", 40_000, 20_000), new Line("B", 40_000, 20_000), new Line("C", 15_000, 5_000)],
+            "A e B spiegano quasi tutto il calo."
+        },
+        // Three are needed: 10.000, 19.000 and 27.000 of 34.000 cents.
+        {
+            [
+                new Line("A", 15_000, 5_000), new Line("B", 14_000, 5_000), new Line("C", 13_000, 5_000),
+                new Line("D", 12_000, 5_000)
+            ],
+            "Il calo viene da più categorie, soprattutto da A."
+        },
+        {
+            [
+                new Line("A", 5_000, 15_000), new Line("B", 5_000, 14_000), new Line("C", 5_000, 13_000),
+                new Line("D", 5_000, 12_000)
+            ],
+            "L'aumento viene da più categorie, soprattutto da A."
+        },
+        { [new Line("A", 50_000, 20_000), new Line("B", 10_000, 15_000)], "A spiega tutto il calo; B va nella direzione opposta." },
+        // Altre categorie is plural, as a driver and as the opposite.
+        {
+            [new Line("Spesa", 10_000, 6_000), new Line("Archiviata", 50_000, 20_000, Standing.Archived)],
+            "Altre categorie spiegano quasi tutto il calo."
+        },
+        {
+            [new Line("A", 50_000, 20_000), new Line("Archiviata", 10_000, 30_000, Standing.Archived)],
+            "A spiega tutto il calo; Altre categorie vanno nella direzione opposta."
+        }
+    };
 
     // The levels 136.660, 130.720, 126.100, 123.420, 123.860, 125.240 and 128.460 cents spread 13.240 cents, under a
     // tenth of the highest, so the spread counts as a tenth: 13.666 cents. Three times that is under the highest level,

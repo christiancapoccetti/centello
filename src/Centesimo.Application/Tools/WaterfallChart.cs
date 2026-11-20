@@ -33,6 +33,7 @@ public sealed record WaterfallChart(
     // Eight columns are about 43dp each on a 360dp phone: room for a 24dp tile and a four-digit label.
     private const int MaxSteps = 6;
     private const long OneEuro = 100;
+    private const long DriverPercent = 75;
     private const string FoldName = "Altre categorie";
     private const char Minus = '−';
 
@@ -55,16 +56,19 @@ public sealed record WaterfallChart(
             .ToList();
         return new WaterfallChart(InsightTexts.FromTo(period),
             Total(spending.Compared, scale, InsightTexts.Short(period.Previous())), steps,
-            Total(spending.Spent, scale, InsightTexts.Short(period)), scale.IsCut, "", "");
+            Total(spending.Spent, scale, InsightTexts.Short(period)), scale.IsCut,
+            Explanation(changes, spending.Spent - spending.Compared), "");
     }
 
-    /// <summary>What a column of the chart changes by: a category, or the rest folded into one.</summary>
-    private sealed record Change(string Name, string IconKey, string ColorKey, long Delta)
+    /// <summary>What a column of the chart changes by: a category, or the rest folded into one. The fold is named in
+    /// the plural, so the sentence agrees with it.</summary>
+    private sealed record Change(string Name, string IconKey, string ColorKey, long Delta, bool IsFold = false)
     {
         public static Change Of(CategorySpend spend) => new(spend.Category.Name,
             CategoryIcons.Resolve(spend.Category.Icon).Key, CategoryPalette.Resolve(spend.Category.Color).Key, spend.Delta);
 
-        public static Change Fold(long delta) => new(FoldName, CategoryIcons.Fallback.Key, CategoryPalette.Fallback.Key, delta);
+        public static Change Fold(long delta) =>
+            new(FoldName, CategoryIcons.Fallback.Key, CategoryPalette.Fallback.Key, delta, true);
     }
 
     /// <summary>The changes of at least 1 € and the residual that closes the total, falls first then by name.</summary>
@@ -106,6 +110,59 @@ public sealed record WaterfallChart(
 
         return levels;
     }
+
+    /// <summary>Names what explains the change: the fewest categories that make up 75 % of everything that went the way
+    /// of the net change, then the largest one that went the other way.</summary>
+    private static string Explanation(IReadOnlyList<Change> changes, long net)
+    {
+        if (net == 0)
+            return "";
+
+        var movers = Ranked(changes, Math.Sign(net));
+        var drivers = Drivers(movers);
+        var lead = Lead(drivers, drivers.Count == movers.Count, net < 0);
+        if (Ranked(changes, -Math.Sign(net)).FirstOrDefault() is not { } opposite)
+            return $"{lead}.";
+
+        return $"{lead}; {opposite.Name} {Agree(opposite, "va", "vanno")} nella direzione opposta.";
+    }
+
+    /// <summary>The changes that went <paramref name="direction"/> (-1 a fall, 1 a rise), largest first.</summary>
+    private static List<Change> Ranked(IReadOnlyList<Change> changes, int direction) => changes
+        .Where(change => Math.Sign(change.Delta) == direction)
+        .OrderByDescending(change => Math.Abs(change.Delta))
+        .ThenBy(change => change.Name)
+        .ToList();
+
+    private static List<Change> Drivers(IReadOnlyList<Change> movers)
+    {
+        var gross = movers.Sum(change => Math.Abs(change.Delta));
+        var drivers = new List<Change>();
+        var covered = 0L;
+        foreach (var mover in movers)
+        {
+            drivers.Add(mover);
+            covered += Math.Abs(mover.Delta);
+            if (covered * 100 >= gross * DriverPercent)
+                break;
+        }
+
+        return drivers;
+    }
+
+    private static string Lead(IReadOnlyList<Change> drivers, bool isAll, bool isFall)
+    {
+        var word = isFall ? "il calo" : "l'aumento";
+        if (drivers.Count > 2)
+            return $"{char.ToUpperInvariant(word[0])}{word[1..]} viene da più categorie, soprattutto da {drivers[0].Name}";
+
+        var how = isAll ? "tutto" : "quasi tutto";
+        return drivers.Count == 1
+            ? $"{drivers[0].Name} {Agree(drivers[0], "spiega", "spiegano")} {how} {word}"
+            : $"{drivers[0].Name} e {drivers[1].Name} spiegano {how} {word}";
+    }
+
+    private static string Agree(Change change, string singular, string plural) => change.IsFold ? plural : singular;
 
     /// <summary>Where the plot starts and ends, in cents. It cuts only when the change is small against the totals: the
     /// spread of the levels is at most a third of the highest one. Then it starts at a round number below the lowest
