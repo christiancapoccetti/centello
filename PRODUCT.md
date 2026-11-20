@@ -33,7 +33,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Capabilities and Constraints
 
-- Categories with optional monthly budgets (create, edit, archive, restore); tags within a category; expenses with amount, date, category, optional tag and note; monthly history with edit and delete; monthly and yearly overviews; recurring payments (weekly, monthly, yearly, optional end date); Insight with a `Questo mese` / `Questo anno` period.
+- Categories with optional monthly budgets (create, edit, archive, restore); tags within a category; expenses with amount, date, category, optional tag and note; monthly history with edit and delete; monthly and yearly overviews; recurring payments (weekly, monthly, yearly, optional end date); Insight for any month or year.
 - Local-first by construction: SQLite on the device, no account, no backend, no sync. The only data that leaves the phone is the voice-entry audio and its transcript, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
 - Stack: .NET 10 MAUI, Android only (min API 24), MVVM, Clean Architecture, Result Pattern.
 - User-facing text is Italian and currently hardcoded; amounts are in euros with Italian formatting (`486,20 €`).
@@ -46,7 +46,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Evidence on Hand
 
-- Product docs: `README.md`, `FUTURE.md`, `docs/insights-mockup.md` (Insight section spec, in Italian).
+- Product docs: `README.md`, `FUTURE.md`, `DESIGN.md` (visual system) and `docs/mockups/centesimo-prototype.html` (approved prototype of every screen).
 - Concept image: `docs/mockups/expense-app-concept-v1.png`.
 - A real Money Manager backup (`MoneyManager_*.mmbackup`) holds personal financial data. Use it only for local testing and never put its contents into screenshots, docs or any public surface.
 - No reviews, testimonials, download counts or store listing exist. Do not invent any.

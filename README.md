@@ -1,20 +1,26 @@
 # Centesimo
 
-Centesimo is a simple Android expense tracker built with .NET MAUI. Its goal is to make expense entry quick while keeping the expense database on the device; the optional quick entry sends the phrase you speak to OpenAI (see below).
+Centesimo is a simple Android expense tracker built with .NET MAUI. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice entry sends the phrase you speak to OpenAI (see below).
 
 ## Features
 
-- Create, edit, archive, and restore expense categories with optional monthly budgets. Archived categories are unavailable for new expenses, while existing expenses retain their category.
-- Create and archive tags within a category.
-- Add expenses with an amount, date, category, optional tag, and optional note.
-- Browse monthly expense history, then edit or delete an expense.
-- Review monthly or yearly spending and category budget progress from the home dashboard, with category details available for both periods.
-- Configure weekly, monthly, or yearly recurring payments, with optional end dates. Due expenses are created when the app is opened, and upcoming payments generate Android notifications.
-- Create an expense draft from a spoken Italian phrase using OpenAI with your own API key, plus explicit confirmation in the expense editor.
-- Review local spending trends, category comparisons, and history-based insights for any month or year.
-- Store application data locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a quick-entry phrase, and only when you enable OpenAI quick entry.
+- Home (`Oggi`): month total, remaining budget, comparison with the previous period, category line, daily spending chart, latest expenses and a split button to add an expense by hand or by voice.
+- Add, edit and delete expenses with an amount, date, category, optional tag and optional note. The `Spese` screen lists the expense history by month.
+- Create, edit, archive and restore categories with optional monthly budgets, and tags within a category. Archived categories are unavailable for new expenses, while existing expenses keep their category. On first run the app suggests common categories to create in one tap.
+- Each category gets a pastel colour from the app (the least-used slot of the palette, not chosen by the user) and an icon from a 32-icon catalog.
+- Category detail with tag filters, and `Insight` for any month or year: totals, comparisons between periods and categories, and history-based insights.
+- Weekly, monthly or yearly recurring payments with optional end date. Due expenses are created when the app opens. A paused payment skips the occurrences missed while paused when it is resumed. Reminder notifications arrive at 09:00 on the due day.
+- Voice entry (`Inserimento vocale`): create an expense draft from a spoken Italian phrase using OpenAI with your own API key, with explicit confirmation in the expense editor.
+- Settings are grouped as `Dati` (recurring payments, import from Money Manager), `Inserimento vocale` and `Informazioni` (version, `Licenze`).
+- One-time import from a Money Manager `.mmbackup` file, with preview and no duplication.
+- Dark and light theme following the Android setting; the app is locked to portrait.
+- Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a voice-entry phrase, and only when you enable voice entry.
 
 Receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
+
+## Design
+
+The visual system (colours, Archivo typography, components) is recorded in [DESIGN.md](DESIGN.md). The approved prototype of every screen is [docs/mockups/centesimo-prototype.html](docs/mockups/centesimo-prototype.html), and the owner's mark and Play Store icon are in `docs/brand/`.
 
 ## Architecture
 
@@ -68,7 +74,7 @@ Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft
 - **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent.
 - **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync.
 - **Confirmation:** the draft opens in the expense editor and nothing is saved until you save it; saving still requires a category.
-- **Availability:** voice quick entry is unavailable until a key is configured, and report an error without an Internet connection. Manual entry always works.
+- **Availability:** voice entry is unavailable until a key is configured, and reports an error without an Internet connection. Manual entry always works.
 
 ## License
 

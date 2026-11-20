@@ -5,7 +5,7 @@ Items are not commitments and will be prioritized after the core manual expense 
 
 ## Accessibility and input
 
-- Voice control for navigating common actions (expense entry by voice or text already exists as OpenAI quick entry).
+- Voice control for navigating common actions (expense entry by voice already exists as `Inserimento vocale`).
 - Improved screen-reader descriptions and accessibility testing.
 - Optional biometric protection when opening the app.
 
@@ -30,3 +30,15 @@ Items are not commitments and will be prioritized after the core manual expense 
 ## Insights
 
 - Configurable budget alerts.
+
+## Categories and recurring payments
+
+- Store the archive and pause dates; the UI currently shows only `Archiviata` and `In pausa`.
+
+## Voice entry
+
+- Experiment with a decision model for category and tag choice in voice entry.
+
+## Technical follow-ups
+
+- Clear the DbContext change tracker after a failed save in `RepositoryBase`, so rejected entities do not linger in later saves.
