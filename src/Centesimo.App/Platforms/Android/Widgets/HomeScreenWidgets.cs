@@ -14,13 +14,14 @@ namespace Centesimo.App;
 /// one runs are folded into one more run, which reads the store after them.</summary>
 public sealed class HomeScreenWidgets : IStoreChangeListener
 {
-    private const string LogTag = "Centesimo.Widgets";
+    internal const string LogTag = "Centesimo.Widgets";
 
     internal static readonly WidgetSpec[] Widgets =
     [
         new(typeof(AddWidget), AddWidget.Render),
         new(typeof(ShortcutsWidget), ShortcutsWidget.Render),
-        new(typeof(MonthWidget), MonthWidget.Render)
+        new(typeof(MonthWidget), MonthWidget.Render),
+        new(typeof(RhythmWidget), RhythmWidget.Render)
     ];
 
     private readonly IServiceScopeFactory _scopes;
