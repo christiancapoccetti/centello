@@ -18,6 +18,13 @@ public sealed class DraftSource
         privacyNote: "Foto inviata a OpenAI, Centesimo non la salva",
         banner: _ => "Dalla foto · controlla e salva");
 
+    public static readonly DraftSource Pdf = new(
+        MaterialSymbols.PictureAsPdf,
+        sheetTitle: "Lettura del PDF",
+        readingLine: "Cerco importo, data e negozio…",
+        privacyNote: "PDF inviato a OpenAI, Centesimo non lo salva",
+        banner: _ => "Dal PDF · controlla e salva");
+
     private readonly Func<string, string> _banner;
 
     private DraftSource(string glyph, string sheetTitle, string readingLine, string privacyNote, Func<string, string> banner)
@@ -35,4 +42,6 @@ public sealed class DraftSource
     public string PrivacyNote { get; }
 
     public string Banner(string heard) => _banner(heard);
+
+    public static DraftSource Of(ExpenseDocument document) => document.IsPdf ? Pdf : Photo;
 }

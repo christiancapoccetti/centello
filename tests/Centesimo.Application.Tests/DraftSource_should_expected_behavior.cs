@@ -39,4 +39,24 @@ public sealed class DraftSource_should_expected_behavior
         Assert.Equal("Cerco importo, data e negozio…", DraftSource.Photo.ReadingLine);
         Assert.Equal("Foto inviata a OpenAI, Centesimo non la salva", DraftSource.Photo.PrivacyNote);
     }
+
+    [Fact]
+    public void Show_the_pdf_banner_whatever_was_heard() =>
+        Assert.Equal("Dal PDF · controlla e salva", DraftSource.Pdf.Banner("Ho speso 100 euro"));
+
+    [Fact]
+    public void Speak_for_the_pdf_on_the_sheet()
+    {
+        Assert.Equal(MaterialSymbols.PictureAsPdf, DraftSource.Pdf.Glyph);
+        Assert.Equal("Lettura del PDF", DraftSource.Pdf.SheetTitle);
+        Assert.Equal(DraftSource.Photo.ReadingLine, DraftSource.Pdf.ReadingLine);
+        Assert.Equal("PDF inviato a OpenAI, Centesimo non lo salva", DraftSource.Pdf.PrivacyNote);
+    }
+
+    [Fact]
+    public void Take_the_source_from_the_kind_of_document()
+    {
+        Assert.Same(DraftSource.Photo, DraftSource.Of(ExpenseDocument.Read(new byte[] { 0xFF, 0xD8, 0xFF }).Value));
+        Assert.Same(DraftSource.Pdf, DraftSource.Of(ExpenseDocument.Read("%PDF-1.7"u8.ToArray()).Value));
+    }
 }
