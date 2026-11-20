@@ -1,22 +1,22 @@
 # Centesimo
 
-Centesimo is a simple Android expense tracker built with .NET MAUI, designed and developed by Christian Capoccetti. The product research, the design, the architecture and the structure of the code are the author's own work; AI coding assistants were used as tools to write and review the implementation under the author's direction. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice entry sends the phrase you speak to OpenAI (see below).
+Centesimo is a simple Android expense tracker built with .NET MAUI, designed and developed by Christian Capoccetti. The product research, the design, the architecture and the structure of the code are the author's own work; AI coding assistants were used as tools to write and review the implementation under the author's direction. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice, photo and PDF entry sends what you speak, photograph or pick to OpenAI (see below).
 
 ## Features
 
-- Home (`Oggi`): month total, remaining budget, comparison with the previous period, category line, daily spending chart, latest expenses and a split button to add an expense by hand or by voice.
+- Home (`Oggi`): month total, remaining budget, comparison with the previous period, category line, daily spending chart, latest expenses and a split button to add an expense by hand, by voice, or from a photo or PDF.
 - Add, edit and delete expenses with an amount, date, category, optional tag and optional note. The `Spese` screen lists the expense history by month.
 - Create, edit, archive and restore categories with optional monthly budgets, and tags within a category. Archived categories are unavailable for new expenses, while existing expenses keep their category. On first run the app suggests common categories to create in one tap.
 - Each category has a pastel colour and an icon from a 32-icon catalog. The editor suggests the least-used of the six palette colours and the user may pick another.
 - Category detail with tag filters, and `Insight` for any month or year: the total against the previous period, a pace chart of cumulative spending (automatic and variable) with the budget, a waterfall of what changed per category, and history-based insights.
 - Weekly, monthly or yearly recurring payments with optional end date. Due expenses are created when the app opens. A paused payment skips the occurrences missed while paused when it is resumed. Reminder notifications arrive at 09:00 on the due day.
-- Voice entry (`Inserimento vocale`): create an expense draft from a spoken Italian phrase using OpenAI with your own API key, with explicit confirmation in the expense editor.
-- Settings are grouped as `Dati` (recurring payments, import from Money Manager), `Inserimento vocale` and `Informazioni` (version, `Licenze`).
+- Voice, photo and PDF entry: create an expense draft from a spoken Italian phrase (`Inserimento vocale`), from a photo of a receipt or from a PDF using OpenAI with your own API key, with explicit confirmation in the expense editor.
+- Settings are grouped as `Dati` (recurring payments, import from Money Manager), `Voce e foto` and `Informazioni` (version, `Licenze`).
 - One-time import from a Money Manager `.mmbackup` file, with preview and no duplication.
 - Dark and light theme following the Android setting; the app is locked to portrait.
-- Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is the audio or text of a voice-entry phrase, and only when you enable voice entry.
+- Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is what you send with voice, photo or PDF entry (audio and text, a photo, or a PDF), and only when you enable it.
 
-Receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
+Storing receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
 
 ## Design
 
@@ -64,17 +64,19 @@ dotnet build src/Centesimo.App/Centesimo.App.csproj -t:Run -f net10.0-android `
 
 Confirm that the target device is available with `adb devices` before running the app. The minimum supported Android API level is 24.
 
-## Voice entry with OpenAI
+## Voice, photo and PDF entry with OpenAI
 
-Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft. It is optional and uses your own OpenAI API key.
+Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft; photo and PDF entry do the same from a receipt photo or a PDF. It is optional and uses your own OpenAI API key.
 
-- **Setup:** enter the key in Settings, under "Inserimento vocale". A consent dialog must be accepted before the key is saved; the key can be removed at any time.
+- **Setup:** enter the key in Settings, under "Voce e foto". A consent dialog must be accepted before the key is saved; the key can be removed at any time.
 - **Key handling:** the key is stored in Android SecureStorage and sent only to the OpenAI API. It lives on the client, so it is not a server-held secret: use it for personal use only.
 - **Flow:** hold the microphone button (up to 20 seconds). Audio is transcribed with `gpt-transcribe`, and the text is then interpreted by `gpt-6-luna` with a strict JSON schema that only admits your own category and tag keys, and the result is validated deterministically.
-- **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent.
+- **Photo and PDF flow:** the camera segment of the home dock opens a menu: "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria" and "Scegli un PDF" (up to 5 MB). A photo is scaled to 1600 px and re-encoded as JPEG without EXIF or GPS data. The photo or PDF goes to `gpt-6-luna` in a single call, with the same strict schema as voice. If the document cannot be read, the editor opens empty with today's date.
+- **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the photo or PDF you chose, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent. OpenAI may keep API inputs for abuse monitoring, so Centesimo can only promise that it does not save them itself.
+- **Nothing is stored by Centesimo:** the copy of a photo or PDF placed in the app cache is deleted before and after each pick, and your own files are never modified or deleted. No storage permission is needed; only the camera permission is declared.
 - **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync.
-- **Confirmation:** the draft opens in the expense editor and nothing is saved until you save it; saving still requires a category.
-- **Availability:** voice entry is unavailable until a key is configured, and reports an error without an Internet connection. Manual entry always works.
+- **Confirmation:** the draft opens in the expense editor (with a "Dalla foto · controlla e salva" or "Dal PDF · controlla e salva" banner for documents) and nothing is saved until you save it; saving still requires a category.
+- **Availability:** the microphone and camera segments are disabled until a key is configured (both lead to Settings), and reports an error without an Internet connection. Manual entry always works.
 
 ## License
 

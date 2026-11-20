@@ -16,7 +16,7 @@
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Repeat}" Title="Pagamenti regolari" Detail="{Binding RecurringSummary}" IsNavigation="True" Tapped="OnRecurringPaymentsTapped" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Download}" Title="Importa da Money Manager" Detail="Da un backup .mmbackup" IsNavigation="True" Tapped="OnImportTapped" />
 
-                <Label Text="Inserimento vocale" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                <Label Text="Voce e foto" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <VerticalStackLayout IsVisible="{Binding ShowKeyStatus}">
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Mic}" Title="Attivo" Detail="Chiave OpenAI salvata" IsPositive="True" />
                     <Grid Margin="24,12,24,0" ColumnDefinitions="Auto,*,Auto">
@@ -34,7 +34,7 @@
                 </VerticalStackLayout>
                 <HorizontalStackLayout Margin="24,12,24,0" Spacing="8">
                     <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Cloud}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
-                    <Label Text="Audio e testo della spesa vengono inviati a OpenAI; le spese restano sul telefono." Style="{StaticResource Caption}" LineHeight="1.45" MaximumWidthRequest="320" />
+                    <Label Text="Audio, foto, PDF e testo della spesa vengono inviati a OpenAI; Centesimo non salva né l'audio né le foto né i PDF e le spese restano sul telefono." Style="{StaticResource Caption}" LineHeight="1.45" MaximumWidthRequest="320" />
                 </HorizontalStackLayout>
 
                 <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />

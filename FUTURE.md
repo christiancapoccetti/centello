@@ -24,8 +24,8 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 - Developer account: one-time fee and identity verification. The contact email becomes public, and the package name `it.christiancapoccetti.centesimo` cannot change after the first upload.
 - Share with family through the **internal testing** track (up to 100 testers, available within minutes, no full review). A new personal account must run a closed test with at least 12 testers for 14 days before it can publish to production.
-- Privacy policy on a public URL (for example GitHub Pages), in Italian. Required because the app records audio and sends it to OpenAI.
-- Data safety form: voice audio, its transcript and the category and tag names are sent to OpenAI only when voice entry is enabled, encrypted in transit; expenses never leave the device.
+- Privacy policy on a public URL (for example GitHub Pages), in Italian. Required because the app records audio and sends it, or a photo or PDF you choose, to OpenAI.
+- Data safety form: voice audio, its transcript, photos and PDFs you choose, and the category and tag names are sent to OpenAI only when voice, photo or PDF entry is used, encrypted in transit; expenses never leave the device. OpenAI keeps API inputs for abuse monitoring: word it as "Centesimo does not save them", never "not saved".
 - Financial features declaration: Centesimo tracks expenses and provides no financial services.
 - Content rating questionnaire, target audience, and the ads declaration (no ads).
 - Store listing: short and full description, at least two screenshots made with placeholder data (never the real Money Manager backup), a 1024×500 feature graphic, and the 512 px icon already in `docs/brand/`.
@@ -43,11 +43,7 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 ### Product gaps for other users
 
 - Backup and restore (see Data portability): the manifest sets `allowBackup="false"` and there is no export, so changing phone or uninstalling loses every expense.
-- Voice entry needs the user's own OpenAI API key, which family members are unlikely to have: explain it in the listing and keep manual entry as the main path.
-
-## Attachments
-
-- Optional receipt text recognition to prefill an expense.
+- Voice, photo and PDF entry need the user's own OpenAI API key, which family members are unlikely to have: explain it in the listing and keep manual entry as the main path.
 
 ## Data portability
 

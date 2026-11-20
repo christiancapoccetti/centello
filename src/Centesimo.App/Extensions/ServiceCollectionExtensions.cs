@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
+        services.AddSingleton<PhotoPicker>();
 #if ANDROID
         services.AddSingleton<ISpeechRecorder, AndroidAudioRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
