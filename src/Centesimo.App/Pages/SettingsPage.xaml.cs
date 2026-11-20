@@ -27,6 +27,9 @@ public partial class SettingsPage : ContentPage
     private async void OnRecurringPaymentsTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(RecurringPaymentsPage));
 
+    private async void OnBackupTapped(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(nameof(BackupPage));
+
     private async void OnLicensesTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(LicensesPage));
 

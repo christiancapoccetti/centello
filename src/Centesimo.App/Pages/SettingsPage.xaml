@@ -13,7 +13,8 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="0,0,0,24">
                 <Label Text="Dati" Style="{StaticResource SectionTitle}" Margin="24,8,24,2" SemanticProperties.HeadingLevel="Level2" />
-                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Repeat}" Title="Pagamenti regolari" Detail="{Binding RecurringSummary}" IsNavigation="True" Tapped="OnRecurringPaymentsTapped" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Repeat}" Title="Pagamenti regolari" Detail="{Binding RecurringSummary}" Kind="Navigation" Tapped="OnRecurringPaymentsTapped" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Backup}" Title="Backup ed export" Detail="Google, file di backup e CSV" Kind="Navigation" Tapped="OnBackupTapped" />
 
                 <Label Text="Inserimento vocale" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <VerticalStackLayout IsVisible="{Binding ShowKeyStatus}">
@@ -38,7 +39,7 @@
 
                 <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Info}" Title="{Binding VersionText}" />
-                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Description}" Title="Licenze" Detail="Centesimo e componenti open source" IsNavigation="True" Tapped="OnLicensesTapped" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Description}" Title="Licenze" Detail="Centesimo e componenti open source" Kind="Navigation" Tapped="OnLicensesTapped" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

@@ -10,6 +10,7 @@ public static class MaterialSymbols
     public const string Archive = "\uE149";
     public const string ArrowBack = "\uE5C4";
     public const string Autorenew = "\uE863";
+    public const string Backup = "\uE864";
     public const string BarChart = "\uE26B";
     public const string BeachAccess = "\uEB3E";
     public const string Bolt = "\uEA0B";
@@ -73,6 +74,7 @@ public static class MaterialSymbols
     public const string SouthEast = "\uF1E4";
     public const string SportsSoccer = "\uEA2F";
     public const string Subscriptions = "\uE064";
+    public const string TableView = "\uF1BE";
     public const string Today = "\uE8DF";
     public const string Visibility = "\uE8F4";
     public const string VisibilityOff = "\uE8F5";

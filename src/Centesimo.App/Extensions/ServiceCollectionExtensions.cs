@@ -19,6 +19,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SettingsPage>();
         services.AddTransient<LicensesViewModel>();
         services.AddTransient<LicensesPage>();
+        services.AddTransient<BackupViewModel>();
+        services.AddTransient<BackupPage>();
         services.AddSingleton<RecurringPaymentAutomation>();
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();

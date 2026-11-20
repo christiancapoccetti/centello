@@ -16,6 +16,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(RecurringPaymentsPage), typeof(RecurringPaymentsPage));
         Routing.RegisterRoute(nameof(RecurringPaymentEditorPage), typeof(RecurringPaymentEditorPage));
         Routing.RegisterRoute(nameof(LicensesPage), typeof(LicensesPage));
+        Routing.RegisterRoute(nameof(BackupPage), typeof(BackupPage));
         Items.Add(new TabBar
         {
             Items =
