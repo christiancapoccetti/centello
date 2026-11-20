@@ -9,7 +9,7 @@ using View = Android.Views.View;
 namespace Centesimo.App;
 
 /// <summary>The native snackbar in the inverse colors of the design. It sits above the view the page in front marks
-/// with SnackbarAnchor, or above the tab bar when the page marks none.</summary>
+/// with SnackbarAnchor, or above the tab bar when the page marks none or the marked view is hidden.</summary>
 internal sealed class MaterialSnackbar(IFontManager fonts) : ISnackbar
 {
     public void Show(string message)
@@ -40,7 +40,7 @@ internal sealed class MaterialSnackbar(IFontManager fonts) : ISnackbar
     private static View? MarkedAnchor() => Shell.Current?.CurrentPage?
         .GetVisualTreeDescendants()
         .OfType<VisualElement>()
-        .FirstOrDefault(SnackbarAnchor.GetIsAnchor)?
+        .FirstOrDefault(view => SnackbarAnchor.GetIsAnchor(view) && view.IsVisible)?
         .Handler?.PlatformView as View;
 
     private static T? First<T>(ViewGroup parent, Func<T, bool>? matches = null) where T : View

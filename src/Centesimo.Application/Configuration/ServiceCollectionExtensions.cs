@@ -8,6 +8,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<CategoryService>();
         services.AddScoped<CategoryChoiceService>();
+        services.AddScoped<CategoryListService>();
         services.AddScoped<TagService>();
         services.AddScoped<ExpenseService>();
         services.AddScoped<BudgetOverviewService>();
