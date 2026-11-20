@@ -52,7 +52,7 @@ public partial class TodayPage : ContentPage
         await _viewModel.TogglePeriod();
 
     private async void OnExpenseOpened(object? sender, Guid expenseId) =>
-        await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expenseId}");
+        await Shell.Current.GoToAsync(ExpenseEditorPage.Route(expenseId));
 
     private async void OnCategoryKeyTapped(object? sender, TappedEventArgs e)
     {
@@ -67,7 +67,7 @@ public partial class TodayPage : ContentPage
     }
 
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
-        await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+        await Shell.Current.GoToAsync(ExpenseEditorPage.Route());
 
     private void OnSuggestionTapped(object? sender, EventArgs e)
     {
@@ -178,7 +178,7 @@ public partial class TodayPage : ContentPage
             // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
             _viewModel.IsSpeechSheetVisible = false;
             _viewModel.SpeechTranscription = "";
-            await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+            await Shell.Current.GoToAsync(ExpenseEditorPage.Route());
         }
         catch
         {

@@ -70,7 +70,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         _original = Snapshot();
     }
 
-    public async Task Load(Guid? expenseId = null)
+    public async Task Load(Guid? expenseId = null, Guid? categoryId = null)
     {
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
@@ -84,6 +84,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 
         if (expenseId.HasValue)
             await LoadExpense(expenseId.Value);
+        else if (categoryId.HasValue)
+            await Picker.Suggest(categoryId, null);
 
         _original = Snapshot();
         if (!expenseId.HasValue)

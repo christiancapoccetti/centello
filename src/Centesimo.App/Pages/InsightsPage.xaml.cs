@@ -27,7 +27,7 @@ public partial class InsightsPage : ContentPage
     private async void OnPeriodToggled(object? sender, EventArgs e) => await _viewModel.TogglePeriod();
 
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
-        await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
+        await Shell.Current.GoToAsync(ExpenseEditorPage.Route());
 
     // An observation about one expense opens it. One about a category leads to its expenses: the history of the
     // month with the category as filter, or the category itself when the period is a year.
@@ -38,7 +38,7 @@ public partial class InsightsPage : ContentPage
 
         var route = insight.Target switch
         {
-            InsightTarget.ExpenseTarget expense => $"{nameof(ExpenseEditorPage)}?expenseId={expense.ExpenseId}",
+            InsightTarget.ExpenseTarget expense => ExpenseEditorPage.Route(expense.ExpenseId),
             InsightTarget.CategoryTarget { Period.Kind: PeriodKind.Month } category => ExpensesPage.Route(category.Period, category.CategoryId),
             InsightTarget.CategoryTarget category => CategoryDetailPage.Route(category.CategoryId, category.Period),
             _ => ""

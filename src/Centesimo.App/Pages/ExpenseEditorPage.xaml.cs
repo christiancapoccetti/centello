@@ -9,7 +9,10 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
     private readonly ExpenseEditorViewModel _viewModel;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
+    private const string ExpenseIdKey = "expenseId";
+    private const string CategoryIdKey = "categoryId";
     private Guid? _expenseId;
+    private Guid? _categoryId;
     private bool _isLoaded;
 
     public ExpenseEditorPage(ExpenseEditorViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
@@ -23,13 +26,28 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
         viewModel.Rejected += OnRejected;
     }
 
+    /// <summary>The route that opens a stored expense, or the empty form of a new one, optionally with a category
+    /// already chosen.</summary>
+    public static string Route(Guid? expenseId = null, Guid? categoryId = null)
+    {
+        if (expenseId.HasValue)
+            return $"{nameof(ExpenseEditorPage)}?{ExpenseIdKey}={expenseId}";
+
+        return categoryId.HasValue
+            ? $"{nameof(ExpenseEditorPage)}?{CategoryIdKey}={categoryId}"
+            : nameof(ExpenseEditorPage);
+    }
+
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        _expenseId = query.TryGetValue("expenseId", out var value)
-            && Guid.TryParse(value?.ToString(), out var expenseId)
-                ? expenseId
-                : null;
+        _expenseId = GuidOf(query, ExpenseIdKey);
+        _categoryId = GuidOf(query, CategoryIdKey);
     }
+
+    private static Guid? GuidOf(IDictionary<string, object> query, string key) =>
+        query.TryGetValue(key, out var value) && Guid.TryParse(value?.ToString(), out var id)
+            ? id
+            : null;
 
     // The page appears again when the category editor closes or the app returns to the front. Loading again would
     // throw away what was typed, so later appearances only refresh the categories on offer.
@@ -43,7 +61,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
         }
 
         _isLoaded = true;
-        await _viewModel.Load(_expenseId);
+        await _viewModel.Load(_expenseId, _categoryId);
         // A new expense starts from its amount. A stored expense or a draft from the voice is there to be read first.
         if (!_viewModel.IsEditMode && _viewModel.Amount.IsEmpty())
             AmountInput.FocusInput();
