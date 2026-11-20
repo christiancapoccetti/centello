@@ -23,7 +23,8 @@
   <ItemGroup>
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#141516" BaseSize="128,128" />
     <MauiFont Include="Resources\Fonts\*" />
-    <MauiImage Include="Resources\Images\*.svg" />
+    <MauiImage Include="..\..\docs\brand\segno-colore-su-scuro.svg" Link="Resources\Images\segno_su_scuro.svg" BaseSize="64,64" />
+    <MauiImage Include="..\..\docs\brand\segno-colore-su-chiaro.svg" Link="Resources\Images\segno_su_chiaro.svg" BaseSize="64,64" />
     <MauiAsset Include="Resources\Raw\*" LogicalName="%(Filename)%(Extension)" />
     <MauiAsset Include="..\..\LICENSE" LogicalName="GPL-3.0.txt" />
     <!-- The Android tab bar label style can only name a font resource, so the SemiBold cut is also packaged as one. -->
