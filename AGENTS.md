@@ -53,4 +53,4 @@ Coding guidelines for Centesimo. Project-local agent instructions override or ex
 
 ## Git
 
-- Never push to `master`; all changes must go through the project's normal branch and review workflow. Pushing is done by the user.
+- Never push to `master` or `main` unless the user explicitly asks for that push; otherwise all changes go through the project's normal branch and review workflow, and pushing is done by the user.
