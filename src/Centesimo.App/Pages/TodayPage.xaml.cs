@@ -8,17 +8,22 @@ public partial class TodayPage : ContentPage
     private readonly TodayViewModel _viewModel;
     private readonly ExpenseDraftService _drafts;
     private readonly OpenAiSettings _settings;
+    private readonly PhotoPicker _photos;
+    private const string MicrophoneRationale = "Centesimo usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.";
+    private const string CameraRationale = "Centesimo usa la fotocamera solo per fotografare lo scontrino. La foto viene inviata a OpenAI per leggerla e Centesimo non la salva.";
+
     private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;
     private int _speechSession;
     private long _speechPressedAt;
 
-    public TodayPage(TodayViewModel viewModel, ExpenseDraftService drafts, OpenAiSettings settings, ISnackbar snackbar)
+    public TodayPage(TodayViewModel viewModel, ExpenseDraftService drafts, OpenAiSettings settings, PhotoPicker photos, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _drafts = drafts;
         _settings = settings;
+        _photos = photos;
         _snackbar = snackbar;
         BindingContext = viewModel;
     }
@@ -112,7 +117,7 @@ public partial class TodayPage : ContentPage
     {
         try
         {
-            var permission = await RequestMicrophonePermission();
+            var permission = await RequestPermission<Permissions.Microphone>("Microfono", MicrophoneRationale);
             if (permission != PermissionStatus.Granted)
                 return Result.Failure(SpeechErrors.MicrophoneDenied);
 
@@ -133,20 +138,68 @@ public partial class TodayPage : ContentPage
         }
     }
 
-    private async Task<PermissionStatus> RequestMicrophonePermission()
+    private async Task<PermissionStatus> RequestPermission<TPermission>(string title, string rationale)
+        where TPermission : Permissions.BasePermission, new()
     {
-        var status = await Permissions.CheckStatusAsync<Permissions.Microphone>();
+        var status = await Permissions.CheckStatusAsync<TPermission>();
         if (status == PermissionStatus.Granted)
             return status;
 
-        var accepted = await DisplayAlertAsync(
-            "Microfono",
-            "Centesimo usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.",
-            "Consenti",
-            "Non ora");
+        var accepted = await DisplayAlertAsync(title, rationale, "Consenti", "Non ora");
         return accepted
-            ? await Permissions.RequestAsync<Permissions.Microphone>()
+            ? await Permissions.RequestAsync<TPermission>()
             : status;
+    }
+
+    private void OnCameraClicked(object? sender, EventArgs e) =>
+        _viewModel.Capture = _viewModel.Capture.ChoosePhoto();
+
+    private void OnPhotoMenuDismissed(object? sender, TappedEventArgs e) =>
+        _viewModel.Capture = _viewModel.Capture.Close();
+
+    private async void OnTakePhotoClicked(object? sender, EventArgs e) =>
+        await ReadPhoto(TakePhoto);
+
+    private async void OnPickPhotoClicked(object? sender, EventArgs e) =>
+        await ReadPhoto(_photos.Pick);
+
+    private async Task<Result<byte[]?>> TakePhoto()
+    {
+        var permission = await RequestPermission<Permissions.Camera>("Fotocamera", CameraRationale);
+        if (permission != PermissionStatus.Granted)
+            return Result<byte[]?>.Failure(PhotoErrors.CameraDenied);
+
+        return await _photos.Capture();
+    }
+
+    private async Task ReadPhoto(Func<Task<Result<byte[]?>>> take)
+    {
+        if (!_viewModel.Capture.IsChoosingPhoto)
+            return;
+
+        _viewModel.Capture = _viewModel.Capture.PickPhoto();
+        try
+        {
+            var photo = await take();
+            if (photo.IsFailure)
+            {
+                _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Photo).Fail(photo.Error);
+                return;
+            }
+
+            if (photo.Value is not { } bytes)
+            {
+                _viewModel.Capture = _viewModel.Capture.Close();
+                return;
+            }
+
+            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Photo);
+            await Show(await _drafts.PrepareFromPhoto(bytes));
+        }
+        catch
+        {
+            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Photo).Fail(PhotoErrors.ProcessingFailed);
+        }
     }
 
     private async void OnSpeechReleased(object? sender, EventArgs e)
@@ -207,11 +260,11 @@ public partial class TodayPage : ContentPage
     private void OnCloseCaptureClicked(object? sender, EventArgs e) =>
         _viewModel.Capture = _viewModel.Capture.Close();
 
-    private async void OnInactiveSpeechClicked(object? sender, EventArgs e)
+    private async void OnInactiveCaptureClicked(object? sender, EventArgs e)
     {
         var openSettings = await DisplayAlertAsync(
-            "Inserimento vocale",
-            "Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.",
+            "Voce e foto con OpenAI",
+            "Configura la chiave API OpenAI nelle impostazioni per dettare le spese o leggere gli scontrini da una foto.",
             "Apri impostazioni",
             "Annulla");
         if (openSettings)
