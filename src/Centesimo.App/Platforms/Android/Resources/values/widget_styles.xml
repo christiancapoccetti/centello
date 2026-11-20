@@ -6,4 +6,15 @@
     <style name="Widget.Centesimo.Night" parent="">
         <item name="android:visibility">gone</item>
     </style>
+
+    <style name="Widget.Centesimo.DayTile" parent="Widget.Centesimo.Day">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <style name="Widget.Centesimo.NightTile" parent="Widget.Centesimo.Night">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
 </resources>
