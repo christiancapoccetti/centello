@@ -1,8 +1,8 @@
 namespace Centesimo.Application;
 
-public sealed record CatalogTag(string Key, SpeechTag Tag);
+public sealed record CatalogTag(string Key, DraftTag Tag);
 
-public sealed record CatalogCategory(string Key, SpeechCategory Category, IReadOnlyList<CatalogTag> Tags)
+public sealed record CatalogCategory(string Key, DraftCategory Category, IReadOnlyList<CatalogTag> Tags)
 {
     public CatalogTag? FindTag(string? key) => Tags.FirstOrDefault(tag => tag.Key == key);
 }
@@ -13,7 +13,7 @@ public sealed record CatalogCategory(string Key, SpeechCategory Category, IReadO
 /// </summary>
 public sealed class ExpenseInterpretationCatalog
 {
-    public ExpenseInterpretationCatalog(IReadOnlyCollection<SpeechCategory> categories)
+    public ExpenseInterpretationCatalog(IReadOnlyCollection<DraftCategory> categories)
     {
         var tagNumber = 0;
         var items = new List<CatalogCategory>();

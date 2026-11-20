@@ -55,7 +55,7 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
     {
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Success("Ho speso 100 euro di carburante");
-        _interpreter.Draft = new ExpenseSpeechDraft(10_000, _car.CategoryId, null, null, "", "Ho speso 100 euro di carburante");
+        _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", "Ho speso 100 euro di carburante");
 
         var result = await _service.StopAndPrepare();
 
@@ -223,15 +223,15 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
 
     private sealed class FakeExpenseTextInterpreter : IExpenseTextInterpreter
     {
-        public ExpenseSpeechDraft Draft { get; set; } = new(null, null, null, null, "", "");
+        public ExpenseDraft Draft { get; set; } = new(null, null, null, null, "", "");
         public Error? Failure { get; set; }
         public string Text { get; private set; } = "";
-        public IReadOnlyCollection<SpeechCategory> Categories { get; private set; } = [];
+        public IReadOnlyCollection<DraftCategory> Categories { get; private set; } = [];
         public int CallCount { get; private set; }
 
-        public Task<Result<ExpenseSpeechDraft>> Interpret(
+        public Task<Result<ExpenseDraft>> Interpret(
             string text,
-            IReadOnlyCollection<SpeechCategory> categories,
+            IReadOnlyCollection<DraftCategory> categories,
             DateOnly today,
             CancellationToken cancellationToken = default)
         {
@@ -239,8 +239,8 @@ public sealed class SpeechExpenseDraftService_should_expected_behavior
             Text = text;
             Categories = categories;
             return Task.FromResult(Failure is null
-                ? Result<ExpenseSpeechDraft>.Success(Draft)
-                : Result<ExpenseSpeechDraft>.Failure(Failure));
+                ? Result<ExpenseDraft>.Success(Draft)
+                : Result<ExpenseDraft>.Failure(Failure));
         }
     }
 

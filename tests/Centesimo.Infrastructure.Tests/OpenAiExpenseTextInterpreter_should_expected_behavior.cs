@@ -11,16 +11,16 @@ public sealed class OpenAiExpenseTextInterpreter_should_expected_behavior
     private static readonly Guid FuelId = Guid.NewGuid();
     private static readonly Guid HomeId = Guid.NewGuid();
 
-    private static readonly SpeechCategory[] Categories =
+    private static readonly DraftCategory[] Categories =
     [
-        new(CarId, "Auto", [new SpeechTag(FuelId, "Carburante"), new SpeechTag(Guid.NewGuid(), "Tagliando")]),
-        new(HomeId, "Casa", [new SpeechTag(Guid.NewGuid(), "Affitto")])
+        new(CarId, "Auto", [new DraftTag(FuelId, "Carburante"), new DraftTag(Guid.NewGuid(), "Tagliando")]),
+        new(HomeId, "Casa", [new DraftTag(Guid.NewGuid(), "Affitto")])
     ];
 
     private static OpenAiExpenseTextInterpreter CreateInterpreter(FakeHttpMessageHandler handler, string apiKey = ApiKey) =>
         new(new OpenAiClient(new HttpClient(handler), new FakeApiKeyProvider(apiKey)));
 
-    private static Task<Result<ExpenseSpeechDraft>> Interpret(
+    private static Task<Result<ExpenseDraft>> Interpret(
         FakeHttpMessageHandler handler,
         string text = "Ho speso 100 euro di carburante",
         string apiKey = ApiKey,
@@ -38,7 +38,7 @@ public sealed class OpenAiExpenseTextInterpreter_should_expected_behavior
         Assert.Equal(10_000, result.Value.AmountCents);
         Assert.Equal(CarId, result.Value.CategoryId);
         Assert.Equal(FuelId, result.Value.TagId);
-        Assert.Equal("Ho speso 100 euro di carburante", result.Value.Transcription);
+        Assert.Equal("Ho speso 100 euro di carburante", result.Value.Heard);
     }
 
     [Fact]

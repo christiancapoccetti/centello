@@ -8,21 +8,21 @@ public static class ExpenseInterpretationResolver
     public const int MaximumNoteLength = 500;
     private const string DateFormat = "yyyy-MM-dd";
 
-    public static ExpenseSpeechDraft Resolve(
+    public static ExpenseDraft Resolve(
         ExpenseInterpretation value,
         ExpenseInterpretationCatalog catalog,
         DateOnly today,
-        string sourceText)
+        string heard)
     {
         var category = catalog.FindCategory(value.CategoryKey);
         var tag = category?.FindTag(value.TagKey);
-        return new ExpenseSpeechDraft(
+        return new ExpenseDraft(
             ToCents(value.Amount),
             category?.Category.CategoryId,
             tag?.Tag.TagId,
             ParseDate(value.Date, today),
             LimitNote(value.Note.Trim()),
-            sourceText);
+            heard);
     }
 
     private static long? ToCents(decimal? amount)

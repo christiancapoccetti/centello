@@ -2,9 +2,9 @@ namespace Centesimo.Application;
 
 public interface IExpenseTextInterpreter
 {
-    Task<Result<ExpenseSpeechDraft>> Interpret(
+    Task<Result<ExpenseDraft>> Interpret(
         string text,
-        IReadOnlyCollection<SpeechCategory> categories,
+        IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default);
 }

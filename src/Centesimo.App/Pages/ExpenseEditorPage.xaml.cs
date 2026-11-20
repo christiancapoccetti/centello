@@ -13,7 +13,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
     private Guid? _expenseId;
-    private ExpenseSpeechDraft? _draft;
+    private ExpenseDraft? _draft;
     private bool _isLoaded;
 
     public ExpenseEditorPage(ExpenseEditorViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
@@ -29,7 +29,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 
     /// <summary>Opens a new expense filled from a draft, on the home tab whichever tab is in front. The draft travels
     /// with this one navigation only, so it can never reach a later "Aggiungi spesa".</summary>
-    public static Task OpenDraft(ExpenseSpeechDraft draft) =>
+    public static Task OpenDraft(ExpenseDraft draft) =>
         Shell.Current.GoToAsync(
             $"//{nameof(TodayPage)}/{nameof(ExpenseEditorPage)}",
             new ShellNavigationQueryParameters { [DraftParameter] = draft });
@@ -40,7 +40,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
             && Guid.TryParse(value?.ToString(), out var expenseId)
                 ? expenseId
                 : null;
-        _draft = query.TryGetValue(DraftParameter, out var draft) ? draft as ExpenseSpeechDraft : null;
+        _draft = query.TryGetValue(DraftParameter, out var draft) ? draft as ExpenseDraft : null;
     }
 
     // The page appears again when the category editor closes or the app returns to the front. Loading again would

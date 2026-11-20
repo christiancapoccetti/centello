@@ -10,8 +10,8 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
 
     private static readonly ExpenseInterpretationCatalog Catalog = new(
     [
-        new SpeechCategory(CarId, "Auto", [new SpeechTag(FuelId, "Carburante")]),
-        new SpeechCategory(HomeId, "Casa", [new SpeechTag(RentId, "Affitto")])
+        new DraftCategory(CarId, "Auto", [new DraftTag(FuelId, "Carburante")]),
+        new DraftCategory(HomeId, "Casa", [new DraftTag(RentId, "Affitto")])
     ]);
 
     private static ExpenseInterpretation Interpretation(
@@ -22,7 +22,7 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
         string note = "") =>
         new(amount, categoryKey, tagKey, date, note);
 
-    private static ExpenseSpeechDraft Resolve(ExpenseInterpretation value) =>
+    private static ExpenseDraft Resolve(ExpenseInterpretation value) =>
         ExpenseInterpretationResolver.Resolve(value, Catalog, Today, "Ho speso 100 euro di carburante");
 
     [Fact]
@@ -35,7 +35,7 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
         Assert.Equal(FuelId, draft.TagId);
         Assert.Equal(new DateOnly(2026, 11, 18), draft.OccurredOn);
         Assert.Equal("pieno", draft.Note);
-        Assert.Equal("Ho speso 100 euro di carburante", draft.Transcription);
+        Assert.Equal("Ho speso 100 euro di carburante", draft.Heard);
     }
 
     [Fact]

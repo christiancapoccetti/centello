@@ -9,8 +9,8 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
 
     private static readonly ExpenseInterpretationCatalog Catalog = new(
     [
-        new SpeechCategory(Guid.NewGuid(), "Auto", [new SpeechTag(Guid.NewGuid(), "Carburante"), new SpeechTag(Guid.NewGuid(), "Tagliando")]),
-        new SpeechCategory(Guid.NewGuid(), "Casa", [new SpeechTag(Guid.NewGuid(), "Affitto")])
+        new DraftCategory(Guid.NewGuid(), "Auto", [new DraftTag(Guid.NewGuid(), "Carburante"), new DraftTag(Guid.NewGuid(), "Tagliando")]),
+        new DraftCategory(Guid.NewGuid(), "Casa", [new DraftTag(Guid.NewGuid(), "Affitto")])
     ]);
 
     private static JsonObject Build(ExpenseInterpretationCatalog? catalog = null, string text = "Ho speso 100 euro di carburante") =>
@@ -98,7 +98,7 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
     [Fact]
     public void Admit_only_null_tags_when_the_catalog_has_none()
     {
-        var catalog = new ExpenseInterpretationCatalog([new SpeechCategory(Guid.NewGuid(), "Auto", [])]);
+        var catalog = new ExpenseInterpretationCatalog([new DraftCategory(Guid.NewGuid(), "Auto", [])]);
 
         var request = Build(catalog);
 
@@ -146,7 +146,7 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
     [Fact]
     public void Serialize_to_valid_json_with_non_ascii_names_intact()
     {
-        var catalog = new ExpenseInterpretationCatalog([new SpeechCategory(Guid.NewGuid(), "Città \"vecchia\"", [])]);
+        var catalog = new ExpenseInterpretationCatalog([new DraftCategory(Guid.NewGuid(), "Città \"vecchia\"", [])]);
 
         var reparsed = JsonNode.Parse(Build(catalog).ToJsonString())!.AsObject();
 

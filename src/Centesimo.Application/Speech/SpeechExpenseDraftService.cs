@@ -27,23 +27,23 @@ public sealed class SpeechExpenseDraftService(
 
     public Task Cancel() => recorder.Cancel();
 
-    public async Task<Result<ExpenseSpeechDraft>> StopAndPrepare(CancellationToken cancellationToken = default)
+    public async Task<Result<ExpenseDraft>> StopAndPrepare(CancellationToken cancellationToken = default)
     {
         var audio = await recorder.Stop(cancellationToken);
         if (audio.IsFailure)
-            return Result<ExpenseSpeechDraft>.Failure(audio.Error);
+            return Result<ExpenseDraft>.Failure(audio.Error);
 
         if (!internet.IsAvailable)
-            return Result<ExpenseSpeechDraft>.Failure(SpeechErrors.NoInternet);
+            return Result<ExpenseDraft>.Failure(SpeechErrors.NoInternet);
 
         var categories = await LoadCategories(cancellationToken);
         if (categories.IsFailure)
-            return Result<ExpenseSpeechDraft>.Failure(categories.Error);
+            return Result<ExpenseDraft>.Failure(categories.Error);
 
         var keywords = new ExpenseInterpretationCatalog(categories.Value).Keywords;
         var transcription = await transcriber.Transcribe(audio.Value, keywords, cancellationToken);
         if (transcription.IsFailure)
-            return Result<ExpenseSpeechDraft>.Failure(transcription.Error);
+            return Result<ExpenseDraft>.Failure(transcription.Error);
 
         LastTranscription = transcription.Value;
         return await interpreter.Interpret(
@@ -53,28 +53,28 @@ public sealed class SpeechExpenseDraftService(
             cancellationToken);
     }
 
-    private async Task<Result<IReadOnlyList<SpeechCategory>>> LoadCategories(CancellationToken cancellationToken)
+    private async Task<Result<IReadOnlyList<DraftCategory>>> LoadCategories(CancellationToken cancellationToken)
     {
         using var scope = scopeFactory.CreateScope();
         var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
         var tagService = scope.ServiceProvider.GetRequiredService<TagService>();
         var categories = await categoryService.GetActive(cancellationToken);
         if (categories.IsFailure)
-            return Result<IReadOnlyList<SpeechCategory>>.Failure(categories.Error);
+            return Result<IReadOnlyList<DraftCategory>>.Failure(categories.Error);
 
-        var options = new List<SpeechCategory>();
+        var options = new List<DraftCategory>();
         foreach (var category in categories.Value)
         {
             var tags = await tagService.GetActive(category.CategoryId, cancellationToken);
             if (tags.IsFailure)
-                return Result<IReadOnlyList<SpeechCategory>>.Failure(tags.Error);
+                return Result<IReadOnlyList<DraftCategory>>.Failure(tags.Error);
 
-            options.Add(new SpeechCategory(
+            options.Add(new DraftCategory(
                 category.CategoryId,
                 category.Name,
-                [.. tags.Value.Select(tag => new SpeechTag(tag.TagId, tag.Name))]));
+                [.. tags.Value.Select(tag => new DraftTag(tag.TagId, tag.Name))]));
         }
 
-        return Result<IReadOnlyList<SpeechCategory>>.Success(options);
+        return Result<IReadOnlyList<DraftCategory>>.Success(options);
     }
 }

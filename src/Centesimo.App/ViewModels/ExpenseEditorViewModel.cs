@@ -69,9 +69,9 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 
     public Task Load(Guid? expenseId = null) => Open(expenseId, null);
 
-    public Task Load(ExpenseSpeechDraft draft) => Open(null, draft);
+    public Task Load(ExpenseDraft draft) => Open(null, draft);
 
-    private async Task Open(Guid? expenseId, ExpenseSpeechDraft? draft)
+    private async Task Open(Guid? expenseId, ExpenseDraft? draft)
     {
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
@@ -112,12 +112,12 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         await Picker.Restore(expense.CategoryId, expense.TagId);
     }
 
-    private async Task ApplyDraft(ExpenseSpeechDraft draft)
+    private async Task ApplyDraft(ExpenseDraft draft)
     {
         Amount = draft.AmountCents is { } cents ? (cents / 100m).ToString("0.00", ItalianCulture) : "";
         OccurredOn = draft.OccurredOn?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
         Note = draft.Note;
-        VoiceBanner = draft.Transcription.HasValue() ? $"Dalla voce: “{draft.Transcription}” · controlla e salva" : "";
+        VoiceBanner = draft.Heard.HasValue() ? $"Dalla voce: “{draft.Heard}” · controlla e salva" : "";
         await Picker.Suggest(draft.CategoryId, draft.TagId);
     }
 
