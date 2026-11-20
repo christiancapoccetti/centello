@@ -8,7 +8,7 @@ public sealed record NoticeComponent(string Name, string License, string Text);
 
 /// <summary>Reads THIRD_PARTY_NOTICES.txt, the file that ships with the app: a title and an introduction, one
 /// paragraph per component (its name on the first line, then the copyright, "License: ..." and a link), then the
-/// full text of each license under a heading of its own.</summary>
+/// full text of each license under a heading of its own, framed by rules of dashes.</summary>
 public static class ThirdPartyNotices
 {
     private const string LicensePrefix = "License:";
@@ -69,10 +69,9 @@ public static class ThirdPartyNotices
         var blocks = new List<(string Heading, List<string> Paragraphs)>();
         foreach (var paragraph in paragraphs)
         {
-            var lines = paragraph.Where(line => !IsRule(line)).Select(line => line.Trim()).ToList();
-            var heading = Heading(lines);
-            if (heading is not null)
-                blocks.Add((heading, [string.Join("\n", lines)]));
+            var lines = paragraph.Select(line => line.Trim()).ToList();
+            if (IsHeading(lines))
+                blocks.Add((lines[1], [string.Join("\n", lines[1..^1])]));
             else if (blocks.Count > 0)
                 blocks[^1].Paragraphs.Add(LicenseText.Reflow(string.Join("\n", lines)));
         }
@@ -80,14 +79,9 @@ public static class ThirdPartyNotices
         return blocks.Select(block => (block.Heading, string.Join("\n\n", block.Paragraphs))).ToList();
     }
 
-    // A heading is a short paragraph with no full stop whose first line names a license. A rule of dashes may frame it.
-    private static string? Heading(List<string> lines)
-    {
-        if (lines.Count is 0 or > 2)
-            return null;
-
-        return lines[0].Contains("license", StringComparison.OrdinalIgnoreCase) && !lines[0].EndsWith('.') ? lines[0] : null;
-    }
+    // A heading is the name of a license framed by two rules of dashes. The frame is what sets it apart: license texts
+    // have short paragraphs of their own that start with the word "License".
+    private static bool IsHeading(List<string> lines) => lines.Count >= 3 && IsRule(lines[0]) && IsRule(lines[^1]);
 
     private static bool IsRule(string line) => line.Length > 0 && line.All(character => character == '-');
 }

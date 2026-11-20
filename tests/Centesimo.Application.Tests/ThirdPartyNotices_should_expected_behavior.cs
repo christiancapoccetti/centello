@@ -20,10 +20,15 @@ public sealed class ThirdPartyNotices_should_expected_behavior
         Copyright Delta.
         License: SIL Open Font License 1.1. The full text is at the end of this file.
 
+        ----------
         MIT License
+        ----------
 
         Permission is hereby granted,
         free of charge.
+
+        "License" shall mean the terms,
+        as defined here.
 
         THE SOFTWARE IS PROVIDED "AS IS".
 
@@ -53,7 +58,8 @@ public sealed class ThirdPartyNotices_should_expected_behavior
 
         Assert.Equal(
             "Copyright (c) Alpha.\nLicense: MIT License.\nhttps://example.com/alpha\n\n" +
-            "MIT License\n\nPermission is hereby granted, free of charge.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\".",
+            "MIT License\n\nPermission is hereby granted, free of charge.\n\n\"License\" shall mean the terms, as defined here.\n\n" +
+            "THE SOFTWARE IS PROVIDED \"AS IS\".",
             components[0].Text);
         Assert.EndsWith("SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n\nPREAMBLE The goals are simple.", components[2].Text);
     }
@@ -78,18 +84,38 @@ public sealed class ThirdPartyNotices_should_expected_behavior
         var components = ThirdPartyNotices.Parse(text);
 
         Assert.Equal(
-            ["Microsoft .NET, .NET MAUI and Entity Framework Core", "SQLite", "SQLitePCLRaw",
-                "AndroidX, Material Components for Android and related Android libraries",
-                "Archivo fonts (Regular, SemiBold, Bold, Condensed ExtraBold)", "Material Symbols Rounded icon font (static subset)"],
+            [".NET runtime, .NET for Android, .NET MAUI, Entity Framework Core and Microsoft.Data.Sqlite", "SQLite", "SQLitePCLRaw",
+                "AndroidX and Material Components for Android", "Glide", "Glide DiskLruCache", "Glide GIF decoder",
+                "Gson, Tink, Guava ListenableFuture and Error Prone annotations",
+                "Kotlin standard library, kotlinx.coroutines, kotlinx.serialization and JetBrains annotations",
+                "JSpecify and JSR 305 annotations", "Archivo fonts (Regular, SemiBold, Bold, Condensed ExtraBold)",
+                "Material Symbols Rounded icon font (static subset)"],
             components.Select(component => component.Name));
         Assert.Equal(
-            ["MIT License", "Pubblico dominio", "Apache License 2.0", "Apache License 2.0", "SIL Open Font License 1.1", "Apache License 2.0"],
+            ["MIT License", "Pubblico dominio", "Apache License 2.0", "Apache License 2.0", "BSD 2-Clause License", "Apache License 2.0",
+                "MIT License", "Apache License 2.0", "Apache License 2.0", "Apache License 2.0", "SIL Open Font License 1.1", "Apache License 2.0"],
             components.Select(component => component.License));
         Assert.Contains("Permission is hereby granted, free of charge", components[0].Text);
-        Assert.Contains("https://www.apache.org/licenses/LICENSE-2.0", components[2].Text);
-        Assert.Contains("DISCLAIMER THE FONT SOFTWARE IS PROVIDED", components[4].Text);
         Assert.DoesNotContain("\nPermission is hereby granted", components[1].Text);
+        Assert.Contains("Redistributions in binary form must reproduce the above copyright notice", components[4].Text);
+        Assert.Contains("DISCLAIMER THE FONT SOFTWARE IS PROVIDED", components[10].Text);
     }
+
+    [Fact]
+    public void Ship_the_whole_apache_license_with_the_components_under_it()
+    {
+        var text = File.ReadAllText(Path.Combine(FontFiles.RepoRoot(), "src/Centesimo.App/Resources/Raw/THIRD_PARTY_NOTICES.txt"));
+
+        var apache = ThirdPartyNotices.Parse(text).Where(component => component.License == "Apache License 2.0").ToList();
+
+        Assert.NotEmpty(apache);
+        Assert.All(apache, component =>
+        {
+            Assert.Contains("You must give any other recipients of the Work or Derivative Works a copy of this License", component.Text);
+            Assert.Contains("END OF TERMS AND CONDITIONS", component.Text);
+        });
+    }
+
 
     [Fact]
     public void Reflow_a_wrapped_text_into_paragraphs()
