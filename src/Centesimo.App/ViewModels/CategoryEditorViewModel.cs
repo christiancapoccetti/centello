@@ -230,7 +230,8 @@ public sealed class CategoryEditorViewModel : ObservableObject
         _storedName = category.Name;
         Name = category.Name;
         SelectedIcon = CategoryIcons.Resolve(category.Icon).Key;
-        ColorKey = CategoryPalette.Resolve(category.Color).Key;
+        // The stored key as it is: a grey or legacy one the palette cannot offer goes back to Update unchanged.
+        ColorKey = category.Color;
         Budget = category.MonthlyBudget?.ToDecimal().ToString("0.00", ItalianCulture) ?? "";
         await LoadTags(categoryId);
         // Every property that reads the mode changes with it.
@@ -319,7 +320,7 @@ public sealed class CategoryEditorViewModel : ObservableObject
 
         IsSaving = true;
         var result = _categoryId.HasValue
-            ? await _categoryService.Update(_categoryId.Value, Name, SelectedIcon, budget.Value)
+            ? await _categoryService.Update(_categoryId.Value, Name, SelectedIcon, ColorKey, budget.Value)
             : await CreateCategory(budget.Value);
         if (result.IsFailure)
         {
@@ -336,7 +337,7 @@ public sealed class CategoryEditorViewModel : ObservableObject
 
     private async Task<Result> CreateCategory(Money? budget)
     {
-        var created = await _categoryService.Create(Name, SelectedIcon, budget, PendingTags.ToList());
+        var created = await _categoryService.Create(Name, SelectedIcon, ColorKey, budget, PendingTags.ToList());
         return created.IsSuccess ? Result.Success() : Result.Failure(created.Error);
     }
 
