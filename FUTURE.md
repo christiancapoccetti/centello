@@ -35,10 +35,6 @@ Items are not commitments and will be prioritized after the core manual expense 
 
 - Store the archive and pause dates; the UI currently shows only `Archiviata` and `In pausa`.
 
-## Voice entry
-
-- Experiment with a decision model for category and tag choice in voice entry.
-
 ## Technical follow-ups
 
 - Clear the DbContext change tracker after a failed save in `RepositoryBase`, so rejected entities do not linger in later saves.
