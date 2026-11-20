@@ -75,6 +75,6 @@ public partial class ExpensesPage : ContentPage, IQueryAttributable
     {
         var selected = ChipScroll.GetVisualTreeDescendants().OfType<Chip>().FirstOrDefault(chip => chip.IsSelected);
         if (selected is not null)
-            await ChipScroll.ScrollToAsync(selected, ScrollToPosition.MakeVisible, true);
+            await ChipScroll.ScrollToAsync(selected, ScrollToPosition.Center, true);
     });
 }
