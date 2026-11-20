@@ -19,7 +19,7 @@
             <VerticalStackLayout Padding="0,0,0,24">
                 <VerticalStackLayout Margin="24,8,24,12">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                        <Image WidthRequest="40" HeightRequest="40" VerticalOptions="Center" Source="{AppThemeBinding Light=segno_su_chiaro.png, Dark=segno_su_scuro.png}" SemanticProperties.Description="Segno di Centesimo" />
+                        <Image WidthRequest="40" HeightRequest="40" Margin="-6,0,0,0" VerticalOptions="Center" Source="{AppThemeBinding Light=segno_su_chiaro.png, Dark=segno_su_scuro.png}" SemanticProperties.Description="Segno di Centesimo" />
                         <Label Grid.Column="1" Text="Centesimo" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
                     </Grid>
                     <Label Text="Software libero con licenza GNU General Public License, versione 3 (GPL-3.0): puoi ridistribuirlo e modificarlo secondo i termini della licenza." FontSize="15" LineHeight="1.5" Margin="0,8,0,0" />
