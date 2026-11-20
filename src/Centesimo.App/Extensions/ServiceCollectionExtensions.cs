@@ -31,11 +31,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
+        services.AddSingleton<IDownloads, MediaStoreDownloads>();
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, AlertConfirmation>();
         services.AddSingleton<ISnackbar, NoSnackbar>();
+        services.AddSingleton<IDownloads, NoDownloads>();
 #endif
         services.AddSingleton<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>

@@ -7,12 +7,14 @@ public partial class BackupPage : ContentPage
 {
     private readonly BackupViewModel _viewModel;
     private readonly ISnackbar _snackbar;
+    private readonly IDownloads _downloads;
 
-    public BackupPage(BackupViewModel viewModel, ISnackbar snackbar)
+    public BackupPage(BackupViewModel viewModel, ISnackbar snackbar, IDownloads downloads)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _snackbar = snackbar;
+        _downloads = downloads;
         BindingContext = viewModel;
     }
 
@@ -38,10 +40,36 @@ public partial class BackupPage : ContentPage
             return;
         }
 
-        await Share.Default.RequestAsync(new ShareFileRequest
+        var file = result.Value;
+        if (!_downloads.CanSave)
         {
-            Title = title,
-            File = new ShareFile(result.Value.FilePath, result.Value.ContentType)
-        });
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = title,
+                File = new ShareFile(file.FilePath, file.ContentType)
+            });
+            return;
+        }
+
+        var saved = await _downloads.Save(file);
+        if (saved.IsFailure)
+        {
+            _snackbar.Show(saved.Error.Message);
+            return;
+        }
+
+        _snackbar.Show($"Salvato in Download: {Path.GetFileName(file.FilePath)}");
+        DeleteCacheCopy(file);
+    }
+
+    private static void DeleteCacheCopy(ExportedFile file)
+    {
+        try
+        {
+            File.Delete(file.FilePath);
+        }
+        catch (IOException)
+        {
+        }
     }
 }
