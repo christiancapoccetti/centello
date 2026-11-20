@@ -7,14 +7,17 @@ public partial class TodayPage : ContentPage
 {
     private readonly TodayViewModel _viewModel;
     private readonly SpeechExpenseDraftService _speechDraftService;
+    private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;
     private int _speechSession;
+    private long _speechPressedAt;
 
-    public TodayPage(TodayViewModel viewModel, SpeechExpenseDraftService speechDraftService)
+    public TodayPage(TodayViewModel viewModel, SpeechExpenseDraftService speechDraftService, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _speechDraftService = speechDraftService;
+        _snackbar = snackbar;
         BindingContext = viewModel;
     }
 
@@ -66,12 +69,33 @@ public partial class TodayPage : ContentPage
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(ExpenseEditorPage));
 
+    private void OnSuggestionTapped(object? sender, EventArgs e)
+    {
+        if (sender is BindableObject { BindingContext: SuggestedCategoryChip chip })
+            _viewModel.Toggle(chip);
+    }
+
+    private async void OnCreateSuggestedClicked(object? sender, EventArgs e)
+    {
+        var created = await _viewModel.CreateSuggested();
+        if (created.IsFailure)
+            return;
+
+        _snackbar.Show(created.Value == 1
+            ? "1 categoria creata: ora puoi aggiungere le spese"
+            : $"{created.Value} categorie create: ora puoi aggiungere le spese");
+    }
+
+    private async void OnCreateByHandClicked(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(CategoryEditorPage.Route());
+
     private void OnSpeechPressed(object? sender, EventArgs e)
     {
         if (!_viewModel.IsSpeechAvailable || _viewModel.IsSpeechProcessing)
             return;
 
         var session = ++_speechSession;
+        _speechPressedAt = Environment.TickCount64;
         _speechStart = StartSpeech(session);
     }
 
@@ -125,6 +149,12 @@ public partial class TodayPage : ContentPage
             return;
 
         _speechStart = null;
+        if (SpeechRecordingLimits.IsTap(TimeSpan.FromMilliseconds(Environment.TickCount64 - _speechPressedAt)))
+        {
+            await ExplainHold(start);
+            return;
+        }
+
         try
         {
             var startResult = await start;
@@ -161,6 +191,17 @@ public partial class TodayPage : ContentPage
             if (_viewModel.HasSpeechError)
                 _viewModel.IsSpeechSheetVisible = true;
         }
+    }
+
+    // A tap is not a dictation: whatever started to record is dropped and the gesture is explained instead.
+    private async Task ExplainHold(Task<Result> start)
+    {
+        var started = await start;
+        if (started.IsSuccess)
+            await _speechDraftService.Cancel();
+
+        _viewModel.IsSpeechListening = false;
+        _snackbar.Show("Tieni premuto il microfono per dettare una spesa");
     }
 
     private void OnCloseSpeechClicked(object? sender, EventArgs e)

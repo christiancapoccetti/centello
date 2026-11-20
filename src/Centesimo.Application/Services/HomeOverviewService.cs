@@ -11,8 +11,11 @@ public sealed record HomeOverview(
     PeriodComparison? Comparison,
     CategoryLine Categories,
     SpendChart Chart,
-    IReadOnlyList<LatestExpense> Latest)
+    IReadOnlyList<LatestExpense> Latest,
+    bool HasCategories)
 {
+    /// <summary>True until the first category exists: there is nothing an expense could go to.</summary>
+    public bool IsFirstRun => !HasCategories;
     public bool HasComparison => Comparison is not null;
     public bool HasLatest => Latest.Count > 0;
     public bool HasNoLatest => Latest.Count == 0;
@@ -110,10 +113,14 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
         var spent = periodExpenses.Sum(expense => expense.Amount.Cents);
         var budget = BudgetOf(period, categories);
         return new HomeOverview(period, HomeNavigation.For(period, today), ItalianFormat.Amount(spent),
-            Summarize(spent, budget), Compare(period, window, expenses),
+            categories.Count == 0 ? NothingYet(period) : Summarize(spent, budget), Compare(period, window, expenses),
             Line(period, categories, periodExpenses, spent), Chart(period, today, periodExpenses, budget),
-            Latest(periodExpenses, categories, today));
+            Latest(periodExpenses, categories, today), categories.Count > 0);
     }
+
+    // The first run has no budget to speak of: the line under the total says there is nothing to count yet.
+    private static BudgetSummary NothingYet(Period period) =>
+        new($"Ancora nessuna spesa {ItalianFormat.InPeriod(period)}", "", "");
 
     private static long SpentBetween(IReadOnlyList<Expense> expenses, DateOnly from, DateOnly to) => expenses
         .Where(expense => expense.OccurredOn >= from && expense.OccurredOn <= to)

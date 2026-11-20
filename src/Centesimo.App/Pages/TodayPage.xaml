@@ -92,27 +92,61 @@
                         </BindableLayout.ItemTemplate>
                     </FlexLayout>
 
-                    <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
+                    <VerticalStackLayout IsVisible="{Binding Overview.HasCategories}">
+                        <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
 
-                    <!-- The link is as high as the whole header, so the touch target is 47 high and its words sit on
-                         the line of the title. -->
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
-                        <c:ActionLink Grid.Column="1" Text="Vedi tutte" Padding="10,24,0,3" Margin="0,0,-4,0" Tapped="OnAllExpensesTapped" />
-                    </Grid>
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Overview.Latest}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <c:ExpenseRow Opened="OnExpenseOpened" />
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
+                        <!-- The link is as high as the whole header, so the touch target is 47 high and its words sit on
+                             the line of the title. -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
+                            <c:ActionLink Grid.Column="1" Text="Vedi tutte" Padding="10,24,0,3" Margin="0,0,-4,0" Tapped="OnAllExpensesTapped" />
+                        </Grid>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Overview.Latest}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <c:ExpenseRow Opened="OnExpenseOpened" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <Label Text="Ancora nessuna spesa in questo periodo." Style="{StaticResource BodyMedium}" Margin="0,8,0,0" IsVisible="{Binding Overview.HasNoLatest}" />
                     </VerticalStackLayout>
-                    <Label Text="Ancora nessuna spesa in questo periodo." Style="{StaticResource BodyMedium}" Margin="0,8,0,0" IsVisible="{Binding Overview.HasNoLatest}" />
+
+                    <!-- The first run: without a category there is nothing an expense could go to, so the home
+                         offers the common ones instead of an empty chart. -->
+                    <VerticalStackLayout IsVisible="{Binding Overview.IsFirstRun}">
+                        <Label Text="Crea le tue categorie per iniziare" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
+                        <Label Text="Le più comuni sono già scelte. Togli quelle che non ti servono: potrai cambiarle quando vuoi." Style="{StaticResource Lead}" Margin="0,4,0,0" />
+                        <FlexLayout Margin="0,4,-8,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Suggestions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- The gap between chips is padding: FlexLayout counts an item margin twice. -->
+                                    <ContentView Padding="0,0,8,0">
+                                        <c:Chip Text="{Binding Name}" IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" IsSelected="{Binding IsSelected}" HasCheck="False" Tapped="OnSuggestionTapped" />
+                                    </ContentView>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                        <Button Text="Crea categorie" Style="{StaticResource PrimaryActionButton}" Margin="0,12,0,0" FontSize="16" HeightRequest="48" MinimumHeightRequest="48" MaximumHeightRequest="48" CornerRadius="24" IsEnabled="{Binding CanCreateSuggested}" Clicked="OnCreateSuggestedClicked">
+                            <Button.Triggers>
+                                <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.38" />
+                                </Trigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Crea a mano" Style="{StaticResource TextActionButton}" Margin="0,8,0,0" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" Clicked="OnCreateByHandClicked" />
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
 
         <Border Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}" local:SnackbarAnchor.IsAnchor="True">
+            <Border.Triggers>
+                <!-- Until a category exists there is nothing to add an expense to. -->
+                <DataTrigger TargetType="Border" Binding="{Binding Overview.IsFirstRun}" Value="True">
+                    <Setter Property="Opacity" Value="0.38" />
+                    <Setter Property="InputTransparent" Value="True" />
+                </DataTrigger>
+            </Border.Triggers>
             <Grid ColumnDefinitions="*,1,76">
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
                     <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Add}" TextColor="{t:Theme Accent}" />

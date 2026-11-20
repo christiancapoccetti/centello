@@ -70,6 +70,29 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_be_a_first_run_until_a_category_exists()
+    {
+        var month = await Overview();
+        var year = await Overview(period: Period.Year(2026));
+
+        Assert.True(month.IsFirstRun);
+        Assert.Equal(new BudgetSummary("Ancora nessuna spesa a novembre", "", ""), month.Budget);
+        Assert.Equal(new BudgetSummary("Ancora nessuna spesa nel 2026", "", ""), year.Budget);
+        Assert.Equal("0,00", month.Total);
+    }
+
+    [Fact]
+    public async Task Should_not_be_a_first_run_with_a_category_even_an_archived_one()
+    {
+        var active = await Overview([NewCategory("Spesa")]);
+        var archived = await Overview([NewCategory("Vecchia", archived: true)]);
+
+        Assert.False(active.IsFirstRun);
+        Assert.False(archived.IsFirstRun);
+        Assert.Equal(new BudgetSummary("Nessun budget impostato", "", ""), archived.Budget);
+    }
+
+    [Fact]
     public async Task Should_say_when_no_budget_is_set()
     {
         var withoutBudget = NewCategory("Spesa");

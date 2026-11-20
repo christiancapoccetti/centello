@@ -4,6 +4,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App.ViewModels;
 
+/// <summary>A category the first run offers to create. Every one starts chosen.</summary>
+public sealed class SuggestedCategoryChip(SuggestedCategory category) : ObservableObject
+{
+    private bool _isSelected = true;
+
+    public string Name { get; } = category.Name;
+    public string IconKey { get; } = category.IconKey;
+    public string ColorKey { get; } = category.ColorKey;
+    public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
+}
+
 public sealed class TodayViewModel : ObservableObject
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -31,6 +42,9 @@ public sealed class TodayViewModel : ObservableObject
         }
     }
     public bool HasOverview => Overview is not null;
+    public IReadOnlyList<SuggestedCategoryChip> Suggestions { get; } =
+        [.. SuggestedCategories.All.Select(category => new SuggestedCategoryChip(category))];
+    public bool CanCreateSuggested => Suggestions.Any(chip => chip.IsSelected);
     /// <summary>The month the expense history opens on: the month in view or, from a year, the month a tap on the
     /// title leads to.</summary>
     public Period? HistoryMonth => Overview?.Period.Kind == PeriodKind.Month ? Overview.Period : Overview?.Navigation.Toggle;
@@ -80,6 +94,34 @@ public sealed class TodayViewModel : ObservableObject
     public bool HasSpeechError => SpeechErrorMessage.HasValue();
 
     public Task Load() => LoadPeriod(_selected);
+
+    public void Toggle(SuggestedCategoryChip chip)
+    {
+        chip.IsSelected = !chip.IsSelected;
+        OnPropertyChanged(nameof(CanCreateSuggested));
+    }
+
+    /// <summary>Creates the chosen suggestions and reads the home again, which then leaves the first run. The value
+    /// is how many categories were created.</summary>
+    public async Task<Result<int>> CreateSuggested()
+    {
+        var names = Suggestions
+            .Where(chip => chip.IsSelected)
+            .Select(chip => chip.Name)
+            .ToList();
+        Result<IReadOnlyList<Category>> created;
+        using (var scope = _scopeFactory.CreateScope())
+            created = await scope.ServiceProvider.GetRequiredService<CategoryService>().CreateSuggested(names);
+
+        if (created.IsFailure)
+        {
+            ErrorMessage = created.Error.Message;
+            return Result<int>.Failure(created.Error);
+        }
+
+        await Load();
+        return Result<int>.Success(created.Value.Count);
+    }
 
     public Task ShowPrevious() => Navigate(Overview?.Navigation.Previous);
 
