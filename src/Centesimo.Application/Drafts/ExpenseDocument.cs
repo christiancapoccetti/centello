@@ -2,8 +2,11 @@ namespace Centesimo.Application;
 
 public sealed class ExpenseDocument
 {
+    private const string PdfMediaType = "application/pdf";
+
     private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF];
     private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+    private static readonly byte[] Pdf = "%PDF-"u8.ToArray();
 
     private ExpenseDocument(ReadOnlyMemory<byte> bytes, string mediaType)
     {
@@ -15,14 +18,17 @@ public sealed class ExpenseDocument
 
     public string MediaType { get; }
 
+    public bool IsPdf => MediaType == PdfMediaType;
+
     public static Result<ExpenseDocument> Read(ReadOnlyMemory<byte> bytes)
     {
-        if (bytes.Length > PhotoLimits.MaximumBytes)
-            return Result<ExpenseDocument>.Failure(PhotoErrors.TooLarge);
-
         var mediaType = MediaTypeOf(bytes.Span);
         if (mediaType is null)
             return Result<ExpenseDocument>.Failure(PhotoErrors.Unsupported);
+
+        var limit = mediaType == PdfMediaType ? DocumentLimits.MaximumPdfBytes : PhotoLimits.MaximumBytes;
+        if (bytes.Length > limit)
+            return Result<ExpenseDocument>.Failure(mediaType == PdfMediaType ? PhotoErrors.PdfTooLarge : PhotoErrors.TooLarge);
 
         return Result<ExpenseDocument>.Success(new ExpenseDocument(bytes, mediaType));
     }
@@ -34,6 +40,9 @@ public sealed class ExpenseDocument
 
         if (bytes.StartsWith(Png))
             return "image/png";
+
+        if (bytes.StartsWith(Pdf))
+            return PdfMediaType;
 
         return IsWebp(bytes) ? "image/webp" : null;
     }

@@ -7,6 +7,8 @@ public sealed class ExpenseDocument_should_expected_behavior
     private static readonly byte[] JpegSignature = [0xFF, 0xD8, 0xFF, 0xE0];
     private static readonly byte[] PngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
+    private static readonly byte[] PdfSignature = "%PDF-1.7"u8.ToArray();
+
     private static byte[] Ascii(string text) => Encoding.ASCII.GetBytes(text);
 
     private static byte[] Webp() =>
@@ -67,11 +69,54 @@ public sealed class ExpenseDocument_should_expected_behavior
     }
 
     [Fact]
-    public void Refuse_a_pdf()
+    public void Read_a_pdf()
     {
-        var result = ExpenseDocument.Read(Ascii("%PDF-1.7"));
+        var result = ExpenseDocument.Read(PdfSignature);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("application/pdf", result.Value.MediaType);
+        Assert.True(result.Value.IsPdf);
+        Assert.Equal(PdfSignature, result.Value.Bytes.ToArray());
+    }
+
+    [Fact]
+    public void Not_take_an_image_for_a_pdf()
+    {
+        Assert.False(ExpenseDocument.Read(JpegSignature).Value.IsPdf);
+    }
+
+    [Fact]
+    public void Refuse_text_that_only_looks_like_a_pdf()
+    {
+        var result = ExpenseDocument.Read(Ascii("%PDF"));
 
         Assert.Equal(PhotoErrors.Unsupported, result.Error);
+    }
+
+    [Fact]
+    public void Refuse_a_pdf_over_the_pdf_size_limit()
+    {
+        var result = ExpenseDocument.Read(Padded(PdfSignature, DocumentLimits.MaximumPdfBytes + 1));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PhotoErrors.PdfTooLarge, result.Error);
+        Assert.Contains("PDF", result.Error.Message);
+    }
+
+    [Fact]
+    public void Accept_a_pdf_of_exactly_the_pdf_size_limit()
+    {
+        var result = ExpenseDocument.Read(Padded(PdfSignature, DocumentLimits.MaximumPdfBytes));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Keep_the_photo_limit_for_images_even_when_a_pdf_may_be_larger()
+    {
+        var result = ExpenseDocument.Read(Padded(PngSignature, PhotoLimits.MaximumBytes + 1));
+
+        Assert.Equal(PhotoErrors.TooLarge, result.Error);
     }
 
     [Fact]
