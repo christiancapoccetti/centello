@@ -508,6 +508,10 @@ public sealed class PaceChart_should_expected_behavior
         "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
     [InlineData(38_700, 50_000, 38_000, 91_000, SplitVerdict.OnlyVariableMoved,
         "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
+    [InlineData(1_299, 50_000, 1_199, 91_000, SplitVerdict.OnlyVariableMoved,
+        "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
+    [InlineData(1_300, 90_000, 1_199, 90_000, SplitVerdict.OnlyAutomaticMoved,
+        "Le automatiche sono 1 € più alte di ottobre; le variabili sono uguali.")]
     [InlineData(38_000, 90_000, 38_000, 90_000, SplitVerdict.BothSame,
         "Automatiche e variabili sono in linea con ottobre.")]
     [InlineData(38_100, 90_049, 38_000, 90_000, SplitVerdict.BothSame,
@@ -531,7 +535,7 @@ public sealed class PaceChart_should_expected_behavior
     public async Task Should_decide_how_automatic_and_variable_spending_moved_and_word_it(long automatic, long variable,
         long comparedAutomatic, long comparedVariable, SplitVerdict verdict, string sentence)
     {
-        var ledger = Mixed(Period.Month(2026, 11), automatic, variable, comparedAutomatic, comparedVariable);
+        var ledger = LedgerSplit(Period.Month(2026, 11), automatic, variable, comparedAutomatic, comparedVariable);
 
         var pace = await ledger.Pace(Period.Month(2026, 11), Today);
 
@@ -566,7 +570,7 @@ public sealed class PaceChart_should_expected_behavior
         long variable, long comparedAutomatic, long comparedVariable, string sentence)
     {
         var period = month == 0 ? Period.Year(year) : Period.Month(year, month);
-        var ledger = Mixed(period, automatic, variable, comparedAutomatic, comparedVariable);
+        var ledger = LedgerSplit(period, automatic, variable, comparedAutomatic, comparedVariable);
 
         var pace = await ledger.Pace(period, Today);
 
@@ -652,8 +656,64 @@ public sealed class PaceChart_should_expected_behavior
             later.Description.Replace($"{Nbsp}€", " €"));
     }
 
-    // Automatic spending on the first day of each period and variable spending on the second, for both windows.
-    private static Ledger Mixed(Period period, long automatic, long variable, long comparedAutomatic, long comparedVariable)
+    [Fact]
+    public async Task Should_word_november_like_the_mockup()
+    {
+        var pace = (await InsightFixtures.November().Overview()).Pace;
+
+        Assert.Equal(SplitVerdict.OnlyVariableMoved, pace.Split);
+        Assert.Equal("Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.", pace.Sentence);
+        Assert.Equal(
+            [
+                new PaceKeyItem(PaceSeries.Automatic, "Automatiche", $"412,99{Nbsp}€"),
+                new PaceKeyItem(PaceSeries.Variable, "Variabili", $"871,61{Nbsp}€"),
+                new PaceKeyItem(PaceSeries.Previous, "Ottobre", "")
+            ],
+            pace.Key);
+        Assert.Equal(new PaceAxis(new PaceTick(0, "1 nov"), new PaceTick(29, "30 nov"), new PaceTick(18, "oggi")), pace.Axis);
+        Assert.Equal(new PaceGap(18, 136_660 / 160_000.0, 128_460 / 160_000.0, $"82{Nbsp}€ in meno", "di ottobre a oggi"),
+            pace.Gap);
+        Assert.Equal(new PaceBudget(1.0, $"budget 1.600{Nbsp}€"), pace.Budget);
+        Assert.Equal($"ottobre ha chiuso a 1.590{Nbsp}€", pace.Previous!.CloseLabel);
+        Assert.Equal(
+            $"Spesa accumulata di novembre fino a oggi: 1.284,60{Nbsp}€, di cui automatiche 412,99{Nbsp}€. "
+            + $"Negli stessi giorni di ottobre: 1.366,60{Nbsp}€. Ottobre ha chiuso a 1.590,00{Nbsp}€. Budget: 1.600{Nbsp}€.",
+            pace.Description);
+    }
+
+    [Fact]
+    public async Task Should_draw_the_mockup_month_day_by_day()
+    {
+        var pace = (await InsightFixtures.November().Overview()).Pace;
+
+        var automatic = Enumerable.Range(1, 19).Select(day => InsightFixtures.AutomaticDays.GetValueOrDefault(day));
+        AssertClose(
+            [..Running(InsightFixtures.NovemberDays, InsightFixtures.BudgetCents), ..Run(0.0, 12)],
+            pace.Slots.Select(slot => slot.Total));
+        AssertClose(
+            [..Running(automatic, InsightFixtures.BudgetCents), ..Run(0.0, 12)],
+            pace.Slots.Select(slot => slot.Automatic));
+        AssertClose(Running(InsightFixtures.OctoberDays, InsightFixtures.BudgetCents).ToList(), pace.Previous!.Levels);
+        Assert.Equal(PaceSlotKind.Today, pace.Slots[18].Kind);
+    }
+
+    [Fact]
+    public async Task Should_say_no_automatic_expenses_were_recorded_to_compare_with()
+    {
+        var ledger = new Ledger()
+            .Automatic(On(11, 1), 38_000)
+            .Spend(On(11, 3), 5_000)
+            .Spend(On(10, 3), 9_000);
+
+        var pace = await ledger.Pace(Period.Month(2026, 11), Today);
+
+        Assert.Equal(SplitVerdict.OnlyOneSide, pace.Split);
+        Assert.Equal("Negli stessi giorni di ottobre non risultano spese automatiche.", pace.Sentence);
+        Assert.Equal([PaceSeries.Automatic, PaceSeries.Variable, PaceSeries.Previous], pace.Key.Select(item => item.Series));
+    }
+
+    // The automatic spending falls on the first day of each window and the variable spending on the second.
+    private static Ledger LedgerSplit(Period period, long automatic, long variable, long comparedAutomatic, long comparedVariable)
     {
         var ledger = new Ledger();
         Fill(ledger, period.Start, automatic, variable);
@@ -674,6 +734,16 @@ public sealed class PaceChart_should_expected_behavior
 
     private static IEnumerable<T> Run<T>(T value, int count) => Enumerable.Repeat(value, count);
 
+    private static IEnumerable<double> Running(IEnumerable<long> cents, long scale)
+    {
+        var sum = 0L;
+        foreach (var amount in cents)
+        {
+            sum += amount;
+            yield return (double)sum / scale;
+        }
+    }
+
     private static void AssertClose(IReadOnlyList<double> expected, IEnumerable<double> actual)
     {
         var values = actual.ToList();
@@ -682,8 +752,6 @@ public sealed class PaceChart_should_expected_behavior
             Assert.Equal(expected[index], values[index], 9);
     }
 
-    // One category, optionally with a budget, one recurring payment for the automatic spending and, on demand, an
-    // archived category.
     private sealed class Ledger
     {
         private readonly FakeCategoryRepository _categories = new();
