@@ -712,7 +712,6 @@ public sealed class PaceChart_should_expected_behavior
         Assert.Equal([PaceSeries.Automatic, PaceSeries.Variable, PaceSeries.Previous], pace.Key.Select(item => item.Series));
     }
 
-    // The automatic spending falls on the first day of each window and the variable spending on the second.
     private static Ledger LedgerSplit(Period period, long automatic, long variable, long comparedAutomatic, long comparedVariable)
     {
         var ledger = new Ledger();

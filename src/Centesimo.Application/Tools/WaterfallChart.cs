@@ -32,7 +32,6 @@ public sealed record WaterfallChart(
     string Sentence,
     string Description) // screen-reader text alternative
 {
-    // Eight columns are about 43dp each on a 360dp phone: room for a 24dp tile and a four-digit label.
     private const int MaxSteps = 6;
     private const long OneEuro = 100;
     private const long DriverPercent = 75;
@@ -230,7 +229,6 @@ public sealed record WaterfallChart(
         {
             var high = levels.Max();
             var low = levels.Min();
-            // A tiny change would otherwise zoom without limit: the spread counts as at least a tenth of the highest.
             var spread = Math.Max(high - low, high / 10);
             if (spread * 3 > high)
                 return new Scale(0, high);
@@ -242,7 +240,6 @@ public sealed record WaterfallChart(
         /// <summary>0..1 of the plot above the floor.</summary>
         public double Level(long cents) => (double)(cents - Floor) / (High - Floor);
 
-        // The smallest 1, 2 or 5 x 10^k euros that is at least a quarter of the spread.
         private static long NiceStep(long spread)
         {
             for (var decade = OneEuro; ; decade *= 10)
@@ -285,6 +282,5 @@ public sealed record WaterfallChart(
         _ => $"meno {ItalianFormat.Count(-euros)}{Nbsp}€"
     };
 
-    // Levels are never negative, so half up is half away from zero.
     private static long Euros(long cents) => (cents + 50) / 100;
 }

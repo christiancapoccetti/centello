@@ -14,12 +14,10 @@ public sealed class WaterfallChartView : ContentView
         propertyChanged: (view, _, _) => ((WaterfallChartView)view).Apply());
 
     private const float PlotHeight = 134;
-    // The value label of the highest column stands above 1.0.
     private const float LabelRise = 22;
     private const float LabelGap = 3;
     private const float FootGap = 6;
     private const float TileSize = 24;
-    // The canvas gap and the column spacing of both Grids, so a label and a tile stand under the column they name.
     private const float Gap = 3;
     private const float MinimumStep = 2;
 
@@ -55,15 +53,12 @@ public sealed class WaterfallChartView : ContentView
     private static float ColumnLeft(int column, double width, int columns) =>
         column * (ColumnWidth(width, columns) + Gap);
 
-    // The drawn extent of a step: its height is never under the minimum, and the extra goes below.
     private static (float Top, float Bottom) Extent(WaterfallStep step)
     {
         var top = PlotY(Math.Max(step.From, step.To));
         return (top, top + Math.Max(MinimumStep, PlotY(Math.Min(step.From, step.To)) - top));
     }
 
-    /// <summary>Rebuilds both Grids with one Star column per total and step and hands the chart to the canvas. A null
-    /// chart clears all of them and hides the view, so it never keeps an old drawing.</summary>
     private void Apply()
     {
         var chart = Chart;
@@ -131,7 +126,6 @@ public sealed class WaterfallChartView : ContentView
             LineBreakMode = LineBreakMode.NoWrap
         };
         label.SetThemeColor(Label.TextColorProperty, ThemeColor.Ink);
-        // The description on the canvas already says everything the labels show.
         AutomationProperties.SetIsInAccessibleTree(label, false);
         return label;
     }
@@ -149,7 +143,6 @@ public sealed class WaterfallChartView : ContentView
         return tile;
     }
 
-    // Sets the top of each value label from the levels of its column.
     private void Place()
     {
         if (Chart is not { } chart)
@@ -168,8 +161,6 @@ public sealed class WaterfallChartView : ContentView
 
     private static void PlaceAbove(Label label, float y) => label.TranslationY = y - LabelGap - label.Height;
 
-    // A rise carries its label above and a fall below, unless the fall ends so near the foot that the label would
-    // cross it: then the label goes above too.
     private static void PlaceStep(Label label, WaterfallStep step)
     {
         var (top, bottom) = Extent(step);
@@ -181,7 +172,6 @@ public sealed class WaterfallChartView : ContentView
 
     private sealed class WaterfallCanvas : ThemedDrawingView
     {
-        // The cut at the foot of an end column: a gap, then a slice of base.
         private const float Break = 3;
         private const float Base = 3;
 
@@ -204,7 +194,6 @@ public sealed class WaterfallChartView : ContentView
             DrawConnectors(canvas, chart, bounds.Width, columns);
         }
 
-        // A cut column says the scale does not start at zero: its body ends above a break and a short base follows.
         private void DrawTotal(ICanvas canvas, WaterfallTotal total, ThemeColor color, bool isCut, float left, float width)
         {
             var top = PlotY(total.Level);
@@ -230,7 +219,6 @@ public sealed class WaterfallChartView : ContentView
             canvas.FillRectangle(left, top, width, bottom - top);
         }
 
-        // A 1dp line across the gap after each column, at the level the next column starts from.
         private void DrawConnectors(ICanvas canvas, WaterfallChart chart, float chartWidth, int columns)
         {
             var width = ColumnWidth(chartWidth, columns);

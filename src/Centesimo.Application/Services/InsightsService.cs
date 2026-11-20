@@ -79,7 +79,6 @@ public sealed class InsightsService(ICategoryRepository categories, IExpenseRepo
             Rows(spending), BuildInsights(spending));
     }
 
-    // A category that only spent in the compared days is a step of the waterfall, never a row.
     private static IReadOnlyList<InsightCategory> Rows(SpendComparison spending) => spending.Categories
         .Where(spend => spend.Spent > 0)
         .Select(spend => new InsightCategory(spend.Category.CategoryId, spend.Category.Name, spend.Category.Icon,
@@ -87,8 +86,6 @@ public sealed class InsightsService(ICategoryRepository categories, IExpenseRepo
             spend.Prior == 0 ? null : spend.Prior, spend.Prior == 0 ? null : (double)spend.Delta / spend.Prior))
         .ToList();
 
-    // Automatic expenses take part in neither: rent is not unusual among groceries, and a subscription is not a new
-    // habit. The pace chart shows what they weigh.
     private static IReadOnlyList<LocalInsight> BuildInsights(SpendComparison spending)
     {
         if (spending.Spent == 0)
@@ -101,8 +98,6 @@ public sealed class InsightsService(ICategoryRepository categories, IExpenseRepo
             .ToList();
     }
 
-    // Every sentence names what it measures against ("di ottobre", "dello stesso periodo del 2025"), so it still
-    // reads right on a past period.
     private static LocalInsight? NewHabit(SpendComparison spending, IReadOnlyList<Expense> current,
         IReadOnlyList<Expense> previous)
     {

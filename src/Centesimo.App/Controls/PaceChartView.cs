@@ -15,17 +15,13 @@ public sealed class PaceChartView : ContentView
         typeof(PaceChartView), propertyChanged: (view, _, _) => ((PaceChartView)view).Apply());
 
     private const float PlotHeight = 148;
-    // The budget and close labels stand above their lines. The plot keeps the same room above 1.0, so a line at the
-    // top of the scale still has its label inside the control.
     private const float LabelRise = 22;
     private const float LabelLift = 3;
-    // The dashed line can run along the baseline: this is the room for its lower half.
     private const float FootRoom = 1;
     private const float AxisGap = 5;
     private const float LabelClearance = 8;
     private const float SlotGap = 2;
     private const float MarkerWidth = 2;
-    // Far enough from its slot to clear the next rise of the dashed line.
     private const float MarkerOffset = 5;
     private const float GapLabelMargin = 2;
     private const float GapLabelDrop = 6;
@@ -46,7 +42,6 @@ public sealed class PaceChartView : ContentView
     {
         Wrap = FlexWrap.Wrap,
         AlignItems = FlexAlignItems.Center,
-        // Each item pads its own right and bottom for the gaps, so the last row gives its 6 back.
         Margin = new Thickness(0, 12, 0, -6)
     };
 
@@ -58,7 +53,6 @@ public sealed class PaceChartView : ContentView
         _close.Padding = new Thickness(4, 0, 0, 0);
         _close.HorizontalOptions = LayoutOptions.End;
         _gapLabel.HorizontalOptions = LayoutOptions.Start;
-        // These sit on the bars: the ground color behind them keeps the text clear of them.
         View[] overlays = [_budget, _close, _gapLabel];
         foreach (var overlay in overlays)
         {
@@ -101,7 +95,6 @@ public sealed class PaceChartView : ContentView
     {
         var label = new Label { FontFamily = fontFamily, FontSize = size, LineBreakMode = LineBreakMode.NoWrap };
         label.SetThemeColor(Label.TextColorProperty, color);
-        // The description on the canvas already says everything the labels show.
         AutomationProperties.SetIsInAccessibleTree(label, false);
         return label;
     }
@@ -117,7 +110,6 @@ public sealed class PaceChartView : ContentView
     private static float SlotRight(int slot, double width, int count) =>
         SlotLeft(slot, width, count) + SlotWidth(width, count);
 
-    // Right of the slot, or at the right edge of the chart when the slot is the last one and has no room beside it.
     private static float MarkerLeft(int slot, double width, int count) =>
         (float)Math.Min(SlotRight(slot, width, count) + MarkerOffset, width - MarkerWidth);
 
@@ -149,8 +141,6 @@ public sealed class PaceChartView : ContentView
         };
     }
 
-    /// <summary>Hands the chart to the canvas, the labels and the key. A null chart clears all of them and hides the
-    /// view, so it never keeps an old drawing.</summary>
     private void Apply()
     {
         var chart = Chart;
@@ -173,14 +163,12 @@ public sealed class PaceChartView : ContentView
         Place();
     }
 
-    // A label without text is hidden, so it takes no room and nothing is read from it.
     private static void SetText(Label label, string? text)
     {
         label.Text = text ?? "";
         label.IsVisible = text is not null;
     }
 
-    // Places every overlay from the fractions and the slot geometry, once the width and the label sizes are known.
     private void Place()
     {
         if (Chart is not { Slots.Count: > 0 } chart || Width <= 0)
@@ -199,8 +187,6 @@ public sealed class PaceChartView : ContentView
         PlaceAxis(chart.Axis, count);
     }
 
-    // The label stands beside the marker, under its lower end. With no room on the right it moves to the left of the
-    // slot, over the bars, where its ground backing keeps it readable.
     private void PlaceGapLabel(PaceGap gap, int count)
     {
         var slotLeft = SlotLeft(gap.Slot, Width, count);
@@ -212,13 +198,10 @@ public sealed class PaceChartView : ContentView
         _gapAmount.HorizontalTextAlignment = alignment;
         _gapCaption.HorizontalTextAlignment = alignment;
         _gapLabel.TranslationX = Math.Max(0, left);
-        // Both lines stay above the axis.
         var top = PlotY(Math.Min(gap.From, gap.To)) + GapLabelDrop;
         _gapLabel.TranslationY = Math.Max(0, Math.Min(top, Baseline - _gapLabel.Height));
     }
 
-    // Start sits at the left edge, End under the last day and Today under its slot, kept inside the chart. An end
-    // label that today's label would touch gives way.
     private void PlaceAxis(PaceAxis axis, int count)
     {
         var endLeft = SlotRight(Math.Clamp(axis.End.Slot, 0, count - 1), Width, count) - _end.Width;
@@ -243,7 +226,6 @@ public sealed class PaceChartView : ContentView
     {
         private const float FutureStub = 4;
         private const float MinimumBar = 2;
-        // Parts the automatic tone from the variable one.
         private const float Band = 2;
 
         public PaceChart? Chart { get; set; }
@@ -291,8 +273,6 @@ public sealed class PaceChartView : ContentView
             }
         }
 
-        // The automatic part is the foot of the bar in Mute. A ground band above it keeps the two tones apart, unless
-        // the variable part is too thin to give up the room.
         private void DrawAutomatic(ICanvas canvas, PaceSlot slot, float left, float width, float barHeight)
         {
             if (slot.Automatic <= 0)
@@ -308,7 +288,6 @@ public sealed class PaceChartView : ContentView
             canvas.FillRectangle(left, Baseline - automatic - Band, width, Band);
         }
 
-        // A step line: the level of each slot of the previous period rises at the slot's left edge and holds to the right.
         private void DrawPrevious(ICanvas canvas, PaceLine line, float width, int count)
         {
             var path = new PathF();
@@ -326,7 +305,7 @@ public sealed class PaceChartView : ContentView
             canvas.SaveState();
             canvas.StrokeColor = Token(ThemeColor.Ink);
             canvas.StrokeSize = LineStroke;
-            // The canvas reads dash lengths as multiples of the stroke size. One path keeps the dash phase continuous.
+            // The canvas reads dash lengths as multiples of the stroke size.
             canvas.StrokeDashPattern = [Dash / LineStroke, DashGap / LineStroke];
             canvas.DrawPath(path);
             canvas.RestoreState();
@@ -340,8 +319,6 @@ public sealed class PaceChartView : ContentView
             canvas.FillRectangle(MarkerLeft(gap.Slot, width, count), top, MarkerWidth, height);
         }
 
-        // Today is always marked and a day to come is a stub. A past day draws what was spent, never less than a
-        // visible sliver, and nothing when nothing was spent.
         private static float HeightOf(PaceSlot slot) => slot.Kind switch
         {
             PaceSlotKind.Spent => slot.Total > 0 ? Math.Max(MinimumBar, Baseline - PlotY(slot.Total)) : 0,
@@ -350,7 +327,6 @@ public sealed class PaceChartView : ContentView
             PaceSlotKind.Outside => 0
         };
 
-        // Outside has no height, so its color is never used.
         private static ThemeColor ColorOf(PaceSlotKind kind) => kind switch
         {
             PaceSlotKind.Spent => ThemeColor.ChartBar,
@@ -360,7 +336,6 @@ public sealed class PaceChartView : ContentView
         };
     }
 
-    /// <summary>The key's mark: a 10dp square for a bar series, a 14dp dashed line for the previous period.</summary>
     private sealed class KeySwatch : ThemedDrawingView
     {
         private readonly PaceSeries _series;

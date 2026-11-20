@@ -85,7 +85,6 @@ public sealed record PaceChart(
     private const int YearSlots = 12;
     private const char Nbsp = (char)0xA0;
 
-    // WholeEuros rounds half up, so a difference under 0,50 € would read "0 €".
     internal const long HalfEuro = 50;
 
     public bool HasSentence => Sentence.HasValue();
@@ -210,7 +209,6 @@ public sealed record PaceChart(
         };
     }
 
-    // After an import the earlier months have no automatic expenses, so a change would only be an artifact of the data.
     private static string OneSidedSentence(SpendComparison spending, PaceSplit split)
     {
         var compared = InsightTexts.InComparedPeriod(spending.Period, spending.IsToDate);
@@ -221,7 +219,6 @@ public sealed record PaceChart(
         return $"{none} spesa automatica; {compared} erano {ItalianFormat.Money(split.ComparedAutomatic)}.";
     }
 
-    // A clause drops with its data. The closing total of a past period is its compared total, so it is said once.
     private static string Describe(SpendComparison spending, PaceSplit split, long? budget)
     {
         var period = spending.Period;
@@ -318,7 +315,6 @@ internal sealed record PaceSplit(long Automatic, long Variable, long ComparedAut
         };
     }
 
-    // A small change of price must not break "le automatiche sono uguali".
     private bool AutomaticMoved()
     {
         var tolerance = Math.Max(AutomaticToleranceCents,

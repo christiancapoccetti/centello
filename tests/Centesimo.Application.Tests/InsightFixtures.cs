@@ -81,8 +81,6 @@ internal sealed class InsightFixtures
     private static Category NewCategory(string name, string icon, string color, long budgetCents) =>
         new(Guid.NewGuid(), name, icon, color, new Money(budgetCents));
 
-    // Automatic payments first, then the rest of the day fills the categories in order, each up to what it spent in
-    // the compared days. Whatever the categories cannot take is the days after the 19th.
     private void AddMonth(int month, IReadOnlyList<long> days, IReadOnlyList<(Category Category, long Cents)> variable)
     {
         var remaining = variable.Select(item => item.Cents).ToArray();
