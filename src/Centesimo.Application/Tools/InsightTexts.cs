@@ -77,11 +77,6 @@ public static class InsightTexts
         ? $"di {ItalianFormat.MonthName(period.Start.Month)}"
         : $"del {period.Start.Year}";
 
-    /// <summary>"a ottobre", "ad aprile" or "al 2025": what something is equal to.</summary>
-    internal static string ToPeriod(Period period) => period.Kind == PeriodKind.Month
-        ? ItalianFormat.InPeriod(period)
-        : $"al {period.Start.Year}";
-
     /// <summary>"Da ottobre a novembre", "Da marzo ad aprile" or "Dal 2025 al 2026": the period before and this one.</summary>
     internal static string FromTo(Period period) => period.Kind == PeriodKind.Month
         ? $"Da {ItalianFormat.MonthName(period.Previous().Start.Month)} {ItalianFormat.InPeriod(period)}"

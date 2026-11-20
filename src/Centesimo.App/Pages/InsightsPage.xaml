@@ -40,7 +40,6 @@
 
                     <Label Text="{Binding Overview.Pace.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
                     <c:PaceChartView Margin="24,16,24,0" Chart="{Binding Overview.Pace}" />
-                    <Label Text="{Binding Overview.Pace.Sentence}" Style="{StaticResource Lead}" Margin="24,10,24,0" IsVisible="{Binding Overview.Pace.HasSentence}" />
 
                     <VerticalStackLayout IsVisible="{Binding Overview.HasWaterfall}">
                         <Label Text="{Binding Overview.Waterfall.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
