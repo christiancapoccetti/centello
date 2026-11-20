@@ -20,14 +20,14 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Positioning
 
-- **Fastest entry.** Logging an expense takes seconds. Today is the home screen, and quick entry turns a spoken or typed Italian phrase such as "ieri 12 euro di pizza" into a pre-filled draft constrained to the user's own categories and tags.
+- **Fastest entry.** Logging an expense takes seconds. Today is the home screen, and voice entry ("Inserimento vocale") turns a spoken Italian phrase such as "ieri 12 euro di pizza" into a pre-filled draft constrained to the user's own categories and tags.
 - **Spending awareness, not budget planning.** Centesimo shows trends, comparisons between periods and categories, and history-based insights. Category budgets exist but stay light; the app must not turn into a planning or alerting tool.
 
 ## Operating Context
 
 - Single-handed phone use, often outdoors or in a shop, right after paying.
 - Bottom navigation with four tabs: `Oggi`, `Insight`, `Categorie`, `Impostazioni`.
-- Quick entry: hold the microphone for up to 20 seconds, or type a phrase. The draft always opens in the expense editor, and nothing is saved without explicit confirmation.
+- Voice entry: hold the microphone for up to 20 seconds; typing a phrase was removed on purpose. The draft always opens in the expense editor, and nothing is saved without explicit confirmation.
 - Recurring payments create due expenses when the app opens and send Android notifications for upcoming ones.
 - One-time migration from a Money Manager `.mmbackup` file, with preview and no duplication.
 
