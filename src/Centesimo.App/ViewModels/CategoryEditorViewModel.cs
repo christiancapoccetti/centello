@@ -70,8 +70,10 @@ public sealed class CategoryEditorViewModel : ObservableObject
     public bool IsReadOnly => !_mode.CanEdit;
     public bool CanArchive => _mode.CanArchive;
     public bool IsArchived => _mode.CanRestore;
+    /// <summary>The category is not stored yet.</summary>
+    public bool IsNew => !_categoryId.HasValue;
     /// <summary>A new category has no tags to store them under yet: they wait for its first save.</summary>
-    public bool SavesTagsWithCategory => !_categoryId.HasValue;
+    public bool SavesTagsWithCategory => IsNew;
     public string Name
     {
         get => _name;
@@ -89,9 +91,9 @@ public sealed class CategoryEditorViewModel : ObservableObject
     public string PreviewName => HasName ? Name.Trim() : "Nome della categoria";
     public bool HasName => Name.HasValue();
     public string SelectedIcon { get => _selectedIcon; set => SetProperty(ref _selectedIcon, value); }
-    /// <summary>The color the category has, or will be given when it is saved. It is not chosen here: the preview only
-    /// shows it.</summary>
-    public string ColorKey { get => _colorKey; private set => SetProperty(ref _colorKey, value); }
+    /// <summary>The color the category has, or will be given when it is saved. A new category starts on the color
+    /// suggested by <see cref="CategoryService.NextColor"/>, a stored one on its own.</summary>
+    public string ColorKey { get => _colorKey; set => SetProperty(ref _colorKey, value); }
     public string Budget
     {
         get => _budget;
@@ -350,9 +352,9 @@ public sealed class CategoryEditorViewModel : ObservableObject
     }
 
     private FormState Snapshot() =>
-        new(Name.Trim(), SelectedIcon, Budget.Trim(), string.Join('\n', PendingTags), NewTagName.Trim());
+        new(Name.Trim(), SelectedIcon, ColorKey, Budget.Trim(), string.Join('\n', PendingTags), NewTagName.Trim());
 
-    private readonly record struct FormState(string Name, string Icon, string Budget, string PendingTags, string TypedTag);
+    private readonly record struct FormState(string Name, string Icon, string Color, string Budget, string PendingTags, string TypedTag);
 
     /// <summary>What the editor says and allows for a new category, a stored one and an archived one.</summary>
     private sealed record Mode(string Title, bool CanEdit, bool CanArchive, bool CanRestore)

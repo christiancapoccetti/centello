@@ -42,6 +42,11 @@
                 <c:TextField Margin="24,20,24,0" Label="Nome" Placeholder="Per esempio Ristoranti" MaxLength="40" Text="{Binding Name}" ErrorText="{Binding NameError}" IsReadOnly="{Binding IsReadOnly}" />
 
                 <VerticalStackLayout IsVisible="{Binding CanEdit}">
+                    <Label Text="Colore" Style="{StaticResource FieldLabel}" />
+                    <!-- Like the icon picker, it is wider than its pictures by the room of a ring on each side. -->
+                    <c:CategoryColorPicker Margin="19,4,19,0" SelectedKey="{Binding ColorKey}" />
+                    <Label Text="Consigliato il colore usato da meno categorie." Style="{StaticResource Caption}" Margin="24,6,24,0" IsVisible="{Binding IsNew}" />
+
                     <Label Text="Icona" Style="{StaticResource FieldLabel}" />
                     <!-- The picker is wider than its pictures by the room of a ring on each side. -->
                     <c:CategoryIconPicker Margin="19,4,19,0" SelectedKey="{Binding SelectedIcon}" ColorKey="{Binding ColorKey}" />
