@@ -29,7 +29,7 @@ public partial class TodayPage : ContentPage
         var load = _viewModel.Load();
         var availability = _settings.HasApiKey();
         await Task.WhenAll(load, availability);
-        _viewModel.IsSpeechAvailable = await availability;
+        _viewModel.IsCaptureAvailable = await availability;
     }
 
     protected override async void OnDisappearing()
@@ -39,9 +39,16 @@ public partial class TodayPage : ContentPage
             return;
 
         await _drafts.CancelListening();
-        _viewModel.IsSpeechListening = false;
-        _viewModel.IsSpeechProcessing = false;
-        _viewModel.IsSpeechSheetVisible = false;
+        _viewModel.Capture = _viewModel.Capture.Close();
+    }
+
+    protected override bool OnBackButtonPressed()
+    {
+        if (_viewModel.Capture.IsIdle)
+            return base.OnBackButtonPressed();
+
+        _viewModel.Capture = _viewModel.Capture.Close();
+        return true;
     }
 
     private async void OnPreviousTapped(object? sender, EventArgs e) =>
@@ -93,7 +100,7 @@ public partial class TodayPage : ContentPage
 
     private void OnSpeechPressed(object? sender, EventArgs e)
     {
-        if (!_viewModel.IsSpeechAvailable || _viewModel.IsSpeechProcessing)
+        if (!_viewModel.IsCaptureAvailable || !_viewModel.Capture.IsIdle)
             return;
 
         var session = ++_speechSession;
@@ -117,9 +124,7 @@ public partial class TodayPage : ContentPage
                 return result;
             }
 
-            _viewModel.SpeechErrorMessage = "";
-            _viewModel.IsSpeechListening = true;
-            _viewModel.IsSpeechProcessing = false;
+            _viewModel.Capture = _viewModel.Capture.Listen();
             return result;
         }
         catch
@@ -160,39 +165,32 @@ public partial class TodayPage : ContentPage
         try
         {
             var startResult = await start;
-            _viewModel.IsSpeechListening = false;
-            _viewModel.IsSpeechProcessing = true;
-            _viewModel.IsSpeechSheetVisible = true;
+            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Voice);
             if (startResult.IsFailure)
             {
-                _viewModel.SpeechErrorMessage = startResult.Error.Message;
+                _viewModel.Capture = _viewModel.Capture.Fail(startResult.Error);
                 return;
             }
 
-            var result = await _drafts.PrepareFromSpeech();
-            _viewModel.SpeechTranscription = _drafts.LastTranscription;
-            if (result.IsFailure)
-            {
-                _viewModel.SpeechErrorMessage = result.Error.Message;
-                return;
-            }
-
-            // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
-            _viewModel.IsSpeechSheetVisible = false;
-            _viewModel.SpeechTranscription = "";
-            await ExpenseEditorPage.OpenDraft(result.Value);
+            await Show(await _drafts.PrepareFromSpeech(), _drafts.LastTranscription);
         }
         catch
         {
-            _viewModel.SpeechErrorMessage = SpeechErrors.ProcessingFailed.Message;
+            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Voice).Fail(SpeechErrors.ProcessingFailed);
         }
-        finally
+    }
+
+    private async Task Show(Result<ExpenseDraft> draft, string heard = "")
+    {
+        if (draft.IsFailure)
         {
-            _viewModel.IsSpeechListening = false;
-            _viewModel.IsSpeechProcessing = false;
-            if (_viewModel.HasSpeechError)
-                _viewModel.IsSpeechSheetVisible = true;
+            _viewModel.Capture = _viewModel.Capture.Fail(draft.Error, heard);
+            return;
         }
+
+        // The editor is the confirmation step: the sheet only prepares a draft and never saves anything.
+        _viewModel.Capture = _viewModel.Capture.Finish();
+        await ExpenseEditorPage.OpenDraft(draft.Value);
     }
 
     // A tap is not a dictation: whatever started to record is dropped and the gesture is explained instead.
@@ -202,18 +200,12 @@ public partial class TodayPage : ContentPage
         if (started.IsSuccess)
             await _drafts.CancelListening();
 
-        _viewModel.IsSpeechListening = false;
+        _viewModel.Capture = _viewModel.Capture.Close();
         _snackbar.Show("Tieni premuto il microfono per dettare una spesa");
     }
 
-    private void OnCloseSpeechClicked(object? sender, EventArgs e)
-    {
-        _viewModel.IsSpeechListening = false;
-        _viewModel.IsSpeechProcessing = false;
-        _viewModel.IsSpeechSheetVisible = false;
-        _viewModel.SpeechTranscription = "";
-        _viewModel.SpeechErrorMessage = "";
-    }
+    private void OnCloseCaptureClicked(object? sender, EventArgs e) =>
+        _viewModel.Capture = _viewModel.Capture.Close();
 
     private async void OnInactiveSpeechClicked(object? sender, EventArgs e)
     {
