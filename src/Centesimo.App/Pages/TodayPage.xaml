@@ -182,7 +182,7 @@
             </Grid.GestureRecognizers>
             <Border Style="{StaticResource MenuSurface}" Margin="0,0,24,84" HorizontalOptions="End" VerticalOptions="End">
                 <VerticalStackLayout>
-                    <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                    <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="14" IsVisible="{Binding CanTakePhoto}">
                         <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.PhotoCamera}" />
                         <Label Grid.Column="1" Text="Scatta una foto" FontSize="16" FontFamily="{x:Static t:Fonts.SemiBold}" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
                         <Button Grid.ColumnSpan="2" Margin="-16,0" BackgroundColor="Transparent" Text="" Clicked="OnTakePhotoClicked" SemanticProperties.Description="Scatta una foto" />

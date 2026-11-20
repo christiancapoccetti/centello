@@ -25,6 +25,7 @@ public partial class TodayPage : ContentPage
         _settings = settings;
         _photos = photos;
         _snackbar = snackbar;
+        viewModel.CanTakePhoto = PhotoPicker.CanCapture;
         BindingContext = viewModel;
     }
 

@@ -18,9 +18,13 @@ public sealed class PhotoPicker
     // Wider than what ExpensePhoto accepts on purpose: a camera app may leave a HEIC original next to the JPEG copy.
     private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
 
+    // Below Android 13 MediaPicker.CapturePhotoAsync demands WRITE_EXTERNAL_STORAGE. Declaring it would make
+    // MediaPicker rotate and compress a picked gallery photo in place, so the camera is not offered there.
+    public static bool CanCapture => OperatingSystem.IsAndroidVersionAtLeast(33);
+
     public async Task<Result<byte[]?>> Capture()
     {
-        if (!MediaPicker.Default.IsCaptureSupported)
+        if (!CanCapture || !MediaPicker.Default.IsCaptureSupported)
             return Result<byte[]?>.Failure(PhotoErrors.CameraUnavailable);
 
         return await Take(() => MediaPicker.Default.CapturePhotoAsync(Options));

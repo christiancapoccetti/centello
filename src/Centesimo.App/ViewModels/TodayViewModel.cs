@@ -65,6 +65,7 @@ public sealed class TodayViewModel : ObservableObject
         }
     }
     public bool IsCaptureUnavailable => !IsCaptureAvailable;
+    public bool CanTakePhoto { get; set; }
 
     public Task Load() => LoadPeriod(_selected);
 
