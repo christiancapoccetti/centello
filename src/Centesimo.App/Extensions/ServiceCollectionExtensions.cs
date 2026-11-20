@@ -30,6 +30,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
         services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
+        services.AddSingleton<HomeScreenWidgets>();
+        services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreenWidgets>());
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
