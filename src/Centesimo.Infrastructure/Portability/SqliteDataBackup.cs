@@ -75,6 +75,12 @@ public sealed class SqliteDataBackup(CentesimoDbContext context, RecurringPaymen
             DeleteStaged(path);
             return Result<RestorePreview>.Failure(PortabilityErrors.NotABackup);
         }
+        catch (IOException)
+        {
+            // A cloud stream dropping or a full cache says nothing about the file: it must not be called damaged.
+            DeleteStaged(path);
+            return Result<RestorePreview>.Failure(PortabilityErrors.Unreadable);
+        }
         catch (Exception)
         {
             DeleteStaged(path);

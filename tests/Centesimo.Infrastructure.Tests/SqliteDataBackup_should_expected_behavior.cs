@@ -289,6 +289,21 @@ public sealed class SqliteDataBackup_should_expected_behavior : IDisposable
     }
 
     [Fact]
+    public async Task Report_an_unreadable_file_when_the_stream_fails_midway()
+    {
+        await AddExpenses(2);
+        var before = ExpenseIds();
+        var bytes = await File.ReadAllBytesAsync(await CreateBackupFile());
+        await using var stream = new FailingStream(bytes, failAfter: 4096);
+
+        var result = await Backup().Analyse(stream);
+
+        Assert.Equal(PortabilityErrors.Unreadable, result.Error);
+        Assert.Empty(Directory.GetFiles(Staging));
+        Assert.Equal(before, ExpenseIds());
+    }
+
+    [Fact]
     public async Task Refuse_a_database_without_the_mark()
     {
         var unmarked = Path.Combine(_database.Folder, "unmarked.copy");
@@ -587,5 +602,16 @@ public sealed class SqliteDataBackup_should_expected_behavior : IDisposable
         Assert.Equal("wal", Scalar<string>(_database.FilePath, "PRAGMA journal_mode"));
         Assert.Equal("ok", Scalar<string>(_database.FilePath, "PRAGMA integrity_check"));
         Assert.DoesNotContain("CentesimoBackup", Tables(_database.FilePath));
+    }
+}
+
+file sealed class FailingStream(byte[] content, int failAfter) : MemoryStream(content)
+{
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        if (Position >= failAfter)
+            throw new IOException("The connection dropped.");
+
+        return await base.ReadAsync(buffer[..Math.Min(buffer.Length, failAfter - (int)Position)], cancellationToken);
     }
 }

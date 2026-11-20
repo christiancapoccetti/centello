@@ -109,7 +109,7 @@ public sealed class RestoreViewModel(IServiceScopeFactory scopeFactory) : Observ
         }
         catch
         {
-            Reject("Non è stato possibile leggere il file.");
+            Reject(PortabilityErrors.Unreadable.Message);
         }
     }
 

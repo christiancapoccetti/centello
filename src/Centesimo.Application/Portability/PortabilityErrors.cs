@@ -22,6 +22,10 @@ public static class PortabilityErrors
         "Backup.Damaged",
         "Il file di backup è danneggiato e non può essere ripristinato.");
 
+    public static readonly Error Unreadable = new(
+        "Backup.Unreadable",
+        "Non è stato possibile leggere il file. Riprova.");
+
     public static readonly Error RestoreFailed = new(
         "Backup.RestoreFailed",
         "Non è stato possibile ripristinare il backup. I dati del telefono non sono cambiati.");
