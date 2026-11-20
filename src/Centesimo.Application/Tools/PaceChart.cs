@@ -66,11 +66,11 @@ public enum SplitVerdict
     BothMoved
 }
 
-/// <summary>"Il passo del mese": cumulative spending of this period against the previous one, split into automatic
+/// <summary>"Spesa accumulata": cumulative spending of this period against the previous one, split into automatic
 /// and variable spending. All heights are 0..1 of one scale, the largest of the spent total, the previous closing
 /// total and the budget; the App adds fixed headroom above 1 for the labels.</summary>
 public sealed record PaceChart(
-    string Title, // "Il passo del mese" or "Il passo dell'anno"
+    string Title, // "Spesa accumulata"
     IReadOnlyList<PaceSlot> Slots, // 31 for a month, 12 for a year
     PaceLine? Previous, // null when the previous period has no spending
     PaceBudget? Budget, // null without a budget
@@ -99,7 +99,7 @@ public sealed record PaceChart(
         var verdict = split.Verdict();
         var line = LineOf(spending, scale);
         return new PaceChart(
-            period.Kind == PeriodKind.Month ? "Il passo del mese" : "Il passo dell'anno",
+            "Spesa accumulata",
             BarsOf(spending, compared, scale), line, BudgetLineOf(budget, scale), GapOf(spending, compared, scale),
             AxisOf(spending, compared), KeyOf(spending, split, line is not null),
             verdict, SentenceOf(spending, split, verdict), Describe(spending, split, budget));

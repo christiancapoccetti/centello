@@ -9,13 +9,13 @@ public sealed class PaceChart_should_expected_behavior
     private static readonly DateOnly Today = new(2026, 11, 19);
 
     [Fact]
-    public async Task Should_title_a_month_and_a_year()
+    public async Task Should_title_a_month_and_a_year_the_same()
     {
         var month = await new Ledger().Pace(Period.Month(2026, 11), Today);
         var year = await new Ledger().Pace(Period.Year(2026), Today);
 
-        Assert.Equal("Il passo del mese", month.Title);
-        Assert.Equal("Il passo dell'anno", year.Title);
+        Assert.Equal("Spesa accumulata", month.Title);
+        Assert.Equal("Spesa accumulata", year.Title);
     }
 
     [Theory]

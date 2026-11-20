@@ -5,7 +5,7 @@ using Microsoft.Maui.Layouts;
 
 namespace Centesimo.App.Controls;
 
-/// <summary>"Il passo del mese": one slot per day or month on a canvas, the previous period as a dashed line, the
+/// <summary>"Spesa accumulata": one slot per day or month on a canvas, the previous period as a dashed line, the
 /// budget hairline and the gap marker. Every text is a Label over or under the canvas, because a canvas cannot show
 /// tabular figures, and the key sits below. Built in code so the label geometry stays inside the control. It reads
 /// fractions, slot indices and finished strings only.</summary>
