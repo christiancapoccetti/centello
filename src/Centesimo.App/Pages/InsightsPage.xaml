@@ -44,7 +44,6 @@
                     <VerticalStackLayout IsVisible="{Binding Overview.HasWaterfall}">
                         <Label Text="{Binding Overview.Waterfall.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
                         <c:WaterfallChartView Margin="24,16,24,0" Chart="{Binding Overview.Waterfall}" />
-                        <Label Text="{Binding Overview.Waterfall.Sentence}" Style="{StaticResource Lead}" Margin="24,12,24,0" />
                     </VerticalStackLayout>
 
                     <Label Text="Da tenere d'occhio" Style="{StaticResource SectionTitle}" Margin="24,22,24,1" IsVisible="{Binding HasInsights}" SemanticProperties.HeadingLevel="Level2" />

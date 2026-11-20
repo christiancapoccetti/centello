@@ -1,5 +1,6 @@
 using Centesimo.App.Theming;
 using Centesimo.Application;
+using Centesimo.Domain;
 
 namespace Centesimo.App.Controls;
 
@@ -24,6 +25,7 @@ public sealed class WaterfallChartView : ContentView
     private readonly WaterfallCanvas _canvas = new();
     private readonly Grid _values = new() { ColumnSpacing = Gap };
     private readonly Grid _foot = new() { ColumnSpacing = Gap, Margin = new Thickness(0, FootGap, 0, 0) };
+    private readonly Label _scale = CreateScaleLabel();
 
     public WaterfallChartView()
     {
@@ -32,7 +34,8 @@ public sealed class WaterfallChartView : ContentView
             Children =
             {
                 new Grid { HeightRequest = LabelRise + PlotHeight, Children = { _canvas, _values } },
-                _foot
+                _foot,
+                _scale
             }
         };
         Apply();
@@ -42,6 +45,20 @@ public sealed class WaterfallChartView : ContentView
     {
         get => (WaterfallChart?)GetValue(ChartProperty);
         set => SetValue(ChartProperty, value);
+    }
+
+    private static Label CreateScaleLabel()
+    {
+        var label = new Label
+        {
+            FontFamily = Fonts.Regular,
+            FontSize = 12,
+            HorizontalOptions = LayoutOptions.Start,
+            Margin = new Thickness(0, FootGap, 0, 0)
+        };
+        label.SetThemeColor(Label.TextColorProperty, ThemeColor.Mute);
+        AutomationProperties.SetIsInAccessibleTree(label, false);
+        return label;
     }
 
     private static float PlotY(double level) => (float)(LabelRise + PlotHeight * (1 - level));
@@ -64,6 +81,8 @@ public sealed class WaterfallChartView : ContentView
         var chart = Chart;
         IsVisible = chart is not null;
         _canvas.Chart = chart;
+        _scale.Text = chart?.ScaleLabel ?? "";
+        _scale.IsVisible = _scale.Text.HasValue();
         _canvas.Invalidate();
         SemanticProperties.SetDescription(_canvas, chart?.Description);
         Rebuild(chart);

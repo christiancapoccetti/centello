@@ -261,131 +261,20 @@ public sealed class WaterfallChart_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_name_one_category_that_explains_all_of_the_change()
-    {
-        var chart = await Chart(new Line("Svago", 10_000, 30_000));
-
-        Assert.Equal("Svago spiega tutto l'aumento.", chart.Sentence);
-    }
-
-    [Theory]
-    [MemberData(nameof(DriverCases))]
-    public async Task Should_word_each_driver_case(Line[] lines, string sentence)
-    {
-        var chart = await Chart(lines);
-
-        Assert.Equal(sentence, chart.Sentence);
-    }
-
-    public static TheoryData<Line[], string> DriverCases() => new()
-    {
-        { [new Line("A", 50_000, 20_000), new Line("B", 10_000, 6_000)], "A spiega quasi tutto il calo." },
-        { [new Line("A", 10_000, 30_000), new Line("B", 10_000, 16_000)], "A spiega quasi tutto l'aumento." },
-        { [new Line("A", 40_000, 20_000), new Line("B", 40_000, 30_000)], "A e B spiegano tutto il calo." },
-        {
-            [new Line("A", 40_000, 20_000), new Line("B", 40_000, 20_000), new Line("C", 15_000, 5_000)],
-            "A e B spiegano quasi tutto il calo."
-        },
-        {
-            [
-                new Line("A", 15_000, 5_000), new Line("B", 14_000, 5_000), new Line("C", 13_000, 5_000),
-                new Line("D", 12_000, 5_000)
-            ],
-            "Il calo viene da più categorie, soprattutto da A."
-        },
-        {
-            [
-                new Line("A", 5_000, 15_000), new Line("B", 5_000, 14_000), new Line("C", 5_000, 13_000),
-                new Line("D", 5_000, 12_000)
-            ],
-            "L'aumento viene da più categorie, soprattutto da A."
-        },
-        { [new Line("A", 50_000, 20_000), new Line("B", 10_000, 15_000)], "A spiega tutto il calo; B va nella direzione opposta." },
-        {
-            [new Line("Spesa", 10_000, 6_000), new Line("Archiviata", 50_000, 20_000, Standing.Archived)],
-            "Altre categorie spiegano quasi tutto il calo."
-        },
-        {
-            [new Line("A", 50_000, 20_000), new Line("Archiviata", 10_000, 30_000, Standing.Archived)],
-            "A spiega tutto il calo; Altre categorie vanno nella direzione opposta."
-        }
-    };
-
-    [Fact]
-    public async Task Should_name_what_explains_the_change()
+    public async Task Should_label_the_scale_floor_of_the_mockup()
     {
         var chart = (await InsightFixtures.November().Overview()).Waterfall!;
 
-        Assert.Equal(
-            $"Trasporti e Svago spiegano quasi tutto il calo; Ristoranti va nella direzione opposta. Casa è invariata. La scala parte da 1.150{Nbsp}€.",
-            chart.Sentence);
+        Assert.Equal($"Scala da 1.150{Nbsp}€", chart.ScaleLabel);
     }
 
     [Fact]
-    public async Task Should_say_the_total_held_when_steps_cancel_out()
+    public async Task Should_leave_the_scale_out_of_a_chart_that_starts_at_zero()
     {
-        var lines = new[] { new Line("A", 50_000, 20_000), new Line("B", 10_000, 40_000) };
+        var chart = await Chart(new Line("Spesa", 200_000, 100_000));
 
-        var month = await Chart(lines);
-        var year = (await Overview(lines, Period.Year(2026))).Waterfall!;
-
-        Assert.Equal("Il totale è in linea con ottobre: A e B si compensano.", month.Sentence);
-        Assert.Equal("Il totale è in linea con il 2025: A e B si compensano.", year.Sentence);
-    }
-
-    [Theory]
-    [InlineData(40_049, "Il totale è in linea con ottobre: A e B si compensano.")]
-    [InlineData(40_050, "B spiega tutto l'aumento; A va nella direzione opposta.")]
-    [InlineData(39_951, "Il totale è in linea con ottobre: A e B si compensano.")]
-    [InlineData(39_950, "A spiega tutto il calo; B va nella direzione opposta.")]
-    public async Task Should_say_the_total_held_when_the_net_change_rounds_to_zero_euros(long current, string sentence)
-    {
-        var chart = await Chart(new Line("A", 50_000, 20_000), new Line("B", 10_000, current));
-
-        Assert.Equal(sentence, chart.Sentence);
-    }
-
-    [Fact]
-    public async Task Should_say_the_total_held_without_naming_a_pair_when_the_other_side_is_a_residual_under_one_euro()
-    {
-        var chart = await Chart(new Line("A", 10_000, 10_100), new Line("Archiviata", 5_060, 5_000, Standing.Archived));
-
-        Assert.Equal(["Altre categorie", "A"], chart.Steps.Select(step => step.Name));
-        Assert.StartsWith("Il totale è in linea con ottobre. ", chart.Sentence);
-    }
-
-    [Theory]
-    [InlineData(5_099, "A spiega tutto il calo.")]
-    [InlineData(5_100, "A spiega tutto il calo; Altre categorie vanno nella direzione opposta.")]
-    public async Task Should_name_the_fold_as_the_opposite_only_from_one_euro(long current, string sentence)
-    {
-        var chart = await Chart(new Line("A", 50_000, 20_000), new Line("Archiviata", 5_000, current, Standing.Archived));
-
-        Assert.Equal(sentence, chart.Sentence);
-    }
-
-    [Theory]
-    [InlineData(5_099, "A spiega tutto il calo. ")]
-    [InlineData(5_100, "A e Altre categorie spiegano tutto il calo. ")]
-    public async Task Should_name_the_fold_as_a_driver_only_from_one_euro(long previous, string lead)
-    {
-        var chart = await Chart(new Line("A", 10_000, 9_900), new Line("Archiviata", previous, 5_000, Standing.Archived));
-
-        Assert.StartsWith(lead, chart.Sentence);
-    }
-
-    [Theory]
-    [InlineData("Casa", "A spiega tutto il calo. Casa è invariata.")]
-    [InlineData("Casa,Bollette", "A spiega tutto il calo. Bollette e Casa sono invariate.")]
-    [InlineData("Casa,Bollette,Auto", "A spiega tutto il calo. 3 categorie sono invariate.")]
-    [InlineData("Casa,Bollette,Auto,Sport,Cibo", "A spiega tutto il calo. 5 categorie sono invariate.")]
-    public async Task Should_name_the_unchanged_categories(string names, string sentence)
-    {
-        var unchanged = names.Split(',').Select(name => new Line(name, 5_000, 5_000));
-
-        var chart = await Chart([new Line("A", 50_000, 20_000), .. unchanged]);
-
-        Assert.Equal(sentence, chart.Sentence);
+        Assert.Equal("", chart.ScaleLabel);
+        Assert.DoesNotContain("scala", chart.Description);
     }
 
     [Fact]
@@ -394,7 +283,7 @@ public sealed class WaterfallChart_should_expected_behavior
         var chart = (await InsightFixtures.November().Overview()).Waterfall!;
 
         Assert.Equal(
-            $"Da ottobre a novembre, da 1.367{Nbsp}€ a 1.285{Nbsp}€: Trasporti meno 60{Nbsp}€, Svago meno 46{Nbsp}€, Salute meno 27{Nbsp}€, Altro più 5{Nbsp}€, Spesa più 13{Nbsp}€, Ristoranti più 33{Nbsp}€.",
+            $"Da ottobre a novembre, da 1.367{Nbsp}€ a 1.285{Nbsp}€: Trasporti meno 60{Nbsp}€, Svago meno 46{Nbsp}€, Salute meno 27{Nbsp}€, Altro più 5{Nbsp}€, Spesa più 13{Nbsp}€, Ristoranti più 33{Nbsp}€. La scala parte da 1.150{Nbsp}€.",
             chart.Description);
     }
 
@@ -405,7 +294,7 @@ public sealed class WaterfallChart_should_expected_behavior
 
         var chart = (await Overview(lines, Period.Year(2026))).Waterfall!;
 
-        Assert.Equal($"Dal 2025 al 2026, da 150{Nbsp}€ a 200{Nbsp}€: Altre categorie 0{Nbsp}€, A più 50{Nbsp}€.", chart.Description);
+        Assert.Equal($"Dal 2025 al 2026, da 150{Nbsp}€ a 200{Nbsp}€: Altre categorie 0{Nbsp}€, A più 50{Nbsp}€. La scala parte da 120{Nbsp}€.", chart.Description);
     }
 
     [Fact]
@@ -430,7 +319,6 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.Equal(1.0, chart.Start.Level);
         Assert.Equal((1.0, 0.5), (chart.Steps[0].From, chart.Steps[0].To));
         Assert.Equal(0.5, chart.End.Level);
-        Assert.Equal("Spesa spiega tutto il calo.", chart.Sentence);
     }
 
     [Theory]
@@ -443,7 +331,7 @@ public sealed class WaterfallChart_should_expected_behavior
 
         Assert.Equal(isCut, chart.IsCut);
         Assert.Equal(endLevel, chart.End.Level, 12);
-        Assert.Equal(isCut, chart.Sentence.EndsWith($" La scala parte da 150{Nbsp}€."));
+        Assert.Equal(isCut ? $"Scala da 150{Nbsp}€" : "", chart.ScaleLabel);
     }
 
     [Theory]
@@ -458,7 +346,7 @@ public sealed class WaterfallChart_should_expected_behavior
         Assert.True(chart.IsCut);
         Assert.Equal(1.0, chart.Start.Level);
         Assert.Equal((double)(current - floor) / (previous - floor), chart.End.Level, 12);
-        Assert.EndsWith($" La scala parte da {floor / 100}{Nbsp}€.", chart.Sentence);
+        Assert.Equal($"Scala da {floor / 100}{Nbsp}€", chart.ScaleLabel);
     }
 
     private static Line[] MessyMonth() =>

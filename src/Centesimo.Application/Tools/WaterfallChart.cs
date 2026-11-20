@@ -22,19 +22,18 @@ public sealed record WaterfallStep(string Name, string IconKey, string ColorKey,
 /// <summary>"Da ottobre a novembre": from the compared total to the current one, one step per category that changed.
 /// Start.Cents + Σ Steps.DeltaCents == End.Cents, and Start.Value + Σ Steps.Value == End.Value in whole euros. Steps
 /// is never empty, and falls come first. IsCut says the scale starts above zero, so the end columns are drawn cut at
-/// the foot. Sentence says what explains the change, then where the scale starts when cut.</summary>
+/// the foot.</summary>
 public sealed record WaterfallChart(
     string Title, // "Da ottobre a novembre" or "Dal 2025 al 2026"
     WaterfallTotal Start,
     IReadOnlyList<WaterfallStep> Steps,
     WaterfallTotal End,
     bool IsCut,
-    string Sentence,
+    string ScaleLabel, // "Scala da 1.150 €" when IsCut, otherwise empty
     string Description) // screen-reader text alternative
 {
     private const int MaxSteps = 6;
     private const long OneEuro = 100;
-    private const long DriverPercent = 75;
     private const string FoldName = "Altre categorie";
     private const char Minus = '−';
     private const char Nbsp = '\u00A0';
@@ -60,21 +59,19 @@ public sealed record WaterfallChart(
                 scale.Level(levels[index]), scale.Level(levels[index + 1]), Label(shifts[index])))
             .ToList();
         var title = InsightTexts.FromTo(period);
-        return new WaterfallChart(title, start, steps, end, scale.IsCut, Say(spending, changes, scale),
-            Describe(title, start, end, changes, shifts));
+        var scaleLabel = scale.IsCut ? $"Scala da {scale.FloorText}" : "";
+        return new WaterfallChart(title, start, steps, end, scale.IsCut, scaleLabel,
+            Describe(title, start, end, changes, shifts, scale));
     }
 
-    /// <summary>What a column of the chart changes by: a category, or the rest folded into one. The fold is named in
-    /// the plural, so the sentence agrees with it.</summary>
-    private sealed record Change(string Name, string IconKey, string ColorKey, long Delta, bool IsFold = false)
+    /// <summary>What a column of the chart changes by: a category, or the rest folded into one.</summary>
+    private sealed record Change(string Name, string IconKey, string ColorKey, long Delta)
     {
         public static Change Of(CategorySpend spend) => new(spend.Category.Name,
             CategoryIcons.Resolve(spend.Category.Icon).Key, CategoryPalette.Resolve(spend.Category.Color).Key, spend.Delta);
 
         public static Change Fold(long delta) =>
-            new(FoldName, CategoryIcons.Fallback.Key, CategoryPalette.Fallback.Key, delta, true);
-
-        public bool IsNamed => !IsFold || Math.Abs(Delta) >= OneEuro;
+            new(FoldName, CategoryIcons.Fallback.Key, CategoryPalette.Fallback.Key, delta);
     }
 
     /// <summary>The changes of at least 1 € and the residual that closes the total, falls first then by name. Empty when
@@ -119,103 +116,6 @@ public sealed record WaterfallChart(
         return levels;
     }
 
-    /// <summary>What explains the change, which categories did not change and, when the plot is cut, where it starts.</summary>
-    private static string Say(SpendComparison spending, IReadOnlyList<Change> changes, Scale scale) => string.Join(" ",
-        new[]
-        {
-            Explanation(spending.Period, changes, spending.Spent - spending.Compared),
-            Unchanged(spending.Categories),
-            scale.IsCut ? $"La scala parte da {ItalianFormat.Budget(scale.Floor)}{Nbsp}€." : ""
-        }.Where(part => part.HasValue()));
-
-    /// <summary>Names what explains the change: the fewest categories that make up 75 % of everything that went the way
-    /// of the net change, then the largest one that went the other way. A net change under 0,50 € is a total that held.</summary>
-    private static string Explanation(Period period, IReadOnlyList<Change> changes, long net)
-    {
-        if (Euros(Math.Abs(net)) == 0)
-            return Held(period, changes);
-
-        var movers = Ranked(changes, Math.Sign(net));
-        var drivers = Drivers(movers);
-        var lead = Lead(drivers, drivers.Count == movers.Count, net < 0);
-        if (Ranked(changes, -Math.Sign(net)).FirstOrDefault() is not { } opposite)
-            return $"{lead}.";
-
-        return $"{lead}; {opposite.Name} {Agree(opposite, "va", "vanno")} nella direzione opposta.";
-    }
-
-    /// <summary>"Il totale è in linea con ottobre: A e B si compensano." The pair is the largest fall and the largest
-    /// rise, and is left out when everything went one way, as when only the fold moved.</summary>
-    private static string Held(Period period, IReadOnlyList<Change> changes)
-    {
-        var held = $"Il totale è in linea con {With(period.Previous())}";
-        if (Ranked(changes, -1).FirstOrDefault() is not { } fall || Ranked(changes, 1).FirstOrDefault() is not { } rise)
-            return $"{held}.";
-
-        return $"{held}: {fall.Name} e {rise.Name} si compensano.";
-    }
-
-    /// <summary>"ottobre" or "il 2025".</summary>
-    private static string With(Period previous) => previous.Kind == PeriodKind.Month
-        ? ItalianFormat.MonthName(previous.Start.Month)
-        : $"il {previous.Start.Year}";
-
-    /// <summary>Categories that spent the same in both windows, down to the cent. A category that moved by less than
-    /// 1 € is in the fold, not here.</summary>
-    private static string Unchanged(IReadOnlyList<CategorySpend> categories)
-    {
-        var names = categories
-            .Where(spend => spend.Delta == 0 && spend.Spent > 0)
-            .Select(spend => spend.Category.Name)
-            .Order()
-            .ToList();
-        return names.Count switch
-        {
-            0 => "",
-            1 => $"{names[0]} è invariata.",
-            2 => $"{names[0]} e {names[1]} sono invariate.",
-            _ => $"{names.Count} categorie sono invariate."
-        };
-    }
-
-    /// <summary>The changes that went <paramref name="direction"/> (-1 a fall, 1 a rise), largest first. The sentence
-    /// never names a fold under 1 €, which stays on the chart as a column only.</summary>
-    private static List<Change> Ranked(IReadOnlyList<Change> changes, int direction) => changes
-        .Where(change => change.IsNamed && Math.Sign(change.Delta) == direction)
-        .OrderByDescending(change => Math.Abs(change.Delta))
-        .ThenBy(change => change.Name)
-        .ToList();
-
-    private static List<Change> Drivers(IReadOnlyList<Change> movers)
-    {
-        var gross = movers.Sum(change => Math.Abs(change.Delta));
-        var drivers = new List<Change>();
-        var covered = 0L;
-        foreach (var mover in movers)
-        {
-            drivers.Add(mover);
-            covered += Math.Abs(mover.Delta);
-            if (covered * 100 >= gross * DriverPercent)
-                break;
-        }
-
-        return drivers;
-    }
-
-    private static string Lead(IReadOnlyList<Change> drivers, bool isAll, bool isFall)
-    {
-        var word = isFall ? "il calo" : "l'aumento";
-        if (drivers.Count > 2)
-            return $"{char.ToUpperInvariant(word[0])}{word[1..]} viene da più categorie, soprattutto da {drivers[0].Name}";
-
-        var how = isAll ? "tutto" : "quasi tutto";
-        return drivers.Count == 1
-            ? $"{drivers[0].Name} {Agree(drivers[0], "spiega", "spiegano")} {how} {word}"
-            : $"{drivers[0].Name} e {drivers[1].Name} spiegano {how} {word}";
-    }
-
-    private static string Agree(Change change, string singular, string plural) => change.IsFold ? plural : singular;
-
     /// <summary>Where the plot starts and ends, in cents. It cuts only when the change is small against the totals: the
     /// spread of the levels is at most a third of the highest one. Then it starts at a round number below the lowest
     /// level, with half the spread as margin so the label under the lowest fall fits. Otherwise it starts at zero.</summary>
@@ -224,6 +124,8 @@ public sealed record WaterfallChart(
         private static readonly long[] NiceMultiples = [1, 2, 5];
 
         public bool IsCut => Floor > 0;
+
+        public string FloorText => $"{ItalianFormat.Budget(Floor)}{Nbsp}€";
 
         public static Scale Of(IReadOnlyList<long> levels)
         {
@@ -266,13 +168,14 @@ public sealed record WaterfallChart(
         return euros > 0 ? $"+{ItalianFormat.Count(euros)}" : $"{Minus}{ItalianFormat.Count(-euros)}";
     }
 
-    /// <summary>"Da ottobre a novembre, da 1.367 € a 1.285 €: Trasporti meno 60 €, Altro più 5 €." It follows the labels
-    /// on the chart, euro for euro.</summary>
+    /// <summary>"Da ottobre a novembre, da 1.367 € a 1.285 €: Trasporti meno 60 €, Altro più 5 €. La scala parte da
+    /// 1.150 €." It follows the labels on the chart, euro for euro, and names the floor when the chart is cut.</summary>
     private static string Describe(string title, WaterfallTotal start, WaterfallTotal end, IReadOnlyList<Change> changes,
-        IReadOnlyList<long> shifts)
+        IReadOnlyList<long> shifts, Scale scale)
     {
         var parts = changes.Select((change, index) => $"{change.Name} {Spoken(shifts[index])}");
-        return $"{title}, da {start.Value}{Nbsp}€ a {end.Value}{Nbsp}€: {string.Join(", ", parts)}.";
+        var floor = scale.IsCut ? $" La scala parte da {scale.FloorText}." : "";
+        return $"{title}, da {start.Value}{Nbsp}€ a {end.Value}{Nbsp}€: {string.Join(", ", parts)}.{floor}";
     }
 
     private static string Spoken(long euros) => euros switch
