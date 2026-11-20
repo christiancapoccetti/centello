@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        android:background="@drawable/widget_surface"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp">
+        <LinearLayout
+            android:id="@+id/slot_1"
+            style="@style/Widget.Centesimo.Slot">
+            <FrameLayout style="@style/Widget.Centesimo.TileBox">
+                <ImageView
+                    android:id="@+id/tile_1_day"
+                    style="@style/Widget.Centesimo.DayTile" />
+                <ImageView
+                    android:id="@+id/tile_1_night"
+                    style="@style/Widget.Centesimo.NightTile" />
+            </FrameLayout>
+            <ImageView
+                android:id="@+id/name_1"
+                style="@style/Widget.Centesimo.SlotName"
+                android:tint="@color/theme_ink" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/slot_2"
+            style="@style/Widget.Centesimo.Slot">
+            <FrameLayout style="@style/Widget.Centesimo.TileBox">
+                <ImageView
+                    android:id="@+id/tile_2_day"
+                    style="@style/Widget.Centesimo.DayTile" />
+                <ImageView
+                    android:id="@+id/tile_2_night"
+                    style="@style/Widget.Centesimo.NightTile" />
+            </FrameLayout>
+            <ImageView
+                android:id="@+id/name_2"
+                style="@style/Widget.Centesimo.SlotName"
+                android:tint="@color/theme_ink" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/slot_3"
+            style="@style/Widget.Centesimo.Slot">
+            <FrameLayout style="@style/Widget.Centesimo.TileBox">
+                <ImageView
+                    android:id="@+id/tile_3_day"
+                    style="@style/Widget.Centesimo.DayTile" />
+                <ImageView
+                    android:id="@+id/tile_3_night"
+                    style="@style/Widget.Centesimo.NightTile" />
+            </FrameLayout>
+            <ImageView
+                android:id="@+id/name_3"
+                style="@style/Widget.Centesimo.SlotName"
+                android:tint="@color/theme_ink" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/slot_4"
+            style="@style/Widget.Centesimo.Slot">
+            <FrameLayout style="@style/Widget.Centesimo.TileBox">
+                <ImageView
+                    android:id="@+id/tile_4_day"
+                    style="@style/Widget.Centesimo.DayTile" />
+                <ImageView
+                    android:id="@+id/tile_4_night"
+                    style="@style/Widget.Centesimo.NightTile" />
+            </FrameLayout>
+            <ImageView
+                android:id="@+id/name_4"
+                style="@style/Widget.Centesimo.SlotName"
+                android:tint="@color/theme_ink" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/slot_other"
+            style="@style/Widget.Centesimo.Slot"
+            android:contentDescription="@string/widget_other_category_description">
+            <FrameLayout
+                style="@style/Widget.Centesimo.TileBox"
+                android:background="@drawable/widget_tile_plus">
+                <ImageView
+                    android:id="@+id/other_plus"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:tint="@color/theme_accent" />
+            </FrameLayout>
+            <ImageView
+                android:id="@+id/other_name"
+                style="@style/Widget.Centesimo.SlotName"
+                android:tint="@color/theme_mute" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

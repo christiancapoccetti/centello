@@ -19,6 +19,7 @@ public sealed class HomeScreenWidgets : IStoreChangeListener
     internal static readonly WidgetSpec[] Widgets =
     [
         new(typeof(AddWidget), AddWidget.Render),
+        new(typeof(ShortcutsWidget), ShortcutsWidget.Render),
         new(typeof(MonthWidget), MonthWidget.Render)
     ];
 
