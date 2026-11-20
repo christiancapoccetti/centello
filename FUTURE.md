@@ -28,6 +28,11 @@ Items are not commitments and will be prioritized after the core manual expense 
 - Restore data and attachments from a backup.
 - Optional encrypted backup files.
 
+## Home screen widgets
+
+- Quick-entry widget: add an expense by hand or by voice without opening the app first.
+- Summary widget: month total, remaining budget and the comparison with the previous period.
+
 ## Insights
 
 - Configurable budget alerts.
