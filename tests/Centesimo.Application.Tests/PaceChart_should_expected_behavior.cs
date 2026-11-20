@@ -510,6 +510,10 @@ public sealed class PaceChart_should_expected_behavior
         "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
     [InlineData(1_299, 50_000, 1_199, 91_000, SplitVerdict.OnlyVariableMoved,
         "Le automatiche sono uguali a ottobre: tutto il calo viene dalle spese variabili.")]
+    [InlineData(40_500, 50_000, 40_000, 50_300, SplitVerdict.BothMoved,
+        "Le automatiche sono 5 € più alte di ottobre, le variabili 3 € più basse.")]
+    [InlineData(40_000, 50_300, 40_500, 50_000, SplitVerdict.BothMoved,
+        "Le automatiche sono 5 € più basse di ottobre, le variabili 3 € più alte.")]
     [InlineData(1_300, 90_000, 1_199, 90_000, SplitVerdict.OnlyAutomaticMoved,
         "Le automatiche sono 1 € più alte di ottobre; le variabili sono uguali.")]
     [InlineData(38_000, 90_000, 38_000, 90_000, SplitVerdict.BothSame,

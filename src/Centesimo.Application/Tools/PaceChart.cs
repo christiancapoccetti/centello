@@ -309,11 +309,15 @@ internal sealed record PaceSplit(long Automatic, long Variable, long ComparedAut
         return (AutomaticMoved(), Math.Abs(VariableDelta) >= PaceChart.HalfEuro) switch
         {
             (false, false) => SplitVerdict.BothSame,
-            (false, true) => SplitVerdict.OnlyVariableMoved,
+            (false, true) => VariableDrivesTotal() ? SplitVerdict.OnlyVariableMoved : SplitVerdict.BothMoved,
             (true, false) => SplitVerdict.OnlyAutomaticMoved,
             _ => SplitVerdict.BothMoved
         };
     }
+
+    /// <summary>An automatic drift inside the tolerance can still flip the total, and the sentence would then name the
+    /// wrong direction.</summary>
+    private bool VariableDrivesTotal() => Math.Sign(VariableDelta) == Math.Sign(AutomaticDelta + VariableDelta);
 
     private bool AutomaticMoved()
     {
