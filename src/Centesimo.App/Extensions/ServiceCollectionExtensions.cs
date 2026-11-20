@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LicensesViewModel>();
         services.AddTransient<LicensesPage>();
         services.AddSingleton<RecurringPaymentAutomation>();
+        services.AddSingleton<AppEntryRouter>();
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();

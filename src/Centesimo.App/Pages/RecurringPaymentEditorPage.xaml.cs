@@ -3,7 +3,7 @@ using Centesimo.App.ViewModels;
 
 namespace Centesimo.App.Pages;
 
-public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributable
+public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributable, IHoldsUnsavedInput
 {
     private readonly RecurringPaymentEditorViewModel _viewModel;
     private readonly IConfirmation _confirmation;
@@ -22,6 +22,8 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
         viewModel.Saved += OnSaved;
         viewModel.Rejected += OnRejected;
     }
+
+    public bool HasUnsavedInput => _viewModel.IsDirty;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) =>
         _paymentId = query.TryGetValue("paymentId", out var value) &&

@@ -3,7 +3,7 @@ using Centesimo.App.ViewModels;
 
 namespace Centesimo.App.Pages;
 
-public partial class CategoryEditorPage : ContentPage, IQueryAttributable
+public partial class CategoryEditorPage : ContentPage, IQueryAttributable, IHoldsUnsavedInput
 {
     private readonly CategoryEditorViewModel _viewModel;
     private readonly IConfirmation _confirmation;
@@ -26,6 +26,8 @@ public partial class CategoryEditorPage : ContentPage, IQueryAttributable
     public static string Route(Guid? categoryId = null) => categoryId.HasValue
         ? $"{nameof(CategoryEditorPage)}?categoryId={categoryId}"
         : nameof(CategoryEditorPage);
+
+    public bool HasUnsavedInput => _viewModel.IsDirty;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) =>
         _categoryId = query.TryGetValue("categoryId", out var value) && Guid.TryParse(value?.ToString(), out var id)

@@ -4,7 +4,7 @@ using Centesimo.Domain;
 
 namespace Centesimo.App.Pages;
 
-public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
+public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHoldsUnsavedInput
 {
     private readonly ExpenseEditorViewModel _viewModel;
     private readonly IConfirmation _confirmation;
@@ -48,6 +48,8 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
             ? nameof(ExpenseEditorPage)
             : $"{nameof(ExpenseEditorPage)}?{string.Join('&', query)}";
     }
+
+    public bool HasUnsavedInput => _viewModel.IsDirty;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
