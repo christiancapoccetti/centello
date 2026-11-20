@@ -8,8 +8,8 @@
              Title="{Binding Detail.Name}"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
-             SafeAreaEdges="All">
-    <Grid RowDefinitions="56,48,*">
+             Style="{StaticResource EdgeToEdgePage}">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,48,*">
         <Grid Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Detail.Name}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
@@ -85,7 +85,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
             <CollectionView.Footer>
-                <BoxView HeightRequest="24" Color="Transparent" />
+                <c:ListEnd />
             </CollectionView.Footer>
         </CollectionView>
     </Grid>

@@ -415,6 +415,9 @@ Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action th
 ### Navigation
 Shell tab bar on the ground with no navigation bar above pages; selected tab and title in ink, unselected in mute. The period switcher (month, year, arrows) is the top of the home and Insight.
 
+### Edge-to-edge lists
+A pushed list page (Spese, a category's page, Pagamenti regolari, Licenze, Importa) draws under the transparent navigation bar: its list scrolls behind the gesture handle and ends above it, never on a hard line. The page takes only the top and side insets (`EdgeToEdgePage`, root grid `EdgeToEdgeRoot`); the bottom inset is taken by the scrolling content, as `ListScroll` on a scroll view and the `ListEnd` footer on a collection, and by what floats over the list, such as the Nuovo pagamento button.
+
 ### Category tile (signature)
 The only place a category's icon and colour become pixels: a square (0 radius) tile in the category's palette ink, with a filled Material Symbols Rounded glyph in tile ink at 58% of the tile size. 36dp in rows and the picker, 24dp inside chips. The catalog holds 31 icons plus the "Altro" fallback; unknown keys fall back to "more" and grey.
 

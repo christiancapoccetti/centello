@@ -8,7 +8,7 @@
              Title="Importa da Money Manager"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
-             SafeAreaEdges="All">
+             Style="{StaticResource EdgeToEdgePage}">
     <ContentPage.Resources>
         <!-- A count over its name. The number is a condensed display face, so it reads before the label does. -->
         <Style x:Key="Count" TargetType="Label" BasedOn="{StaticResource BaseText}">
@@ -17,13 +17,13 @@
             <Setter Property="Margin" Value="0,-3,0,0" />
         </Style>
     </ContentPage.Resources>
-    <Grid RowDefinitions="56,*">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,*">
         <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" IsEnabled="{Binding CanLeave}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="Importa da Money Manager" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" Style="{StaticResource ListScroll}">
             <VerticalStackLayout Padding="0,0,0,24">
                 <Label Text="Importa categorie, spese e pagamenti regolari da un backup .mmbackup. I dati restano sul telefono." Style="{StaticResource Lead}" Margin="24,1,24,0" />
 

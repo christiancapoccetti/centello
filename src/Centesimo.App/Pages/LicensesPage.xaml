@@ -8,14 +8,14 @@
              Title="Licenze"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
-             SafeAreaEdges="All">
-    <Grid RowDefinitions="56,*">
+             Style="{StaticResource EdgeToEdgePage}">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,*">
         <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="Licenze" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" Style="{StaticResource ListScroll}">
             <VerticalStackLayout Padding="0,0,0,24">
                 <VerticalStackLayout Margin="24,8,24,12">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">

@@ -9,7 +9,7 @@
              Title="Pagamenti regolari"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
-             SafeAreaEdges="All">
+             Style="{StaticResource EdgeToEdgePage}">
     <ContentPage.Resources>
         <!-- One row for every section: what the payment is, what it does and how much. A tap opens it in the editor. -->
         <DataTemplate x:Key="PaymentRow">
@@ -34,7 +34,7 @@
             </Grid>
         </DataTemplate>
     </ContentPage.Resources>
-    <Grid RowDefinitions="56,*">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,*">
         <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="Pagamenti regolari" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
@@ -42,7 +42,7 @@
 
         <c:InlineError Grid.Row="1" Margin="24,8" VerticalOptions="Start" Text="{Binding ErrorMessage}" />
 
-        <ScrollView Grid.Row="1" IsVisible="{Binding HasPayments}">
+        <ScrollView Grid.Row="1" Style="{StaticResource ListScroll}" IsVisible="{Binding HasPayments}">
             <!-- The last 88 keep the last row clear of the button that floats over the list. -->
             <VerticalStackLayout Padding="0,0,0,88">
                 <Label Text="Creano la spesa da soli alla scadenza." Style="{StaticResource Lead}" Margin="24,1,24,3" />
@@ -74,6 +74,9 @@
             <Label Text="Affitto, abbonamenti, bollette: aggiungili una volta e la spesa si crea da sola alla scadenza." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
 
-        <Button Grid.Row="1" Text="Nuovo pagamento" Style="{StaticResource ExtendedFab}" Margin="0,0,16,16" HorizontalOptions="End" VerticalOptions="End" Clicked="OnAddClicked" local:SnackbarAnchor.IsAnchor="True" />
+        <!-- The button floats above the navigation bar: the bar's room is taken here, since the page leaves it alone. -->
+        <Grid Grid.Row="1" SafeAreaEdges="None,None,None,Container" InputTransparent="True" CascadeInputTransparent="False">
+            <Button Text="Nuovo pagamento" Style="{StaticResource ExtendedFab}" Margin="0,0,16,16" HorizontalOptions="End" VerticalOptions="End" Clicked="OnAddClicked" local:SnackbarAnchor.IsAnchor="True" />
+        </Grid>
     </Grid>
 </ContentPage>
