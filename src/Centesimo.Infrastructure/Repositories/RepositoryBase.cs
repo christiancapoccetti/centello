@@ -54,6 +54,10 @@ public abstract class RepositoryBase
         {
             return Result.Failure(InfrastructureErrors.Unexpected);
         }
+        finally
+        {
+            Context.ChangeTracker.Clear();
+        }
     }
 
     protected async Task<Result> SaveContext(
@@ -77,6 +81,10 @@ public abstract class RepositoryBase
         catch (Exception)
         {
             return Result.Failure(InfrastructureErrors.Unexpected);
+        }
+        finally
+        {
+            Context.ChangeTracker.Clear();
         }
     }
 
@@ -104,6 +112,10 @@ public abstract class RepositoryBase
         catch (Exception)
         {
             return Result<TValue>.Failure(InfrastructureErrors.Unexpected);
+        }
+        finally
+        {
+            Context.ChangeTracker.Clear();
         }
     }
 }
