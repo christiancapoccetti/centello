@@ -15,7 +15,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     private string _note = "";
     private string _amountError = "";
     private string _errorMessage = "";
-    private string _voiceBanner = "";
+    private ExpenseDraft? _draft;
     private bool _isSaving;
     private FormState _original;
 
@@ -38,19 +38,19 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     }
     public DateTime OccurredOn { get => _occurredOn; set => SetProperty(ref _occurredOn, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
-    /// <summary>What the voice heard, shown above a draft so the person can check it. Empty for a typed expense.</summary>
-    public string VoiceBanner
+    /// <summary>The draft a new expense started from, for the banner above the form. Null for a typed expense.</summary>
+    public ExpenseDraft? Draft
     {
-        get => _voiceBanner;
+        get => _draft;
         private set
         {
-            if (SetProperty(ref _voiceBanner, value))
-                OnPropertyChanged(nameof(HasVoiceBanner));
+            if (SetProperty(ref _draft, value))
+                OnPropertyChanged(nameof(HasDraft));
         }
     }
-    public bool HasVoiceBanner => VoiceBanner.HasValue();
+    public bool HasDraft => Draft?.Banner.HasValue() == true;
     /// <summary>True while the form differs from what is stored. A new expense starts from an empty form, so a draft
-    /// from the voice is unsaved input from the start.</summary>
+    /// from the voice or a photo is unsaved input from the start.</summary>
     public bool IsDirty => Snapshot() != _original;
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
     public string AmountError { get => _amountError; private set => SetProperty(ref _amountError, value); }
@@ -117,7 +117,7 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         Amount = draft.AmountCents is { } cents ? (cents / 100m).ToString("0.00", ItalianCulture) : "";
         OccurredOn = draft.OccurredOn?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
         Note = draft.Note;
-        VoiceBanner = draft.Heard.HasValue() ? $"Dalla voce: “{draft.Heard}” · controlla e salva" : "";
+        Draft = draft;
         await Picker.Suggest(draft.CategoryId, draft.TagId);
     }
 

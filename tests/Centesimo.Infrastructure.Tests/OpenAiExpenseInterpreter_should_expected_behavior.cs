@@ -38,6 +38,7 @@ public sealed class OpenAiExpenseInterpreter_should_expected_behavior
         Assert.Equal(10_000, result.Value.AmountCents);
         Assert.Equal(CarId, result.Value.CategoryId);
         Assert.Equal(FuelId, result.Value.TagId);
+        Assert.Same(DraftSource.Voice, result.Value.Source);
         Assert.Equal("Ho speso 100 euro di carburante", result.Value.Heard);
     }
 

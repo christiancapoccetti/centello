@@ -23,7 +23,7 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
         new(amount, categoryKey, tagKey, date, note);
 
     private static ExpenseDraft Resolve(ExpenseInterpretation value) =>
-        ExpenseInterpretationResolver.Resolve(value, Catalog, Today, "Ho speso 100 euro di carburante");
+        ExpenseInterpretationResolver.Resolve(value, Catalog, Today, DraftSource.Voice, "Ho speso 100 euro di carburante");
 
     [Fact]
     public void Resolve_a_complete_interpretation_to_a_draft_with_canonical_ids()
@@ -36,6 +36,26 @@ public sealed class ExpenseInterpretationResolver_should_expected_behavior
         Assert.Equal(new DateOnly(2026, 11, 18), draft.OccurredOn);
         Assert.Equal("pieno", draft.Note);
         Assert.Equal("Ho speso 100 euro di carburante", draft.Heard);
+    }
+
+    [Fact]
+    public void Keep_the_source_and_what_was_heard_on_the_draft()
+    {
+        var draft = ExpenseInterpretationResolver.Resolve(Interpretation(), Catalog, Today, DraftSource.Voice, "cento euro");
+
+        Assert.Same(DraftSource.Voice, draft.Source);
+        Assert.Equal("cento euro", draft.Heard);
+        Assert.Equal("Dalla voce: “cento euro” · controlla e salva", draft.Banner);
+    }
+
+    [Fact]
+    public void Resolve_a_photo_draft_with_nothing_heard()
+    {
+        var draft = ExpenseInterpretationResolver.Resolve(Interpretation(), Catalog, Today, DraftSource.Photo);
+
+        Assert.Same(DraftSource.Photo, draft.Source);
+        Assert.Equal("", draft.Heard);
+        Assert.Equal("Dalla foto · controlla e salva", draft.Banner);
     }
 
     [Fact]

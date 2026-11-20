@@ -27,6 +27,6 @@ public sealed class OpenAiExpenseInterpreter(OpenAiClient client) : IExpenseInte
             return Result<ExpenseDraft>.Failure(interpretation.Error);
 
         return Result<ExpenseDraft>.Success(
-            ExpenseInterpretationResolver.Resolve(interpretation.Value, catalog, today, phrase));
+            ExpenseInterpretationResolver.Resolve(interpretation.Value, catalog, today, DraftSource.Voice, phrase));
     }
 }

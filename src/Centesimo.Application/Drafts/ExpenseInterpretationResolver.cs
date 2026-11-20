@@ -12,7 +12,8 @@ public static class ExpenseInterpretationResolver
         ExpenseInterpretation value,
         ExpenseInterpretationCatalog catalog,
         DateOnly today,
-        string heard)
+        DraftSource source,
+        string heard = "")
     {
         var category = catalog.FindCategory(value.CategoryKey);
         var tag = category?.FindTag(value.TagKey);
@@ -22,6 +23,7 @@ public static class ExpenseInterpretationResolver
             tag?.Tag.TagId,
             ParseDate(value.Date, today),
             LimitNote(value.Note.Trim()),
+            source,
             heard);
     }
 
