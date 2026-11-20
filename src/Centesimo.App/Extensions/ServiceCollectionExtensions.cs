@@ -50,8 +50,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<RecurringPaymentsPage>();
         services.AddTransient<RecurringPaymentEditorViewModel>();
         services.AddTransient<RecurringPaymentEditorPage>();
-        services.AddTransient<MoneyManagerImportViewModel>();
-        services.AddTransient<MoneyManagerImportPage>();
         return services;
     }
 }
