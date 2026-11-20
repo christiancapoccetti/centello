@@ -12,18 +12,20 @@ using Uri = Android.Net.Uri;
 
 namespace Centesimo.App;
 
-/// <summary>The panel a widget opens over the launcher: a translucent sheet that listens at once and hands the draft
-/// to the app. It lives in a task of its own so the app does not come forward behind it, and it never records after
-/// the person leaves it. No ScreenOrientation: a translucent activity with a fixed orientation throws on API 26.</summary>
 [Activity(
     Theme = "@style/Centesimo.VoicePanel",
-    Exported = false,
+    Exported = VoicePanelActivity.ShellCanStart,
     ExcludeFromRecents = true,
     TaskAffinity = "it.christiancapoccetti.centesimo.voice",
     LaunchMode = LaunchMode.SingleTask,
     ConfigurationChanges = ConfigChanges.UiMode | ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 public sealed class VoicePanelActivity : AppCompatActivity
 {
+#if DEBUG
+    internal const bool ShellCanStart = true;
+#else
+    internal const bool ShellCanStart = false;
+#endif
     private const int TickMilliseconds = 100;
     private readonly CancellationTokenSource _ticking = new();
     private Dictation? _dictation;
@@ -70,7 +72,6 @@ public sealed class VoicePanelActivity : AppCompatActivity
         ApplySystemBars(IsDark(newConfig));
     }
 
-    // Leaving the panel (home, recents, screen off) sends nothing and closes it. After DraftReady the cancel is ignored.
     protected override void OnStop()
     {
         Dismiss();
@@ -89,7 +90,6 @@ public sealed class VoicePanelActivity : AppCompatActivity
     private static bool IsDark(Configuration configuration) =>
         (configuration.UiMode & UiMode.NightMask) == UiMode.NightYes;
 
-    // The scrim is dark in both themes, so only the navigation bar, which sits on the sheet, changes its icons.
     private void ApplySystemBars(bool isDark)
     {
         if (WindowCompat.GetInsetsController(Window!, Window!.DecorView) is not { } controller)

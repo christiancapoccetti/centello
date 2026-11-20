@@ -7,8 +7,6 @@
         <item name="fontFamily">@font/archivo_semibold</item>
     </style>
 
-    <!-- The voice panel: a translucent window over the launcher whose sheet and scrim the activity draws itself. It
-         derives from the MAUI theme so MaterialConfirmation works inside it. -->
     <style name="Centesimo.VoicePanel" parent="Maui.MainTheme.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>

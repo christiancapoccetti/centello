@@ -14,9 +14,6 @@ using View = Android.Views.View;
 
 namespace Centesimo.App;
 
-/// <summary>The bottom sheet of the voice panel in native views: the scrim, the sheet and what each DictationState
-/// shows. Colors come from ThemeColors and type from the app's Archivo, so it looks like the rest of the app without
-/// the MAUI window. Show moves it to a state, Recolor repaints it for a new theme.</summary>
 internal sealed class VoicePanelSheet
 {
     private const int SheetCorner = 28;

@@ -2,8 +2,6 @@ using Centesimo.Application;
 
 namespace Centesimo.App;
 
-/// <summary>The microphone for the voice panel: the explanation the first time, then the system question. A person
-/// who already granted it is never asked again.</summary>
 internal sealed class MicrophoneAccess(IConfirmation confirmation) : IMicrophoneAccess
 {
     private const string Rationale = "Centesimo usa il microfono solo mentre il pannello è aperto. " +
