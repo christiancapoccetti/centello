@@ -23,6 +23,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IOpenAiApiKeyProvider>(provider => provider.GetRequiredService<OpenAiSettings>());
         services.AddSingleton<IPendingExpenseSpeechDraft, PendingExpenseSpeechDraft>();
         services.AddSingleton<SpeechExpenseDraftService>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddTransient<Dictation>();
         return services;
     }
 }
