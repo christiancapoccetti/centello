@@ -51,6 +51,9 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 
     protected override bool OnBackButtonPressed()
     {
+        if (SoftKeyboard.Dismiss(this))
+            return true;
+
         if (MenuLayer.IsVisible)
             MenuLayer.IsVisible = false;
         else

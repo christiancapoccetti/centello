@@ -46,6 +46,9 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
 
     protected override bool OnBackButtonPressed()
     {
+        if (SoftKeyboard.Dismiss(this))
+            return true;
+
         _ = Close();
         return true;
     }
