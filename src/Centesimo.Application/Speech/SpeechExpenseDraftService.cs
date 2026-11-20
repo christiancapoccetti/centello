@@ -2,6 +2,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.Application;
 
+/// <summary>What a dictation does with a recording that reached the limit. Held on Oggi, the limit cut the phrase,
+/// so it is refused. The voice panel ends at the limit on purpose, so what it heard is sent.</summary>
+public enum WhenFull { Refuse, Send }
+
 /// <summary>Turns a spoken phrase into the draft the expense editor opens with. Nothing is saved here.</summary>
 public sealed class SpeechExpenseDraftService(
     ISpeechRecorder recorder,
@@ -28,11 +32,14 @@ public sealed class SpeechExpenseDraftService(
 
     public Task Cancel() => recorder.Cancel();
 
-    public async Task<Result> StopAndPrepare(CancellationToken cancellationToken = default)
+    public async Task<Result> StopAndPrepare(WhenFull whenFull, CancellationToken cancellationToken = default)
     {
         var audio = await recorder.Stop(cancellationToken);
         if (audio.IsFailure)
             return Result.Failure(audio.Error);
+
+        if (audio.Value.IsFull && whenFull == WhenFull.Refuse)
+            return Result.Failure(SpeechErrors.TooLong);
 
         if (!internet.IsAvailable)
             return Result.Failure(SpeechErrors.NoInternet);
@@ -54,6 +61,9 @@ public sealed class SpeechExpenseDraftService(
             cancellationToken);
         if (draft.IsFailure)
             return Result.Failure(draft.Error);
+
+        if (cancellationToken.IsCancellationRequested)
+            return Result.Failure(SpeechErrors.Canceled);
 
         pendingDraft.Set(draft.Value);
         return Result.Success();

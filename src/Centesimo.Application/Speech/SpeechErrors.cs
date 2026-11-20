@@ -9,4 +9,7 @@ public static class SpeechErrors
     public static readonly Error MissingApiKey = new("Speech.MissingApiKey", "Configura la chiave API OpenAI nelle impostazioni.");
     public static readonly Error EmptyApiKey = new("Speech.EmptyApiKey", "Inserisci la chiave API OpenAI.");
     public static readonly Error ConsentRequired = new("Speech.ConsentRequired", "Per usare OpenAI serve il tuo consenso.");
+    public static readonly Error TooLong = new("Speech.TooLong", "Il comando vocale è troppo lungo. Riprova con una frase più breve.");
+    public static readonly Error StartFailed = new("Speech.StartFailed", "Non riesco ad avviare il riconoscimento vocale.");
+    public static readonly Error Failed = new("Speech.Failed", "Non riesco a elaborare il comando vocale.");
 }

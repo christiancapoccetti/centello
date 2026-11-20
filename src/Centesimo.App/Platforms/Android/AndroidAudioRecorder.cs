@@ -53,7 +53,7 @@ public sealed class AndroidAudioRecorder : ISpeechRecorder, IDisposable
         {
             var audio = await session.Stop();
             return session.IsLimitReached
-                ? Result<RecordedAudio>.Failure(new Error("Speech.TooLong", "Il comando vocale è troppo lungo. Riprova con una frase più breve."))
+                ? Result<RecordedAudio>.Failure(SpeechErrors.TooLong)
                 : Result<RecordedAudio>.Success(audio);
         }
         catch (Exception)
