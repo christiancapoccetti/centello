@@ -1,6 +1,6 @@
 # Centesimo
 
-Centesimo is a simple Android expense tracker built with .NET MAUI. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice entry sends the phrase you speak to OpenAI (see below).
+Centesimo is a simple Android expense tracker built with .NET MAUI, designed and developed by Christian Capoccetti. The product research, the design, the architecture and the structure of the code are the author's own work; AI coding assistants were used as tools to write and review the implementation under the author's direction. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice entry sends the phrase you speak to OpenAI (see below).
 
 ## Features
 
@@ -77,6 +77,8 @@ Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft
 - **Availability:** voice entry is unavailable until a key is configured, and reports an error without an Internet connection. Manual entry always works.
 
 ## License
+
+Copyright © 2026 Christian Capoccetti.
 
 Centesimo is licensed under the [GNU General Public License v3.0](LICENSE).
 The corresponding source code for distributed APKs is available as described in [SOURCE_OFFER.md](SOURCE_OFFER.md).
