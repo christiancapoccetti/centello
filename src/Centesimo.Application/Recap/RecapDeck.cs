@@ -10,7 +10,8 @@ public sealed record RecapDeck
         RecapCard.Rank.Of,
         RecapCard.RecordDay.Of,
         RecapCard.Categories.Of,
-        RecapCard.Changes.Of
+        RecapCard.Changes.Of,
+        RecapCard.NewHabit.Of
     ];
 
     private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> YearCards =
