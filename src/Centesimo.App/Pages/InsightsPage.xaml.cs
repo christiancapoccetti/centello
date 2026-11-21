@@ -29,6 +29,12 @@ public partial class InsightsPage : ContentPage
     private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(ExpenseEditorPage.Route());
 
+    private async void OnRecapClicked(object? sender, EventArgs e)
+    {
+        if (_viewModel.Recap is { } recap)
+            await Shell.Current.GoToAsync(RecapPage.Route(recap.Period));
+    }
+
     // An observation about one expense opens it. One about a category leads to its expenses: the history of the
     // month with the category as filter, or the category itself when the period is a year.
     private async void OnInsightTapped(object? sender, EventArgs e)

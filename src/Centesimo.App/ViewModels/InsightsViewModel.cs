@@ -41,10 +41,19 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
     public string Total => ItalianFormat.Amount(Overview?.SpentCents ?? 0);
     public IReadOnlyList<InsightRow> Insights => Overview?.Insights.Select(ToRow).ToList() ?? [];
     public bool HasInsights => Overview is { Insights.Count: > 0 };
+    public InsightRecap? Recap => Overview?.Recap;
+    public bool HasRecap => Recap is not null;
     public IReadOnlyList<InsightCategoryRow> Categories => Overview is null ? [] : Overview.Categories.Select(ToRow).ToList();
     public string ErrorMessage { get => _errorMessage; private set => SetProperty(ref _errorMessage, value); }
 
     public Task Load() => LoadPeriod(_selected);
+
+    /// <summary>The only way to move Insight from outside: opens it on a period, as the arrows would.</summary>
+    public Task Show(Period period)
+    {
+        _selected = period;
+        return LoadPeriod(period);
+    }
 
     public Task ShowPrevious() => Navigate(Overview?.Navigation.Previous);
 
