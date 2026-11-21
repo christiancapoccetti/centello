@@ -51,7 +51,7 @@ public sealed class RhythmWidget : CentesimoWidgetProvider
         Chart.Show(views, art.Chart(month.Chart, width, chartHeight));
         views.SetOnClickPendingIntent(Resource.Id.root, EntryLinks.Pending(frame.Context, new AppEntry.Screen.Today()));
         views.SetContentDescription(Resource.Id.root, month.Description);
-        Log.Debug(HomeScreenWidgets.LogTag, $"Il ritmo RemoteViews memory estimate: {MemoryEstimate(views)}");
+        Log.Debug(HomeScreen.LogTag, $"Il ritmo RemoteViews memory estimate: {MemoryEstimate(views)}");
         return views;
     }
 

@@ -12,7 +12,7 @@ namespace Centesimo.App;
 /// midnight alarm after midnight, the launcher when a widget is added, resized or restored. A refresh reads the store
 /// in its own scope and redraws every installed widget, so it can run any number of times; requests that arrive while
 /// one runs are folded into one more run, which reads the store after them.</summary>
-public sealed class HomeScreenWidgets : IStoreChangeListener
+public sealed class HomeScreen : IStoreChangeListener
 {
     internal const string LogTag = "Centesimo.Widgets";
 
@@ -28,7 +28,7 @@ public sealed class HomeScreenWidgets : IStoreChangeListener
     private readonly IFontManager _fonts;
     private readonly RefreshCoalescer _refreshes;
 
-    public HomeScreenWidgets(IServiceScopeFactory scopes, IFontManager fonts)
+    public HomeScreen(IServiceScopeFactory scopes, IFontManager fonts)
     {
         _scopes = scopes;
         _fonts = fonts;

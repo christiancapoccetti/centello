@@ -24,7 +24,7 @@ Android Auto Backup saves the database (and only the database) to your own Googl
 Widgets compute nothing: their words and numbers come from the same Application services as the Home (`HomeOverviewService`, `CategoryChoiceService`).
 
 - **Opening the app:** a tap sends a typed `AppEntry` link in the intent data to `MainActivity`, and `AppEntryRouter` opens it once the Shell can navigate. An expense editor opened from a widget returns to the home screen when it is saved or closed.
-- **Refresh:** `StoreChangeInterceptor` (EF Core) signals after every committed write and `HomeScreenWidgets` redraws every widget, coalescing signals. It also redraws at midnight, on time and time-zone changes and when the app window activates.
+- **Refresh:** `StoreChangeInterceptor` (EF Core) signals after every committed write and `HomeScreen` redraws every widget, coalescing signals. It also redraws at midnight, on time and time-zone changes and when the app window activates.
 - **Look:** widget words are drawn in Archivo as tinted masks, and colours are `@color/theme_*` resources generated from `ThemeTokens`, so the scheme switches without the app running. See [DESIGN.md](DESIGN.md).
 
 ## Design
@@ -38,7 +38,7 @@ The solution follows a pragmatic Clean Architecture approach with MVVM and the R
 - `Centesimo.Domain`: entities, value objects, and domain rules.
 - `Centesimo.Application`: use cases, repository contracts, and application services. `RecurringPaymentAutomation` runs behind an exclusive gate so a restore cannot overlap with creating due expenses.
 - `Centesimo.Infrastructure`: EF Core and SQLite persistence. `SqliteDataBackup` is the only code besides EF that touches the database files (backup copy with `VACUUM INTO`, validation and migration on a private copy, replacement in one transaction); it signals the store change listener itself after a restore, since the copy bypasses EF. Editor view models share one window-lifetime `DbContext`, so `RepositoryBase` clears the change tracker after every save.
-- `Centesimo.App`: .NET MAUI Android UI and view models. `Platforms/Android/Widgets` holds the widgets and `HomeScreenWidgets`, the one place that redraws them; `Platforms/Android/Voice` holds the voice panel.
+- `Centesimo.App`: .NET MAUI Android UI and view models. `Platforms/Android/Widgets` holds the widgets and `Platforms/Android/HomeScreen.cs` the one place that redraws them; `Platforms/Android/Voice` holds the voice panel.
 - `tests`: domain, application, and infrastructure test projects.
 
 ## Prerequisites
