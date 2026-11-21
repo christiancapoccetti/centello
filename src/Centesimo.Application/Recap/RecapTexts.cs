@@ -92,6 +92,9 @@ public static class RecapTexts
     /// <summary>"il 4", "l'8", "l'11": a day of the month with its article.</summary>
     public static string TheDay(int day) => day is 8 or 11 ? $"l'{day}" : $"il {day}";
 
+    /// <summary>"Il " or "L'" before a percentage: "Il 31%", "L'8%", "L'11%", "L'85%".</summary>
+    public static string ThePercent(int percent) => percent is 8 or 11 or (>= 80 and <= 89) ? "L'" : "Il ";
+
     /// <summary>"a", "a e b", "a, b e c".</summary>
     public static string List(IReadOnlyList<string> items) => items.Count switch
     {

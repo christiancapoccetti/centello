@@ -18,5 +18,7 @@ internal sealed class RecapCatalog(IReadOnlyList<Category> categories, IReadOnly
     public RecapCategory Category(Guid categoryId) =>
         _categories.TryGetValue(categoryId, out var category) ? category : Unknown with { CategoryId = categoryId };
 
+    public bool Knows(Guid categoryId) => _categories.ContainsKey(categoryId);
+
     public Tag? Tag(Guid tagId) => _tags.GetValueOrDefault(tagId);
 }

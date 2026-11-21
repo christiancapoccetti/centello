@@ -30,6 +30,7 @@ public sealed record RecapDeck
         RecapCard.SteadyTag.Of,
         RecapCard.NewHabits.Of,
         RecapCard.SmallExpenses.Of,
+        RecapCard.Automatic.Of,
         RecapCard.Consistency.Of
     ];
 

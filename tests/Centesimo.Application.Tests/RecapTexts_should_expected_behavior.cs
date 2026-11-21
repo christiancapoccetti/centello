@@ -137,6 +137,17 @@ public sealed class RecapTexts_should_expected_behavior
         Assert.Equal(expected, RecapTexts.TheDay(day));
 
     [Theory]
+    [InlineData(31, "Il ")]
+    [InlineData(18, "Il ")]
+    [InlineData(8, "L'")]
+    [InlineData(11, "L'")]
+    [InlineData(80, "L'")]
+    [InlineData(85, "L'")]
+    [InlineData(90, "Il ")]
+    public void Should_put_the_article_before_a_percentage(int percent, string expected) =>
+        Assert.Equal(expected, RecapTexts.ThePercent(percent));
+
+    [Theory]
     [InlineData("", new string[0])]
     [InlineData("a", new[] { "a" })]
     [InlineData("a e b", new[] { "a", "b" })]
