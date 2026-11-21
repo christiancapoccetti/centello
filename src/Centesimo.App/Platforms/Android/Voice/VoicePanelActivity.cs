@@ -8,7 +8,6 @@ using AndroidX.AppCompat.App;
 using AndroidX.Core.View;
 using Centesimo.Application;
 using Microsoft.Extensions.DependencyInjection;
-using Uri = Android.Net.Uri;
 
 namespace Centesimo.App;
 
@@ -53,7 +52,7 @@ public sealed class VoicePanelActivity : AppCompatActivity
         dictation.Changed += OnChanged;
         sheet.MicTapped += () => Run(dictation.Send);
         sheet.RetryTapped += () => Run(dictation.Retry);
-        sheet.SettingsTapped += () => OpenApp(new AppEntry.Settings());
+        sheet.SettingsTapped += () => OpenApp(new AppEntry.Screen.Settings());
         sheet.Dismissed += Dismiss;
         OnBackPressedDispatcher.AddCallback(this, new BackToDismiss(Dismiss));
 
@@ -108,7 +107,7 @@ public sealed class VoicePanelActivity : AppCompatActivity
             return;
 
         _router?.Receive(ready.Draft);
-        OpenApp(new AppEntry.VoiceDraft());
+        OpenApp(new AppEntry.Screen.Draft());
     }
 
     private void Dismiss()
@@ -129,12 +128,9 @@ public sealed class VoicePanelActivity : AppCompatActivity
         }
     }
 
-    private void OpenApp(AppEntry entry)
+    private void OpenApp(AppEntry.Screen entry)
     {
-        var intent = new Intent(this, typeof(MainActivity))
-            .SetData(Uri.Parse(entry.ToLink()))!
-            .SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop)!;
-        StartActivity(intent, ActivityOptions.MakeCustomAnimation(this, 0, 0)!.ToBundle());
+        StartActivity(EntryLinks.Intent(this, entry), ActivityOptions.MakeCustomAnimation(this, 0, 0)!.ToBundle());
         Finish();
     }
 

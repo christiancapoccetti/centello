@@ -41,7 +41,7 @@ public sealed class RhythmWidget : CentesimoWidgetProvider
         views.SetImageViewBitmap(Resource.Id.year, art.Text(month.Year, new WidgetTextStyle(Fonts.Regular, MonthDp)));
         views.SetImageViewBitmap(Resource.Id.total, art.Total(month.Total, TotalDp, EuroDp, width));
         views.SetImageViewBitmap(Resource.Id.fab_glyph, art.Glyph(MaterialSymbols.Add, PlusDp));
-        views.SetOnClickPendingIntent(Resource.Id.fab, WidgetLinks.Open(frame.Context, frame.Data.AddEntry()));
+        views.SetOnClickPendingIntent(Resource.Id.fab, EntryLinks.Pending(frame.Context, frame.Data.Admit(new AppEntry.Screen.NewExpense(null))));
         var budget = art.Sentence(month.Budget.Lead, month.Budget.Emphasis, month.Budget.Tail,
             width - ChipReserve(art, month.Comparison), BudgetDp);
         Budget.Show(views, budget);
@@ -49,7 +49,7 @@ public sealed class RhythmWidget : CentesimoWidgetProvider
         var chartHeight = Math.Clamp(frame.Size.HeightDp - FrameHeightDp - rowHeight, MinChartHeightDp, MaxChartHeightDp);
         WidgetViews.Comparison(views, art, month.Comparison, month.Comparison?.Text);
         Chart.Show(views, art.Chart(month.Chart, width, chartHeight));
-        views.SetOnClickPendingIntent(Resource.Id.root, WidgetLinks.Open(frame.Context, new AppEntry.Today()));
+        views.SetOnClickPendingIntent(Resource.Id.root, EntryLinks.Pending(frame.Context, new AppEntry.Screen.Today()));
         views.SetContentDescription(Resource.Id.root, month.Description);
         Log.Debug(HomeScreenWidgets.LogTag, $"Il ritmo RemoteViews memory estimate: {MemoryEstimate(views)}");
         return views;

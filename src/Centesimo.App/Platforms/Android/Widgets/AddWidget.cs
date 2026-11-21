@@ -29,10 +29,9 @@ public sealed class AddWidget : CentesimoWidgetProvider
             views.SetImageViewBitmap(Resource.Id.add_label,
                 frame.Art.Text("Aggiungi spesa", new WidgetTextStyle(Fonts.Bold, LabelDp)));
 
-        views.SetOnClickPendingIntent(Resource.Id.add_action, WidgetLinks.Open(frame.Context, frame.Data.AddEntry()));
-        views.SetOnClickPendingIntent(Resource.Id.mic_action, frame.Data.CanAdd
-            ? WidgetLinks.Dictate(frame.Context)
-            : WidgetLinks.Open(frame.Context, new AppEntry.Today()));
+        views.SetOnClickPendingIntent(Resource.Id.add_action, EntryLinks.Pending(frame.Context, frame.Data.Admit(new AppEntry.Screen.NewExpense(null))));
+        views.SetOnClickPendingIntent(Resource.Id.mic_action,
+            EntryLinks.Pending(frame.Context, frame.Data.Admit(new AppEntry.Panel.VoicePanel())));
         if (!frame.Data.CanAdd)
             views.SetFloat(Resource.Id.add_pill, "setAlpha", FirstRunAlpha);
 

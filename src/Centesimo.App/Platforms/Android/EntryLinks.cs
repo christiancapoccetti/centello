@@ -5,20 +5,23 @@ using Uri = Android.Net.Uri;
 
 namespace Centesimo.App;
 
-internal static class WidgetLinks
+/// <summary>The only place that turns an entry into what Android starts: the widgets, the launcher shortcuts and the
+/// hand-off of the panels. The link is the intent's data, so no two entries share a PendingIntent.</summary>
+internal static class EntryLinks
 {
-    /// <summary>Opens the app on <paramref name="entry"/>. The link is the intent's data, so no two entries share a
-    /// PendingIntent.</summary>
-    public static PendingIntent Open(Context context, AppEntry entry)
+    public static Intent Intent(Context context, AppEntry entry)
     {
-        var intent = new Intent(context, typeof(MainActivity))
-            .SetData(Uri.Parse(entry.ToLink()))
+        var intent = new Intent(Android.Content.Intent.ActionView, Uri.Parse(entry.ToLink()));
+        if (entry is AppEntry.Panel)
+            return intent
+                .SetClass(context, typeof(VoicePanelActivity))
+                .AddFlags(ActivityFlags.NewTask);
+
+        return intent
+            .SetClass(context, typeof(MainActivity))
             .AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
-        return PendingIntent.GetActivity(context, 0, intent, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent)!;
     }
 
-    /// <summary>Opens the voice panel over the launcher, in its own task.</summary>
-    public static PendingIntent Dictate(Context context) => PendingIntent.GetActivity(context, 0,
-        new Intent(context, typeof(VoicePanelActivity)).AddFlags(ActivityFlags.NewTask),
-        PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent)!;
+    public static PendingIntent Pending(Context context, AppEntry entry) =>
+        PendingIntent.GetActivity(context, 0, Intent(context, entry), PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent)!;
 }

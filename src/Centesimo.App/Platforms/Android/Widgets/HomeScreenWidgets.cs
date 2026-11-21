@@ -109,15 +109,6 @@ internal sealed record WidgetSpec(Type Provider, Func<WidgetFrame, RemoteViews> 
     public ComponentName Component(Context context) => new(context, Java.Lang.Class.FromType(Provider));
 }
 
-internal sealed record HomeScreenData(IReadOnlyList<CategoryShortcut> Shortcuts, MonthGlance Month)
-{
-    /// <summary>False until an active category exists: every add action then opens Oggi, where the first run starts.</summary>
-    public bool CanAdd => Shortcuts.Count > 0;
-
-    public AppEntry AddEntry(Guid? categoryId = null) =>
-        CanAdd ? new AppEntry.NewExpense(categoryId) : new AppEntry.Today();
-}
-
 internal sealed record WidgetFrame(Context Context, WidgetArt Art, HomeScreenData Data, WidgetSize Size)
 {
     private const int SidePaddingDp = 16;

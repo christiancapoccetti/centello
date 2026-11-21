@@ -39,7 +39,7 @@ public sealed class MonthWidget : CentesimoWidgetProvider
             Line.Hide(views);
 
         WidgetViews.OverBudget(views, art, month.OverBudget, width);
-        views.SetOnClickPendingIntent(Resource.Id.root, WidgetLinks.Open(frame.Context, new AppEntry.Today()));
+        views.SetOnClickPendingIntent(Resource.Id.root, EntryLinks.Pending(frame.Context, new AppEntry.Screen.Today()));
         views.SetContentDescription(Resource.Id.root, month.Description);
         return views;
     }
