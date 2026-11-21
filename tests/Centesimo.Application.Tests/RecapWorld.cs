@@ -4,7 +4,7 @@ namespace Centesimo.Application.Tests;
 
 /// <summary>A small world of categories, tags and expenses behind the repository fakes, and the deck the PUBLIC
 /// <see cref="RecapService"/> builds from it on a fixed day. Each instance is its own world.</summary>
-internal sealed class RecapWorld(DateOnly? today = null)
+internal sealed partial class RecapWorld(DateOnly? today = null)
 {
     public static readonly DateOnly Today = new(2026, 12, 1);
 
