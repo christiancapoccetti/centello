@@ -73,3 +73,8 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - OpenAI only turns the question into a structured query (category, tag, period, kind of calculation) through the same constrained JSON schema as voice entry; the app computes the answer on the local database, so no expense leaves the phone.
 - Limited set of calculations: total, comparison between two periods, largest expense, average. Questions outside it get a plain "non so rispondere" instead of a guess.
 - The voice flow must tell a question from an expense: a field in the schema or two separate microphone modes.
+
+## AI providers and the API key
+
+- Support providers other than OpenAI (for example Google Gemini or Mistral) for transcription and for reading photos and PDFs, behind the existing interpreter port. The user picks the provider in `Impostazioni` and enters that provider's key; each provider keeps the same consent and the same constrained output.
+- A short in-app tutorial under `Inserimento vocale`, in plain Italian: what an API key is, how to create one on the provider's site step by step, that usage is billed by the provider to the user's own account (with an indicative cost per expense), that the key stays in Android SecureStorage and is sent only to that provider, and how to remove it from Centesimo and revoke it on the provider's site.
