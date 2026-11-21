@@ -38,7 +38,7 @@ The solution follows a pragmatic Clean Architecture approach with MVVM and the R
 - `Centesimo.Domain`: entities, value objects, and domain rules.
 - `Centesimo.Application`: use cases, repository contracts, and application services. `RecurringPaymentAutomation` runs behind an exclusive gate so a restore cannot overlap with creating due expenses.
 - `Centesimo.Infrastructure`: EF Core and SQLite persistence. `SqliteDataBackup` is the only code besides EF that touches the database files (backup copy with `VACUUM INTO`, validation and migration on a private copy, replacement in one transaction); it signals the store change listener itself after a restore, since the copy bypasses EF. Editor view models share one window-lifetime `DbContext`, so `RepositoryBase` clears the change tracker after every save.
-- `Centesimo.App`: .NET MAUI Android UI and view models. `Platforms/Android/Widgets` holds the widgets and `HomeScreenWidgets`, the one place that redraws them; `Platforms/Android/Voice` holds the voice panel.
+- `Centesimo.App`: .NET MAUI Android UI and view models. `Platforms/Android/Widgets` holds the widgets and `HomeScreenWidgets`, the one place that redraws them; `Platforms/Android/Panel` holds the panel over the launcher, which hosts the voice capture.
 - `tests`: domain, application, and infrastructure test projects.
 
 ## Prerequisites
