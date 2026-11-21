@@ -1,6 +1,6 @@
 namespace Centesimo.Application;
 
-public sealed record WaitingEntry(AppEntry Entry, ExpenseDraft? Draft);
+public sealed record WaitingEntry(AppEntry.Screen Entry, ExpenseDraft? Draft);
 
 public sealed class AppEntryInbox
 {
@@ -8,15 +8,15 @@ public sealed class AppEntryInbox
 
     public bool HasWaiting => _waiting is not null;
 
-    public void Receive(AppEntry entry)
+    public void Receive(AppEntry.Screen entry)
     {
-        if (entry is AppEntry.VoiceDraft && _waiting is { Entry: AppEntry.VoiceDraft })
+        if (entry is AppEntry.Screen.Draft && _waiting is { Entry: AppEntry.Screen.Draft })
             return;
 
         _waiting = new WaitingEntry(entry, null);
     }
 
-    public void Receive(ExpenseDraft draft) => _waiting = new WaitingEntry(new AppEntry.VoiceDraft(), draft);
+    public void Receive(ExpenseDraft draft) => _waiting = new WaitingEntry(new AppEntry.Screen.Draft(), draft);
 
     public WaitingEntry? Take()
     {
