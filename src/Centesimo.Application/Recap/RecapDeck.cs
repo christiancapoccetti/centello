@@ -4,9 +4,17 @@ namespace Centesimo.Application;
 /// is the invariant: nothing else can put a card before the cover or after the summary.</summary>
 public sealed record RecapDeck
 {
-    private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> MonthCards = [RecapCard.Total.Of];
+    private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> MonthCards =
+    [
+        RecapCard.Total.Of,
+        RecapCard.RecordDay.Of
+    ];
 
-    private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> YearCards = [RecapCard.Total.Of];
+    private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> YearCards =
+    [
+        RecapCard.Total.Of,
+        RecapCard.RecordDay.Of
+    ];
 
     public RecapDeck(RecapSpan span, RecapCard.Cover cover, IReadOnlyList<RecapCard> middle, RecapCard.Summary summary)
     {

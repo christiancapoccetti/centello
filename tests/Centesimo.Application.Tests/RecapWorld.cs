@@ -34,10 +34,10 @@ internal sealed class RecapWorld(DateOnly? today = null)
     }
 
     public Expense Spend(Category category, long cents, DateOnly on, Tag? tag = null, string note = "",
-        bool automatic = false)
+        bool automatic = false, Guid? payment = null)
     {
         var expense = new Expense(Guid.NewGuid(), category.CategoryId, new Money(cents), on, tag?.TagId, note,
-            recurringPaymentId: automatic ? Guid.NewGuid() : null);
+            recurringPaymentId: payment ?? (automatic ? Guid.NewGuid() : null));
         Expenses.Items.Add(expense);
         return expense;
     }

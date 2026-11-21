@@ -120,7 +120,7 @@ public sealed class RecapCardTotal_should_expected_behavior
         Assert.Equal(
             new RecapSummaryRow(MaterialSymbols.Payments, "Totale", $"1.284,60{Nbsp}€"),
             deck.Single<RecapCard.Total>().Row);
-        Assert.Equal(deck.Single<RecapCard.Total>().Row, deck.Single<RecapCard.Summary>().Rows.Single());
+        Assert.Contains(deck.Single<RecapCard.Total>().Row!, deck.Single<RecapCard.Summary>().Rows);
     }
 
     [Fact]
