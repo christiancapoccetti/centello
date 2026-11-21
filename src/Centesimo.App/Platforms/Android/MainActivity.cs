@@ -49,7 +49,7 @@ public class MainActivity : MauiAppCompatActivity
         if (intent is null || intent.Flags.HasFlag(ActivityFlags.LaunchedFromHistory))
             return;
 
-        if (AppEntry.Parse(intent.DataString) is not { } entry || IPlatformApplication.Current is not { } application)
+        if (AppEntry.Parse(intent.DataString) is not AppEntry.Screen entry || IPlatformApplication.Current is not { } application)
             return;
 
         application.Services.GetRequiredService<AppEntryRouter>().Receive(entry);

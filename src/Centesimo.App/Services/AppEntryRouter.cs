@@ -14,7 +14,7 @@ public sealed class AppEntryRouter(IConfirmation confirmation)
 
     public bool HasWaiting => _inbox.HasWaiting;
 
-    public void Receive(AppEntry entry) => _inbox.Receive(entry);
+    public void Receive(AppEntry.Screen entry) => _inbox.Receive(entry);
 
     public void Receive(ExpenseDraft draft) => _inbox.Receive(draft);
 
@@ -46,13 +46,13 @@ public sealed class AppEntryRouter(IConfirmation confirmation)
             .SelectMany(section => section.Navigation.NavigationStack)
             .ToList();
 
-    private static (string Route, bool RebuildsToday) RouteOf(AppEntry entry) => entry switch
+    private static (string Route, bool RebuildsToday) RouteOf(AppEntry.Screen entry) => entry switch
     {
-        AppEntry.Today => ($"//{nameof(TodayPage)}", true),
-        AppEntry.NewExpense expense =>
+        AppEntry.Screen.Today => ($"//{nameof(TodayPage)}", true),
+        AppEntry.Screen.NewExpense expense =>
             ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(categoryId: expense.CategoryId, fromOutside: true)}", true),
-        AppEntry.VoiceDraft => ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(fromOutside: true)}", true),
-        AppEntry.Settings => ($"//{nameof(SettingsPage)}", false),
+        AppEntry.Screen.Draft => ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(fromOutside: true)}", true),
+        AppEntry.Screen.Settings => ($"//{nameof(SettingsPage)}", false),
         _ => throw new UnreachableException()
     };
 }

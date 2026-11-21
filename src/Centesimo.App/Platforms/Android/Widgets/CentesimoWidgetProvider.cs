@@ -17,5 +17,5 @@ public abstract class CentesimoWidgetProvider : AppWidgetProvider
     public override void OnDisabled(Context? context) => Refresh();
 
     private void Refresh() =>
-        ReceiverWork.Run(this, services => services.GetRequiredService<HomeScreenWidgets>().Refresh());
+        ReceiverWork.Run(this, services => services.GetRequiredService<HomeScreen>().Refresh());
 }

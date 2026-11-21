@@ -18,7 +18,7 @@ internal static class ReceiverWork
                     return;
 
                 await work(services);
-                await services.GetRequiredService<HomeScreenWidgets>().Settled();
+                await services.GetRequiredService<HomeScreen>().Settled();
             }
             catch
             {

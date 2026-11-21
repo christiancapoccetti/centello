@@ -35,8 +35,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
         services.AddSingleton<IDownloads, MediaStoreDownloads>();
         services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
-        services.AddSingleton<HomeScreenWidgets>();
-        services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreenWidgets>());
+        services.AddSingleton<IPhotoCapture, PanelPhotoCapture>();
+        services.AddSingleton<HomeScreen>();
+        services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreen>());
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();

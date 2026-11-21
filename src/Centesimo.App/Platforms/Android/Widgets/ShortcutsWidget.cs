@@ -45,7 +45,7 @@ public sealed class ShortcutsWidget : CentesimoWidgetProvider
 
         views.SetImageViewBitmap(Resource.Id.other_plus, frame.Art.Glyph(MaterialSymbols.Add, PlusDp));
         views.SetImageViewBitmap(Resource.Id.other_name, frame.Art.Text("Altra", NameStyle, nameWidthDp));
-        views.SetOnClickPendingIntent(Resource.Id.slot_other, WidgetLinks.Open(frame.Context, frame.Data.AddEntry()));
+        views.SetOnClickPendingIntent(Resource.Id.slot_other, EntryLinks.Pending(frame.Context, frame.Data.Admit(new AppEntry.Screen.NewExpense(null))));
         return views;
     }
 
@@ -59,7 +59,7 @@ public sealed class ShortcutsWidget : CentesimoWidgetProvider
             views.SetImageViewBitmap(Name, frame.Art.Text(shortcut.Name, NameStyle, nameWidthDp));
             views.SetContentDescription(Container, $"{shortcut.Name}, aggiungi spesa");
             views.SetOnClickPendingIntent(Container,
-                WidgetLinks.Open(frame.Context, frame.Data.AddEntry(shortcut.CategoryId)));
+                EntryLinks.Pending(frame.Context, frame.Data.Admit(new AppEntry.Screen.NewExpense(shortcut.CategoryId))));
         }
     }
 }

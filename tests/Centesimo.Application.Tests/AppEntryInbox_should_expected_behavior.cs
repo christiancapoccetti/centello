@@ -16,10 +16,10 @@ public sealed class AppEntryInbox_should_expected_behavior
     [Fact]
     public void Hand_over_an_entry_once()
     {
-        _inbox.Receive(new AppEntry.Settings());
+        _inbox.Receive(new AppEntry.Screen.Settings());
 
         Assert.True(_inbox.HasWaiting);
-        Assert.Equal(new WaitingEntry(new AppEntry.Settings(), null), _inbox.Take());
+        Assert.Equal(new WaitingEntry(new AppEntry.Screen.Settings(), null), _inbox.Take());
         Assert.False(_inbox.HasWaiting);
         Assert.Null(_inbox.Take());
     }
@@ -29,7 +29,7 @@ public sealed class AppEntryInbox_should_expected_behavior
     {
         _inbox.Receive(Draft);
 
-        Assert.Equal(new WaitingEntry(new AppEntry.VoiceDraft(), Draft), _inbox.Take());
+        Assert.Equal(new WaitingEntry(new AppEntry.Screen.Draft(), Draft), _inbox.Take());
     }
 
     [Fact]
@@ -37,17 +37,17 @@ public sealed class AppEntryInbox_should_expected_behavior
     {
         _inbox.Receive(Draft);
 
-        _inbox.Receive(new AppEntry.VoiceDraft());
+        _inbox.Receive(new AppEntry.Screen.Draft());
 
-        Assert.Equal(new WaitingEntry(new AppEntry.VoiceDraft(), Draft), _inbox.Take());
+        Assert.Equal(new WaitingEntry(new AppEntry.Screen.Draft(), Draft), _inbox.Take());
     }
 
     [Fact]
     public void Open_an_empty_voice_entry_when_no_draft_was_handed_over()
     {
-        _inbox.Receive(new AppEntry.VoiceDraft());
+        _inbox.Receive(new AppEntry.Screen.Draft());
 
-        Assert.Equal(new WaitingEntry(new AppEntry.VoiceDraft(), null), _inbox.Take());
+        Assert.Equal(new WaitingEntry(new AppEntry.Screen.Draft(), null), _inbox.Take());
     }
 
     [Fact]
@@ -55,9 +55,9 @@ public sealed class AppEntryInbox_should_expected_behavior
     {
         _inbox.Receive(Draft);
 
-        _inbox.Receive(new AppEntry.NewExpense(null));
+        _inbox.Receive(new AppEntry.Screen.NewExpense(null));
 
-        Assert.Equal(new WaitingEntry(new AppEntry.NewExpense(null), null), _inbox.Take());
+        Assert.Equal(new WaitingEntry(new AppEntry.Screen.NewExpense(null), null), _inbox.Take());
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class AppEntryInbox_should_expected_behavior
         _inbox.Receive(Draft);
         _inbox.Take();
 
-        _inbox.Receive(new AppEntry.VoiceDraft());
+        _inbox.Receive(new AppEntry.Screen.Draft());
 
         Assert.Null(_inbox.Take()!.Draft);
     }
