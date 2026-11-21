@@ -12,13 +12,14 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centesimo.App;
 
 [Activity(
-    Theme = "@style/Centesimo.VoicePanel",
-    Exported = VoicePanelActivity.ShellCanStart,
+    Name = "it.christiancapoccetti.centesimo.PanelActivity",
+    Theme = "@style/Centesimo.Panel",
+    Exported = PanelActivity.ShellCanStart,
     ExcludeFromRecents = true,
-    TaskAffinity = "it.christiancapoccetti.centesimo.voice",
+    TaskAffinity = "it.christiancapoccetti.centesimo.panel",
     LaunchMode = LaunchMode.SingleTask,
     ConfigurationChanges = ConfigChanges.UiMode | ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
-public sealed class VoicePanelActivity : AppCompatActivity
+public sealed class PanelActivity : AppCompatActivity
 {
 #if DEBUG
     internal const bool ShellCanStart = true;
@@ -27,8 +28,10 @@ public sealed class VoicePanelActivity : AppCompatActivity
 #endif
     private const int TickMilliseconds = 100;
     private readonly CancellationTokenSource _ticking = new();
+    private IServiceProvider? _services;
+    private IPanelCapture? _capture;
     private Dictation? _dictation;
-    private VoicePanelSheet? _sheet;
+    private PanelSheet? _sheet;
     private AppEntryRouter? _router;
 
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -41,23 +44,28 @@ public sealed class VoicePanelActivity : AppCompatActivity
         }
 
         WindowCompat.SetDecorFitsSystemWindows(Window!, false);
-        var dictation = services.GetRequiredService<Dictation>();
-        var sheet = new VoicePanelSheet(this, services.GetRequiredService<IFontManager>(), IsDark(Resources!.Configuration!));
-        _dictation = dictation;
+        var sheet = new PanelSheet(this, services.GetRequiredService<IFontManager>(), IsDark(Resources!.Configuration!));
+        _services = services;
         _sheet = sheet;
         _router = services.GetRequiredService<AppEntryRouter>();
         SetContentView(sheet.Root);
         ApplySystemBars(IsDark(Resources.Configuration!));
 
-        dictation.Changed += OnChanged;
-        sheet.MicTapped += () => Run(dictation.Send);
-        sheet.RetryTapped += () => Run(dictation.Retry);
-        sheet.SettingsTapped += () => OpenApp(new AppEntry.Screen.Settings());
+        sheet.MicTapped += () => Run(() => _dictation?.Send() ?? Task.CompletedTask);
+        sheet.ActionTapped += OnActionTapped;
         sheet.Dismissed += Dismiss;
         OnBackPressedDispatcher.AddCallback(this, new BackToDismiss(Dismiss));
 
-        Run(dictation.Begin);
+        Start(EntryOf(Intent), restored: savedInstanceState is not null);
         Run(Tick);
+    }
+
+    /// <summary>A new tap on a panel entry starts that panel over. singleTask has already cleared what was above it.</summary>
+    protected override void OnNewIntent(Intent? intent)
+    {
+        base.OnNewIntent(intent);
+        Intent = intent;
+        Start(EntryOf(intent), restored: false);
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -75,18 +83,22 @@ public sealed class VoicePanelActivity : AppCompatActivity
 
     protected override void OnStop()
     {
-        Dismiss();
+        if (_capture?.State.KeepsPanelWhenStopped != true)
+            Dismiss();
+
         base.OnStop();
     }
 
     protected override void OnDestroy()
     {
         _ticking.Cancel();
-        if (_dictation is { } dictation)
-            dictation.Changed -= OnChanged;
+        if (_capture is { } capture)
+            capture.Changed -= OnChanged;
 
         base.OnDestroy();
     }
+
+    private static AppEntry.Panel? EntryOf(Intent? intent) => AppEntry.Parse(intent?.DataString) as AppEntry.Panel;
 
     private static bool IsDark(Configuration configuration) =>
         (configuration.UiMode & UiMode.NightMask) == UiMode.NightYes;
@@ -100,20 +112,69 @@ public sealed class VoicePanelActivity : AppCompatActivity
         controller.AppearanceLightNavigationBars = !isDark;
     }
 
-    private void OnChanged(object? sender, DictationState state)
+    private void Start(AppEntry.Panel? entry, bool restored)
     {
-        _sheet?.Show(state);
-        if (state is not DictationState.DraftReady ready)
+        Release();
+        if (entry is null || _services is null)
+        {
+            Finish();
+            return;
+        }
+
+        IPanelCapture capture = entry switch
+        {
+            AppEntry.Panel.PhotoPanel => _services.GetRequiredService<PhotoReading>(),
+            _ => _services.GetRequiredService<Dictation>()
+        };
+        _capture = capture;
+        _dictation = capture as Dictation;
+        capture.Changed += OnChanged;
+        _sheet?.Show(PanelFaces.Of(capture.Source, capture.State));
+        Run(restored ? capture.Restore : capture.Begin);
+    }
+
+    private void Release()
+    {
+        if (_capture is not { } capture)
             return;
 
-        _router?.Receive(ready.Draft);
-        OpenApp(new AppEntry.Screen.Draft());
+        capture.Changed -= OnChanged;
+        Run(capture.Cancel);
+    }
+
+    private void OnChanged(object? sender, PanelState state)
+    {
+        switch (state)
+        {
+            case PanelState.DraftReady ready:
+                _router?.Receive(ready.Draft);
+                OpenApp(new AppEntry.Screen.Draft());
+                return;
+            case PanelState.Closed:
+                Finish();
+                return;
+        }
+
+        if (_capture is { } capture)
+            _sheet?.Show(PanelFaces.Of(capture.Source, state));
+    }
+
+    private void OnActionTapped(PanelAction action)
+    {
+        if (action == PanelAction.OpenSettings)
+        {
+            OpenApp(new AppEntry.Screen.Settings());
+            return;
+        }
+
+        if (_capture is { } capture)
+            Run(capture.Retry);
     }
 
     private void Dismiss()
     {
-        if (_dictation is { } dictation)
-            Run(dictation.Cancel);
+        if (_capture is { } capture)
+            Run(capture.Cancel);
 
         Finish();
     }
@@ -123,7 +184,7 @@ public sealed class VoicePanelActivity : AppCompatActivity
         while (!_ticking.IsCancellationRequested)
         {
             await Task.Delay(TickMilliseconds, _ticking.Token);
-            if (_dictation is { State: DictationState.Listening } dictation)
+            if (_dictation is { State: PanelState.Listening } dictation)
                 await dictation.Tick();
         }
     }
@@ -145,7 +206,7 @@ public sealed class VoicePanelActivity : AppCompatActivity
         }
         catch (Exception exception)
         {
-            Android.Util.Log.Error(nameof(VoicePanelActivity), exception.ToString());
+            Android.Util.Log.Error(nameof(PanelActivity), exception.ToString());
             Finish();
         }
     }

@@ -7,7 +7,7 @@
         <item name="fontFamily">@font/archivo_semibold</item>
     </style>
 
-    <style name="Centesimo.VoicePanel" parent="Maui.MainTheme.NoActionBar">
+    <style name="Centesimo.Panel" parent="Maui.MainTheme.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">false</item>

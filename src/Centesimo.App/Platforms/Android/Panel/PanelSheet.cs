@@ -1,8 +1,10 @@
+using Android.Animation;
 using Android.Content;
 using Android.Content.Res;
 using Android.Graphics.Drawables;
 using Android.Util;
 using Android.Views;
+using Android.Views.Animations;
 using Android.Widget;
 using AndroidX.Core.View;
 using Centesimo.App.Theming;
@@ -14,17 +16,17 @@ using View = Android.Views.View;
 
 namespace Centesimo.App;
 
-internal sealed class VoicePanelSheet
+internal sealed class PanelSheet
 {
     private const int SheetCorner = 28;
     private const int Gutter = 24;
     private const int Target = 48;
     private const int MicSize = 88;
-    private const int LimitSeconds = SpeechRecordingLimits.MaximumDurationSeconds;
+    private const int ReceiptWidth = 56;
+    private const int ReceiptHeight = 72;
+    private const float SweepShare = 0.42f;
+    private const long SweepMilliseconds = 1400;
     private const string Tabular = "tnum";
-    private const string ListeningTitle = "Ti ascolto…";
-    private const string ListeningLead = "Dì cosa hai speso, per esempio “ieri 12 euro di pizza”.";
-    private const string SendLabel = "Tocca per inviare";
 
     private readonly Context _context;
     private readonly IFontManager _fonts;
@@ -41,13 +43,19 @@ internal sealed class VoicePanelSheet
     private readonly LinearLayout _talk;
     private readonly TextView _mic;
     private readonly TextView _micLabel;
+    private readonly LinearLayout _readingRow;
+    private readonly TextView _receipt;
+    private readonly FrameLayout _readingTrack;
+    private readonly View _readingBar;
+    private readonly TextView _privacy;
+    private readonly ValueAnimator _sweep;
     private readonly LinearLayout _actions;
     private readonly TextView _cancel;
     private readonly TextView _primary;
     private bool _isDark;
-    private DictationState _state = new DictationState.Starting();
+    private PanelFace _face = new PanelFace.Hidden();
 
-    public VoicePanelSheet(Context context, IFontManager fonts, bool isDark)
+    public PanelSheet(Context context, IFontManager fonts, bool isDark)
     {
         _context = context;
         _fonts = fonts;
@@ -64,7 +72,6 @@ internal sealed class VoicePanelSheet
 
         _elapsed = Text(12, Fonts.Bold);
         _remaining = Text(12, Fonts.Regular);
-        _remaining.Text = Clock(TimeSpan.FromSeconds(LimitSeconds));
         _fill = new View(context) { PivotX = 0 };
         _track = new FrameLayout(context);
         _track.AddView(_fill, new FrameLayout.LayoutParams(Match, Match));
@@ -85,12 +92,32 @@ internal sealed class VoicePanelSheet
         _talk.AddView(_mic, new LinearLayout.LayoutParams(Dp(MicSize), Dp(MicSize)));
         _talk.AddView(_micLabel, new LinearLayout.LayoutParams(Wrap, Wrap) { TopMargin = Dp(10) });
 
+        _receipt = Text(24, Fonts.Icons, ComplexUnitType.Dip);
+        _receipt.Gravity = GravityFlags.Center;
+        _readingBar = new View(context) { PivotX = 0, ScaleX = SweepShare };
+        _readingTrack = new FrameLayout(context);
+        _readingTrack.AddView(_readingBar, new FrameLayout.LayoutParams(Match, Match));
+        _readingRow = new LinearLayout(context) { Orientation = Orientation.Horizontal };
+        _readingRow.SetGravity(GravityFlags.CenterVertical);
+        _readingRow.AddView(_receipt, new LinearLayout.LayoutParams(Dp(ReceiptWidth), Dp(ReceiptHeight)));
+        _readingRow.AddView(_readingTrack, new LinearLayout.LayoutParams(0, Dp(4), 1) { LeftMargin = Dp(14) });
+        _privacy = Text(12, Fonts.Regular);
+        _sweep = ValueAnimator.OfFloat(0f, 1f)!;
+        _sweep.SetDuration(SweepMilliseconds);
+        _sweep.RepeatCount = ValueAnimator.Infinite;
+        _sweep.SetInterpolator(new LinearInterpolator());
+        _sweep.Update += (_, args) => Sweep((float)args.Animation.AnimatedValue!);
+
         _cancel = Button(14, Fonts.SemiBold, horizontalPadding: 12);
         _cancel.Text = "Annulla";
         _cancel.ContentDescription = "Annulla";
         _cancel.Click += (_, _) => Dismissed?.Invoke();
         _primary = Button(16, Fonts.Bold, horizontalPadding: Gutter);
-        _primary.Click += (_, _) => (_state is DictationState.NeedsApiKey ? SettingsTapped : RetryTapped)?.Invoke();
+        _primary.Click += (_, _) =>
+        {
+            if (_face is PanelFace.Message message)
+                ActionTapped?.Invoke(message.Action);
+        };
         _actions = new LinearLayout(context) { Orientation = Orientation.Horizontal };
         _actions.SetGravity(GravityFlags.CenterVertical);
         _actions.SetMinimumHeight(Dp(56));
@@ -104,12 +131,15 @@ internal sealed class VoicePanelSheet
         _sheet.AddView(_lead, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(6) });
         _sheet.AddView(_timeRow, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(22) });
         _sheet.AddView(_talk, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(26) });
+        _sheet.AddView(_readingRow, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(20) });
+        _sheet.AddView(_privacy, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(16) });
         _sheet.AddView(_actions, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(18) });
 
         _root = new FrameLayout(context);
         _root.AddView(_scrim, new FrameLayout.LayoutParams(Match, Match));
         _root.AddView(_sheet, new FrameLayout.LayoutParams(Match, Wrap, GravityFlags.Bottom));
         ViewCompat.SetOnApplyWindowInsetsListener(_root, new SheetInsets(_sheet, Dp(4)));
+        _root.ViewDetachedFromWindow += (_, _) => _sweep.Cancel();
 
         Render();
     }
@@ -117,13 +147,12 @@ internal sealed class VoicePanelSheet
     public View Root => _root;
 
     public event Action? MicTapped;
+    public event Action<PanelAction>? ActionTapped;
     public event Action? Dismissed;
-    public event Action? RetryTapped;
-    public event Action? SettingsTapped;
 
-    public void Show(DictationState state)
+    public void Show(PanelFace face)
     {
-        _state = state;
+        _face = face;
         Render();
     }
 
@@ -139,54 +168,90 @@ internal sealed class VoicePanelSheet
 
     private void Render()
     {
-        switch (_state)
+        var visibility = _face is PanelFace.Hidden ? ViewStates.Gone : ViewStates.Visible;
+        _scrim.Visibility = visibility;
+        _sheet.Visibility = visibility;
+        var isReading = _face is PanelFace.Reading;
+        if (isReading)
+            StartSweeping();
+        else
+            _sweep.Cancel();
+
+        switch (_face)
         {
-            case DictationState.Starting:
-                ShowRecording(ListeningTitle, ListeningLead, TimeSpan.Zero, SendLabel, isActive: false);
+            case PanelFace.Recording recording:
+                ShowRecording(recording);
                 break;
-            case DictationState.Listening listening:
-                ShowRecording(ListeningTitle, ListeningLead, listening.Heard, SendLabel, isActive: true);
+            case PanelFace.Reading reading:
+                ShowReading(reading);
                 break;
-            case DictationState.Preparing preparing:
-                ShowRecording("Preparo la bozza…", "Poi la controlli prima di salvarla.", preparing.Heard, "Invio in corso", isActive: false);
-                break;
-            case DictationState.NeedsApiKey:
-                ShowMessage("Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.", "Apri impostazioni");
-                break;
-            case DictationState.Failed failed:
-                ShowMessage(failed.Error.Message, "Riprova");
+            case PanelFace.Message message:
+                ShowMessage(message);
                 break;
         }
 
         Paint();
     }
 
-    private void ShowRecording(string title, string lead, TimeSpan heard, string label, bool isActive)
+    private void ShowRecording(PanelFace.Recording recording)
     {
-        _title.Text = title;
-        _lead.Text = lead;
+        _title.Text = recording.Title;
+        _lead.Text = recording.Lead;
         _timeRow.Visibility = ViewStates.Visible;
-        _elapsed.Text = Clock(heard);
-        _fill.ScaleX = (float)Math.Clamp(heard.TotalSeconds / LimitSeconds, 0, 1);
+        _elapsed.Text = recording.Elapsed;
+        _remaining.Text = recording.Remaining;
+        _fill.ScaleX = (float)recording.Fill;
+        _readingRow.Visibility = ViewStates.Gone;
+        _privacy.Visibility = ViewStates.Gone;
         _talk.Visibility = ViewStates.Visible;
-        _talk.Alpha = _state is DictationState.Preparing ? 0.38f : 1f;
-        _micLabel.Text = label;
-        _mic.ContentDescription = label;
-        _mic.Enabled = isActive;
+        _talk.Alpha = recording.Mic == MicStage.Sending ? 0.38f : 1f;
+        _micLabel.Text = recording.MicLabel;
+        _mic.ContentDescription = recording.MicLabel;
+        _mic.Enabled = recording.Mic == MicStage.Listening;
         _primary.Visibility = ViewStates.Gone;
         SetTopMargin(_actions, 18);
     }
 
-    private void ShowMessage(string lead, string action)
+    private void ShowReading(PanelFace.Reading reading)
     {
-        _title.Text = "Inserimento vocale";
-        _lead.Text = lead;
+        _title.Text = reading.Title;
+        _lead.Text = reading.Lead;
         _timeRow.Visibility = ViewStates.Gone;
         _talk.Visibility = ViewStates.Gone;
+        _receipt.Text = reading.Glyph;
+        _readingRow.Visibility = ViewStates.Visible;
+        _privacy.Text = reading.PrivacyNote;
+        _privacy.Visibility = ViewStates.Visible;
+        _primary.Visibility = ViewStates.Gone;
+        SetTopMargin(_actions, 14);
+    }
+
+    private void ShowMessage(PanelFace.Message message)
+    {
+        var action = message.Action == PanelAction.OpenSettings ? "Apri impostazioni" : "Riprova";
+        _title.Text = message.Title;
+        _lead.Text = message.Lead;
+        _timeRow.Visibility = ViewStates.Gone;
+        _talk.Visibility = ViewStates.Gone;
+        _readingRow.Visibility = ViewStates.Gone;
+        _privacy.Visibility = ViewStates.Gone;
         _primary.Text = action;
         _primary.ContentDescription = action;
         _primary.Visibility = ViewStates.Visible;
         SetTopMargin(_actions, 28);
+    }
+
+    private void StartSweeping()
+    {
+        if (!_sweep.IsRunning)
+            _sweep.Start();
+    }
+
+    private void Sweep(float progress)
+    {
+        var width = _readingTrack.Width;
+        var bar = width * SweepShare;
+        _readingBar.TranslationX = -bar + progress * (width + bar);
     }
 
     private void Paint()
@@ -198,13 +263,20 @@ internal sealed class VoicePanelSheet
         _elapsed.SetTextColor(Resolve(ThemeColor.Ink));
         _remaining.SetTextColor(Resolve(ThemeColor.Mute));
         _track.SetBackgroundColor(Resolve(ThemeColor.Hairline));
-        _fill.SetBackgroundColor(Resolve(_state is DictationState.Preparing ? ThemeColor.Mute : ThemeColor.Ink));
+        _fill.SetBackgroundColor(Resolve(_face is PanelFace.Recording { Mic: MicStage.Sending } ? ThemeColor.Mute : ThemeColor.Ink));
         _micLabel.SetTextColor(Resolve(ThemeColor.Ink));
         _mic.SetTextColor(Resolve(ThemeColor.Accent));
         var mic = Shape(ThemeColor.SurfaceRaised, oval: true);
         mic.SetStroke(Dp(1), Resolve(ThemeColor.Outline));
         _mic.Background = mic;
         _mic.Foreground = Ripple(Shape(ThemeColor.Ink, oval: true));
+        _receipt.SetTextColor(Resolve(ThemeColor.Mute));
+        var receipt = Shape(ThemeColor.SurfaceRaised);
+        receipt.SetStroke(Dp(1), Resolve(ThemeColor.Outline));
+        _receipt.Background = receipt;
+        _readingTrack.SetBackgroundColor(Resolve(ThemeColor.Hairline));
+        _readingBar.SetBackgroundColor(Resolve(ThemeColor.Ink));
+        _privacy.SetTextColor(Resolve(ThemeColor.Mute));
         _cancel.SetTextColor(Resolve(ThemeColor.Ink));
         _cancel.Foreground = Ripple(new ColorDrawable(Color.White));
         _primary.SetTextColor(Resolve(ThemeColor.Ground));
@@ -264,8 +336,6 @@ internal sealed class VoicePanelSheet
         margins.TopMargin = Dp(dp);
         view.LayoutParameters = margins;
     }
-
-    private static string Clock(TimeSpan time) => $"{(int)time.TotalMinutes}:{time.Seconds:00}";
 
     private sealed class SheetInsets(View sheet, int restingBottom) : Java.Lang.Object, IOnApplyWindowInsetsListener
     {

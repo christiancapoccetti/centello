@@ -14,7 +14,7 @@ internal static class EntryLinks
         var intent = new Intent(Android.Content.Intent.ActionView, Uri.Parse(entry.ToLink()));
         if (entry is AppEntry.Panel)
             return intent
-                .SetClass(context, typeof(VoicePanelActivity))
+                .SetClass(context, typeof(PanelActivity))
                 .AddFlags(ActivityFlags.NewTask);
 
         return intent
