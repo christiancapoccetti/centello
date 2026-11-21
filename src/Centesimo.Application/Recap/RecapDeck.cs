@@ -7,6 +7,7 @@ public sealed record RecapDeck
     private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> MonthCards =
     [
         RecapCard.Total.Of,
+        RecapCard.Rank.Of,
         RecapCard.RecordDay.Of,
         RecapCard.Categories.Of,
         RecapCard.Changes.Of
