@@ -74,6 +74,13 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Limited set of calculations: total, comparison between two periods, largest expense, average. Questions outside it get a plain "non so rispondere" instead of a guess.
 - The voice flow must tell a question from an expense: a field in the schema or two separate microphone modes.
 
+## Gemini ("Ok Google")
+
+- "Ok Google, aggiungi una spesa di 10 euro in Ristoranti su Centesimo": expose an `addExpense` function (amount, category name, optional tag, note and date) through Android AppFunctions, the API Gemini uses to call app features on Android 16 and later.
+- Gemini does the language understanding, so this path needs no OpenAI key. The app matches the category name against its own active categories; anything missing or ambiguous opens the expense editor pre-filled instead of saving, as voice entry does.
+- Blocked today: AppFunctions is an experimental Jetpack library (Kotlin, annotation processing), and Gemini calls third-party apps only in a limited preview for trusted testers. Centesimo would also need a small Kotlin library bound into the MAUI app. Re-check when Gemini opens AppFunctions to every app.
+- App Actions (built-in intents in `shortcuts.xml`) belong to the retired Google Assistant and are not a path forward.
+
 ## AI providers and the API key
 
 - Support providers other than OpenAI (for example Google Gemini or Mistral) for transcription and for reading photos and PDFs, behind the existing interpreter port. The user picks the provider in `Impostazioni` and enters that provider's key; each provider keeps the same consent and the same constrained output.
