@@ -125,7 +125,7 @@ public sealed class RecapCardNewHabits_should_expected_behavior
     [Fact]
     public async Task Should_compare_a_year_so_far_with_the_year_before()
     {
-        var world = new RecapWorld(new DateOnly(2026, 11, 21));
+        var world = new RecapWorld(new DateOnly(2026, 12, 31));
         var svago = world.Category("Svago", "lilac");
         world.SpendInYear(svago, 2026, 1_000_000, 40, lastMonth: 10);
         world.SpendInYear(svago, 2025, 1_000_000, 40);

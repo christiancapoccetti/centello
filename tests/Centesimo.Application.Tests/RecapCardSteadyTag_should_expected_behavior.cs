@@ -110,26 +110,11 @@ public sealed class RecapCardSteadyTag_should_expected_behavior
         Assert.Equal(shown, deck.Cards.OfType<RecapCard.SteadyTag>().Any());
     }
 
-    [Theory]
-    [InlineData(9, false)]
-    [InlineData(10, true)]
-    public async Task Should_need_ten_weeks_even_in_a_short_year_so_far(int weeks, bool shown)
-    {
-        var world = new RecapWorld(new DateOnly(2026, 3, 11));
-        var spesa = world.Category("Spesa", "mint");
-        world.SpendInYear(spesa, 2026, 600_000, 40, lastMonth: 3);
-        Dominant(world, spesa);
-        SpendWeekly(world, spesa, world.Tag(spesa, "Pane"), Enumerable.Range(1, weeks));
-
-        var deck = await world.Deck(Period.Year(2026));
-
-        Assert.Equal(shown, deck.Cards.OfType<RecapCard.SteadyTag>().Any());
-    }
 
     [Fact]
     public async Task Should_count_the_weeks_so_far_and_end_on_the_month_of_the_last_day()
     {
-        var world = new RecapWorld(new DateOnly(2026, 11, 21));
+        var world = new RecapWorld(new DateOnly(2026, 12, 31));
         var spesa = world.Category("Spesa", "mint");
         world.SpendInYear(spesa, 2026, 1_000_000, 40, lastMonth: 10);
         Dominant(world, spesa);
@@ -137,10 +122,10 @@ public sealed class RecapCardSteadyTag_should_expected_behavior
 
         var steady = (await world.Deck(Period.Year(2026))).Single<RecapCard.SteadyTag>();
 
-        // 20 November is the 324th day: week 47 of 47 counted.
-        Assert.Equal("40 settimane su 47", steady.Detail.Emphasis);
-        Assert.Equal(47, steady.Weeks.Bars.Count);
-        Assert.Equal("Novembre", steady.End);
+        // 30 December is the 364th day: week 52 of 52 counted.
+        Assert.Equal("40 settimane su 52", steady.Detail.Emphasis);
+        Assert.Equal(52, steady.Weeks.Bars.Count);
+        Assert.Equal("Dicembre", steady.End);
     }
 
     [Fact]

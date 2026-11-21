@@ -23,13 +23,25 @@ public sealed class RecapSpan_should_expected_behavior
     }
 
     [Fact]
-    public void Should_cover_the_year_of_today_up_to_yesterday()
-    {
-        var span = RecapSpan.Of(Period.Year(2026), Today)!;
+    public void Should_have_no_span_for_the_year_of_today_in_November() =>
+        Assert.Null(RecapSpan.Of(Period.Year(2026), Today));
 
-        Assert.Equal(new DateOnly(2026, 11, 20), span.Through);
+    [Fact]
+    public void Should_have_no_span_for_the_year_of_today_the_day_before_it_opens() =>
+        Assert.Null(RecapSpan.Of(Period.Year(2026), new DateOnly(2026, 12, 29)));
+
+    [Fact]
+    public void Should_cover_the_year_of_today_up_to_yesterday_from_30_December()
+    {
+        var span = RecapSpan.Of(Period.Year(2026), new DateOnly(2026, 12, 30))!;
+
+        Assert.Equal(new DateOnly(2026, 12, 29), span.Through);
         Assert.True(span.IsSoFar);
     }
+
+    [Fact]
+    public void Should_cover_the_year_of_today_up_to_the_30th_on_31_December() =>
+        Assert.Equal(new DateOnly(2026, 12, 30), RecapSpan.Of(Period.Year(2026), new DateOnly(2026, 12, 31))!.Through);
 
     [Fact]
     public void Should_have_no_span_for_the_month_of_today() =>
@@ -75,6 +87,6 @@ public sealed class RecapSpan_should_expected_behavior
     [Fact]
     public void Should_compare_the_year_so_far_with_the_same_days_a_year_earlier() =>
         Assert.Equal(
-            (new DateOnly(2025, 1, 1), new DateOnly(2025, 11, 20)),
-            RecapSpan.Of(Period.Year(2026), Today)!.Compared);
+            (new DateOnly(2025, 1, 1), new DateOnly(2025, 12, 30)),
+            RecapSpan.Of(Period.Year(2026), new DateOnly(2026, 12, 31))!.Compared);
 }

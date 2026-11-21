@@ -155,7 +155,7 @@ public sealed class RecapCardAutomatic_should_expected_behavior
     [Fact]
     public async Task Should_count_the_year_so_far_as_so_far()
     {
-        var world = new RecapWorld(new DateOnly(2026, 11, 21));
+        var world = new RecapWorld(new DateOnly(2026, 12, 31));
         var casa = world.Category("Casa", "peri");
         world.SpendInYear(world.Category("Spesa", "mint"), 2026, 1_000_000, 40, lastMonth: 10);
         Pay(world, casa, "Affitto", 32_000, times: 10);

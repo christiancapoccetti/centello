@@ -33,7 +33,7 @@ public sealed class RecapCardSummary_should_expected_behavior
     [Fact]
     public async Task Should_title_the_deck_with_the_span_it_covers()
     {
-        var world = new RecapWorld(new DateOnly(2026, 11, 21));
+        var world = new RecapWorld(new DateOnly(2026, 12, 31));
         world.SpendInYear(world.Category("Spesa", "mint"), 2026, 1_200_000, 40, lastMonth: 10);
 
         var deck = await world.Deck(Period.Year(2026));

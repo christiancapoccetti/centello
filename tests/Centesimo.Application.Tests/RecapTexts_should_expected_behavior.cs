@@ -2,7 +2,7 @@ namespace Centesimo.Application.Tests;
 
 public sealed class RecapTexts_should_expected_behavior
 {
-    private static readonly DateOnly Today = new(2026, 11, 21);
+    private static readonly DateOnly Today = new(2026, 12, 31);
 
     [Fact]
     public void Should_title_a_month_with_its_name_and_badge_it_with_the_year()
@@ -111,7 +111,7 @@ public sealed class RecapTexts_should_expected_behavior
         var soFar = RecapSpan.Of(Period.Year(2026), Today)!;
 
         Assert.Equal("del 2024", RecapTexts.Against(closed, Period.Year(2024)));
-        Assert.Equal("del 2025 al 20 novembre", RecapTexts.Against(soFar, Period.Year(2025)));
+        Assert.Equal("del 2025 al 30 dicembre", RecapTexts.Against(soFar, Period.Year(2025)));
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class RecapTexts_should_expected_behavior
         Assert.Equal("rispetto a settembre", RecapTexts.Versus(month));
         Assert.Equal("rispetto a dicembre 2025", RecapTexts.Versus(january));
         Assert.Equal("rispetto al 2024", RecapTexts.Versus(closed));
-        Assert.Equal("rispetto al 2025 fino al 20 novembre", RecapTexts.Versus(soFar));
+        Assert.Equal("rispetto al 2025 fino al 30 dicembre", RecapTexts.Versus(soFar));
     }
 
     [Theory]

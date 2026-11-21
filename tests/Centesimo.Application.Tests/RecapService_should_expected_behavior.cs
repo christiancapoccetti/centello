@@ -39,6 +39,9 @@ public sealed class RecapService_should_expected_behavior
         ["a future year"] = () => (WorldWithYear(2027), Period.Year(2027)),
         ["a thin year"] = () => (WorldWithYear(2025, count: 29), Period.Year(2025)),
         ["a year in two months"] = () => (WorldWithYear(2025, lastMonth: 2), Period.Year(2025)),
+        ["the current year in November"] = () => (WorldWithYear(2026, lastMonth: 10), Period.Year(2026)),
+        ["the current year the day before it opens"] = () =>
+            (WorldWithYear(2026, lastMonth: 10, today: new DateOnly(2026, 12, 29)), Period.Year(2026)),
         ["1 January for the current year"] = () =>
             (WorldWithYear(2025, today: new DateOnly(2026, 1, 1)), Period.Year(2026))
     };
@@ -48,7 +51,7 @@ public sealed class RecapService_should_expected_behavior
         ["a closed month"] = () => (WorldWithMonth(2026, 10), Period.Month(2026, 10)),
         ["a month of 10 expenses"] = () => (WorldWithMonth(2026, 10, count: 10), Period.Month(2026, 10)),
         ["a closed year"] = () => (WorldWithYear(2025), Period.Year(2025)),
-        ["the year so far"] = () => (WorldWithYear(2026, lastMonth: 10), Period.Year(2026))
+        ["the year so far on 31 December"] = () => (WorldWithYear(2026, lastMonth: 10, today: new DateOnly(2026, 12, 31)), Period.Year(2026))
     };
 
     public static IEnumerable<object[]> Unavailable => UnavailableCases.Keys.Select(name => new object[] { name });

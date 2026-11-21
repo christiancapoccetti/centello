@@ -3,10 +3,13 @@ using Centesimo.Domain;
 namespace Centesimo.Application;
 
 /// <summary>The days a recap covers. A closed month or year covers all of them. The year of today covers 1 January
-/// to yesterday (IsSoFar) and compares with the same days a year earlier. The month of today, any future period and
-/// the year of today on 1 January have no span, so no recap.</summary>
+/// to yesterday (IsSoFar) and compares with the same days a year earlier, but only from YearOpensOn. The month of
+/// today, any future period and the year of today before that day have no span, so no recap.</summary>
 public sealed record RecapSpan
 {
+    /// <summary>The month and day from which the year of today can be recapped.</summary>
+    public static readonly (int Month, int Day) YearOpensOn = (12, 30);
+
     private RecapSpan(Period period, DateOnly through) => (Period, Through) = (period, through);
 
     public Period Period { get; }
@@ -26,8 +29,9 @@ public sealed record RecapSpan
         if (period.End < today)
             return new RecapSpan(period, period.End);
 
-        var yesterday = today.AddDays(-1);
-        return period.Kind == PeriodKind.Year && period.Start <= yesterday ? new RecapSpan(period, yesterday) : null;
+        return period.Kind == PeriodKind.Year && period.Start.Year == today.Year && today >= new DateOnly(today.Year, YearOpensOn.Month, YearOpensOn.Day)
+            ? new RecapSpan(period, today.AddDays(-1))
+            : null;
     }
 
     /// <summary>The single eligibility rule. Insight's row, the deck and the notification all call this. Expenses

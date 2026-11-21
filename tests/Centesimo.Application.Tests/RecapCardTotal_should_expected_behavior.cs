@@ -186,26 +186,26 @@ public sealed class RecapCardTotal_should_expected_behavior
     [Fact]
     public async Task Should_say_until_when_the_year_so_far_is_counted_and_compare_the_same_days()
     {
-        var world = Year(new DateOnly(2026, 11, 21), spent: 1_000_000, count: 500, lastMonth: 10);
+        var world = Year(new DateOnly(2026, 12, 31), spent: 1_000_000, count: 500, lastMonth: 10);
 
         var total = (await world.Deck(Period.Year(2026))).Single<RecapCard.Total>();
 
-        Assert.Equal("Fino al 20 novembre hai speso", total.Lead);
+        Assert.Equal("Fino al 30 dicembre hai speso", total.Lead);
         Assert.Equal("10.000", total.Amount);
         Assert.Equal(
-            new RecapChip($"8.340{Nbsp}€ meno del 2025 al 20 novembre", ComparisonTrend.Lower),
+            new RecapChip($"8.340{Nbsp}€ meno del 2025 al 30 dicembre", ComparisonTrend.Lower),
             total.Chips.Single());
-        Assert.Equal(["2025 al 20 novembre", "2026 al 20 novembre"], total.Measures.Select(measure => measure.Label));
+        Assert.Equal(["2025 al 30 dicembre", "2026 al 30 dicembre"], total.Measures.Select(measure => measure.Label));
     }
 
     [Fact]
     public async Task Should_average_a_year_so_far_over_the_months_its_days_make_up()
     {
-        var world = Year(new DateOnly(2026, 11, 21), spent: 1_000_000, count: 500, lastMonth: 10);
+        var world = Year(new DateOnly(2026, 12, 31), spent: 1_000_000, count: 500, lastMonth: 10);
 
         var total = (await world.Deck(Period.Year(2026))).Single<RecapCard.Total>();
 
-        // 10.000 € over 324 of 365 days is 12 * 324 / 365 = 10,65 months.
-        Assert.Equal($"939{Nbsp}€", total.Detail.Emphasis);
+        // 10.000 € over 364 of 365 days is 12 * 364 / 365 = 11,97 months.
+        Assert.Equal($"836{Nbsp}€", total.Detail.Emphasis);
     }
 }

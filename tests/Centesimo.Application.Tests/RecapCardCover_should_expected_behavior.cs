@@ -105,28 +105,28 @@ public sealed class RecapCardCover_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_say_until_when_the_year_so_far_is_counted_and_stub_the_months_to_come()
+    public async Task Should_say_until_when_the_year_so_far_is_counted()
     {
-        var cover = await YearCover(new DateOnly(2026, 11, 21), lastMonth: 11);
+        var cover = await YearCover(new DateOnly(2026, 12, 31));
 
-        Assert.Equal("Fino al 20 novembre, in poche schede.", cover.Subtitle);
-        Assert.Equal(RecapBarKind.Stub, cover.Chart.Bars[11].Kind);
+        Assert.Equal("Fino al 30 dicembre, in poche schede.", cover.Subtitle);
+        Assert.Equal(RecapBarKind.Bar, cover.Chart.Bars[11].Kind);
     }
 
     [Fact]
     public async Task Should_not_rank_the_month_still_in_progress_in_a_year_so_far()
     {
-        var world = new RecapWorld(new DateOnly(2026, 11, 21));
+        var world = new RecapWorld(new DateOnly(2026, 12, 31));
         var spesa = world.Category("Spesa", "mint");
-        for (var month = 1; month <= 10; month++)
+        for (var month = 1; month <= 11; month++)
             world.SpendInMonth(spesa, 2026, month, 100_000, 5);
 
-        world.SpendInMonth(spesa, 2026, 11, 10_000, 5);
+        world.SpendInMonth(spesa, 2026, 12, 10_000, 5);
 
         var cover = (await world.Deck(Period.Year(2026))).Single<RecapCard.Cover>();
 
-        Assert.Equal(RecapBarKind.Bar, cover.Chart.Bars[10].Kind);
-        Assert.Equal(0.1, cover.Chart.Bars[10].Height, 10);
+        Assert.Equal(RecapBarKind.Bar, cover.Chart.Bars[11].Kind);
+        Assert.Equal(0.1, cover.Chart.Bars[11].Height, 10);
         Assert.Equal(RecapBarKind.Strong, cover.Chart.Bars[0].Kind);
     }
 }

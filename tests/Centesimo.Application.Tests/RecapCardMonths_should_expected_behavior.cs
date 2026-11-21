@@ -53,15 +53,15 @@ public sealed class RecapCardMonths_should_expected_behavior
     [Fact]
     public async Task Should_draw_but_never_rank_the_month_of_the_last_day_of_a_year_so_far()
     {
-        long[] months = [100_000, 110_000, 120_000, 130_000, 140_000, 150_000, 160_000, 170_000, 180_000, 190_000, 900_000];
+        long[] months = [100_000, 110_000, 120_000, 130_000, 140_000, 150_000, 160_000, 170_000, 180_000, 190_000, 195_000, 900_000];
 
-        var deck = await Year(months, new DateOnly(2026, 11, 21));
+        var deck = await Year(months, new DateOnly(2026, 12, 31));
 
         var chart = deck.Single<RecapCard.Months>().Chart;
-        Assert.Equal(RecapBarKind.Bar, chart.Bars[10].Kind);
-        Assert.Equal(1.0, chart.Bars[10].Height);
-        Assert.Equal(RecapBarKind.Strong, chart.Bars[9].Kind);
-        Assert.Equal("Ottobre il più caro, gennaio il più leggero", deck.Single<RecapCard.Months>().Headline);
+        Assert.Equal(RecapBarKind.Bar, chart.Bars[11].Kind);
+        Assert.Equal(1.0, chart.Bars[11].Height);
+        Assert.Equal(RecapBarKind.Strong, chart.Bars[10].Kind);
+        Assert.Equal("Novembre il più caro, gennaio il più leggero", deck.Single<RecapCard.Months>().Headline);
     }
 
     [Fact]

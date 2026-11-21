@@ -527,19 +527,27 @@ public sealed class InsightsService_should_expected_behavior
     [Fact]
     public async Task Should_offer_the_year_so_far_up_to_yesterday()
     {
-        var overview = await Recap(Period.Year(2026), SpendOnDays(new DateOnly(2026, 1, 5), 36, 10));
+        var overview = await Recap(Period.Year(2026), SpendOnDays(new DateOnly(2026, 1, 5), 36, 10), new DateOnly(2026, 12, 31));
 
-        Assert.Equal(new InsightRecap(Period.Year(2026), "Il tuo 2026 finora", "Fino al 20 novembre, in poche schede"),
+        Assert.Equal(new InsightRecap(Period.Year(2026), "Il tuo 2026 finora", "Fino al 30 dicembre, in poche schede"),
             overview.Recap);
+    }
+
+    [Fact]
+    public async Task Should_not_offer_the_year_before_it_opens()
+    {
+        var overview = await Recap(Period.Year(2026), SpendOnDays(new DateOnly(2026, 1, 5), 36, 10), new DateOnly(2026, 12, 29));
+
+        Assert.Null(overview.Recap);
     }
 
     [Fact]
     public async Task Should_count_the_year_so_far_only_up_to_yesterday()
     {
         var spending = SpendOnDays(new DateOnly(2026, 1, 5), 29, 10)
-            .Append(new Expense(Guid.NewGuid(), RecapCategory.CategoryId, new Money(1000), new DateOnly(2026, 11, 21)));
+            .Append(new Expense(Guid.NewGuid(), RecapCategory.CategoryId, new Money(1000), new DateOnly(2026, 12, 31)));
 
-        var overview = await Recap(Period.Year(2026), spending);
+        var overview = await Recap(Period.Year(2026), spending, new DateOnly(2026, 12, 31));
 
         Assert.Null(overview.Recap);
     }
@@ -552,10 +560,10 @@ public sealed class InsightsService_should_expected_behavior
 
     private static readonly Category RecapCategory = new(Guid.NewGuid(), "Spesa", "cart", "#196D61");
 
-    private static async Task<InsightsOverview> Recap(Period period, IEnumerable<Expense> spending)
+    private static async Task<InsightsOverview> Recap(Period period, IEnumerable<Expense> spending, DateOnly? today = null)
     {
         var expenses = new FakeExpenseRepository();
         expenses.Items.AddRange(spending);
-        return (await CreateService(new DateOnly(2026, 11, 21), RecapCategory, expenses).Get(period)).Value;
+        return (await CreateService(today ?? new DateOnly(2026, 11, 21), RecapCategory, expenses).Get(period)).Value;
     }
 }

@@ -124,13 +124,13 @@ public sealed class RecapCardConsistency_should_expected_behavior
     [Fact]
     public async Task Should_blank_the_days_after_yesterday_in_the_year_so_far()
     {
-        var consistency = await YearWith(200, new DateOnly(2026, 7, 20));
+        var consistency = await YearWith(364, new DateOnly(2026, 12, 31));
 
         var days = consistency.Days;
-        Assert.Equal("200 giorni su 200", consistency.Headline);
-        Assert.Equal(200, days.Cells.Count(cell => cell is RecapCell.Filled or RecapCell.Empty));
-        Assert.Equal(RecapCell.None, days.Cells[6 * 31 + 19]);
-        Assert.Equal(RecapCell.Filled, days.Cells[6 * 31 + 18]);
+        Assert.Equal("364 giorni su 364", consistency.Headline);
+        Assert.Equal(364, days.Cells.Count(cell => cell is RecapCell.Filled or RecapCell.Empty));
+        Assert.Equal(RecapCell.None, days.Cells[11 * 31 + 30]);
+        Assert.Equal(RecapCell.Filled, days.Cells[11 * 31 + 29]);
     }
 
     [Theory]
