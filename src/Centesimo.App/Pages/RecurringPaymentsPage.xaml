@@ -13,24 +13,26 @@
     <ContentPage.Resources>
         <!-- One row for every section: what the payment is, what it does and how much. A tap opens it in the editor. -->
         <DataTemplate x:Key="PaymentRow">
-            <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
+            <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*" ColumnSpacing="14" RowDefinitions="*,1">
                 <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                <VerticalStackLayout Grid.Column="1" Padding="0,8" VerticalOptions="Center">
-                    <!-- A long title gives way and the badge keeps its place beside it. -->
-                    <FlexLayout Direction="Row" AlignItems="Center">
-                        <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="1" FlexLayout.Shrink="1" />
-                        <!-- The gap is padding: FlexLayout counts an item margin twice. -->
-                        <ContentView Padding="6,0,0,0" FlexLayout.Shrink="0" IsVisible="{Binding HasBadge}">
-                            <Border Style="{StaticResource Badge}">
-                                <Label Text="{Binding Badge}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" TextColor="{t:Theme Mute}" VerticalTextAlignment="Center" />
-                            </Border>
-                        </ContentView>
-                    </FlexLayout>
-                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" />
-                </VerticalStackLayout>
-                <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource AmountLabel}" VerticalOptions="Center" />
-                <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
-                <Button Grid.RowSpan="2" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnPaymentClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri il pagamento" />
+                <c:TrailingValueLayout Grid.Column="1" Margin="0,8">
+                    <VerticalStackLayout>
+                        <!-- A long title gives way and the badge keeps its place beside it. -->
+                        <FlexLayout Direction="Row" AlignItems="Center">
+                            <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" FlexLayout.Shrink="1" />
+                            <!-- The gap is padding: FlexLayout counts an item margin twice. -->
+                            <ContentView Padding="6,0,0,0" FlexLayout.Shrink="0" IsVisible="{Binding HasBadge}">
+                                <Border Style="{StaticResource Badge}">
+                                    <Label Text="{Binding Badge}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" TextColor="{t:Theme Mute}" VerticalTextAlignment="Center" />
+                                </Border>
+                            </ContentView>
+                        </FlexLayout>
+                        <Label Text="{Binding Detail}" Style="{StaticResource Caption}" />
+                    </VerticalStackLayout>
+                    <Label Text="{Binding Amount}" Style="{StaticResource AmountLabel}" />
+                </c:TrailingValueLayout>
+                <BoxView Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
+                <Button Grid.RowSpan="2" Grid.ColumnSpan="2" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnPaymentClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri il pagamento" />
             </Grid>
         </DataTemplate>
     </ContentPage.Resources>

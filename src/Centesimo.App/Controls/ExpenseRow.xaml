@@ -3,21 +3,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:Centesimo.App.Controls"
              x:Class="Centesimo.App.Controls.ExpenseRow">
-    <Grid HeightRequest="58" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
+    <!-- 58 is the least: with a larger font the title and the detail take the lines they need, and the amount goes
+         under them when it would leave them too little width. -->
+    <Grid MinimumHeightRequest="58" ColumnDefinitions="36,*" ColumnSpacing="14" RowDefinitions="*,1">
         <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-            <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" />
-            <Label Text="{Binding Detail}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation">
-                <Label.Triggers>
-                    <!-- A row with nothing to add keeps its title in the middle. -->
-                    <DataTrigger TargetType="Label" Binding="{Binding Detail}" Value="">
-                        <Setter Property="IsVisible" Value="False" />
-                    </DataTrigger>
-                </Label.Triggers>
-            </Label>
-        </VerticalStackLayout>
-        <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource AmountLabel}" VerticalOptions="Center" />
-        <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
-        <Button Grid.RowSpan="2" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" Clicked="OnClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la spesa" />
+        <c:TrailingValueLayout Grid.Column="1" Margin="0,6">
+            <VerticalStackLayout>
+                <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" />
+                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" MaxLines="2">
+                    <Label.Triggers>
+                        <!-- A row with nothing to add keeps its title in the middle. -->
+                        <DataTrigger TargetType="Label" Binding="{Binding Detail}" Value="">
+                            <Setter Property="IsVisible" Value="False" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </VerticalStackLayout>
+            <Label Text="{Binding Amount}" Style="{StaticResource AmountLabel}" />
+        </c:TrailingValueLayout>
+        <BoxView Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
+        <Button Grid.RowSpan="2" Grid.ColumnSpan="2" BackgroundColor="Transparent" Text="" Clicked="OnClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la spesa" />
     </Grid>
 </ContentView>
