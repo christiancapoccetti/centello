@@ -22,7 +22,7 @@
     <MauiImage Include="..\..\docs\brand\segno-colore-su-scuro.svg" Link="Resources\Images\segno_su_scuro.svg" BaseSize="64,64" />
     <MauiImage Include="..\..\docs\brand\segno-colore-su-chiaro.svg" Link="Resources\Images\segno_su_chiaro.svg" BaseSize="64,64" />
     <MauiAsset Include="Resources\Raw\*" LogicalName="%(Filename)%(Extension)" />
-    <MauiAsset Include="..\..\LICENSE" LogicalName="GPL-3.0.txt" />
+    <MauiAsset Include="..\..\LICENSE" LogicalName="PolyForm-Noncommercial-1.0.0.md" />
     <!-- The Android tab bar label style can only name a font resource, so the SemiBold cut is also packaged as one. -->
     <AndroidResource Include="Resources\Fonts\Archivo-SemiBold.ttf" LogicalName="font\archivo_semibold.ttf" />
   </ItemGroup>
