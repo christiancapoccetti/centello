@@ -54,13 +54,6 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Optional hiding of amounts in the widgets.
 - Align Oggi's microphone consent with the panel's dialog.
 
-## App shortcuts
-
-- Launcher shortcuts (long press on the app icon), three in total:
-  - `Nuova spesa` (static): opens an empty expense editor.
-  - The two most used categories of the last 30 days (dynamic, with the category icon): open the expense editor with that category already selected, amount to type. They are refreshed when an expense is saved.
-- Each shortcut can be pinned to the home screen as its own icon.
-
 ## Year in review
 
 - "Il tuo anno in Centesimo", in the style of Spotify Wrapped: full-screen story cards at the end of the year with the yearly total, the most expensive month, the category that grew the most, the most regular habit and the record day.

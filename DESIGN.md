@@ -391,19 +391,27 @@ The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi
 
 ### Home screen widgets (signature)
 Four widgets that are the Home on the launcher, in the same flat graphite and the same Archivo.
-- **Aggiungi** (4x1, or 2x1): a raised pill with the coral plus, "Aggiungi spesa" and a divider, then the coral microphone; the 2x1 keeps only the plus and the microphone.
+- **Aggiungi** (resizable in both directions): four shapes chosen by its size and the measured width of its words (`AddWidgetShapes.Of`). 2x1: the coral plus and microphone. 3x1: plus, microphone and camera as icons. 4x1: a raised pill with the coral plus, "Aggiungi spesa" and a divider, then the coral microphone and camera, as Oggi's dock. 4x2: a full-width "Aggiungi spesa" pill over "A voce" and "Da foto".
 - **Scorciatoie** (4x1): the four categories used most in the last 30 days (by count) as tiles with their name, then "Altra" for any other; each opens the editor on that category.
 - **Il mese** (2x2): the month, the total in the condensed numeral, the remaining budget, a short comparison chip, the category line and, when there is one, the over-budget category.
 - **Il ritmo** (4x2): the full comparison chip, a round coral plus and Oggi's daily chart with its pace line ("27 € al giorno").
 
-Tapping a widget opens the app on the matching screen; an editor opened from a widget returns to the launcher when it is saved or closed.
+Tapping a widget opens the app on the matching screen; an editor opened from a widget returns to the launcher when it is saved or closed. The gallery and the PDF stay inside Oggi.
 
 **The Widget Words Are Pictures Rule.** Launchers ignore the app's font resources, so no widget word is a TextView. Every word is drawn in Archivo with tabular figures as a single-colour mask that the layout tints with its `@color/theme_*` colour, like the glyphs; a text with two colours (the budget sentence with its bold ink amount) is drawn twice, light and dark, and the launcher shows the copy that matches its scheme. Each image carries the same words as its description. Widget text therefore does not follow the system font size.
 
 **The Theme Resources Rule.** Widget layouts take colours only from `@color/theme_*`, generated from `ThemeTokens` in `values/` and `values-night/`, so a widget switches between light and dark with the launcher while the app is not running. Data graphics keep the hard-edge rules of the Home.
 
-### Voice panel (signature)
-The voice entry opened from the Aggiungi microphone: a translucent sheet over the launcher, on the scrim, that starts listening at once. A second tap on the microphone sends; so does reaching 20 seconds. "Annulla", a tap outside, Back or leaving the panel cancels. The draft then opens in the expense editor, as it does from Oggi, whose hold-to-talk still refuses a recording that reaches 20 seconds.
+### Entry panel (signature)
+The sheet opened from the Aggiungi microphone or camera, or from the "Spesa a voce" and "Spesa da foto" shortcuts: translucent, over the launcher, on the scrim. `PanelActivity` hosts voice (`Dictation`) or photo (`PhotoReading`), and `PanelFaces.Of` holds every word it shows.
+- **Voice:** starts listening at once. A second tap on the microphone sends; so does reaching 20 seconds. "Annulla", a tap outside, Back or leaving the panel cancels. Oggi's hold-to-talk still refuses a recording that reaches 20 seconds.
+- **Photo:** the camera opens at once (the gallery below Android 13), after the same camera consent as Oggi. The panel stays alive behind the camera, then shows the reading face ("Lettura della foto", a progress bar and the privacy line) over the launcher. "Annulla" or backing out of the camera closes it. If Android ended the process behind the camera, the sheet says "La foto non è arrivata a Centesimo. Riprova.".
+- **No key:** the sheet gives the missing-key sentence of its source and "Apri impostazioni".
+
+The draft then opens in the expense editor, as it does from Oggi.
+
+### Launcher shortcuts (signature)
+The long-press menu of the app icon, all dynamic: "Nuova spesa", "Spesa a voce", "Spesa da foto" and "Spesa in" the category most used in the last 30 days (absent with no category). The ways are drawn graphite with a coral glyph; the category takes its palette colour with its glyph in tile ink, like its tile. `HomeScreen` publishes them on every store change and when the app window activates, also with no widget installed, so they appear after the first launch after install. Each can be pinned. With no category every entry opens Oggi (`HomeScreenData.Admit`).
 
 ### Extended FAB
 Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action that floats over a list.
