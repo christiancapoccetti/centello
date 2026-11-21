@@ -38,11 +38,28 @@
             android:background="@color/theme_outline" />
         <FrameLayout
             android:id="@+id/mic_action"
-            android:layout_width="76dp"
+            android:layout_width="64dp"
             android:layout_height="match_parent"
             android:contentDescription="@string/widget_dictate_description">
             <ImageView
                 android:id="@+id/mic_glyph"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:tint="@color/theme_accent" />
+        </FrameLayout>
+        <FrameLayout
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/theme_outline" />
+        <FrameLayout
+            android:id="@+id/photo_action"
+            android:layout_width="64dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/widget_photo_description">
+            <ImageView
+                android:id="@+id/photo_glyph"
                 android:layout_width="26dp"
                 android:layout_height="26dp"
                 android:layout_gravity="center"
