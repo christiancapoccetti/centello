@@ -14,7 +14,7 @@ public interface IReminderOffer
     Task<bool> Accept();
 }
 
-public sealed class NotificationReminderOffer : IReminderOffer
+public sealed class NotificationReminderOffer(INotificationPermission permission) : IReminderOffer
 {
     private const string ClosedKey = "reminder-offer-closed";
 
@@ -23,14 +23,14 @@ public sealed class NotificationReminderOffer : IReminderOffer
         if (Preferences.Default.Get(ClosedKey, false))
             return false;
 
-        return await Permissions.CheckStatusAsync<Permissions.PostNotifications>() != PermissionStatus.Granted;
+        return !await permission.IsGranted();
     }
 
     public void Close() => Preferences.Default.Set(ClosedKey, true);
 
-    public async Task<bool> Accept()
+    public Task<bool> Accept()
     {
         Close();
-        return await Permissions.RequestAsync<Permissions.PostNotifications>() == PermissionStatus.Granted;
+        return permission.Request();
     }
 }

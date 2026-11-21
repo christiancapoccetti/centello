@@ -13,6 +13,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(ExpensesPage), typeof(ExpensesPage));
         Routing.RegisterRoute(nameof(CategoryEditorPage), typeof(CategoryEditorPage));
         Routing.RegisterRoute(nameof(CategoryDetailPage), typeof(CategoryDetailPage));
+        Routing.RegisterRoute(nameof(RecapPage), typeof(RecapPage));
         Routing.RegisterRoute(nameof(RecurringPaymentsPage), typeof(RecurringPaymentsPage));
         Routing.RegisterRoute(nameof(RecurringPaymentEditorPage), typeof(RecurringPaymentEditorPage));
         Routing.RegisterRoute(nameof(LicensesPage), typeof(LicensesPage));

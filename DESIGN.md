@@ -307,7 +307,7 @@ A graphite-and-warm-white neutral world, one coral accent, and a seven-slot past
 ### Category palette
 Slots, stored by key in `Categories.Color`: coral (Corallo), peri (Pervinca), butter (Burro), mint (Menta), lilac (Lilla), sky (Celeste), and grey (Grigio). The six chromatic slots are a little deeper in the light scheme; grey is the fallback for a missing or unknown key.
 
-**The Category Owns Its Ink Rule.** Palette colours appear only where a category is shown: its tile, its swatch in a key, its segment of the category line, its bars, its fraction bars and its step in the waterfall. Interface chrome never borrows a palette colour, and a palette colour never carries interface meaning.
+**The Category Owns Its Ink Rule.** Palette colours appear only where a category is shown: its tile, its swatch in a key, its segment of the category line, its bars, its fraction bars and its step in the waterfall. The one exception is the recap story, where a card about a category is painted in that category's full-bleed ink (see Recap story). Interface chrome never borrows a palette colour, and a palette colour never carries interface meaning.
 
 **The App Suggests the Colour Rule.** A new category opens with the chromatic slot the fewest active categories hold (first in palette order on a tie) already selected, and the user may pick any of the six chromatic slots instead. Grey is never offered; it only shows a missing or legacy colour, which an edit keeps until the user picks a palette colour.
 
@@ -443,6 +443,8 @@ Shell tab bar on the ground with no navigation bar above pages; selected tab and
 ### Settings rows
 `SettingsRow` has a `Kind`: **Info** (not tappable, no arrow), **Action** (tappable, runs in place, no arrow) and **Navigation** (tappable, trailing arrow, "Apri" as the accessibility hint). "Backup ed export" in `Dati` is a Navigation row to a pushed page of three titled sections ("Account Google", "File di backup", "Foglio di calcolo") that mixes all three kinds, with a note under the Info row. A finished save answers with a snackbar ("Salvato in Download: <name>"), not a page.
 
+**Toggle** rows (the `Notifiche` section's "Riepilogo del mese") carry a switch at the end and change in place.
+
 ### Edge-to-edge lists
 A pushed list page (Spese, a category's page, Pagamenti regolari, Backup ed export, Ripristina backup, Licenze) draws under the transparent navigation bar: its list scrolls behind the gesture handle and ends above it, never on a hard line. The page takes only the top and side insets (`EdgeToEdgePage`, root grid `EdgeToEdgeRoot`); the bottom inset is taken by the scrolling content, as `ListScroll` on a scroll view and the `ListEnd` footer on a collection, and by what floats over the list, such as the Nuovo pagamento button.
 
@@ -467,6 +469,13 @@ The previous period is a 2dp dashed ink step line (4dp dash, 3dp gap) on the sam
 "Da ottobre a novembre" (or "Dal 2025 al 2026"): how the to-date total moved between the compared periods, one column per bar with 3dp between columns, 134dp of plot plus 22dp of headroom. The start total is a chart-bar bar and the end total an ink bar, each with a Bold 12sp ink value and its period name in SemiBold 13sp underneath. Between them, each category that changed by at least 1 € floats as a step in its own ink, from the level before to the level after. Its SemiBold 12sp value sits above a rise or below a fall, and a 24dp category tile sits in the foot row under it. The rest folds into one "Altre categorie" step. A 1dp outline connector crosses each 3dp gap at the shared level, and a step never draws thinner than 2dp.
 
 When the levels are close, the scale does not start at zero and both end bars are cut: a body, a 3dp break and a 3dp base at the foot, so a bar never claims to start at zero. A 12sp mute label under the foot row, aligned to the chart's left edge, names the floor ("Scala da 1.150 €"), and the screen-reader description says it too. It is empty and hidden when the scale starts at zero. No sentence follows the chart.
+
+### Recap story (signature)
+The full-screen story of a closed month or year ("Il tuo novembre", "Il tuo 2026"), pushed over Insight with no tab bar. It is the one place the palette leaves its tiles: a card about a category fills the whole screen with that category's ink under tile-ink text. Coral never paints a card (coral means "add an expense"), so a coral category's card stays on the graphite ground and keeps its ink in tile and bars.
+- **Progress:** one segment per card at the top, filling over 7 seconds, then the next card. Holding pauses; a tap on the left or right side goes back or forward; the summary card stops and does not advance.
+- **Type:** the card numeral is Archivo Condensed ExtraBold at 76sp for a total and 56sp for any other amount (euro sign 40sp and 30sp, after a thin space), a 30sp Bold headline for the verdict and a 17sp mute lead; the One Loud Numeral Rule holds. Cards set their own ink, since a card can sit on a category colour.
+- **System bars:** the status and navigation bars follow the surface of the card on screen (`IStoryBars`, `SystemBars`) and return to the app's own when the story closes.
+- **Content:** each card says one thing and appears only when the period has enough to say it; thresholds live in `RecapRules`.
 
 ### Comparison chip
 26dp raised chip after the budget sentence: an arrow glyph (east, north-east or south-east) and a SemiBold label. When spending is lower than last month it takes the positive container and on-positive text.

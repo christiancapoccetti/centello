@@ -1,4 +1,5 @@
 using Centesimo.Domain;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.Application.Tests;
 
@@ -72,3 +73,72 @@ internal sealed class FakeRecurringOccurrenceProcessor(FakeExpenseRepository exp
     }
 }
 
+
+internal sealed class FakeServiceProvider(params object[] services) : IServiceProvider
+{
+    public object? GetService(Type serviceType) => services.FirstOrDefault(serviceType.IsInstanceOfType);
+}
+
+internal sealed class FakeScopeFactory(IServiceProvider provider) : IServiceScopeFactory
+{
+    public IServiceScope CreateScope() => new Scope(provider);
+
+    private sealed class Scope(IServiceProvider provider) : IServiceScope
+    {
+        public IServiceProvider ServiceProvider => provider;
+
+        public void Dispose()
+        {
+        }
+    }
+}
+
+internal sealed class FakeRecapService : IRecapService
+{
+    public HashSet<Period> Available { get; } = [];
+    public Error? Failure { get; set; }
+
+    public Task<Result<RecapDeck>> Get(Period period, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Result<RecapDeck>.Failure(RecapErrors.NotAvailable));
+
+    public Task<Result<bool>> IsAvailable(Period period, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Failure is null
+            ? Result<bool>.Success(Available.Contains(period))
+            : Result<bool>.Failure(Failure));
+}
+
+internal sealed class FakeRecapNoticeBoard : IRecapNoticeBoard
+{
+    public bool CanPost { get; set; } = true;
+    public bool PostSucceeds { get; set; } = true;
+    public List<RecapNotice> Posted { get; } = [];
+    public List<DateTime> Armed { get; } = [];
+    public int Disarmed { get; private set; }
+
+    public Task<bool> Post(RecapNotice notice)
+    {
+        if (!PostSucceeds)
+            return Task.FromResult(false);
+
+        Posted.Add(notice);
+        return Task.FromResult(true);
+    }
+
+    public Task ArmAt(DateTime local)
+    {
+        Armed.Add(local);
+        return Task.CompletedTask;
+    }
+
+    public Task Disarm()
+    {
+        Disarmed++;
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class FakeRecapNoticeSettings : IRecapNoticeSettings
+{
+    public RecapNoticeState State { get; set; } = RecapNoticeState.On;
+    public string LastHandledKey { get; set; } = "";
+}

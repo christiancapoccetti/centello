@@ -2,6 +2,7 @@
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Views;
 using Centesimo.Application;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -61,6 +62,24 @@ public class MainActivity : MauiAppCompatActivity
     private void OnModalPushed(object? sender, ModalPushedEventArgs e) => ApplySystemBars();
 
     private void ApplySystemBars() => SystemBars.Apply(this, App?.RequestedTheme == AppTheme.Dark);
+
+    // The story pauses the moment a finger lands, before any view decides what the touch is.
+    public override bool DispatchTouchEvent(MotionEvent? e)
+    {
+        switch (e?.ActionMasked)
+        {
+            case MotionEventActions.Down:
+                Touches?.Press();
+                break;
+            case MotionEventActions.Up or MotionEventActions.Cancel:
+                Touches?.Release();
+                break;
+        }
+
+        return base.DispatchTouchEvent(e);
+    }
+
+    private static StoryTouches? Touches => IPlatformApplication.Current?.Services.GetService<StoryTouches>();
 
     protected override void OnStop()
     {

@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<RestoreViewModel>();
         services.AddTransient<RestorePage>();
         services.AddSingleton<AppEntryRouter>();
+        services.AddSingleton<INotificationPermission, MauiNotificationPermission>();
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
@@ -45,6 +46,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISnackbar, NoSnackbar>();
         services.AddSingleton<IDownloads, NoDownloads>();
 #endif
+        services.AddRecapStory();
+        services.AddRecapNotices();
         services.AddSingleton<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>
             () => provider.GetRequiredService<AppShell>());
