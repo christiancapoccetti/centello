@@ -26,6 +26,7 @@ public sealed record RecapDeck
         RecapCard.Categories.Of,
         RecapCard.Changes.Of,
         RecapCard.TagOfYear.Of,
+        RecapCard.CostliestTag.Of,
         RecapCard.SmallExpenses.Of,
         RecapCard.Consistency.Of
     ];
