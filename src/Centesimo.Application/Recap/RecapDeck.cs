@@ -20,6 +20,7 @@ public sealed record RecapDeck
     private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> YearCards =
     [
         RecapCard.Total.Of,
+        RecapCard.Months.Of,
         RecapCard.RecordDay.Of,
         RecapCard.Categories.Of,
         RecapCard.Changes.Of,
