@@ -8,9 +8,11 @@ public sealed class RecapCardRank_should_expected_behavior
 
     private static readonly long[] FirstSixMonths = [100_000, 110_000, 120_000, 130_000, 140_000, 150_000];
 
-    private static async Task<RecapDeck> JulyAmong(long[] earlier, long july)
+    private static Task<RecapDeck> JulyAmong(long[] earlier, long july) => JulyAmong(earlier, july, new DateOnly(2026, 8, 1));
+
+    private static async Task<RecapDeck> JulyAmong(long[] earlier, long july, DateOnly today)
     {
-        var world = new RecapWorld(new DateOnly(2026, 8, 1));
+        var world = new RecapWorld(today);
         var spesa = world.Category("Spesa", "mint");
         for (var index = 0; index < earlier.Length; index++)
             world.Spend(spesa, earlier[index], new DateOnly(2026, index + 1, 10));
@@ -32,6 +34,41 @@ public sealed class RecapCardRank_should_expected_behavior
 
         Assert.Equal(headline, rank.Headline);
         Assert.Equal(detail, rank.Detail);
+    }
+
+    [Theory]
+    [InlineData(90_000, "Il mese più leggero del 2026 fino a luglio", "2026-11-05")]
+    [InlineData(105_000, "Il secondo mese più leggero del 2026 fino a luglio", "2026-11-05")]
+    [InlineData(160_000, "Il mese più caro del 2026 fino a luglio", "2026-09-01")]
+    public async Task Should_name_the_cut_when_the_month_is_not_the_latest_closed(long july, string headline, string today)
+    {
+        var rank = (await JulyAmong(FirstSixMonths, july, DateOnly.Parse(today))).Single<RecapCard.Rank>();
+
+        Assert.Equal(headline, rank.Headline);
+        Assert.Equal("Fino a luglio", rank.Row!.Label);
+    }
+
+    [Fact]
+    public async Task Should_keep_the_wording_of_the_latest_closed_month_through_the_month_after()
+    {
+        var rank = (await JulyAmong(FirstSixMonths, 90_000, new DateOnly(2026, 8, 31))).Single<RecapCard.Rank>();
+
+        Assert.Equal("Il mese più leggero del 2026", rank.Headline);
+    }
+
+    [Fact]
+    public async Task Should_keep_the_wording_for_december_opened_later()
+    {
+        var world = new RecapWorld(new DateOnly(2027, 5, 1));
+        var spesa = world.Category("Spesa", "mint");
+        for (var month = 1; month <= 11; month++)
+            world.Spend(spesa, 100_000 + month * 1_000, new DateOnly(2026, month, 10));
+
+        world.SpendInMonth(spesa, 2026, 12, 50_000, 10);
+        var rank = (await world.Deck(Period.Month(2026, 12))).Single<RecapCard.Rank>();
+
+        Assert.Equal("Il mese più leggero del 2026", rank.Headline);
+        Assert.Equal("Nell'anno", rank.Row!.Label);
     }
 
     [Fact]

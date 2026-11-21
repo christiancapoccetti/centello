@@ -12,10 +12,13 @@ public sealed class RecapCardYearSoFar_should_expected_behavior
     private static readonly long[] Months2025 =
         [147_940, 130_200, 139_500, 141_000, 152_000, 145_500, 181_000, 201_000, 140_200, 140_000, 123_610];
 
-    private static async Task<RecapDeck> Deck(long[] thisYear, long[] lastYear)
+    private static Task<RecapDeck> Deck(long[] thisYear, long[] lastYear) =>
+        Deck(thisYear, lastYear, new DateOnly(2026, thisYear.Length + 1, 1));
+
+    private static async Task<RecapDeck> Deck(long[] thisYear, long[] lastYear, DateOnly today)
     {
         var month = thisYear.Length;
-        var world = new RecapWorld(new DateOnly(2026, month + 1, 1));
+        var world = new RecapWorld(today);
         var spesa = world.Category("Spesa", "mint");
         for (var index = 0; index < lastYear.Length; index++)
             world.Spend(spesa, lastYear[index], new DateOnly(2025, index + 1, 10));
@@ -37,6 +40,27 @@ public sealed class RecapCardYearSoFar_should_expected_behavior
         Assert.Equal(new RecapChip($"349{Nbsp}€ meno del 2025 a fine novembre", ComparisonTrend.Lower), yearSoFar.Chip);
         Assert.Equal("2026", yearSoFar.ThisYear);
         Assert.Equal(new RecapPhrase("2025, ", $"16.420{Nbsp}€"), yearSoFar.LastYear);
+    }
+
+    [Fact]
+    public async Task Should_say_where_the_year_stood_when_the_month_is_not_the_latest_closed()
+    {
+        var yearSoFar = (await Deck([100_000, 100_000, 100_000], [150_000, 150_000, 150_000], new DateOnly(2026, 11, 5)))
+            .Single<RecapCard.YearSoFar>();
+
+        Assert.Equal("A fine marzo 2026 avevi speso", yearSoFar.Lead);
+        Assert.Equal("3.000", yearSoFar.Amount);
+        Assert.Equal(new RecapChip($"1.500{Nbsp}€ meno del 2025 a fine marzo", ComparisonTrend.Lower), yearSoFar.Chip);
+    }
+
+    [Fact]
+    public async Task Should_keep_the_wording_for_december_opened_later()
+    {
+        var months = Enumerable.Repeat(100_000L, 12).ToArray();
+
+        var yearSoFar = (await Deck(months, months, new DateOnly(2027, 5, 1))).Single<RecapCard.YearSoFar>();
+
+        Assert.Equal("Nel 2026 hai speso finora", yearSoFar.Lead);
     }
 
     [Fact]

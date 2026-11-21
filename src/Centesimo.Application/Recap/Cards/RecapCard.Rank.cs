@@ -38,12 +38,13 @@ public abstract partial record RecapCard
             var year = period.Start.Year;
             var month = ItalianFormat.MonthName(period.Start.Month);
             var ordinal = RecapTexts.Ordinal(rank);
-            return new Rank($"Il {ordinal}mese {side.Superlative} del {year}",
+            var cut = scope.YearToDateIsCut ? $" fino a {month}" : "";
+            return new Rank($"Il {ordinal}mese {side.Superlative} del {year}{cut}",
                 DetailOf(rank, side, isLightest ? Dearest : Lightest, ahead, behind[0]),
                 new RecapBars(Bars(period.Start.Month, totals, ahead.Select(other => other.Key).ToHashSet()), [],
                     $"Spesa per mese nel {year}: {month} {ItalianFormat.WholeMoney(mine)}, il {ordinal}{side.Superlative}"))
             {
-                Row = new RecapSummaryRow(MaterialSymbols.CalendarMonth, "Nell'anno",
+                Row = new RecapSummaryRow(MaterialSymbols.CalendarMonth, scope.YearToDateIsCut ? $"Fino a {month}" : "Nell'anno",
                     rank == 1 ? RecapTexts.Capitalized(side.Superlative) : $"{rank}° {side.Superlative}")
             };
         }

@@ -47,7 +47,7 @@ public sealed class RecapService(ICategoryRepository categories, ITagRepository 
         if (!span.HasEnough(expenseResult.Value))
             return Result<RecapDeck>.Failure(RecapErrors.NotAvailable);
 
-        var scope = RecapScope.Of(span, categoryResult.Value, tagResult.Value, expenseResult.Value);
+        var scope = RecapScope.Of(span, _today(), categoryResult.Value, tagResult.Value, expenseResult.Value);
         return Result<RecapDeck>.Success(RecapDeck.Build(scope));
     }
 

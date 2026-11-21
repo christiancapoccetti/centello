@@ -16,6 +16,10 @@ internal sealed class RecapScope
     /// <summary>A month only: what the same month a year earlier cost, 0 when nothing was spent.</summary>
     public long SameMonthLastYear { get; init; }
 
+    /// <summary>A month only: the year to date ends at a month that is neither December nor the latest closed one, so
+    /// it is the year as it stood then and not the year so far.</summary>
+    public bool YearToDateIsCut { get; init; }
+
     /// <summary>The span's expenses without the automatic ones: the ones the person chose to make.</summary>
     public required IReadOnlyList<Expense> Variable { get; init; }
 
@@ -28,7 +32,7 @@ internal sealed class RecapScope
     public int DaysCounted => Span.Through.DayNumber - Span.Period.Start.DayNumber + 1;
 
     /// <summary><paramref name="expenses"/> covers 1 January of the year before the period's to the span's last day.</summary>
-    public static RecapScope Of(RecapSpan span, IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags,
+    public static RecapScope Of(RecapSpan span, DateOnly today, IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags,
         IReadOnlyList<Expense> expenses)
     {
         var period = span.Period;
@@ -46,6 +50,7 @@ internal sealed class RecapScope
                 ? SpendComparison.Of(year, ComparisonWindow.For(year, period.End), categories, expenses)
                 : null,
             SameMonthLastYear = isMonth ? SpentIn(expenses, Period.Month(period.Start.Year - 1, period.Start.Month)) : 0,
+            YearToDateIsCut = isMonth && period.Start.Month != 12 && period.End.AddDays(1) < new DateOnly(today.Year, today.Month, 1),
             Variable = variable,
             Catalog = catalog,
             TagUses = TagUse.Of(variable, catalog)

@@ -33,7 +33,8 @@ public abstract partial record RecapCard
             var end = $"a fine {ItalianFormat.MonthName(month)}";
             var chart = new RecapBars(bars, [.. lastYear.Select(cents => (double)cents / peak)],
                 $"Spesa accumulata nel {year} contro il {year - 1}: {ItalianFormat.WholeMoney(spent)} contro {ItalianFormat.WholeMoney(compared)} {end}");
-            return new YearSoFar($"Nel {year} hai speso finora", ItalianFormat.WholeEuros(spent),
+            var lead = scope.YearToDateIsCut ? $"{RecapTexts.Capitalized(end)} {year} avevi speso" : $"Nel {year} hai speso finora";
+            return new YearSoFar(lead, ItalianFormat.WholeEuros(spent),
                 ChipOf(year, spent - compared, end), chart, $"{year}",
                 new RecapPhrase($"{year - 1}, ", ItalianFormat.WholeMoney(compared)));
         }
