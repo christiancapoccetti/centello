@@ -54,12 +54,6 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Optional hiding of amounts in the widgets.
 - Align Oggi's microphone consent with the panel's dialog.
 
-## Year in review
-
-- "Il tuo anno in Centesimo", in the style of Spotify Wrapped: full-screen story cards at the end of the year with the yearly total, the most expensive month, the category that grew the most, the most regular habit and the record day.
-- Computed on the device from the yearly Insight data; nothing leaves the phone.
-- Available from December and kept reachable from Insight for past years.
-
 ## Ask Centesimo
 
 - Spoken questions about spending ("Quanto ho speso al ristorante a ottobre?", "Spendo più in benzina quest'anno o l'anno scorso?"), answered with a large figure, one sentence and a small chart; a tap opens the expenses behind the figure.
