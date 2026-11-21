@@ -42,5 +42,24 @@
                 android:importantForAccessibility="no"
                 android:tint="@color/theme_accent" />
         </FrameLayout>
+        <FrameLayout
+            android:id="@+id/photo_divider"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/theme_outline" />
+        <FrameLayout
+            android:id="@+id/photo_action"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/widget_photo_description">
+            <ImageView
+                android:id="@+id/photo_glyph"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:tint="@color/theme_accent" />
+        </FrameLayout>
     </LinearLayout>
 </FrameLayout>
