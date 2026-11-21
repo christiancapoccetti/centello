@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il tuo anno · Una scheda, un fatto</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="2026-11-21-monthly-recap-assets/base.css">
+<style>
+.ink{--fg:var(--tile-ink);--mute:color-mix(in srgb,var(--tile-ink) 74%,transparent);--line:color-mix(in srgb,var(--tile-ink) 22%,transparent);--bar:color-mix(in srgb,var(--tile-ink) 30%,transparent)}
+.lead{font-size:17px;line-height:1.35;color:var(--mute)}
+.lead em{font-style:normal;color:var(--fg);font-weight:600}
+.big{font-size:76px}
+.big span{font-size:40px;margin-left:4px}
+.mid{font-size:56px}
+.mid span{font-size:30px;margin-left:3px}
+.say{font-size:30px;font-weight:800;line-height:1.12}
+.sub{margin-top:8px;font-size:16px;line-height:1.4;color:var(--mute)}
+.sub em{font-style:normal;color:var(--fg);font-weight:700}
+.push{flex:1}
+.cap{font-size:12px;color:var(--mute);margin-top:10px}
+.hb{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:6px;column-gap:12px;margin-top:22px}
+.hb small{font-size:13px;color:var(--mute);grid-column:1/-1;margin-bottom:-2px}
+.hb i{display:block;height:20px}
+.hb b{font-size:14px;font-weight:700}
+.stack{flex:1;display:flex;flex-direction:column;gap:3px;margin:18px -24px 0}
+.stack div{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 24px 0;color:var(--tile-ink);min-height:6px;overflow:hidden}
+.stack b{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.stack b .ms{font-size:20px}
+.stack em{font-style:normal;font-size:16px;font-weight:700}
+.stack em small{font-weight:400;margin-left:8px;font-size:14px}
+.half{flex:1;display:flex;flex-direction:column;color:var(--tile-ink)}
+.half .in{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 24px 26px}
+.half .who{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;margin-bottom:10px}
+.half p{font-size:15px;line-height:1.4;margin-top:8px;color:color-mix(in srgb,var(--tile-ink) 76%,transparent)}
+.sumrow{display:flex;align-items:center;gap:14px;min-height:48px;border-bottom:1px solid var(--line)}
+.sumrow>.ms{font-size:22px;color:var(--mute);width:24px}
+.sumrow span.t{flex:1;font-size:15px;color:var(--mute)}
+.sumrow b{font-size:15px;font-weight:700;text-align:right}
+.sub-row{display:flex;justify-content:space-between;min-height:36px;align-items:center;border-bottom:1px solid var(--line);font-size:14px}
+.sub-row b{font-weight:700}
+.split{display:flex;gap:3px;height:28px;margin-top:22px}
+.split i{display:block}
+.key{display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--mute)}
+.key span{display:flex;align-items:center;gap:6px}
+.key i{display:block;width:10px;height:10px}
+h2.sec{font-size:22px;font-weight:800;margin:56px 0 4px}
+.scroll{flex:1;overflow:hidden}
+.period{height:56px;padding:0 8px 0 24px;display:flex;align-items:center;justify-content:space-between}
+.period b{font-size:20px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px}
+.period b .ms{font-size:20px;color:var(--mute);margin-left:2px}
+.period span{display:flex}
+.period .ib{color:var(--mute)}
+.seg2{display:flex;margin:6px 24px 10px;height:40px;border:1px solid var(--mute);border-radius:9999px;overflow:hidden}
+.seg2>span{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;font-size:14px;font-weight:600}
+.seg2>span+span{border-left:1px solid var(--mute)}
+.seg2 .on{background:var(--sel)}
+.seg2 .ms{font-size:18px}
+.ins-sum{padding:4px 24px 0}
+.ins-sum b{display:block;font-stretch:75%;font-weight:800;font-size:48px;letter-spacing:-.02em;line-height:1}
+.ins-sum b span{font-size:28px;margin-left:3px}
+.ins-sum p{margin-top:8px;font-size:16px;line-height:1.4;color:var(--mute)}
+.ins-sum p em{font-style:normal;color:var(--fg);font-weight:700}
+.navrow{display:flex;align-items:center;gap:14px;min-height:64px;margin:18px 24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.navrow>.ms{color:var(--mute)}
+.navb{height:69px;flex:none;display:flex;border-top:1px solid var(--line);background:var(--bg)}
+.nv{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--mute)}
+.nv .ms{font-variation-settings:'FILL' 0,'wght' 500}
+.nv.on{color:var(--fg)}
+.nv.on .ms{font-variation-settings:'FILL' 1,'wght' 600}
+.shade{flex:1;display:flex;flex-direction:column;padding:18px 12px 0}
+.qs{display:flex;gap:8px;padding:0 4px 18px}
+.qs span{flex:1;height:56px;border-radius:28px;background:var(--raised);display:grid;place-items:center;color:var(--mute)}
+.ntf{background:var(--raised);border-radius:24px;padding:14px 16px 6px}
+.ntf .app{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute)}
+.ntf .app i{width:20px;height:20px;border-radius:50%;background:var(--fg);display:grid;place-items:center}
+.ntf b{display:block;margin-top:10px;font-size:15px;font-weight:700}
+.ntf p{font-size:14px;line-height:1.4;color:var(--mute);margin-top:2px}
+.ntf .acts span{height:44px;display:flex;align-items:center;font-size:14px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>Il tuo anno · Una scheda, un fatto</h1>
+    <p class="intro">Il riepilogo annuale con la struttura A del mensile: stesse schede, stesse regole, stesso colore delle categorie a tutto schermo. In più ci sono le schede che reggono solo su un anno: <em>il mese più caro e il più leggero, il tuo giorno della settimana, il tag dell'anno, l'abitudine più costante, quanto era automatico</em>. Qui ci sono tutte le 14 schede; l'app mostra solo quelle con qualcosa da dire. Sotto, come ci si arriva. Dati inventati, il 2026 come apparirebbe il 1° gennaio 2027.</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+<div class="grid" id="G"></div>
+<h2 class="sec">Come ci si arriva</h2>
+<p class="intro">La notifica del 1° gennaio presenta l'anno; il riepilogo di dicembre resta nella vista mese di Insight. La vista anno di Insight tiene il riepilogo di ogni anno chiuso e, per l'anno in corso, la versione "finora".</p>
+<div class="grid" id="E"></div>
+<script src="2026-11-21-monthly-recap-assets/recap.js"></script>
+<script src="2026-11-21-monthly-recap-assets/year.js"></script>
+<script>
+const N=14;
+const phone=(i,body,{cls='',style=''}={})=>`<div class="phone ${cls}" style="${style}">${status()}${storyTopY(i,N)}<div class="story-body">${body}</div><div class="gest"></div></div>`;
+const up=ms('trending_up'),down=ms('trending_down');
+const card=[];
+
+card.push({t:'Copertina',p:'Si apre dalla notifica del 1° gennaio o dalla vista anno di Insight. La firma qui sono i dodici mesi.',h:phone(0,`
+ <div class="push"></div>
+ <div class="say" style="font-size:56px;line-height:1">Il tuo<br>2026</div>
+ <p class="sub">Un anno di spese, in poche schede.</p>
+ <div style="margin:40px 0 0">${yearBars(312,120)}</div>
+ <p class="cap" style="display:flex;align-items:center;gap:6px;margin:14px 0 22px">${ms('touch_app')} Tocca per andare avanti</p>`)});
+
+const hb=(label,amt,v,fill)=>`<small>${label}</small><i style="width:${Math.round(v/18340*100)}%;background:${fill}"></i><b>${amt} €</b>`;
+card.push({t:'Il totale',p:'Il totale, il numero di spese e la media al mese, poi il confronto con l\'anno prima.',h:phone(1,`
+ <div style="margin-top:40px" class="lead">Nel 2026 hai speso</div>
+ <div class="num big" style="margin-top:8px">${Y.total}<span>€</span></div>
+ <p class="sub">in ${Y.count.toLocaleString('it-IT')} spese, <em>${Y.avg} €</em> al mese in media</p>
+ <div style="margin-top:20px"><span class="chip low">${down}${Y.prev.diff} € meno del 2025</span></div>
+ <div class="push"></div>
+ <div class="hb" style="margin-bottom:28px">${hb('2025',Y.prev.total,18340,'var(--bar)')}${hb('2026',Y.total,17955,'var(--fg)')}</div>`)});
+
+card.push({t:'I mesi',p:'Il più caro pieno, il più leggero solo contornato. Copre anche la "stagione" che avevamo in lista.',h:phone(2,`
+ <div style="margin-top:40px" class="say">Agosto il più caro, febbraio il più leggero</div>
+ <p class="sub">1.948 € contro 1.198 €.</p>
+ <div class="push"></div>
+ <div style="margin-bottom:34px">${yearBars(312,250)}</div>`)});
+
+card.push({t:'Il giorno più caro',p:'Come nel mensile: spese automatiche escluse, ogni spesa si apre con un tocco.',h:phone(3,`
+ <div style="margin-top:40px" class="lead">Il giorno più caro dell'anno</div>
+ <div class="num mid" style="margin-top:8px">${Y.record.total}<span>€</span></div>
+ <p class="sub"><em>${Y.record.label}</em>, in 3 spese</p>
+ <div class="push"></div>
+ <div style="margin-bottom:6px">${Y.record.items.map(x=>`<div class="row">${cat(x.c,x.g)}<div class="what"><b>${x.name}</b><small>${x.note}</small></div><span class="amt">${x.amt} €</span></div>`).join('')}</div>
+ <p class="cap" style="margin-bottom:28px">Senza le spese automatiche.</p>`)});
+
+card.push({t:'Il tuo giorno',p:'Su un anno ogni giorno della settimana compare 52 volte, quindi il dato regge. Solo spese variabili.',h:phone(4,`
+ <div style="margin-top:40px" class="say">Il sabato è il tuo giorno</div>
+ <p class="sub">Il <em>24%</em> delle spese variabili cade di sabato.</p>
+ <div class="push"></div>
+ <div style="margin-bottom:34px">${weekBars(312,240)}</div>`)});
+
+card.push({t:'Dove sono andati',p:'La stessa scheda del mensile, sull\'anno.',h:phone(5,`
+ <div style="margin-top:28px" class="lead">Dove sono andati i <em>${Y.total} €</em></div>
+ <div class="stack">${Y.cats.map((c,k)=>`<div style="flex:${c.v} 0 0;background:var(--${c.c})">${k<4||k===6?`<b>${ms(c.g)}${c.name}</b><em>${c.amt} €<small>${c.share}</small></em>`:''}</div>`).join('')}</div>`)});
+
+card.push({t:'Cosa è cambiato',p:'Rispetto al 2025, in euro.',h:`<div class="phone" style="color:var(--tile-ink)">
+ <div class="half" style="background:var(--${Y.up.c})">${status()}${storyTopY(6,N)}
+  <div class="in"><div class="who">${cat(Y.up.c,Y.up.g)}<span>${Y.up.name}</span></div><div class="num mid">+${Y.up.diff}<span>€</span></div><p>Da ${Y.up.from} a ${Y.up.to} € rispetto al 2025.</p></div></div>
+ <div class="half" style="background:var(--${Y.down.c})">
+  <div class="in" style="justify-content:flex-start;padding-top:26px"><div class="who">${cat(Y.down.c,Y.down.g)}<span>${Y.down.name}</span></div><div class="num mid">−${Y.down.diff}<span>€</span></div><p>Da ${Y.down.from} a ${Y.down.to} €.</p></div>
+  <div class="gest"></div></div></div>`});
+
+const pm=Y.tag.perMonth,pmax=Math.max(...pm);
+const tagBars=`<svg class="chart" width="312" height="110" viewBox="0 0 312 110" shape-rendering="crispEdges" role="img" aria-label="Pizza mese per mese, da 2 a 5 volte">${pm.map((v,k)=>{const bw=(312-33)/12,x=k*(bw+3),h=Math.round(v/pmax*88);return `<rect x="${x}" y="${88-h}" width="${bw}" height="${h}" fill="var(--tile-ink)"/><text x="${x+bw/2}" y="106" text-anchor="middle" font-size="12" fill="var(--mute)">${Y.months.labels[k]}</text>`}).join('')}</svg>`;
+card.push({t:'Il tag dell\'anno',p:'Il tag usato più volte. Prende il colore della sua categoria a tutto schermo.',h:phone(7,`
+ <div style="margin-top:40px" class="lead">Il tag dell'anno</div>
+ <div style="display:flex;align-items:center;gap:14px;margin-top:18px"><span class="tile" style="width:56px;height:56px;background:var(--tile-ink);color:var(--${Y.tag.c})"><span class="ms" aria-hidden="true" style="font-size:32px">${Y.tag.g}</span></span><div class="say" style="font-size:44px">${Y.tag.tag}</div></div>
+ <p class="sub" style="margin-top:16px"><em>${Y.tag.times} volte</em>, ${Y.tag.amt} € in tutto, ${Y.tag.avg} € in media.</p>
+ <div class="push"></div>
+ <div style="margin-bottom:28px">${tagBars}</div>`,{cls:'ink',style:`background:var(--${Y.tag.c})`})});
+
+card.push({t:'L\'abitudine più costante',p:'Il tag presente nel maggior numero di settimane, ricorrenti esclusi. Il caffè è in Bar, che è corallo: qui la scheda resta sul grafite per non confondersi col corallo di "aggiungi".',h:phone(8,`
+ <div style="margin-top:40px" class="lead">La tua abitudine più costante</div>
+ <div style="display:flex;align-items:center;gap:14px;margin-top:18px">${cat(Y.steady.c,Y.steady.g).replace('tile"','tile" style="width:56px;height:56px"')}<div class="say" style="font-size:44px">${Y.steady.tag}</div></div>
+ <p class="sub" style="margin-top:16px">In <em>${Y.steady.weeks} settimane su ${Y.steady.of}</em>, ${Y.steady.times} volte.</p>
+ <div class="push"></div>
+ <div>${weeks52(312,96,Y.steady.missing,'var(--'+Y.steady.c+')')}</div>
+ <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin:8px 0 28px"><span>Gennaio</span><span>Una barra per settimana</span><span>Dicembre</span></div>`)});
+
+card.push({t:'Le nuove abitudini',p:'Tag che nel 2025 non c\'erano, fino a tre. Su più categorie, quindi grafite con i quadratini.',h:phone(9,`
+ <div style="margin-top:40px" class="say">Tre abitudini nuove</div>
+ <p class="sub">Nel 2025 non c'erano.</p>
+ <div class="push"></div>
+ <div style="margin-bottom:28px">${Y.fresh.map(f=>`<div class="row">${cat(f.c,f.g)}<div class="what"><b>${f.tag}</b><small>${f.cat}, ${f.since}, ${f.times} volte</small></div><span class="amt">${f.amt} €</span></div>`).join('')}</div>`)});
+
+card.push({t:'Le piccole spese',p:'Un quadrato per spesa sotto i 5 €: sull\'anno diventano una superficie.',h:phone(10,`
+ <div style="margin-top:40px" class="lead">Le spese sotto i 5 € fanno</div>
+ <div class="num mid" style="margin-top:8px">${Y.small.total}<span>€</span></div>
+ <p class="sub">in ${Y.small.count} spese. Il primo: <em>${Y.small.top}</em>.</p>
+ <div class="push"></div>
+ <div style="margin-bottom:30px">${yearUnits(8,2,31)}</div>`)});
+
+card.push({t:'Quanto era deciso',p:'La parte automatica dell\'anno, poi gli abbonamenti uno per uno. Solo sull\'anno: mese per mese cambia poco.',h:phone(11,`
+ <div style="margin-top:40px" class="say">Il ${Y.auto.pct} era già deciso</div>
+ <p class="sub"><em>${Y.auto.amt} €</em> in spese automatiche, ${Y.auto.vari} € variabili.</p>
+ <div class="split"><i style="flex:5566 0 0;background:var(--mute)"></i><i style="flex:12389 0 0;background:var(--bar)"></i></div>
+ <div class="key"><span><i style="background:var(--mute)"></i>Automatiche</span><span><i style="background:var(--bar)"></i>Variabili</span></div>
+ <div class="push"></div>
+ <div>${Y.auto.subs.map(([n,a])=>`<div class="sub-row"><span>${n}</span><b>${a} €</b></div>`).join('')}</div>
+ <p class="cap" style="margin-bottom:26px">Abbonamenti senza l'affitto: <b style="color:var(--fg)">${Y.auto.subsNoRent} €</b> l'anno.</p>`)});
+
+card.push({t:'La costanza',p:'Un quadrato per giorno, un mese per riga.',h:phone(12,`
+ <div style="margin-top:40px" class="lead">Hai registrato spese in</div>
+ <div class="say" style="font-size:34px;margin-top:6px;white-space:nowrap">287 giorni su 365</div>
+ <div class="push"></div>
+ <div style="margin-bottom:12px">${yearHeat(7,2)}</div>
+ <p class="cap" style="margin-bottom:28px">Un quadrato pieno per ogni giorno con almeno una spesa.</p>`)});
+
+const sr=(g,t,v)=>`<div class="sumrow">${ms(g)}<span class="t">${t}</span><b>${v}</b></div>`;
+card.push({t:'Chiusura',p:'Il riepilogo in righe e l\'uscita verso la vista anno di Insight.',h:phone(13,`
+ <div style="margin-top:28px" class="say">Il 2026 in breve</div>
+ <div style="margin-top:10px">
+  ${sr('payments','Totale',Y.total+' €')}
+  ${sr('calendar_month','Il mese più caro','Agosto')}
+  ${sr('event','Il giorno più caro','8 ago · '+Y.record.total+' €')}
+  ${sr('weekend','Il tuo giorno','Sabato')}
+  ${sr('donut_small','Prima categoria','Casa · 21%')}
+  ${sr('sell','Il tag dell\'anno','Pizza · 41')}
+  ${sr('repeat','La più costante','Caffè')}
+  ${sr('autorenew','Automatico',Y.auto.pct)}
+  ${sr('check_circle','Costanza','287 su 365')}
+ </div>
+ <div class="push"></div>
+ <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px"><button class="pill">Vedi il 2026 in Insight</button><button class="pill out">Rivedi dall'inizio</button></div>`)});
+
+document.getElementById('G').innerHTML=card.map((c,k)=>`<figure><figcaption><b>${k+1} · ${c.t}</b><p>${c.p}</p></figcaption>${c.h}</figure>`).join('');
+
+const nav=on=>`<div class="navb">${[['today','Oggi'],['insights','Insight'],['category','Categorie'],['settings','Impostazioni']].map(([g,t])=>`<div class="nv ${t===on?'on':''}">${ms(g)}${t}</div>`).join('')}</div>`;
+const mark=`<i><svg width="14" height="14" viewBox="18 18 72 72" aria-hidden="true"><path d="M70.454 63.500 A19 19 0 1 1 53.337 35.012" fill="none" stroke="var(--bg)" stroke-width="14"/><path d="M58.597 35.564 A19 19 0 0 1 70.454 44.500" fill="none" stroke="#FF8A7A" stroke-width="14"/></svg></i>`;
+const yearView=(yr,total,cmp,row,sub,next)=>`<div class="phone">${status()}<div class="scroll"><div class="period"><b>${yr} ${ms('expand_more')}</b><span><span class="ib">${ms('chevron_left')}</span><span class="ib" ${next?'':'style="opacity:.38"'}>${ms('chevron_right')}</span></span></div>
+ <div class="seg2"><span>Mese</span><span class="on">${ms('check')}Anno</span></div>
+ <div class="ins-sum"><b>${total}<span>€</span></b><p>${cmp}</p></div>
+ <div class="navrow">${cat('grey','auto_stories').replace('var(--grey)','var(--fg)')}<div class="what"><b>${row}</b><small>${sub}</small></div>${ms('chevron_right')}</div>
+ <h2 style="padding:26px 0 0 24px;font-size:18px;font-weight:700">Spesa accumulata</h2><div style="margin:14px 24px 0">${cumulative(312,120)}</div></div>${nav('Insight')}<div class="gest"></div></div>`;
+const entry=[
+ {t:'La notifica del 1° gennaio',p:'Sostituisce quella mensile di quel giorno, così non ne arrivano due. Niente cifre, come la mensile.',h:`<div class="phone">${status()}<div class="shade"><div class="qs"><span>${ms('wifi')}</span><span>${ms('bluetooth')}</span><span>${ms('do_not_disturb_on','o')}</span><span>${ms('flashlight_on')}</span></div>
+  <div class="ntf"><div class="app">${mark}Centesimo · 10:00</div><b>Il tuo 2026 è pronto</b><p>Un anno di spese, in poche schede.</p><div class="acts"><span>Apri</span></div></div></div><div class="gest"></div></div>`},
+ {t:'Insight · un anno chiuso',p:'Nella vista anno, la stessa riga della vista mese. C\'è per ogni anno chiuso con abbastanza spese.',h:yearView('2025','18.340','<em>1.120 € più</em> del 2024','Rivedi il tuo 2025','Il riepilogo dell\'anno, in poche schede',true)},
+ {t:'Insight · l\'anno in corso',p:'L\'anno in corso ha la versione "finora", fino a ieri, quando c\'è abbastanza storia. I confronti col 2025 sono allo stesso punto dell\'anno.',h:yearView('2026','16.071','<em>349 € meno</em> del 2025 a oggi','Il tuo 2026 finora','Fino al 20 novembre, in poche schede',false)}
+];
+document.getElementById('E').innerHTML=entry.map((c,k)=>`<figure><figcaption><b>${c.t}</b><p>${c.p}</p></figcaption>${c.h}</figure>`).join('');
+wireTheme();
+</script>
+</body>
+</html>

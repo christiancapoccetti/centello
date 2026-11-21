@@ -9,11 +9,13 @@ public static class MaterialSymbols
     public const string Add = "\uE145";
     public const string Archive = "\uE149";
     public const string ArrowBack = "\uE5C4";
+    public const string AutoStories = "\uE666";
     public const string Autorenew = "\uE863";
     public const string Backup = "\uE864";
     public const string BarChart = "\uE26B";
     public const string BeachAccess = "\uEB3E";
     public const string Bolt = "\uEA0B";
+    public const string CalendarMonth = "\uEBCC";
     public const string CalendarToday = "\uE935";
     public const string Category = "\uE574";
     public const string Check = "\uE5CA";
@@ -28,17 +30,20 @@ public static class MaterialSymbols
     public const string ContentCut = "\uE14E";
     public const string Delete = "\uE872";
     public const string Description = "\uE873";
+    public const string DonutSmall = "\uE918";
     public const string Devices = "\uE1B1";
     public const string DirectionsBus = "\uE530";
     public const string DirectionsCar = "\uE531";
     public const string East = "\uF1DF";
     public const string Edit = "\uE3C9";
     public const string Error = "\uE000";
+    public const string Event = "\uE878";
     public const string EventBusy = "\uE615";
     public const string EventRepeat = "\uEB7B";
     public const string ExpandLess = "\uE5CE";
     public const string ExpandMore = "\uE5CF";
     public const string FamilyRestroom = "\uF1A2";
+    public const string FiberNew = "\uE05E";
     public const string Favorite = "\uE87D";
     public const string FitnessCenter = "\uEB43";
     public const string Flag = "\uE153";
@@ -56,6 +61,7 @@ public static class MaterialSymbols
     public const string NorthEast = "\uF1E1";
     public const string Notifications = "\uE7F4";
     public const string OpenInNew = "\uE89E";
+    public const string Payments = "\uEF63";
     public const string Pause = "\uE034";
     public const string PauseCircle = "\uE1A2";
     public const string Pets = "\uE91D";
@@ -68,6 +74,7 @@ public static class MaterialSymbols
     public const string Repeat = "\uE040";
     public const string Restaurant = "\uE56C";
     public const string Restore = "\uE8B3";
+    public const string Sell = "\uF05B";
     public const string Save = "\uE161";
     public const string School = "\uE80C";
     public const string SearchOff = "\uEA76";
@@ -80,10 +87,12 @@ public static class MaterialSymbols
     public const string SportsSoccer = "\uEA2F";
     public const string Subscriptions = "\uE064";
     public const string TableView = "\uF1BE";
+    public const string TouchApp = "\uE913";
     public const string Today = "\uE8DF";
     public const string UploadFile = "\uE9FC";
     public const string Visibility = "\uE8F4";
     public const string VisibilityOff = "\uE8F5";
+    public const string Weekend = "\uE16B";
     public const string Warning = "\uE002";
     public const string Work = "\uE8F9";
 }

@@ -38,6 +38,24 @@
                         </Label.FormattedText>
                     </Label>
 
+                    <Grid IsVisible="{Binding HasRecap}" Margin="24,18,24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="1,*,1">
+                        <BoxView Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
+                        <!-- The tile is the ink and its glyph the ground, so it reads on the paper and on the graphite. -->
+                        <Border Grid.Row="1" WidthRequest="36" HeightRequest="36" StrokeThickness="0" VerticalOptions="Center" BackgroundColor="{t:Theme Ink}" AutomationProperties.IsInAccessibleTree="False">
+                            <Border.StrokeShape>
+                                <Rectangle />
+                            </Border.StrokeShape>
+                            <Label Style="{StaticResource IconGlyph}" FontSize="21" Text="{x:Static app:MaterialSymbols.AutoStories}" TextColor="{t:Theme Ground}" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Padding="0,8" VerticalOptions="Center">
+                            <Label Text="{Binding Recap.Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding Recap.Detail}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </VerticalStackLayout>
+                        <Label Grid.Row="1" Grid.Column="2" Margin="-8,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" VerticalOptions="Center" />
+                        <BoxView Grid.Row="2" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
+                        <Button Grid.RowSpan="3" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" Clicked="OnRecapClicked" SemanticProperties.Description="{Binding Recap.Title}" SemanticProperties.Hint="{Binding Recap.Detail}" />
+                    </Grid>
+
                     <Label Text="{Binding Overview.Pace.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
                     <c:PaceChartView Margin="24,16,24,0" Chart="{Binding Overview.Pace}" />
 

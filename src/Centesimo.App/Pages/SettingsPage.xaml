@@ -16,6 +16,9 @@
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Repeat}" Title="Pagamenti regolari" Detail="{Binding RecurringSummary}" Kind="Navigation" Tapped="OnRecurringPaymentsTapped" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Backup}" Title="Backup ed export" Detail="Google, file di backup e CSV" Kind="Navigation" Tapped="OnBackupTapped" />
 
+                <Label Text="Notifiche" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Notifications}" Title="Riepilogo del mese" Detail="{Binding RecapNoticeDetail}" IsOn="{Binding RecapNoticeOn, Mode=OneWay}" Kind="Toggle" Toggled="OnRecapNoticeToggled" />
+
                 <Label Text="Voce e foto" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <VerticalStackLayout IsVisible="{Binding ShowKeyStatus}">
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Mic}" Title="Attivo" Detail="Chiave OpenAI salvata" IsPositive="True" />

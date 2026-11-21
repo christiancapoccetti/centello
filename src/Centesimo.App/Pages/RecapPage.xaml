@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centesimo.App.Theming"
+             xmlns:c="clr-namespace:Centesimo.App.Controls"
+             xmlns:r="clr-namespace:Centesimo.App.Controls.Recap"
+             xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
+             x:Class="Centesimo.App.Pages.RecapPage"
+             Title="{Binding Title}"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="{t:Theme Ground}"
+             SafeAreaEdges="None">
+    <Grid SafeAreaEdges="None">
+        <!-- A tap on the right half goes on, one on the left half goes back. The buttons inside a card keep their own. -->
+        <ContentView x:Name="CardHost" SafeAreaEdges="None" SemanticProperties.Hint="Tocca a destra per la scheda successiva, a sinistra per la precedente">
+            <ContentView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnCardTapped" />
+            </ContentView.GestureRecognizers>
+        </ContentView>
+
+        <c:InlineError Margin="24,72,24,0" VerticalOptions="Start" SafeAreaEdges="Container,Container,Container,None" Text="{Binding ErrorMessage}" />
+
+        <VerticalStackLayout VerticalOptions="Start" Padding="12,6,12,0" SafeAreaEdges="Container,Container,Container,None" InputTransparent="True" CascadeInputTransparent="False">
+            <r:StoryProgress x:Name="Progress" />
+            <Grid HeightRequest="48" ColumnDefinitions="*,48">
+                <Label x:Name="TitleLabel" Margin="4,0,0,0" VerticalOptions="Center" FontFamily="{x:Static t:Fonts.SemiBold}" FontSize="14" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+                <Button x:Name="CloseButton" Grid.Column="1" Margin="0,0,-4,0" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Close}" Clicked="OnCloseClicked" SemanticProperties.Description="Chiudi" />
+            </Grid>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

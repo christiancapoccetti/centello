@@ -47,6 +47,17 @@ public partial class SettingsPage : ContentPage
         await Form.ScrollToAsync(SaveKeyButton, ScrollToPosition.End, true);
     }
 
+    private async void OnRecapNoticeToggled(object? sender, ToggledEventArgs e)
+    {
+        if (_viewModel.RecapNoticeBlocked)
+        {
+            AppInfo.ShowSettingsUI();
+            return;
+        }
+
+        await _viewModel.SetRecapNotice(e.Value);
+    }
+
     private void OnReplaceClicked(object? sender, EventArgs e) => _viewModel.StartReplacing();
 
     private void OnCancelReplaceClicked(object? sender, EventArgs e) => _viewModel.StopReplacing();

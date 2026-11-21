@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App.ViewModels;
 
-public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiSettings openAiSettings) : ObservableObject
+public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiSettings openAiSettings,
+    RecapNoticeAutomation recapNotices, IRecapNoticeSettings recapNoticeSettings, IRecapNoticeBoard recapNoticeBoard,
+    INotificationPermission notificationPermission) : ObservableObject
 {
     private const string NewKeyLead = "Detta una spesa con parole tue, per esempio “ieri 12 euro di pizza”, o fotografa uno scontrino o una fattura, o scegli un PDF. Serve una tua chiave API OpenAI.";
     private const string ReplacementLead = "La nuova chiave prende il posto di quella salvata.";
@@ -14,7 +16,14 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
     private bool _isReplacing;
     private string _apiKeyInput = "";
     private string _apiKeyError = "";
+    private bool _recapNoticeOn;
+    private string _recapNoticeDetail = "";
+    private bool _recapNoticeBlocked;
 
+    public bool RecapNoticeOn { get => _recapNoticeOn; private set => SetProperty(ref _recapNoticeOn, value); }
+    public string RecapNoticeDetail { get => _recapNoticeDetail; private set => SetProperty(ref _recapNoticeDetail, value); }
+    /// <summary>The person wants the notice but Android does not let the app notify: only the system settings can fix it.</summary>
+    public bool RecapNoticeBlocked { get => _recapNoticeBlocked; private set => SetProperty(ref _recapNoticeBlocked, value); }
     public string RecurringSummary { get => _recurringSummary; private set => SetProperty(ref _recurringSummary, value); }
     public string VersionText => $"Versione {AppInfo.Current.VersionString}";
     public bool HasApiKey
@@ -52,8 +61,20 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
     }
     public string ApiKeyError { get => _apiKeyError; private set => SetProperty(ref _apiKeyError, value); }
 
+    /// <summary>Off cancels the alarm. On asks Android for the permission when it is missing and is kept even when refused,
+    /// so the detail can send the person to the system settings and the notice starts by itself once they allow it.</summary>
+    public async Task SetRecapNotice(bool on)
+    {
+        if (on && !recapNoticeBoard.CanPost)
+            await notificationPermission.Request();
+
+        await recapNotices.Choose(on ? RecapNoticeState.On : RecapNoticeState.Off);
+        ShowRecapNotice();
+    }
+
     public async Task Load()
     {
+        ShowRecapNotice();
         HasApiKey = await openAiSettings.HasApiKey();
         using var scope = scopeFactory.CreateScope();
         var list = await scope.ServiceProvider.GetRequiredService<RecurringPaymentListService>().Get();
@@ -104,6 +125,15 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
         openAiSettings.ClearApiKey();
         ClearInput();
         HasApiKey = false;
+    }
+
+    private void ShowRecapNotice()
+    {
+        var state = recapNoticeSettings.State;
+        var canPost = recapNoticeBoard.CanPost;
+        RecapNoticeOn = canPost && RecapNoticeAutomation.IsEnabled(state, canPost);
+        RecapNoticeBlocked = state == RecapNoticeState.On && !canPost;
+        RecapNoticeDetail = RecapNoticeAutomation.Describe(state, canPost);
     }
 
     private void ClearInput()

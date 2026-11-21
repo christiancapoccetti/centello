@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il tuo mese · B · Il tabellone</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="2026-11-21-monthly-recap-assets/base.css">
+<style>
+.board{margin:6px -8px 0;display:flex;flex-direction:column}
+.br{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 8px;border-bottom:1px solid var(--line)}
+.br .lb{flex:1;min-width:0;font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.br.done .lb{color:var(--fg)}
+.flaps{display:flex;gap:2px;align-items:center}
+.flaps i{position:relative;display:grid;place-items:center;width:13px;height:24px;background:var(--raised);font-style:normal;font-size:15px;font-weight:700;color:var(--fg)}
+.flaps i::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--bg)}
+.flaps i.w{width:auto;padding:0 3px}
+.br.todo .flaps i{background:transparent;outline:1px solid var(--line);outline-offset:-1px}
+.br.todo .flaps i::after{background:var(--line)}
+.br .tile.s{margin-right:2px}
+.cur{padding:12px 8px 14px;border-bottom:1px solid var(--line);background:var(--bg)}
+.cur .lb{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.cur .flaps{margin-top:12px;gap:3px}
+.cur .flaps i{width:31px;height:56px;font-stretch:75%;font-weight:800;font-size:46px;letter-spacing:-.02em}
+.cur .flaps i.p{width:14px}
+.cur .flaps i.e{width:24px;font-size:28px}
+.cur p{margin-top:12px;font-size:14px;line-height:1.4;color:var(--mute)}
+.cur p em{font-style:normal;color:var(--fg);font-weight:700}
+.cur .g{margin-top:14px}
+.cur .flaps i{animation:flip .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes flip{from{transform:perspective(200px) rotateX(-80deg);opacity:.2}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.cur .flaps i{animation:none}}
+.line{display:flex;gap:3px;height:14px}
+.line i{display:block}
+.cover-t{font-size:15px;color:var(--mute);margin-top:16px;line-height:1.4}
+.push{flex:1}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>Il tuo mese · B · Il tabellone</h1>
+    <p class="intro">Il riepilogo è un unico tabellone delle partenze, quello del grafite di Centesimo. All'inizio le righe sono vuote, e ogni tocco <em>gira una riga</em>: le sue cifre scattano a palette, si apre con una frase e un piccolo grafico, poi si richiude e resta sul tabellone. Le righe ancora da girare si vedono vuote, quindi sai sempre quanto manca. L'ultima scheda è il tabellone pieno. Dati inventati, novembre 2026.</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+<div class="grid" id="G"></div>
+<script src="2026-11-21-monthly-recap-assets/recap.js"></script>
+<script>
+const up=ms('trending_up'),down=ms('trending_down');
+const flapsOf=(v,big)=>[...v].map(ch=>{
+ if(ch===' ')return big?'<i class="p" style="background:transparent"></i>':'<i style="width:5px;background:transparent"></i>';
+ if(big&&ch==='€')return '<i class="e">€</i>';
+ if(big&&(ch===','||ch==='.'))return `<i class="p">${ch}</i>`;
+ return `<i>${ch}</i>`}).join('');
+const L=R.cats.reduce((s,c)=>s+c.v,0);
+const rows=[
+ {lb:'Totale',v:'1.284,60 €',detail:`In ${R.count} spese. <em>${R.prev.diff} € meno</em> di ottobre, ${R.lastYear.diff} € più di novembre 2025.`,
+  g:`<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip low">${down}−${R.prev.pct} su ottobre</span><span class="chip">${up}+${R.lastYear.pct} su novembre 2025</span></div>`},
+ {lb:'Nell\'anno',v:'2° su 11',detail:`<em>${R.rank.text}.</em> ${R.rank.detail}`,g:monthBars(296,44,{label:false})},
+ {lb:'Il giorno più caro',v:'186,40 €',detail:`<em>${R.record.label}</em>: spesa, cena fuori e benzina. Senza le spese automatiche.`,g:strip(296,48,{hi:14})},
+ {lb:'Prima categoria',tile:['peri','home'],v:'Casa 25%',detail:`<em>Casa 320,00 €</em>, poi Spesa 298,40 € e Ristoranti 182,50 €.`,
+  g:`<div class="line">${R.cats.map(c=>`<i style="flex:${c.v} 0 0;background:var(--${c.c})"></i>`).join('')}</div>`},
+ {lb:'Cresciuta di più',tile:[R.up.c,R.up.g],v:'+64,20 €',detail:`<em>${R.up.name}</em>, da ${R.up.from} a ${R.up.to} € rispetto a ottobre.`},
+ {lb:'Calata di più',tile:[R.down.c,R.down.g],v:'−48,60 €',detail:`<em>${R.down.name}</em>, da ${R.down.from} a ${R.down.to} €.`},
+ {lb:'Nuova abitudine',tile:[R.habit.c,R.habit.g],v:'Piscina',detail:`<em>${R.habit.times} volte</em>, ${R.habit.amt} € in Svago. A ottobre nessuna.`},
+ {lb:'Spese sotto i 5 €',v:'84,60 €',detail:`<em>${R.small.count} spese</em>. Il caffè da solo: 22 volte, in media 1,30 €.`,g:smallUnits(14,2,16)},
+ {lb:'Giorni con spese',v:'26/30',detail:`Hai registrato spese in <em>26 giorni su 30</em>.`,g:`<div style="display:flex;gap:2px">${Array.from({length:30},(_,k)=>`<i style="flex:1;height:18px;${R.streak.empty.includes(k+1)?'outline:1px solid var(--line);outline-offset:-1px':'background:var(--fg)'}"></i>`).join('')}</div>`},
+ {lb:'Il 2026 finora',v:'16.071 €',detail:`<em>${R.ytd.diff} € meno</em> del 2025 a fine novembre (${R.ytd.prevTotal} €).`,g:cumulative(296,44)}
+];
+const N=rows.length+2;
+const blank=n=>Array.from({length:n},()=>'<i></i>').join('');
+const tileOf=r=>r.tile?cat(r.tile[0],r.tile[1],'s'):'';
+const boardRow=(r,k,cur)=>{
+ if(k===cur)return `<div class="cur"><div class="lb">${tileOf(r)}${r.lb}</div><div class="flaps">${flapsOf(r.v,true)}</div><p>${r.detail}</p>${r.g?`<div class="g">${r.g}</div>`:''}</div>`;
+ if(k<cur)return `<div class="br done"><span class="lb">${r.lb}</span>${tileOf(r)}<span class="flaps">${flapsOf(r.v)}</span></div>`;
+ return `<div class="br todo"><span class="lb">${r.lb}</span><span class="flaps">${blank(9)}</span></div>`;
+};
+const phone=(i,body)=>`<div class="phone">${status()}${storyTop(i,N)}<div class="story-body">${body}</div><div class="gest"></div></div>`;
+const figs=[];
+figs.push({t:'Copertina',p:'Il tabellone vuoto: si vede subito quante righe ci sono. Le etichette sono già scritte, mancano i valori.',h:phone(0,`
+ <div style="margin-top:14px;font-size:34px;font-weight:800;line-height:1.05">Il tuo novembre</div>
+ <p class="cover-t">Tocca per girare la prima riga.</p>
+ <div class="board">${rows.map((r,k)=>boardRow(r,k,-1)).join('')}</div>`)});
+rows.forEach((r,k)=>figs.push({t:r.lb,p:k===0?'La riga corrente si apre in grande, le sue cifre scattano a palette (animazione in questa pagina). Sopra, le righe già girate.':k===3?'Una riga di categoria porta il suo quadratino: il colore resta della categoria.':k===8?'Una riga per giorno del mese, piena se c\'è almeno una spesa.':'',h:phone(k+1,`<div class="board">${rows.map((x,j)=>boardRow(x,j,k)).join('')}</div>`)}));
+figs.push({t:'Tabellone pieno',p:'L\'ultima scheda è il riepilogo intero, da leggere in un colpo d\'occhio. Poi l\'uscita verso Insight di novembre.',h:phone(N-1,`
+ <div class="board">${rows.map((r,k)=>boardRow(r,k,99)).join('')}</div>
+ <div class="push"></div>
+ <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px"><button class="pill">Vedi le spese di novembre</button><button class="pill out">Rivedi dall'inizio</button></div>`)});
+document.getElementById('G').innerHTML=figs.map((c,k)=>`<figure><figcaption><b>${k+1} · ${c.t}</b><p>${c.p}</p></figcaption>${c.h}</figure>`).join('');
+wireTheme();
+</script>
+</body>
+</html>

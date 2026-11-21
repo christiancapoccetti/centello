@@ -8,9 +8,10 @@ public partial class App : Microsoft.Maui.Controls.Application
     private readonly RecurringPaymentAutomation _automation;
     private readonly AppEntryRouter _router;
     private readonly HomeScreen _widgets;
+    private readonly RecapNoticeAutomation _recapNotices;
 
     public App(Func<AppShell> appShellFactory, RecurringPaymentAutomation automation, AppEntryRouter router,
-        HomeScreen widgets)
+        HomeScreen widgets, RecapNoticeAutomation recapNotices)
     {
         InitializeComponent();
         // The window pans under the keyboard by default, which pushes the top bar behind the status bar and hides the
@@ -21,6 +22,7 @@ public partial class App : Microsoft.Maui.Controls.Application
         _automation = automation;
         _router = router;
         _widgets = widgets;
+        _recapNotices = recapNotices;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -34,6 +36,7 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         _ = _automation.ProcessDue();
         _ = _widgets.Refresh();
+        _ = _recapNotices.Sync();
         _ = _router.OpenWaiting();
         // On a cold start the Shell may not be current at the first activation: try once more when the UI is idle.
         if (_router.HasWaiting)
