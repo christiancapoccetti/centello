@@ -30,6 +30,9 @@ public sealed record RecapSpan
         return period.Kind == PeriodKind.Year && period.Start <= yesterday ? new RecapSpan(period, yesterday) : null;
     }
 
-    /// <summary>The single eligibility rule. Insight's row, the deck and the notification all call this.</summary>
-    internal bool HasEnough(IEnumerable<Expense> expenses) => throw new NotImplementedException();
+    /// <summary>The single eligibility rule. Insight's row, the deck and the notification all call this. Expenses
+    /// outside the span are ignored, so a read that also covers the compared window can be passed whole.</summary>
+    internal bool HasEnough(IEnumerable<Expense> expenses) => RecapRules.For(Period.Kind).HasEnough(expenses
+        .Where(expense => expense.OccurredOn >= Period.Start && expense.OccurredOn <= Through)
+        .ToList());
 }
