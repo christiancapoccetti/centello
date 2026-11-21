@@ -55,4 +55,34 @@ public sealed class ItalianFormat_should_expected_behavior
     [InlineData(0, 0, "00:00")]
     public void Write_a_time_with_two_digits_each(int hour, int minute, string expected) =>
         Assert.Equal(expected, ItalianFormat.Time(new TimeOnly(hour, minute)));
+
+    [Theory]
+    [InlineData(DayOfWeek.Saturday, "sabato")]
+    [InlineData(DayOfWeek.Sunday, "domenica")]
+    [InlineData(DayOfWeek.Monday, "lunedì")]
+    [InlineData(DayOfWeek.Friday, "venerdì")]
+    public void Name_a_weekday(DayOfWeek day, string expected) =>
+        Assert.Equal(expected, ItalianFormat.Weekday(day));
+
+    [Theory]
+    [InlineData(20, "al 20 novembre")]
+    [InlineData(8, "all'8 novembre")]
+    [InlineData(11, "all'11 novembre")]
+    [InlineData(1, "al 1 novembre")]
+    public void Say_until_which_day(int day, string expected) =>
+        Assert.Equal(expected, ItalianFormat.UntilLongDate(new DateOnly(2026, 11, day)));
+
+    [Theory]
+    [InlineData(1, "G")]
+    [InlineData(11, "N")]
+    [InlineData(12, "D")]
+    public void Initial_a_month_with_one_letter(int month, string expected) =>
+        Assert.Equal(expected, ItalianFormat.MonthInitial(month));
+
+    [Fact]
+    public void Write_whole_euros_with_the_euro_sign()
+    {
+        Assert.Equal("1.367 €", ItalianFormat.WholeMoney(136_660));
+        Assert.Equal("385 €", ItalianFormat.WholeMoney(38_500));
+    }
 }

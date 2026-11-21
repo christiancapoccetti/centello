@@ -18,6 +18,9 @@ public static class ItalianFormat
     // Indexed by DayOfWeek, which starts on Sunday.
     private static readonly string[] ShortWeekdayNames = ["dom", "lun", "mar", "mer", "gio", "ven", "sab"];
 
+    private static readonly string[] WeekdayNames =
+        ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
+
     /// <summary>"1.284,60"</summary>
     public static string Amount(long cents) => $"{Grouped(cents / 100)},{cents % 100:00}";
 
@@ -31,11 +34,17 @@ public static class ItalianFormat
     /// <summary>"1.218" for a count of things.</summary>
     public static string Count(long count) => Grouped(count);
 
+    /// <summary>"1.367 €" for 1.366,60: WholeEuros with its euro sign.</summary>
+    public static string WholeMoney(long cents) => $"{WholeEuros(cents)} €";
+
     /// <summary>"1.600" for whole euros, "1.600,50" otherwise.</summary>
     public static string Budget(long cents) => cents % 100 == 0 ? Grouped(cents / 100) : Amount(cents);
 
     /// <summary>"novembre"</summary>
     public static string MonthName(int month) => MonthNames[month - 1];
+
+    /// <summary>"N" for novembre: the one letter a month wears on a chart.</summary>
+    public static string MonthInitial(int month) => char.ToUpperInvariant(MonthName(month)[0]).ToString();
 
     /// <summary>"Novembre"</summary>
     public static string MonthTitle(int month) => char.ToUpperInvariant(MonthName(month)[0]) + MonthName(month)[1..];
@@ -61,6 +70,12 @@ public static class ItalianFormat
 
     /// <summary>"21:40"</summary>
     public static string Time(TimeOnly time) => $"{time.Hour:00}:{time.Minute:00}";
+
+    /// <summary>"sabato"</summary>
+    public static string Weekday(DayOfWeek day) => WeekdayNames[(int)day];
+
+    /// <summary>"al 20 novembre", or "all'8 agosto" and "all'11 novembre" where the article elides</summary>
+    public static string UntilLongDate(DateOnly date) => $"{(date.Day is 8 or 11 ? "all'" : "al ")}{LongDate(date)}";
 
     /// <summary>"Una spesa di 12,50 € scade il 18 novembre.", or "scade l'8 agosto." where the article elides</summary>
     public static string PaymentDue(long cents, DateOnly dueOn) =>
