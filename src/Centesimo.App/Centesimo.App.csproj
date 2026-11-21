@@ -16,10 +16,6 @@
     <NoWarn>$(NoWarn);CS8524</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <RunAOTCompilation>false</RunAOTCompilation>
-  </PropertyGroup>
-
   <ItemGroup>
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#141516" BaseSize="128,128" />
     <MauiFont Include="Resources\Fonts\*" />
