@@ -68,6 +68,15 @@ internal sealed class RecapWorld(DateOnly? today = null)
                 new DateOnly(year, index % lastMonth + 1, index / lastMonth % 28 + 1));
     }
 
+    /// <summary>One expense of <paramref name="cents"/> carrying <paramref name="tag"/> per use, <paramref name="perMonth"/>
+    /// (January first) of them in each month of the year.</summary>
+    public void SpendWithTag(Category category, Tag tag, long cents, int year, params int[] perMonth)
+    {
+        for (var month = 1; month <= perMonth.Length; month++)
+            for (var use = 0; use < perMonth[month - 1]; use++)
+                Spend(category, cents, new DateOnly(year, month, use % 28 + 1), tag);
+    }
+
     public async Task<RecapDeck> Deck(Period period) => (await Service.Get(period)).Value;
 }
 

@@ -25,6 +25,7 @@ public sealed record RecapDeck
         RecapCard.Weekday.Of,
         RecapCard.Categories.Of,
         RecapCard.Changes.Of,
+        RecapCard.TagOfYear.Of,
         RecapCard.SmallExpenses.Of,
         RecapCard.Consistency.Of
     ];
