@@ -400,7 +400,7 @@ Tapping a widget opens the app on the matching screen; an editor opened from a w
 
 **The Widget Words Are Pictures Rule.** Launchers ignore the app's font resources, so no widget word is a TextView. Every word is drawn in Archivo with tabular figures as a single-colour mask that the layout tints with its `@color/theme_*` colour, like the glyphs; a text with two colours (the budget sentence with its bold ink amount) is drawn twice, light and dark, and the launcher shows the copy that matches its scheme. Each image carries the same words as its description. Widget text therefore does not follow the system font size.
 
-**The Theme Resources Rule.** Widget layouts take colours only from `@color/theme_*`, generated from `ThemeTokens` in `src/Centesimo.App/Platforms/Android/Resources/values/` and `values-night/`, so a widget switches between light and dark with the launcher while the app is not running. Data graphics keep the hard-edge rules of the Home.
+**The Theme Resources Rule.** Widget layouts take colours only from `@color/theme_*`, generated from `ThemeTokens` in `src/Centesimo.App/Platforms/Android/Resources/values/` and `src/Centesimo.App/Platforms/Android/Resources/values-night/`, so a widget switches between light and dark with the launcher while the app is not running. Data graphics keep the hard-edge rules of the Home.
 
 ### Entry panel (signature)
 The sheet opened from the Aggiungi microphone or camera, or from the "Spesa a voce" and "Spesa da foto" shortcuts: translucent, over the launcher, on the scrim. `PanelActivity` hosts voice (`Dictation`) or photo (`PhotoReading`), and `PanelFaces.Of` holds every word it shows.
