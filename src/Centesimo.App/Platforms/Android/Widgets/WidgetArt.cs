@@ -38,6 +38,8 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
     private const float PaceLabelLiftDp = 6;
     private const float PaceLabelPaddingDp = 4;
     private const float AxisBaselineInsetDp = 2;
+    private const float ShortcutIconDp = 108;
+    private const float ShortcutGlyphDp = 40;
 
     private readonly float _density = context.Resources!.DisplayMetrics!.Density;
     private readonly int _densityDpi = (int)context.Resources!.DisplayMetrics!.DensityDpi;
@@ -67,6 +69,28 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
     /// square's edges stay sharp.</summary>
     public DayNight Tile(CategoryShortcut shortcut, float sizeDp) =>
         new(Tile(shortcut, sizeDp, false), Tile(shortcut, sizeDp, true));
+
+    /// <summary>A launcher shortcut's icon as an adaptive bitmap: 108dp, filled edge to edge, with the glyph inside the
+    /// 66dp safe circle that every launcher mask keeps. Drawn in the dark scheme, as the launcher icon: a way in is the
+    /// ground with the accent glyph, a category is its palette colour with the tile-ink glyph.</summary>
+    public AndroidBitmap ShortcutIcon(ShortcutArt art)
+    {
+        var (ground, ink, glyph) = art switch
+        {
+            ShortcutArt.Way way => (ThemeColors.Resolve(ThemeColor.Ground, true),
+                ThemeColors.Resolve(ThemeColor.Accent, true), way.Glyph),
+            ShortcutArt.Category category => (ThemeColors.ResolvePalette(category.ColorKey, true),
+                ThemeColors.Resolve(ThemeColor.TileInk, true), CategoryIcons.Resolve(category.IconKey).Glyph),
+            _ => throw new ArgumentOutOfRangeException(nameof(art))
+        };
+        var bitmap = NewBitmap(ShortcutIconDp, ShortcutIconDp);
+        using var canvas = new AndroidCanvas(bitmap);
+        canvas.DrawColor(ground.ToPlatform());
+        using var paint = PaintOf(new WidgetTextStyle(Fonts.Icons, ShortcutGlyphDp));
+        paint.Color = ink.ToPlatform();
+        DrawCentred(canvas, paint, glyph, bitmap.Width);
+        return bitmap;
+    }
 
     /// <summary>Art in several colours: <paramref name="draw"/> runs once for each scheme, on a bitmap with the density
     /// scaling MAUI's own graphics view applies, so the Home's painters draw exactly what they draw on screen.</summary>

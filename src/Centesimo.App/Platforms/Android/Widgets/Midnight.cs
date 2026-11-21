@@ -39,5 +39,5 @@ internal static class Midnight
 public sealed class WidgetMidnightReceiver : BroadcastReceiver
 {
     public override void OnReceive(Context? context, Intent? intent) =>
-        ReceiverWork.Run(this, services => services.GetRequiredService<HomeScreenWidgets>().Refresh());
+        ReceiverWork.Run(this, services => services.GetRequiredService<HomeScreen>().Refresh());
 }

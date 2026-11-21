@@ -7,10 +7,10 @@ public partial class App : Microsoft.Maui.Controls.Application
     private readonly Func<AppShell> _appShellFactory;
     private readonly RecurringPaymentAutomation _automation;
     private readonly AppEntryRouter _router;
-    private readonly HomeScreenWidgets _widgets;
+    private readonly HomeScreen _widgets;
 
     public App(Func<AppShell> appShellFactory, RecurringPaymentAutomation automation, AppEntryRouter router,
-        HomeScreenWidgets widgets)
+        HomeScreen widgets)
     {
         InitializeComponent();
         // The window pans under the keyboard by default, which pushes the top bar behind the status bar and hides the
