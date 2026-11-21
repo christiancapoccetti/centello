@@ -74,6 +74,9 @@ public static class ItalianFormat
     /// <summary>"sabato"</summary>
     public static string Weekday(DayOfWeek day) => WeekdayNames[(int)day];
 
+    /// <summary>"sab"</summary>
+    public static string ShortWeekday(DayOfWeek day) => ShortWeekdayNames[(int)day];
+
     /// <summary>"al 20 novembre", or "all'8 agosto" and "all'11 novembre" where the article elides</summary>
     public static string UntilLongDate(DateOnly date) => $"{(date.Day is 8 or 11 ? "all'" : "al ")}{LongDate(date)}";
 

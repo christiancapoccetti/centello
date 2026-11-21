@@ -75,5 +75,30 @@ public static class RecapTexts
         return compared.Start.Year == span.Period.Start.Year ? $"di {month}" : $"di {month} {compared.Start.Year}";
     }
 
+    /// <summary>What a change is measured against, ready after a name: "rispetto a ottobre", "rispetto a novembre
+    /// 2025", "rispetto al 2025" and, for the year so far, "rispetto al 2025 fino al 20 novembre".</summary>
+    public static string Versus(RecapSpan span)
+    {
+        var compared = span.Period.Previous();
+        if (compared.Kind == PeriodKind.Year)
+            return span.IsSoFar
+                ? $"rispetto al {compared.Start.Year} fino {ItalianFormat.UntilLongDate(span.Compared.To)}"
+                : $"rispetto al {compared.Start.Year}";
+
+        var month = ItalianFormat.MonthName(compared.Start.Month);
+        return compared.Start.Year == span.Period.Start.Year ? $"rispetto a {month}" : $"rispetto a {month} {compared.Start.Year}";
+    }
+
+    /// <summary>"il 4", "l'8", "l'11": a day of the month with its article.</summary>
+    public static string TheDay(int day) => day is 8 or 11 ? $"l'{day}" : $"il {day}";
+
+    /// <summary>"a", "a e b", "a, b e c".</summary>
+    public static string List(IReadOnlyList<string> items) => items.Count switch
+    {
+        0 => "",
+        1 => items[0],
+        _ => $"{string.Join(", ", items.Take(items.Count - 1))} e {items[^1]}"
+    };
+
     internal static string Capitalized(string text) => char.ToUpperInvariant(text[0]) + text[1..];
 }
