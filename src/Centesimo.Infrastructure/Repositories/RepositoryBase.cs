@@ -54,6 +54,10 @@ public abstract class RepositoryBase
         {
             return Result.Failure(InfrastructureErrors.Unexpected);
         }
+        finally
+        {
+            Context.ChangeTracker.Clear();
+        }
     }
 
     protected async Task<Result> SaveContext(
@@ -78,12 +82,15 @@ public abstract class RepositoryBase
         {
             return Result.Failure(InfrastructureErrors.Unexpected);
         }
+        finally
+        {
+            Context.ChangeTracker.Clear();
+        }
     }
 
     protected async Task<Result<TValue>> SaveContextInTransaction<TValue>(
         Func<CentesimoDbContext, CancellationToken, Task<TValue>> mutation,
-        CancellationToken cancellationToken = default,
-        bool clearChangeTracker = false)
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -108,8 +115,7 @@ public abstract class RepositoryBase
         }
         finally
         {
-            if (clearChangeTracker)
-                Context.ChangeTracker.Clear();
+            Context.ChangeTracker.Clear();
         }
     }
 }

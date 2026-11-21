@@ -30,15 +30,14 @@ Success means expenses actually get logged, because entry is fast enough that sk
 - Voice entry: hold the microphone for up to 20 seconds; typing a phrase was removed on purpose. The draft always opens in the expense editor, and nothing is saved without explicit confirmation.
 - Photo and PDF entry: the camera segment of the home dock opens a menu to take a photo (Android 13 and later), choose one from the gallery or choose a PDF (up to 5 MB). Like voice, it opens a pre-filled draft in the expense editor, never saves on its own, and stores neither the photo nor the PDF.
 - Recurring payments create due expenses when the app opens and send Android notifications for upcoming ones.
-- One-time migration from a Money Manager `.mmbackup` file, with preview and no duplication.
 
 ## Capabilities and Constraints
 
 - Categories with optional monthly budgets (create, edit, archive, restore); tags within a category; expenses with amount, date, category, optional tag and note; monthly history with edit and delete; monthly and yearly overviews; home screen widgets to add an expense (by hand or voice) and read the month from the launcher; recurring payments (weekly, monthly, yearly, optional end date); Insight for any month or year.
-- Local-first by construction: SQLite on the device, no account, no backend, no sync. The only data that leaves the phone is the voice-entry audio and its transcript, or the photo or PDF chosen for entry, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
+- Local-first by construction: SQLite on the device, no account, no backend, no sync. Android Auto Backup copies only the database to the user's own Google account (the OpenAI key is excluded); a backup file and a CSV of every expense can be saved in the Download folder, and a backup file can be restored after a preview. Apart from that, the only data that leaves the phone is the voice-entry audio and its transcript, or the photo or PDF chosen for entry, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
 - Stack: .NET 10 MAUI, Android only (min API 24), MVVM, Clean Architecture, Result Pattern.
 - User-facing text is Italian and currently hardcoded; amounts are in euros with Italian formatting (`486,20 €`).
-- Not in scope yet (see `FUTURE.md`): storing receipt photos, localization/English, backup export and restore, configurable budget alerts, biometric lock.
+- Not in scope yet (see `FUTURE.md`): storing receipt photos, localization/English, configurable budget alerts, biometric lock.
 
 ## Brand Commitments
 
@@ -48,14 +47,13 @@ Success means expenses actually get logged, because entry is fast enough that sk
 ## Evidence on Hand
 
 - Product docs: `README.md`, `FUTURE.md`, `DESIGN.md` (visual system) and `docs/mockups/centesimo-prototype.html` (approved prototype of every screen).
-- A real Money Manager backup (`MoneyManager_*.mmbackup`) holds personal financial data. Use it only for local testing and never put its contents into screenshots, docs or any public surface.
 - No reviews, testimonials, download counts or store listing exist. Do not invent any.
 
 ## Product Principles
 
 1. **Entry speed is the product.** Any change that adds a tap or a field to logging an expense has to justify itself against that cost.
 2. **Show, don't plan.** Help people notice how their spending changes. Do not push budgets, thresholds or guilt.
-3. **The user confirms.** Automation (voice entry, recurring payments, import) proposes; nothing ambiguous is saved silently.
+3. **The user confirms.** Automation (voice entry, recurring payments) proposes; nothing ambiguous is saved silently, and a restore shows what the phone would lose before it replaces anything.
 4. **Local by default.** Data stays on the phone. Anything that would leave it is opt-in, explained in plain Italian, and reversible.
 5. **Built for an audience of strangers.** Even with two users, every screen should be clear to someone who has never seen the app before.
 

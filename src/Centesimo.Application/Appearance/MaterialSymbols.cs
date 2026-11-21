@@ -10,6 +10,7 @@ public static class MaterialSymbols
     public const string Archive = "\uE149";
     public const string ArrowBack = "\uE5C4";
     public const string Autorenew = "\uE863";
+    public const string Backup = "\uE864";
     public const string BarChart = "\uE26B";
     public const string BeachAccess = "\uEB3E";
     public const string Bolt = "\uEA0B";
@@ -30,7 +31,6 @@ public static class MaterialSymbols
     public const string Devices = "\uE1B1";
     public const string DirectionsBus = "\uE530";
     public const string DirectionsCar = "\uE531";
-    public const string Download = "\uF090";
     public const string East = "\uF1DF";
     public const string Edit = "\uE3C9";
     public const string Error = "\uE000";
@@ -68,6 +68,7 @@ public static class MaterialSymbols
     public const string Repeat = "\uE040";
     public const string Restaurant = "\uE56C";
     public const string Restore = "\uE8B3";
+    public const string Save = "\uE161";
     public const string School = "\uE80C";
     public const string SearchOff = "\uEA76";
     public const string Settings = "\uE8B8";
@@ -78,9 +79,11 @@ public static class MaterialSymbols
     public const string SouthEast = "\uF1E4";
     public const string SportsSoccer = "\uEA2F";
     public const string Subscriptions = "\uE064";
+    public const string TableView = "\uF1BE";
     public const string Today = "\uE8DF";
     public const string UploadFile = "\uE9FC";
     public const string Visibility = "\uE8F4";
     public const string VisibilityOff = "\uE8F5";
+    public const string Warning = "\uE002";
     public const string Work = "\uE8F9";
 }

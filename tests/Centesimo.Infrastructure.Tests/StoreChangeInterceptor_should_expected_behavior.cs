@@ -101,28 +101,6 @@ public sealed class StoreChangeInterceptor_should_expected_behavior
     }
 
     [Fact]
-    public async Task Signal_after_a_money_manager_import()
-    {
-        using var store = new SignalingStore();
-        var data = new MoneyManagerImportData(
-            [new MoneyManagerCategory("category-1", "Food", "cart", "#176B5B")],
-            [new MoneyManagerTag("tag-1:category-1", "category-1", "Restaurant")],
-            [new MoneyManagerExpense("expense-1", "category-1", "tag-1:category-1", 1234,
-                new DateOnly(2026, 7, 20), "Lunch")],
-            0,
-            0);
-        using var scope = store.Provider.CreateScope();
-
-        var imported = await scope.ServiceProvider
-            .GetRequiredService<IMoneyManagerImportRepository>()
-            .Import(data);
-
-        Assert.True(imported.IsSuccess);
-        Assert.NotEmpty(store.Listener.ExpensesSeen);
-        Assert.All(store.Listener.ExpensesSeen, seen => Assert.Equal(1, seen));
-    }
-
-    [Fact]
     public async Task Do_nothing_without_a_listener()
     {
         using var store = new SignalingStore(withListener: false);

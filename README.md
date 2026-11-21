@@ -11,13 +11,13 @@ Centesimo is a simple Android expense tracker built with .NET MAUI, designed and
 - Category detail with tag filters, and `Insight` for any month or year: the total against the previous period, a pace chart of cumulative spending (automatic and variable) with the budget, a waterfall of what changed per category, and history-based insights.
 - Weekly, monthly or yearly recurring payments with optional end date. Due expenses are created when the app opens. A paused payment skips the occurrences missed while paused when it is resumed. Reminder notifications arrive at 09:00 on the due day.
 - Voice, photo and PDF entry: create an expense draft from a spoken Italian phrase (`Inserimento vocale`), from a photo of a receipt or from a PDF using OpenAI with your own API key, with explicit confirmation in the expense editor.
-- Home screen widgets: `Aggiungi` (add an expense by hand or by voice), `Scorciatoie` (your four most used categories plus `Altra`), `Il mese` (total, remaining budget, comparison and category line) and `Il ritmo` (the same with Oggi's daily chart). A widget opens the app on the right screen, and the microphone of `Aggiungi` opens a voice panel over the launcher that listens at once. Widgets follow the launcher's light and dark scheme and refresh after every saved change.
-- Settings are grouped as `Dati` (recurring payments, import from Money Manager), `Voce e foto` and `Informazioni` (version, `Licenze`).
-- One-time import from a Money Manager `.mmbackup` file, with preview and no duplication.
+- Home screen widgets: `Aggiungi` (add an expense by hand or by voice), `Scorciatoie` (your four most used categories plus `Altra`), `Il mese` (total, remaining budget, comparison and category line) and `Il ritmo` (the same with Oggi's daily chart). A widget opens the app on the right screen, and the microphone of `Aggiungi` opens a voice panel over the launcher that listens at once. Widgets follow the launcher's light and dark scheme and refresh after every saved change, a restored backup included.
+- Settings are grouped as `Dati` (recurring payments, `Backup ed export`), `Voce e foto` and `Informazioni` (version, `Licenze`).
+- Backup and export (`Backup ed export`): create a backup file (`centesimo-yyyy-MM-dd.backup`) and export every expense to CSV (`;` separated, UTF-8 with BOM, for Excel or Sheets). Both are saved in the Download folder (on Android 9 and older the share sheet is used instead). `Ripristina backup` picks a backup file, compares what the file and the phone hold, and replaces the phone's data in one transaction after confirmation.
 - Dark and light theme following the Android setting; the app is locked to portrait.
-- Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. The only data that leaves the device is what you send with voice, photo or PDF entry (audio and text, a photo, or a PDF), and only when you enable it.
+- Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. Apart from Android Auto Backup to your own Google account, the only data that leaves the device is what you send with voice, photo or PDF entry (audio and text, a photo, or a PDF), and only when you enable it.
 
-Storing receipt photos, localization, backups, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
+Android Auto Backup saves the database (and only the database) to your own Google account, so a new phone with the same account gets the expenses back. The OpenAI key, the reminder settings and the preferences are not backed up: enter the key again on the new phone, and the reminders are rebuilt at first launch. Storing receipt photos, localization, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
 
 ## Home screen widgets
 
@@ -36,8 +36,8 @@ The visual system (colours, Archivo typography, components) is recorded in [DESI
 The solution follows a pragmatic Clean Architecture approach with MVVM and the Result Pattern:
 
 - `Centesimo.Domain`: entities, value objects, and domain rules.
-- `Centesimo.Application`: use cases, repository contracts, and application services.
-- `Centesimo.Infrastructure`: EF Core and SQLite persistence.
+- `Centesimo.Application`: use cases, repository contracts, and application services. `RecurringPaymentAutomation` runs behind an exclusive gate so a restore cannot overlap with creating due expenses.
+- `Centesimo.Infrastructure`: EF Core and SQLite persistence. `SqliteDataBackup` is the only code besides EF that touches the database files (backup copy with `VACUUM INTO`, validation and migration on a private copy, replacement in one transaction); it signals the store change listener itself after a restore, since the copy bypasses EF. Editor view models share one window-lifetime `DbContext`, so `RepositoryBase` clears the change tracker after every save.
 - `Centesimo.App`: .NET MAUI Android UI and view models. `Platforms/Android/Widgets` holds the widgets and `HomeScreenWidgets`, the one place that redraws them; `Platforms/Android/Voice` holds the voice panel.
 - `tests`: domain, application, and infrastructure test projects.
 
@@ -83,7 +83,7 @@ Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft
 - **Photo and PDF flow:** the camera segment of the home dock opens a menu: "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria" and "Scegli un PDF" (up to 5 MB). A photo is scaled to 1600 px and re-encoded as JPEG without EXIF or GPS data. The photo or PDF goes to `gpt-6-luna` in a single call, with the same strict schema as voice. If the document cannot be read, the editor opens empty with today's date.
 - **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the photo or PDF you chose, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent. OpenAI may keep API inputs for abuse monitoring, so Centesimo can only promise that it does not save them itself.
 - **Nothing is stored by Centesimo:** the copy of a photo or PDF placed in the app cache is deleted before and after each pick, and your own files are never modified or deleted. No storage permission is needed; only the camera permission is declared.
-- **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync.
+- **What stays local:** expenses, budgets, and the SQLite database. There is no backend and no sync; the only copy outside the phone is Android Auto Backup to your own Google account, which does not include the OpenAI key.
 - **Voice panel:** the microphone of the `Aggiungi` widget opens a panel that listens at once. A second tap sends the phrase and it is sent on its own at 20 seconds; `Annulla`, a tap outside, Back or leaving cancels. Oggi's hold-to-talk is unchanged.
 - **Confirmation:** the draft opens in the expense editor (with a "Dalla foto · controlla e salva" or "Dal PDF · controlla e salva" banner for documents) and nothing is saved until you save it; saving still requires a category.
 - **Availability:** the microphone and camera segments are disabled until a key is configured (both lead to Settings), and reports an error without an Internet connection. Manual entry always works.

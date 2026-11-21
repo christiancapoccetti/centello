@@ -21,10 +21,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
-        services.AddScoped<IMoneyManagerBackupReader, MoneyManagerBackupReader>();
-        services.AddScoped<IMoneyManagerImportRepository, MoneyManagerImportRepository>();
         services.AddScoped<IRecurringPaymentRepository, RecurringPaymentRepository>();
         services.AddScoped<IRecurringOccurrenceProcessor, RecurringOccurrenceProcessor>();
+        services.AddScoped<IDataBackup, SqliteDataBackup>();
         services.AddSingleton(provider => new OpenAiClient(
             new HttpClient(),
             provider.GetRequiredService<IOpenAiApiKeyProvider>()));

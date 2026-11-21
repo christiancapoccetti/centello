@@ -1,5 +1,6 @@
 ﻿using Centesimo.Application;
 using Centesimo.Domain;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centesimo.Infrastructure.Tests;
@@ -52,10 +53,64 @@ public sealed class RepositoryBase_should_expected_behavior
         var probe = new RepositoryBaseProbe(database.Context);
 
         var failed = await probe.FailTransaction(CreateCategory("Food"));
-        database.Context.ChangeTracker.Clear();
 
         Assert.True(failed.IsFailure);
         Assert.Empty(await database.Context.Categories.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Track_nothing_after_a_successful_save()
+    {
+        using var database = new TestDatabase();
+        var probe = new RepositoryBaseProbe(database.Context);
+
+        await probe.Save(CreateCategory("Food"));
+
+        Assert.Empty(database.Context.ChangeTracker.Entries());
+    }
+
+    [Fact]
+    public async Task Track_nothing_after_a_failed_transaction()
+    {
+        using var database = new TestDatabase();
+        var probe = new RepositoryBaseProbe(database.Context);
+
+        await probe.FailTransaction(CreateCategory("Food"));
+
+        Assert.Empty(database.Context.ChangeTracker.Entries());
+    }
+
+    [Fact]
+    public async Task Save_again_after_a_failed_save()
+    {
+        using var database = new TestDatabase();
+        var probe = new RepositoryBaseProbe(database.Context);
+        await probe.Save(CreateCategory("Food"));
+        await probe.Save(CreateCategory("Food"));
+
+        var saved = await probe.Save(CreateCategory("Travel"));
+
+        Assert.True(saved.IsSuccess);
+        Assert.Equal(2, (await probe.CountCategories()).Value);
+    }
+
+    [Fact]
+    public async Task Read_a_row_changed_by_another_connection_after_saving_it()
+    {
+        using var database = new TestFileDatabase();
+        var probe = new RepositoryBaseProbe(database.Context);
+        await probe.Save(CreateCategory("Food"));
+        using (var other = new SqliteConnection($"Data Source={database.FilePath};Pooling=False"))
+        {
+            other.Open();
+            using var command = other.CreateCommand();
+            command.CommandText = "UPDATE Categories SET Name = 'Changed'";
+            command.ExecuteNonQuery();
+        }
+
+        var category = await database.Context.Categories.SingleAsync();
+
+        Assert.Equal("Changed", category.Name);
     }
 
     [Fact]
@@ -69,6 +124,7 @@ public sealed class RepositoryBase_should_expected_behavior
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             probe.CancelQuery(cancellation.Token));
     }
+
     private static Category CreateCategory(string name) =>
         new(Guid.NewGuid(), name, "cart", "#123456");
 

@@ -13,6 +13,7 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         services.AddSingleton<IOpenAiApiKeyStore, InMemoryOpenAiApiKeyStore>();
         services.AddSingleton<ISpeechRecorder, SilentSpeechRecorder>();
         services.AddSingleton<IInternetAccess, AlwaysOnlineInternetAccess>();
+        services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
         return services.BuildServiceProvider();
     }
 
@@ -75,6 +76,33 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         using var scope = provider.CreateScope();
 
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseService>());
+    }
+
+    [Fact]
+    public void Build_the_expense_export_service_with_the_system_clock()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExpenseExportService>());
+    }
+
+    [Fact]
+    public void Build_the_data_backup_over_the_scoped_database()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        Assert.IsType<SqliteDataBackup>(scope.ServiceProvider.GetRequiredService<IDataBackup>());
+    }
+
+    [Fact]
+    public void Share_one_recurring_payment_automation()
+    {
+        using var provider = BuildProvider();
+
+        Assert.Same(provider.GetRequiredService<RecurringPaymentAutomation>(),
+            provider.GetRequiredService<RecurringPaymentAutomation>());
     }
 
     [Fact]

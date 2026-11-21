@@ -48,4 +48,11 @@ public sealed class ItalianFormat_should_expected_behavior
     [InlineData(1218, "1.218")]
     public void Group_the_thousands_of_a_count(int count, string expected) =>
         Assert.Equal(expected, ItalianFormat.Count(count));
+
+    [Theory]
+    [InlineData(21, 40, "21:40")]
+    [InlineData(9, 5, "09:05")]
+    [InlineData(0, 0, "00:00")]
+    public void Write_a_time_with_two_digits_each(int hour, int minute, string expected) =>
+        Assert.Equal(expected, ItalianFormat.Time(new TimeOnly(hour, minute)));
 }

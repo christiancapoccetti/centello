@@ -19,7 +19,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SettingsPage>();
         services.AddTransient<LicensesViewModel>();
         services.AddTransient<LicensesPage>();
-        services.AddSingleton<RecurringPaymentAutomation>();
+        services.AddTransient<BackupViewModel>();
+        services.AddTransient<BackupPage>();
+        services.AddTransient<RestoreViewModel>();
+        services.AddTransient<RestorePage>();
         services.AddSingleton<AppEntryRouter>();
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
@@ -30,6 +33,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
+        services.AddSingleton<IDownloads, MediaStoreDownloads>();
         services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
         services.AddSingleton<HomeScreenWidgets>();
         services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreenWidgets>());
@@ -38,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, AlertConfirmation>();
         services.AddSingleton<ISnackbar, NoSnackbar>();
+        services.AddSingleton<IDownloads, NoDownloads>();
 #endif
         services.AddSingleton<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>
@@ -55,8 +60,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<RecurringPaymentsPage>();
         services.AddTransient<RecurringPaymentEditorViewModel>();
         services.AddTransient<RecurringPaymentEditorPage>();
-        services.AddTransient<MoneyManagerImportViewModel>();
-        services.AddTransient<MoneyManagerImportPage>();
         return services;
     }
 }

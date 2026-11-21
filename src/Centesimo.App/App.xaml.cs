@@ -1,3 +1,5 @@
+using Centesimo.Application;
+
 namespace Centesimo.App;
 
 public partial class App : Microsoft.Maui.Controls.Application

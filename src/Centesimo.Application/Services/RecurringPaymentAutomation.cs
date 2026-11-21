@@ -1,7 +1,6 @@
-using Centesimo.Application;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Centesimo.App;
+namespace Centesimo.Application;
 
 public interface IRecurringPaymentReminder
 {
@@ -13,16 +12,47 @@ public sealed class NoOpRecurringPaymentReminder : IRecurringPaymentReminder
     public Task Resync(IReadOnlyList<UpcomingRecurringPaymentReminder> reminders) => Task.CompletedTask;
 }
 
+/// <summary>The only background writer of the database. One gate serializes its passes with the work that must
+/// own the database alone, such as a restore.</summary>
 public sealed class RecurringPaymentAutomation(IServiceScopeFactory scopeFactory,
     IRecurringPaymentReminder reminder)
 {
-    private readonly SemaphoreSlim _processing = new(1, 1);
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
     public async Task ProcessDue()
     {
-        if (!await _processing.WaitAsync(0))
+        if (!await _gate.WaitAsync(0))
             return;
 
+        try
+        {
+            await RunPass();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>Waits for the gate instead of dropping the call, then runs one pass before releasing it: calls
+    /// skipped while the work held the gate are covered, and the pass sees the data the work left.</summary>
+    public async Task<TResult> Exclusive<TResult>(Func<Task<TResult>> work)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            var result = await work();
+            await RunPass();
+            return result;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task RunPass()
+    {
         try
         {
             using var scope = scopeFactory.CreateScope();
@@ -41,10 +71,6 @@ public sealed class RecurringPaymentAutomation(IServiceScopeFactory scopeFactory
         }
         catch
         {
-        }
-        finally
-        {
-            _processing.Release();
         }
     }
 }

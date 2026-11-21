@@ -5,7 +5,7 @@
              xmlns:app="clr-namespace:Centesimo.Application;assembly=Centesimo.Application"
              x:Class="Centesimo.App.Controls.SettingsRow"
              x:Name="Root">
-    <!-- A line of a settings list: what it is, a word on it and, when it leads somewhere, the arrow and the tap. -->
+    <!-- A line of a settings list: what it is, a word on it and, when it does something, the tap and, when it leads somewhere, the arrow. -->
     <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
         <Label x:Name="Mark" Style="{StaticResource IconGlyph}" Text="{Binding Glyph, Source={x:Reference Root}}" VerticalOptions="Center" />
         <VerticalStackLayout Grid.Column="1" Padding="0,10" VerticalOptions="Center">

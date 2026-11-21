@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backup ed export · varianti</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#FAFAF8;--raised:#EFEFEA;--selected:#E3E3E2;--fg:#16161A;--mute:#62626A;--line:#E4E4DF;--outline:#DCDCD6;
+ --alert:#C8261A;--pos-bg:#E3F2EA;--pos-fg:#0B5A3D;--coral:#E0503D;--scrim:rgba(0,0,0,.5);
+ --page:#E9E9E4;--page-fg:#16161A;--page-mute:#5E5E66;
+}
+.dark{
+ --bg:#141516;--raised:#26282B;--selected:#333435;--fg:#F4F4F0;--mute:#A0A3A9;--line:#2A2C2F;--outline:#3A3D41;
+ --alert:#FF8A7A;--pos-bg:#16302A;--pos-fg:#7FD6A8;--coral:#FF8A7A;--scrim:rgba(0,0,0,.5);
+ --page:#0B0B0C;--page-fg:#F4F4F0;--page-mute:#A0A3A9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--page)}
+body{font-family:Archivo,sans-serif;color:var(--page-fg);background:var(--page);font-variant-numeric:tabular-nums;padding:32px 24px 56px}
+::selection{background:var(--fg);color:var(--bg)}
+.ms{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;font-size:24px;line-height:1;font-variation-settings:'FILL' 1,'wght' 500;display:inline-block;white-space:nowrap}
+
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;max-width:1800px}
+h1{font-size:28px;font-weight:800}
+.intro{margin-top:8px;max-width:80ch;color:var(--page-mute);font-size:16px;line-height:1.5}
+.theme{display:flex;border:1px solid var(--outline);border-radius:9999px;overflow:hidden}
+.theme button{font:600 14px Archivo,sans-serif;color:var(--page-mute);background:none;border:0;padding:10px 18px;cursor:pointer;min-height:44px}
+.theme button[aria-pressed="true"]{background:var(--page-fg);color:var(--page)}
+.theme button:focus-visible{outline:2px solid var(--page-fg);outline-offset:2px}
+
+section.v{margin-top:48px}
+section.v>h2{font-size:22px;font-weight:800}
+section.v>p{margin-top:6px;max-width:80ch;font-size:15px;line-height:1.5;color:var(--page-mute)}
+section.v>p em{font-style:normal;color:var(--page-fg);font-weight:600}
+.row{display:flex;gap:28px;margin-top:20px;overflow-x:auto;padding-bottom:8px}
+figure{flex:none;width:360px}
+figcaption{margin-bottom:10px;font-size:14px;font-weight:600;color:var(--page-mute)}
+
+.phone{width:360px;height:780px;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;border-radius:28px;overflow:hidden;outline:1px solid var(--outline);position:relative}
+.status{height:32px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600}
+.status .ms{font-size:18px}
+.top{height:56px;flex:none;display:flex;align-items:center}
+.top.tab{padding:0 24px}
+.top.push{padding:0 4px;gap:4px}
+.top .ib{width:48px;height:48px;display:grid;place-items:center}
+.top b{font-size:20px;font-weight:700}
+.top.push b{margin-left:4px}
+.scroll{flex:1;overflow:hidden;padding-bottom:24px}
+
+.sec{font-size:18px;font-weight:700;margin:24px 24px 2px}
+.sec.first{margin-top:8px}
+.srow{margin:0 24px;min-height:64px;display:grid;grid-template-columns:36px 1fr auto;column-gap:14px;align-items:center;border-bottom:1px solid var(--line)}
+.srow .t{font-size:16px;font-weight:600;line-height:1.25}
+.srow .d{font-size:13px;color:var(--mute);margin-top:2px;line-height:1.3}
+.srow .txt{padding:10px 0}
+.srow .chev{color:var(--mute);margin-right:-4px}
+.srow.pos .t{color:var(--pos-fg)}
+.srow.old{opacity:.45}
+.note{display:flex;gap:8px;margin:12px 24px 0;align-items:flex-start}
+.note .ms{font-size:18px;color:var(--mute)}
+.note p{font-size:13px;line-height:1.45;color:var(--mute);max-width:300px}
+.lead{margin:1px 24px 0;font-size:15px;line-height:1.35;color:var(--mute)}
+.btns{display:flex;gap:12px;margin:12px 24px 0}
+.btn{height:48px;border-radius:9999px;padding:0 24px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700;white-space:nowrap}
+.btn.filled{background:var(--fg);color:var(--bg)}
+.btn.outlined{border:1px solid var(--mute)}
+.btn.danger{border:1px solid var(--alert);color:var(--alert)}
+.btn.text{padding:0 12px}
+.btn.block{display:flex;width:auto;margin:0 24px}
+.btn .ms{font-size:20px}
+
+.file{display:flex;gap:10px;align-items:center;margin:20px 24px 0}
+.file .ms{font-size:20px;color:var(--mute)}
+.file b{font-size:14px;font-weight:600}
+.file small{display:block;font-size:13px;color:var(--mute);margin-top:2px}
+.cmp{margin:16px 24px 0}
+.cmp .h,.cmp .r{display:grid;grid-template-columns:1fr 84px 96px;align-items:center}
+.cmp .h{font-size:13px;color:var(--mute);padding-bottom:6px;border-bottom:1px solid var(--line)}
+.cmp .h span,.cmp .r span{text-align:right}
+.cmp .r{min-height:48px;border-bottom:1px solid var(--line);font-size:16px}
+.cmp .r b{font-weight:700;text-align:right}
+.cmp .r span{color:var(--mute)}
+.warn{display:flex;gap:8px;margin:16px 24px 0;align-items:flex-start}
+.warn .ms{font-size:18px;color:var(--fg)}
+.warn p{font-size:14px;line-height:1.4}
+.err{display:flex;gap:6px;margin:12px 24px 0;align-items:flex-start;color:var(--alert)}
+.err .ms{font-size:18px}
+.err p{font-size:13px;line-height:1.4}
+.done{margin:16px 24px 0;background:var(--pos-bg);color:var(--pos-fg);border-radius:12px;padding:16px}
+.done .hd{display:flex;gap:8px;align-items:center;font-weight:700}
+.done .hd .ms{font-size:22px}
+.done p{margin-top:8px;line-height:1.5;font-size:14px}
+.bar{height:4px;margin:24px 24px 0;background:var(--line);position:relative;overflow:hidden}
+.bar::after{content:"";position:absolute;left:20%;width:35%;top:0;bottom:0;background:var(--fg)}
+.cap{margin:6px 28px 0;font-size:13px;color:var(--mute)}
+
+.tabs{flex:none;height:72px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);align-items:center;text-align:center;font-size:12px;font-weight:600;color:var(--mute)}
+.tabs div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.tabs .on{color:var(--fg)}
+.gest{height:24px;flex:none;display:grid;place-items:center;background:var(--bg)}
+.gest::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--fg)}
+
+.scrimL{position:absolute;inset:0;background:var(--scrim)}
+.dialog{position:absolute;left:24px;right:24px;top:210px;background:var(--raised);border-radius:28px;padding:24px 24px 12px}
+.dialog h3{font-size:22px;font-weight:700;line-height:1.25}
+.dialog p{margin-top:14px;font-size:15px;line-height:1.45;color:var(--mute)}
+.dialog .acts{display:flex;justify-content:flex-end;gap:4px;margin-top:20px}
+.dialog .acts span{min-height:48px;padding:0 12px;display:grid;place-items:center;font-weight:700;font-size:16px}
+.dialog .acts .x{color:var(--alert)}
+.snack{position:absolute;left:12px;right:12px;bottom:108px;background:var(--fg);color:var(--bg);border-radius:4px;padding:14px 16px;font-size:14px;line-height:1.4}
+
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--raised);border-radius:28px 28px 0 0;padding:12px 24px 40px}
+.sheet .grab{width:32px;height:4px;border-radius:2px;background:var(--mute);margin:0 auto 18px;opacity:.6}
+.sheet .fileline{display:flex;gap:12px;align-items:center}
+.sheet .fileline i{width:44px;height:44px;border-radius:8px;background:var(--selected);display:grid;place-items:center}
+.sheet .fileline b{font-size:15px;font-weight:600}
+.sheet .fileline small{display:block;font-size:13px;color:var(--mute);margin-top:2px}
+.apps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 8px;margin-top:26px;text-align:center;font-size:12px}
+.apps i{width:52px;height:52px;border-radius:50%;background:var(--selected);display:grid;place-items:center;margin:0 auto 8px}
+.sheet .sys{margin-top:22px;font-size:12px;color:var(--mute);text-align:center}
+
+@media (max-width:480px){body{padding:24px 16px 40px}}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>Dati: backup, ripristino ed export</h1>
+    <p class="intro">Oggi in Impostazioni c'è solo l'import da Money Manager, che va via. Si aggiungono tre azioni: esportare le spese in CSV, creare un file di backup e ripristinarlo. Il backup su Google lo fa Android da solo e qui va solo spiegato. Ogni variante cambia una sola cosa rispetto alla precedente. Dati di esempio.</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+
+<section class="v">
+  <h2>Oggi</h2>
+  <p>La sezione Dati com'è adesso.</p>
+  <div class="row"><figure><figcaption>Impostazioni</figcaption><div class="phone" id="today"></div></figure></div>
+</section>
+
+<section class="v">
+  <h2>A · Tre righe in Dati, conferma con un dialogo</h2>
+  <p>Le tre azioni sono righe della sezione Dati e sotto c'è una nota sul backup Google. Il ripristino apre il selettore di file, poi <em>un dialogo con i numeri del file e del telefono</em>. L'esito arriva in uno snackbar.</p>
+  <div class="row">
+    <figure><figcaption>Impostazioni</figcaption><div class="phone" id="a1"></div></figure>
+    <figure><figcaption>Dopo aver scelto il file</figcaption><div class="phone" id="a2"></div></figure>
+    <figure><figcaption>Ripristino riuscito</figcaption><div class="phone" id="a3"></div></figure>
+    <figure><figcaption>File non valido</figcaption><div class="phone" id="a4"></div></figure>
+  </div>
+</section>
+
+<section class="v">
+  <h2>B · A, ma il ripristino passa da una pagina</h2>
+  <p>Impostazioni restano come in A. Dopo aver scelto il file si apre <em>una pagina che mette a confronto il file e il telefono riga per riga</em>, con il pulsante di sostituzione in rosso. Esito ed errore restano sulla stessa pagina, come faceva l'import di Money Manager.</p>
+  <div class="row">
+    <figure><figcaption>Dopo aver scelto il file</figcaption><div class="phone" id="b1"></div></figure>
+    <figure><figcaption>Ripristino in corso</figcaption><div class="phone" id="b2"></div></figure>
+    <figure><figcaption>Ripristino riuscito</figcaption><div class="phone" id="b3"></div></figure>
+    <figure><figcaption>File non valido</figcaption><div class="phone" id="b4"></div></figure>
+  </div>
+</section>
+
+<section class="v">
+  <h2>C · B, ma tutto sta in una pagina "Backup ed export"</h2>
+  <p>In Impostazioni resta <em>una sola riga che apre una pagina dedicata</em>, con il backup Google, il file di backup e l'export CSV in sezioni separate. Il ripristino prosegue come in B.</p>
+  <div class="row">
+    <figure><figcaption>Impostazioni</figcaption><div class="phone" id="c1"></div></figure>
+    <figure><figcaption>Backup ed export</figcaption><div class="phone" id="c2"></div></figure>
+  </div>
+</section>
+
+<section class="v">
+  <h2>In tutte le varianti</h2>
+  <p>Export CSV e file di backup aprono il foglio di condivisione di Android: l'utente sceglie Drive, la mail o la cartella dei file. Il foglio è del sistema e qui è solo abbozzato.</p>
+  <div class="row">
+    <figure><figcaption>Esporta spese in CSV</figcaption><div class="phone" id="s1"></div></figure>
+    <figure><figcaption>Crea file di backup</figcaption><div class="phone" id="s2"></div></figure>
+  </div>
+</section>
+
+<script>
+const ms=n=>`<span class="ms">${n}</span>`;
+const status=`<div class="status"><span>9:41</span><span>${ms('signal_cellular_alt')} ${ms('wifi')} ${ms('battery_full')}</span></div>`;
+const tabs=`<div class="tabs"><div>${ms('today')}Oggi</div><div>${ms('bar_chart')}Insight</div><div>${ms('category')}Categorie</div><div class="on">${ms('settings')}Impostazioni</div></div><div class="gest"></div>`;
+const gest=`<div class="gest"></div>`;
+const srow=(icon,t,d,{nav=false,cls=''}={})=>`<div class="srow ${cls}">${ms(icon)}<div class="txt"><div class="t">${t}</div>${d?`<div class="d">${d}</div>`:''}</div>${nav?`<span class="ms chev">chevron_right</span>`:'<span></span>'}</div>`;
+const googleNote=`<div class="note">${ms('cloud')}<p>Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centesimo su un telefono nuovo.</p></div>`;
+const voice=`<p class="sec">Inserimento vocale</p>${srow('mic','Attivo','Chiave OpenAI salvata',{cls:'pos'})}
+ <div class="btns"><span class="btn outlined">Sostituisci chiave</span><span class="btn text" style="margin-left:auto;color:var(--alert)">Rimuovi</span></div>`;
+const info=`<p class="sec">Informazioni</p>${srow('info','Versione 1.4.0')}${srow('description','Licenze','Centesimo e componenti open source',{nav:true})}`;
+
+const settings=dati=>`${status}<div class="top tab"><b>Impostazioni</b></div><div class="scroll">
+ <p class="sec first">Dati</p>${srow('repeat','Pagamenti regolari','6 attivi',{nav:true})}${dati}${voice}${info}</div>${tabs}`;
+
+const datiToday=srow('download','Importa da Money Manager','Da un backup .mmbackup',{nav:true});
+const datiA=`${srow('table_view','Esporta spese in CSV','Tutte le spese, per Excel o Fogli')}
+ ${srow('save','Crea file di backup','Spese, categorie, tag e pagamenti regolari')}
+ ${srow('restore','Ripristina da file','Sostituisce i dati di questo telefono')}${googleNote}`;
+const datiC=srow('backup','Backup ed export','Google, file di backup e CSV',{nav:true});
+
+const push=(title,body)=>`${status}<div class="top push"><span class="ib">${ms('arrow_back')}</span><b>${title}</b></div><div class="scroll">${body}</div>${gest}`;
+
+const dialog=`<div class="scrimL"></div><div class="dialog"><h3>Ripristinare questo backup?</h3>
+ <p>Il backup del 12 novembre 2026 contiene 1.284 spese e 23 categorie. Sostituisce tutti i dati di questo telefono: 1.302 spese e 24 categorie.</p>
+ <div class="acts"><span>Annulla</span><span class="x">Ripristina</span></div></div>`;
+const snack=t=>`<div class="snack">${t}</div>`;
+
+const fileLine=`<div class="file">${ms('description')}<div><b>centesimo-2026-11-12.backup</b><small>Backup del 12 novembre 2026, 21:40</small></div></div>`;
+const cmp=`<div class="cmp"><div class="h"><span style="text-align:left"></span><span>Nel file</span><span>Sul telefono</span></div>
+ <div class="r">Spese<b>1.284</b><span>1.302</span></div>
+ <div class="r">Categorie<b>23</b><span>24</span></div>
+ <div class="r">Tag<b>41</b><span>43</span></div>
+ <div class="r">Pagamenti regolari<b>6</b><span>6</span></div></div>`;
+const restoreLead=`<p class="lead">Il ripristino sostituisce tutti i dati di questo telefono con quelli del file.</p>`;
+const b1=push('Ripristina backup',`${restoreLead}${fileLine}${cmp}
+ <div class="warn">${ms('warning')}<p>Le 18 spese aggiunte dopo il 12 novembre andranno perse. Prima di procedere puoi creare un file di backup dei dati attuali.</p></div>
+ <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px"><span class="btn danger block">Sostituisci i dati del telefono</span><span class="btn outlined block">Scegli un altro file</span></div>`);
+const b2=push('Ripristina backup',`${restoreLead}${fileLine}${cmp}<div class="bar"></div><p class="cap">Ripristino in corso…</p>`);
+const b3=push('Ripristina backup',`${restoreLead}${fileLine}
+ <div class="done"><div class="hd">${ms('check_circle')}Fatto</div><p>Ripristinate 1.284 spese, 23 categorie, 41 tag e 6 pagamenti regolari dal backup del 12 novembre 2026.</p></div>
+ <div style="margin-top:20px"><span class="btn outlined block">Vai a Oggi</span></div>`);
+const b4=push('Ripristina backup',`${restoreLead}
+ <div class="file">${ms('description')}<div><b>spese-novembre.pdf</b></div></div>
+ <div class="err">${ms('error')}<p>Questo file non è un backup di Centesimo. Scegli un file creato con "Crea file di backup".</p></div>
+ <div style="margin-top:20px"><span class="btn filled block">${ms('upload_file')}Scegli un altro file</span></div>`);
+
+const c2=push('Backup ed export',`
+ <p class="sec first">Account Google</p>${srow('cloud','Backup automatico','Gestito da Android')}
+ <div class="note">${ms('info')}<p>Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centesimo su un telefono nuovo.</p></div>
+ <p class="sec">File di backup</p>${srow('save','Crea file di backup','Spese, categorie, tag e pagamenti regolari')}${srow('restore','Ripristina da file','Sostituisce i dati di questo telefono',{nav:true})}
+ <p class="sec">Foglio di calcolo</p>${srow('table_view','Esporta spese in CSV','Tutte le spese, per Excel o Fogli')}`);
+
+const sheet=(name,size,icon)=>`<div class="scrimL"></div><div class="sheet"><div class="grab"></div>
+ <div class="fileline"><i>${ms(icon)}</i><div><b>${name}</b><small>${size}</small></div></div>
+ <div class="apps"><div><i>${ms('add_to_drive')}</i>Drive</div><div><i>${ms('mail')}</i>Email</div><div><i>${ms('chat')}</i>Messaggi</div><div><i>${ms('folder')}</i>File</div>
+ <div><i>${ms('bluetooth')}</i>Bluetooth</div><div><i>${ms('nearby')}</i>Quick Share</div><div><i>${ms('content_copy')}</i>Copia</div><div><i>${ms('more_horiz')}</i>Altro</div></div>
+ <p class="sys">Foglio di condivisione di Android</p></div>`;
+
+const put=(id,html)=>document.getElementById(id).innerHTML=html;
+put('today',settings(datiToday));
+put('a1',settings(datiA));
+put('a2',settings(datiA)+dialog);
+put('a3',settings(datiA)+snack('Dati ripristinati dal backup del 12 novembre 2026.'));
+put('a4',settings(datiA)+snack('Questo file non è un backup di Centesimo.'));
+put('b1',b1);put('b2',b2);put('b3',b3);put('b4',b4);
+put('c1',settings(datiC.replace('</div></div>','</div></div>')));
+put('c2',c2);
+put('s1',settings(datiA)+sheet('centesimo-spese-2026-11-20.csv','86 kB · 1.302 spese','table_view'));
+put('s2',settings(datiA)+sheet('centesimo-2026-11-20.backup','412 kB','save'));
+
+if(location.hash.includes('chiaro')) document.documentElement.classList.remove('dark');
+document.querySelectorAll('.theme button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.documentElement.classList.toggle('dark',btn.dataset.theme==='dark');
+  document.querySelectorAll('.theme button').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+}));
+</script>
+</body>
+</html>
