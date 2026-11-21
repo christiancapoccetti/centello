@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il tuo mese · A · Una scheda, un fatto</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="2026-11-21-monthly-recap-assets/base.css">
+<style>
+.ink{--fg:var(--tile-ink);--mute:color-mix(in srgb,var(--tile-ink) 74%,transparent);--line:color-mix(in srgb,var(--tile-ink) 22%,transparent);--bar:color-mix(in srgb,var(--tile-ink) 30%,transparent)}
+.lead{font-size:17px;line-height:1.35;color:var(--mute)}
+.lead em{font-style:normal;color:var(--fg);font-weight:600}
+.big{font-size:76px}
+.big span{font-size:40px;margin-left:4px}
+.mid{font-size:56px}
+.mid span{font-size:30px;margin-left:3px}
+.say{font-size:30px;font-weight:800;line-height:1.12}
+.sub{margin-top:8px;font-size:16px;line-height:1.4;color:var(--mute)}
+.sub em{font-style:normal;color:var(--fg);font-weight:700}
+.push{flex:1}
+.cap{font-size:12px;color:var(--mute);margin-top:10px}
+.hb{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:6px;column-gap:12px;margin-top:22px}
+.hb small{font-size:13px;color:var(--mute);grid-column:1/-1;margin-bottom:-2px}
+.hb i{display:block;height:20px}
+.hb b{font-size:14px;font-weight:700}
+.stack{flex:1;display:flex;flex-direction:column;gap:3px;margin:18px -24px 0}
+.stack div{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 24px 0;color:var(--tile-ink);min-height:6px;overflow:hidden}
+.stack b{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.stack b .ms{font-size:20px}
+.stack em{font-style:normal;font-size:16px;font-weight:700}
+.stack em small{font-weight:400;margin-left:8px;font-size:14px}
+.half{flex:1;display:flex;flex-direction:column;color:var(--tile-ink)}
+.half .in{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 24px 26px}
+.half .who{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;margin-bottom:10px}
+.half p{font-size:15px;line-height:1.4;margin-top:8px;color:color-mix(in srgb,var(--tile-ink) 76%,transparent)}
+.sumrow{display:flex;align-items:center;gap:14px;min-height:52px;border-bottom:1px solid var(--line)}
+.sumrow>.ms{font-size:22px;color:var(--mute);width:24px}
+.sumrow span.t{flex:1;font-size:15px;color:var(--mute)}
+.sumrow b{font-size:15px;font-weight:700;text-align:right}
+.key{display:flex;gap:16px;margin-top:12px;font-size:13px;color:var(--mute)}
+.key span{display:flex;align-items:center;gap:6px}
+.key i{display:block;width:10px;height:10px}
+.key i.ln{height:2px;width:14px;background:repeating-linear-gradient(90deg,var(--fg) 0 4px,transparent 4px 7px)}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>Il tuo mese · A · Una scheda, un fatto</h1>
+    <p class="intro">Ogni scheda dice una cosa sola, con un numero grande e un grafico piatto sotto. Le schede che parlano di una categoria prendono <em>il suo colore a tutto schermo</em>: è l'unico momento in cui la palette esce dai quadratini, ed è ancora la categoria che si mostra. Le altre restano sul grafite. Qui ci sono tutte le 11 schede possibili; l'app mostra solo quelle che hanno qualcosa da dire quel mese. Dati inventati, il riepilogo di novembre 2026 come apparirebbe il 1° dicembre.</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+<div class="grid" id="G"></div>
+<script src="2026-11-21-monthly-recap-assets/recap.js"></script>
+<script>
+const N=11;
+const phone=(i,body,{cls='',style=''}={})=>`<div class="phone ${cls}" style="${style}">${status()}${storyTop(i,N)}<div class="story-body">${body}</div><div class="gest"></div></div>`;
+const up=ms('trending_up'),down=ms('trending_down');
+const card=[];
+
+card.push({t:'Copertina',p:'Si apre dalla notifica o dalla card in Oggi. Il grafico dei giorni del mese è la firma del riepilogo.',h:phone(0,`
+ <div class="push"></div>
+ <div class="say" style="font-size:48px;line-height:1.02">Il tuo<br>novembre</div>
+ <p class="sub">Le spese del mese, in poche schede.</p>
+ <div style="margin-top:40px">${strip(312,120,{hi:null})}</div>
+ <p class="cap" style="display:flex;align-items:center;gap:6px;margin:18px 0 22px">${ms('touch_app')} Tocca per andare avanti</p>`)});
+
+const hb=(label,amt,v,fill)=>`<small>${label}</small><i style="width:${Math.round(v/1396.8*100)}%;background:${fill}"></i><b>${amt} €</b>`;
+card.push({t:'Il totale',p:'Il confronto con lo stesso mese dell\'anno scorso tiene conto della stagione. Chip verde solo quando si spende meno.',h:phone(1,`
+ <div style="margin-top:40px" class="lead">A novembre hai speso</div>
+ <div class="num big" style="margin-top:8px">${R.total}<span>€</span></div>
+ <p class="sub">in ${R.count} spese</p>
+ <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:20px">
+  <span class="chip low">${down}${R.prev.diff} € meno di ottobre</span>
+  <span class="chip">${up}${R.lastYear.diff} € più di novembre 2025</span>
+ </div>
+ <div class="push"></div>
+ <div class="hb" style="margin-bottom:28px">${hb('Novembre 2025',R.lastYear.total,1236.1,'var(--bar)')}${hb('Ottobre',R.prev.total,1396.8,'var(--bar)')}${hb('Novembre',R.total,1284.6,'var(--fg)')}</div>`)});
+
+card.push({t:'Il mese nell\'anno',p:'Dove cade il mese tra quelli dell\'anno. Esiste solo nel riepilogo mensile.',h:phone(2,`
+ <div style="margin-top:40px" class="say">${R.rank.text}</div>
+ <p class="sub">${R.rank.detail}</p>
+ <div class="push"></div>
+ <div style="margin-bottom:34px">${monthBars(312,250)}</div>`)});
+
+card.push({t:'Il giorno più caro',p:'Spese automatiche escluse, altrimenti vincerebbe ogni mese il giorno dell\'affitto. Tocca una spesa per aprirla.',h:phone(3,`
+ <div style="margin-top:40px" class="lead">Il giorno più caro</div>
+ <div class="num mid" style="margin-top:8px">${R.record.total}<span>€</span></div>
+ <p class="sub"><em>${R.record.label}</em>, in 3 spese</p>
+ <div style="margin-top:26px">${strip(312,72,{hi:14})}</div>
+ <div style="margin-top:14px">${R.record.items.map(x=>`<div class="row">${cat(x.c,x.g)}<div class="what"><b>${x.name}</b><small>${x.note}</small></div><span class="amt">${x.amt} €</span></div>`).join('')}</div>
+ <p class="cap">Senza le spese automatiche.</p>`)});
+
+const totalV=R.cats.reduce((s,c)=>s+c.v,0);
+card.push({t:'Dove sono andati',p:'La linea delle categorie di Oggi, girata in verticale e grande quanto lo schermo. Ogni blocco è alto quanto la sua quota.',h:phone(4,`
+ <div style="margin-top:28px" class="lead">Dove sono andati i <em>${R.total} €</em></div>
+ <div class="stack">${R.cats.map((c,k)=>`<div style="flex:${c.v} 0 0;background:var(--${c.c})">${k<4?`<b>${ms(c.g)}${c.name}</b><em>${c.amt} €<small>${c.share}</small></em>`:''}</div>`).join('')}</div>`,{style:'padding-bottom:0'})});
+
+card.push({t:'Cosa è cambiato',p:'La categoria cresciuta e quella calata di più rispetto a ottobre, in euro e non in percentuale. Ognuna prende metà schermo.',h:`<div class="phone" style="color:var(--tile-ink)">
+ <div class="half" style="background:var(--${R.up.c})">${status()}${storyTop(5,N)}
+  <div class="in"><div class="who">${cat(R.up.c,R.up.g)}<span>${R.up.name}</span></div><div class="num mid">+${R.up.diff}<span>€</span></div><p>Da ${R.up.from} a ${R.up.to} € rispetto a ottobre.</p></div></div>
+ <div class="half" style="background:var(--${R.down.c})">
+  <div class="in" style="justify-content:flex-start;padding-top:26px"><div class="who">${cat(R.down.c,R.down.g)}<span>${R.down.name}</span></div><div class="num mid">−${R.down.diff}<span>€</span></div><p>Da ${R.down.from} a ${R.down.to} €.</p></div>
+  <div class="gest"></div></div></div>`});
+
+const habitDays=[4,11,18,22,25];
+const ticks=`<svg class="chart" width="312" height="64" viewBox="0 0 312 64" shape-rendering="crispEdges" role="img" aria-label="Piscina il 4, l'11, il 18, il 22 e il 25 novembre">${Array.from({length:30},(_,k)=>{const x=k*(312-29*3)/30+k*3,w=(312-29*3)/30;return habitDays.includes(k+1)?`<rect x="${x}" y="0" width="${w}" height="64" fill="var(--tile-ink)"/>`:`<rect x="${x}" y="62" width="${w}" height="2" fill="var(--line)"/>`}).join('')}</svg>`;
+card.push({t:'Una nuova abitudine',p:'Un tag o una categoria che a ottobre non c\'era. Riusa la regola dell\'insight "Una nuova abitudine" di oggi.',h:phone(6,`
+ <div style="margin-top:40px" class="lead">Una nuova abitudine</div>
+ <div style="display:flex;align-items:center;gap:14px;margin-top:18px"><span class="tile" style="width:56px;height:56px;background:var(--tile-ink);color:var(--${R.habit.c})"><span class="ms" aria-hidden="true" style="font-size:32px">${R.habit.g}</span></span><div class="say" style="font-size:40px">${R.habit.tag}</div></div>
+ <p class="sub" style="margin-top:16px"><em>${R.habit.times} volte</em>, ${R.habit.amt} € in tutto, nella categoria ${R.habit.cat}. A ottobre nessuna.</p>
+ <div class="push"></div>
+ <div style="margin-bottom:12px">${ticks}</div>
+ <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-bottom:28px"><span>1 nov</span><span>30 nov</span></div>`,{cls:'ink',style:`background:var(--${R.habit.c})`})});
+
+card.push({t:'Le piccole spese',p:'Un quadrato per ogni spesa sotto i 5 €, nel colore della sua categoria. Poi il tag che ne raccoglie di più.',h:phone(7,`
+ <div style="margin-top:40px" class="lead">Le spese sotto i 5 € fanno</div>
+ <div class="num mid" style="margin-top:8px">${R.small.total}<span>€</span></div>
+ <p class="sub">in ${R.small.count} spese</p>
+ <div style="margin-top:28px">${smallUnits(33,3,8)}</div>
+ <div class="push"></div>
+ <div class="row" style="margin-bottom:26px;border-top:1px solid var(--line)">${cat(R.small.top.c,R.small.top.g)}<div class="what"><b>${R.small.top.tag}</b><small>${R.small.top.times} volte, in media ${R.small.top.avg} €</small></div><span class="amt">28,60 €</span></div>`)});
+
+card.push({t:'La costanza',p:'Premia il gesto su cui si regge l\'app. Un giorno vuoto è "nessuna spesa registrata", non "hai dimenticato": nessun rimprovero.',h:phone(8,`
+ <div style="margin-top:40px" class="lead">Hai registrato spese in</div>
+ <div class="say" style="font-size:38px;margin-top:6px">26 giorni su 30</div>
+ <div class="push"></div>
+ <div style="margin-bottom:12px">${calendar(40,4)}</div>
+ <p class="cap" style="margin-bottom:28px">Un quadrato pieno per ogni giorno con almeno una spesa.</p>`)});
+
+card.push({t:'L\'anno finora',p:'Il grafico "Spesa accumulata" di Insight per l\'anno, con il 2025 tratteggiato. Collega il mese all\'anno, e prepara il riepilogo di dicembre.',h:phone(9,`
+ <div style="margin-top:40px" class="lead">Nel 2026 hai speso finora</div>
+ <div class="num mid" style="margin-top:8px">${R.ytd.total}<span>€</span></div>
+ <div style="margin-top:14px"><span class="chip low">${down}${R.ytd.diff} € meno del 2025 a fine novembre</span></div>
+ <div class="push"></div>
+ <div>${cumulative(312,200)}</div>
+ <div class="key" style="margin-bottom:28px"><span><i style="background:var(--bar)"></i>2026</span><span><i class="ln"></i>2025, <b style="color:var(--fg);font-weight:600">${R.ytd.prevTotal} €</b></span></div>`)});
+
+const sr=(g,t,v)=>`<div class="sumrow">${ms(g)}<span class="t">${t}</span><b>${v}</b></div>`;
+card.push({t:'Chiusura',p:'Il riepilogo in righe, poi l\'uscita verso Insight di novembre. Niente "condividi": i dati restano sul telefono.',h:phone(10,`
+ <div style="margin-top:32px" class="say">Novembre in breve</div>
+ <div style="margin-top:14px">
+  ${sr('payments','Totale',R.total+' €')}
+  ${sr('calendar_month','Nell\'anno','2° più leggero')}
+  ${sr('event','Il giorno più caro','sab 14 · '+R.record.total+' €')}
+  ${sr('donut_small','Prima categoria','Casa · 25%')}
+  ${sr('trending_up','Cresciuta di più','Ristoranti +64 €')}
+  ${sr('fiber_new','Nuova abitudine','Piscina')}
+  ${sr('check_circle','Costanza','26 giorni su 30')}
+ </div>
+ <div class="push"></div>
+ <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px"><button class="pill">Vedi le spese di novembre</button><button class="pill out">Rivedi dall'inizio</button></div>`)});
+
+document.getElementById('G').innerHTML=card.map((c,k)=>`<figure><figcaption><b>${k+1} · ${c.t}</b><p>${c.p}</p></figcaption>${c.h}</figure>`).join('');
+wireTheme();
+</script>
+</body>
+</html>

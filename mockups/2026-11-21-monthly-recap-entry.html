@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="it" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il tuo mese · Come ci si arriva</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="2026-11-21-monthly-recap-assets/base.css">
+<style>
+.scroll{flex:1;overflow:hidden}
+.period{height:56px;padding:0 8px 0 24px;display:flex;align-items:center;justify-content:space-between}
+.period b{font-size:20px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px}
+.period b .ms{font-size:20px;color:var(--mute);margin-left:2px}
+.period span{display:flex}
+.period .ib{color:var(--mute)}
+.total{padding:0 24px}
+.total b{display:block;font-stretch:75%;font-weight:800;font-size:68px;letter-spacing:-.02em;line-height:1}
+.total b span{font-size:38px;margin-left:4px}
+.total p{margin-top:6px;font-size:16px;line-height:1.4;color:var(--mute)}
+.total p em{font-style:normal;color:var(--fg);font-weight:700}
+.days{display:flex;align-items:flex-end;gap:3px;height:96px;margin:22px 24px 0}
+.days i{flex:1;display:block;background:var(--bar)}
+.days i.today{background:var(--fg)}
+.days i.stub{height:3px!important;background:var(--line)}
+h2{display:flex;justify-content:space-between;align-items:baseline;padding:22px 24px 2px;font-size:18px;font-weight:700}
+h2 a{font-size:14px;color:var(--fg);text-decoration:none}
+.scroll .row{margin:0 24px}
+.dock{flex:none;padding:12px 24px;background:var(--bg)}
+.sp{display:flex;height:60px;background:var(--raised);border:1px solid var(--outline);border-radius:30px;overflow:hidden}
+.sp .seg{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--fg);font-size:17px;font-weight:700}
+.sp .seg .ms{color:var(--accent)}
+.sp .main{flex:1}
+.sp .rule{width:1px;background:var(--outline)}
+.sp .w64{width:64px}
+.navb{height:69px;flex:none;display:flex;border-top:1px solid var(--line);background:var(--bg)}
+.nv{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--mute)}
+.nv .ms{font-variation-settings:'FILL' 0,'wght' 500}
+.nv.on{color:var(--fg)}
+.nv.on .ms{font-variation-settings:'FILL' 1,'wght' 600}
+
+.recap{margin:20px 24px 0;background:var(--raised);border-radius:12px;padding:14px 4px 6px 16px;display:grid;grid-template-columns:1fr 48px;align-items:start}
+.recap b{font-size:16px;font-weight:700;line-height:1.25;padding-top:2px}
+.recap p{grid-column:1;font-size:14px;line-height:1.4;color:var(--mute);margin-top:2px}
+.recap .mini{grid-column:1;margin-top:12px}
+.recap .go{grid-column:1/-1;display:inline-flex;align-items:center;gap:2px;height:48px;font-size:14px;font-weight:700;color:var(--fg)}
+.recap .go .ms{font-size:18px}
+.recap .x{grid-row:1;grid-column:2;margin-top:-12px;color:var(--mute)}
+.recap.row-k{padding:0 4px 0 16px;grid-template-columns:auto 1fr 48px;align-items:center;min-height:64px;margin-top:22px}
+.recap.row-k .mini{margin:0 14px 0 0;grid-column:1}
+.recap.row-k div{grid-column:2}
+.recap.row-k .x{grid-column:3;grid-row:1;margin:0}
+
+.shade{flex:1;display:flex;flex-direction:column;padding:18px 12px 0;background:var(--bg)}
+.qs{display:flex;gap:8px;padding:0 4px 18px}
+.qs span{flex:1;height:56px;border-radius:28px;background:var(--raised);display:grid;place-items:center;color:var(--mute)}
+.ntf{background:var(--raised);border-radius:24px;padding:14px 16px 6px}
+.ntf .app{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute)}
+.ntf .app i{width:20px;height:20px;border-radius:50%;background:var(--fg);display:grid;place-items:center}
+.ntf b{display:block;margin-top:10px;font-size:15px;font-weight:700}
+.ntf p{font-size:14px;line-height:1.4;color:var(--mute);margin-top:2px}
+.ntf .acts{display:flex;gap:4px;margin:8px -8px 0}
+.ntf .acts span{height:44px;display:flex;align-items:center;padding:0 10px;font-size:14px;font-weight:700;color:var(--fg)}
+.ntf.other{margin-top:8px;opacity:.6}
+.ins-sum{padding:4px 24px 0}
+.ins-sum b{display:block;font-stretch:75%;font-weight:800;font-size:48px;letter-spacing:-.02em;line-height:1}
+.ins-sum b span{font-size:28px;margin-left:3px}
+.ins-sum p{margin-top:8px;font-size:16px;line-height:1.4;color:var(--mute)}
+.ins-sum p em{font-style:normal;color:var(--fg);font-weight:700}
+.seg2{display:flex;margin:6px 24px 10px;height:40px;border:1px solid var(--mute);border-radius:9999px;overflow:hidden}
+.seg2>span{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;font-size:14px;font-weight:600}
+.seg2>span+span{border-left:1px solid var(--mute)}
+.seg2 .on{background:var(--sel)}
+.seg2 .ms{font-size:18px}
+.navrow{display:flex;align-items:center;gap:14px;min-height:64px;margin:18px 24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.navrow .what b{font-size:16px}
+.navrow>.ms{color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>Il tuo mese · Come ci si arriva</h1>
+    <p class="intro">Tre strade, uguali per qualsiasi struttura delle schede. <em>La notifica</em> arriva il 1° del mese alle 9 e non mostra cifre, perché si legge anche dalla schermata di blocco. <em>La card in Oggi</em> resta finché la apri o la chiudi, al massimo per 7 giorni. <em>Insight</em> tiene il riepilogo di ogni mese passato, per sempre. Dati inventati, 1° dicembre 2026.</p>
+  </div>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
+    <button type="button" data-theme="light" aria-pressed="false">Chiaro</button>
+  </div>
+</div>
+<div class="grid" id="G"></div>
+<script src="2026-11-21-monthly-recap-assets/recap.js"></script>
+<script>
+const nav=on=>`<div class="navb">${[['today','Oggi'],['insights','Insight'],['category','Categorie'],['settings','Impostazioni']].map(([g,t])=>`<div class="nv ${t===on?'on':''}">${ms(g)}${t}</div>`).join('')}</div>`;
+const dock=`<div class="dock"><div class="sp"><div class="seg main">${ms('add')}Aggiungi spesa</div><div class="rule"></div><div class="seg w64">${ms('mic')}</div><div class="rule"></div><div class="seg w64">${ms('photo_camera')}</div></div></div>`;
+const decBars=`<div class="days">${Array.from({length:31},(_,i)=>i===0?'<i class="today" style="height:18px"></i>':'<i class="stub"></i>').join('')}</div>`;
+const oggiTop=`<div class="period"><b>Dicembre 2026 ${ms('expand_more')}</b><span><span class="ib">${ms('chevron_left')}</span><span class="ib" style="opacity:.38">${ms('chevron_right')}</span></span></div>
+ <div class="total"><b>4,80<span>€</span></b><p>Ne restano <em>1.195,20 €</em> su 1.200 di budget</p></div>`;
+const recent=`<h2>Ultime spese <a href="#">Vedi tutte</a></h2><div class="row">${cat('coral','local_cafe')}<div class="what"><b>Bar</b><small>Oggi · Caffè e brioche</small></div><span class="amt">4,80 €</span></div><div class="row">${cat('mint','shopping_cart')}<div class="what"><b>Spesa</b><small>30 nov</small></div><span class="amt">41,30 €</span></div>`;
+const figs=[
+ {t:'La notifica',p:'Il 1° del mese alle 9. Tocco sulla notifica: si apre direttamente la copertina. Si spegne in Impostazioni, accanto alle notifiche dei pagamenti regolari.',h:`<div class="phone">${status()}<div class="shade"><div class="qs"><span>${ms('wifi')}</span><span>${ms('bluetooth')}</span><span>${ms('do_not_disturb_on','o')}</span><span>${ms('flashlight_on')}</span></div>
+  <div class="ntf"><div class="app"><i><svg width="14" height="14" viewBox="18 18 72 72" aria-hidden="true"><path d="M70.454 63.500 A19 19 0 1 1 53.337 35.012" fill="none" stroke="var(--bg)" stroke-width="14"/><path d="M58.597 35.564 A19 19 0 0 1 70.454 44.500" fill="none" stroke="#FF8A7A" stroke-width="14"/></svg></i>Centesimo · 9:00</div>
+   <b>Il tuo novembre è pronto</b><p>Rivedi le spese del mese, in poche schede.</p><div class="acts"><span>Apri</span></div></div>
+  <div class="ntf other"><div class="app"><i></i>Centesimo · 8:00</div><b>Pagamento regolare: Netflix</b><p>Domani 13,99 € in Svago.</p></div>
+  </div><div class="gest"></div></div>`},
+ {t:'Oggi · card sotto il totale',p:'Il 1° del mese il totale è quasi vuoto, quindi lo spazio sotto c\'è. Card raised con il grafico dei giorni di novembre in piccolo; la X la chiude.',h:`<div class="phone">${status()}<div class="scroll">${oggiTop}
+  <div class="recap"><b>Il tuo novembre è pronto</b><span class="ib x">${ms('close','','Chiudi')}</span><p>1.284,60 € in 96 spese.</p><div class="mini">${strip(240,32)}</div><span class="go">Rivedi il mese ${ms('chevron_right')}</span></div>
+  ${decBars}${recent}</div>${dock}${nav('Oggi')}<div class="gest"></div></div>`},
+ {t:'Oggi · riga compatta',p:'Stessa cosa in una riga da 64 dp: costa meno spazio, ma il grafico in miniatura dice meno. La riga intera apre la copertina.',h:`<div class="phone">${status()}<div class="scroll">${oggiTop}
+  <div class="recap row-k"><div class="mini">${cat('grey','auto_stories').replace('var(--grey)','var(--fg)')}</div><div><b style="display:block;font-size:16px;font-weight:700">Il tuo novembre è pronto</b><p style="margin:0">Rivedi il mese in poche schede</p></div><span class="ib x">${ms('close','','Chiudi')}</span></div>
+  ${decBars}${recent}</div>${dock}${nav('Oggi')}<div class="gest"></div></div>`},
+ {t:'Insight · ogni mese passato',p:'Nella vista mese di Insight, una riga di navigazione sotto il totale. C\'è per ogni mese chiuso con abbastanza spese; il mese in corso non ce l\'ha.',h:`<div class="phone">${status()}<div class="scroll"><div class="period"><b>Novembre 2026 ${ms('expand_more')}</b><span><span class="ib">${ms('chevron_left')}</span><span class="ib">${ms('chevron_right')}</span></span></div>
+  <div class="seg2"><span class="on">${ms('check')}Mese</span><span>Anno</span></div>
+  <div class="ins-sum"><b>1.284,60<span>€</span></b><p><em>112,20 € meno</em> di ottobre</p></div>
+  <div class="navrow">${cat('grey','auto_stories').replace('var(--grey)','var(--fg)')}<div class="what"><b>Rivedi il tuo novembre</b><small>Il riepilogo del mese, in poche schede</small></div>${ms('chevron_right')}</div>
+  <h2 style="padding-top:26px">Spesa accumulata</h2><div style="margin:14px 24px 0">${strip(312,120)}</div></div>${nav('Insight')}<div class="gest"></div></div>`}
+];
+document.getElementById('G').innerHTML=figs.map((c,k)=>`<figure><figcaption><b>${k+1} · ${c.t}</b><p>${c.p}</p></figcaption>${c.h}</figure>`).join('');
+wireTheme();
+</script>
+</body>
+</html>
