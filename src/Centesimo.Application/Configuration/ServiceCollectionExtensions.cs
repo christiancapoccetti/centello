@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ExpenseDraftService>();
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<Dictation>();
+        services.AddTransient<PhotoReading>();
         return services;
     }
 }

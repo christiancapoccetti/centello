@@ -10,7 +10,6 @@ public partial class TodayPage : ContentPage
     private readonly OpenAiSettings _settings;
     private readonly PhotoPicker _photos;
     private const string MicrophoneRationale = "Centesimo usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.";
-    private const string CameraRationale = "Centesimo usa la fotocamera solo per fotografare una spesa, come uno scontrino o una fattura. La foto viene inviata a OpenAI per leggerla e Centesimo non la salva.";
 
     private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;
@@ -169,7 +168,7 @@ public partial class TodayPage : ContentPage
 
     private async Task<Result<byte[]?>> TakePhoto()
     {
-        var permission = await RequestPermission<Permissions.Camera>("Fotocamera", CameraRationale);
+        var permission = await RequestPermission<Permissions.Camera>("Fotocamera", PhotoPicker.CameraRationale);
         if (permission != PermissionStatus.Granted)
             return Result<byte[]?>.Failure(PhotoErrors.CameraDenied);
 
