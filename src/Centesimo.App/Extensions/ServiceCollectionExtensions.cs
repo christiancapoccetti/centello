@@ -45,6 +45,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISnackbar, NoSnackbar>();
         services.AddSingleton<IDownloads, NoDownloads>();
 #endif
+        services.AddRecapStory();
+        services.AddRecapNotices();
         services.AddSingleton<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>
             () => provider.GetRequiredService<AppShell>());
