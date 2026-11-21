@@ -8,10 +8,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App;
 
-/// <summary>The one owner of what the home screen widgets show. The store asks it to refresh after every commit, the
-/// midnight alarm after midnight, the launcher when a widget is added, resized or restored. A refresh reads the store
-/// in its own scope and redraws every installed widget, so it can run any number of times; requests that arrive while
-/// one runs are folded into one more run, which reads the store after them.</summary>
+/// <summary>The one owner of what the home screen shows from the app: the widgets and the launcher's long-press menu.
+/// The store asks it to refresh after every commit, the midnight alarm after midnight, the launcher when a widget is
+/// added, resized or restored. A refresh reads the store in its own scope, republishes the menu when it changed and
+/// redraws every installed widget, so it can run any number of times; requests that arrive while one runs are folded
+/// into one more run, which reads the store after them. Runs start on the thread pool, where the menu may be
+/// published.</summary>
 public sealed class HomeScreen : IStoreChangeListener
 {
     internal const string LogTag = "Centesimo.Widgets";
@@ -27,6 +29,7 @@ public sealed class HomeScreen : IStoreChangeListener
     private readonly IServiceScopeFactory _scopes;
     private readonly IFontManager _fonts;
     private readonly RefreshCoalescer _refreshes;
+    private IReadOnlyList<LauncherShortcut> _published = [];
 
     public HomeScreen(IServiceScopeFactory scopes, IFontManager fonts)
     {
@@ -62,20 +65,40 @@ public sealed class HomeScreen : IStoreChangeListener
         var installed = Widgets
             .SelectMany(spec => manager.GetAppWidgetIds(spec.Component(context))!.Select(id => (spec, id)))
             .ToList();
-        if (installed.Count == 0)
-        {
-            Midnight.Cancel(context);
-            return;
-        }
-
         if (await Read() is { } data)
         {
             var art = new WidgetArt(context, _fonts);
+            PublishMenu(context, art, LauncherShortcuts.Of(data));
             foreach (var (spec, id) in installed)
                 Push(context, manager, art, data, spec, id);
         }
 
-        Midnight.Arm(context);
+        if (installed.Count == 0)
+            Midnight.Cancel(context);
+        else
+            Midnight.Arm(context);
+    }
+
+    // Only a published list is remembered, so a refused or failed publish is retried by the next refresh.
+    private void PublishMenu(Context context, WidgetArt art, IReadOnlyList<LauncherShortcut> shortcuts)
+    {
+        if (shortcuts.SequenceEqual(_published))
+            return;
+
+        try
+        {
+            if (!LauncherMenu.Publish(context, art, shortcuts))
+            {
+                Log.Warn(LogTag, "Launcher menu not published: Android refused the update.");
+                return;
+            }
+
+            _published = shortcuts;
+        }
+        catch (Exception exception)
+        {
+            Log.Warn(LogTag, $"Launcher menu failed: {exception}");
+        }
     }
 
     private async Task<HomeScreenData?> Read()
