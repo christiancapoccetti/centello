@@ -53,6 +53,7 @@ public sealed class AppEntryRouter(IConfirmation confirmation)
             ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(categoryId: expense.CategoryId, fromOutside: true)}", true),
         AppEntry.Screen.Draft => ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(fromOutside: true)}", true),
         AppEntry.Screen.Settings => ($"//{nameof(SettingsPage)}", false),
+        AppEntry.Screen.Recap => ($"//{nameof(InsightsPage)}", false),
         _ => throw new UnreachableException()
     };
 }

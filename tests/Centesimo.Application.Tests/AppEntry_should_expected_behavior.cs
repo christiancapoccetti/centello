@@ -11,6 +11,8 @@ public sealed class AppEntry_should_expected_behavior
         { new AppEntry.Screen.NewExpense(CategoryId), "centesimo://expense/new?category=3f2c9a52-6d1e-4b7a-9c58-0e1d2a3b4c5d" },
         { new AppEntry.Screen.Draft(), "centesimo://expense/draft" },
         { new AppEntry.Screen.Settings(), "centesimo://settings" },
+        { new AppEntry.Screen.Recap(Period.Month(2026, 11)), "centesimo://recap?year=2026&month=11" },
+        { new AppEntry.Screen.Recap(Period.Year(2026)), "centesimo://recap?year=2026" },
         { new AppEntry.Panel.VoicePanel(), "centesimo://panel/voice" },
         { new AppEntry.Panel.PhotoPanel(), "centesimo://panel/photo" }
     };
@@ -30,6 +32,8 @@ public sealed class AppEntry_should_expected_behavior
         { "centesimo://today", new AppEntry.Screen.Today() },
         { "centesimo://expense/new", new AppEntry.Screen.NewExpense(null) },
         { "centesimo://expense/new?category=3f2c9a52-6d1e-4b7a-9c58-0e1d2a3b4c5d", new AppEntry.Screen.NewExpense(CategoryId) },
+        { "centesimo://recap?year=2026&month=11", new AppEntry.Screen.Recap(Period.Month(2026, 11)) },
+        { "centesimo://recap?year=2026", new AppEntry.Screen.Recap(Period.Year(2026)) },
         { "centesimo://panel/voice", new AppEntry.Panel.VoicePanel() },
         { "centesimo://panel/photo", new AppEntry.Panel.PhotoPanel() }
     };
@@ -48,6 +52,7 @@ public sealed class AppEntry_should_expected_behavior
     [InlineData("centesimo://expense/new", true)]
     [InlineData("centesimo://expense/draft", false)]
     [InlineData("centesimo://settings", false)]
+    [InlineData("centesimo://recap?year=2026&month=11", false)]
     [InlineData("centesimo://panel/voice", true)]
     [InlineData("centesimo://panel/photo", true)]
     public void Should_tell_which_entries_add_an_expense(string link, bool addsExpense) =>
@@ -72,5 +77,16 @@ public sealed class AppEntry_should_expected_behavior
     [InlineData("")]
     [InlineData(null)]
     public void Should_ignore_a_link_it_does_not_know(string? link) =>
+        Assert.Null(AppEntry.Parse(link));
+
+    [Theory]
+    [InlineData("centesimo://recap")]
+    [InlineData("centesimo://recap?year=abc")]
+    [InlineData("centesimo://recap?year=1999")]
+    [InlineData("centesimo://recap?year=2026&month=13")]
+    [InlineData("centesimo://recap?year=2026&month=0")]
+    [InlineData("centesimo://recap?year=2026&month=x")]
+    [InlineData("centesimo://recap?month=11")]
+    public void Should_ignore_a_recap_link_with_a_bad_period(string link) =>
         Assert.Null(AppEntry.Parse(link));
 }
