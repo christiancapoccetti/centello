@@ -15,7 +15,7 @@ public sealed class Dictation_should_expected_behavior
     private readonly FakeSpeechTranscriber _transcriber = new();
     private readonly FakeExpenseInterpreter _interpreter = new();
     private readonly ManualTimeProvider _clock = new();
-    private readonly List<DictationState> _changes = [];
+    private readonly List<PanelState> _changes = [];
     private readonly Dictation _dictation;
 
     public Dictation_should_expected_behavior()
@@ -37,9 +37,31 @@ public sealed class Dictation_should_expected_behavior
     }
 
     [Fact]
+    public void Read_from_the_voice_source()
+    {
+        Assert.Equal(DraftSource.Voice, _dictation.Source);
+    }
+
+    [Fact]
+    public async Task Begin_again_when_restored()
+    {
+        await _dictation.Restore();
+
+        Assert.Equal(new PanelState.Listening(TimeSpan.Zero), _dictation.State);
+    }
+
+    [Fact]
+    public void Keep_the_panel_when_stopped_only_while_taking_a_photo()
+    {
+        Assert.True(new PanelState.TakingPhoto().KeepsPanelWhenStopped);
+        Assert.False(new PanelState.Reading().KeepsPanelWhenStopped);
+        Assert.False(new PanelState.Listening(TimeSpan.Zero).KeepsPanelWhenStopped);
+    }
+
+    [Fact]
     public void Start_in_the_starting_state()
     {
-        Assert.Equal(new DictationState.Starting(), _dictation.State);
+        Assert.Equal(new PanelState.Starting(), _dictation.State);
     }
 
     [Fact]
@@ -49,7 +71,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Begin();
 
-        Assert.Equal(new DictationState.NeedsApiKey(), _dictation.State);
+        Assert.Equal(new PanelState.NeedsApiKey(), _dictation.State);
         Assert.Equal(0, _microphone.AskedCount);
         Assert.Equal(0, _recorder.StartCount);
     }
@@ -61,7 +83,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Begin();
 
-        Assert.Equal(new DictationState.Failed(SpeechErrors.MicrophoneDenied), _dictation.State);
+        Assert.Equal(new PanelState.Failed(SpeechErrors.MicrophoneDenied), _dictation.State);
         Assert.Equal(0, _recorder.StartCount);
     }
 
@@ -72,7 +94,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Begin();
 
-        Assert.Equal(new DictationState.Failed(SpeechErrors.StartFailed), _dictation.State);
+        Assert.Equal(new PanelState.Failed(SpeechErrors.StartFailed), _dictation.State);
     }
 
     [Fact]
@@ -80,9 +102,9 @@ public sealed class Dictation_should_expected_behavior
     {
         await _dictation.Begin();
 
-        Assert.Equal(new DictationState.Listening(TimeSpan.Zero), _dictation.State);
+        Assert.Equal(new PanelState.Listening(TimeSpan.Zero), _dictation.State);
         Assert.Equal(
-            [new DictationState.Listening(TimeSpan.Zero)],
+            [new PanelState.Listening(TimeSpan.Zero)],
             _changes);
     }
 
@@ -94,7 +116,7 @@ public sealed class Dictation_should_expected_behavior
         _clock.Advance(TimeSpan.FromSeconds(3));
         await _dictation.Tick();
 
-        Assert.Equal(new DictationState.Listening(TimeSpan.FromSeconds(3)), _dictation.State);
+        Assert.Equal(new PanelState.Listening(TimeSpan.FromSeconds(3)), _dictation.State);
     }
 
     [Fact]
@@ -106,7 +128,7 @@ public sealed class Dictation_should_expected_behavior
         _clock.Advance(Limit);
         await _dictation.Tick();
 
-        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
+        Assert.Equal(new PanelState.DraftReady(_interpreter.Draft), _dictation.State);
         Assert.Equal(1, _transcriber.CallCount);
         Assert.Equal(Full, _transcriber.Audio);
     }
@@ -120,7 +142,7 @@ public sealed class Dictation_should_expected_behavior
         _clock.Advance(Limit - TimeSpan.FromMilliseconds(100));
         await _dictation.Send();
 
-        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
+        Assert.Equal(new PanelState.DraftReady(_interpreter.Draft), _dictation.State);
     }
 
     [Fact]
@@ -139,8 +161,8 @@ public sealed class Dictation_should_expected_behavior
 
         Assert.Equal(1, _transcriber.CallCount);
         Assert.Equal(1, _recorder.StopCount);
-        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
-        Assert.Single(_changes, state => state is DictationState.DraftReady);
+        Assert.Equal(new PanelState.DraftReady(_interpreter.Draft), _dictation.State);
+        Assert.Single(_changes, state => state is PanelState.DraftReady);
     }
 
     [Fact]
@@ -164,7 +186,7 @@ public sealed class Dictation_should_expected_behavior
     {
         await _dictation.Send();
 
-        Assert.Equal(new DictationState.Starting(), _dictation.State);
+        Assert.Equal(new PanelState.Starting(), _dictation.State);
         Assert.Equal(0, _recorder.StopCount);
     }
 
@@ -176,7 +198,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Send();
 
-        Assert.Contains(new DictationState.Preparing(TimeSpan.FromSeconds(4)), _changes);
+        Assert.Contains(new PanelState.Preparing(TimeSpan.FromSeconds(4)), _changes);
     }
 
     [Fact]
@@ -188,7 +210,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Send();
 
-        Assert.Equal(new DictationState.Failed(failure), _dictation.State);
+        Assert.Equal(new PanelState.Failed(failure), _dictation.State);
     }
 
     [Fact]
@@ -199,7 +221,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Send();
 
-        Assert.Equal(new DictationState.Failed(SpeechErrors.ProcessingFailed), _dictation.State);
+        Assert.Equal(new PanelState.Failed(SpeechErrors.ProcessingFailed), _dictation.State);
     }
 
     [Fact]
@@ -213,7 +235,7 @@ public sealed class Dictation_should_expected_behavior
         gate.SetResult();
         await begin;
 
-        Assert.Equal(new DictationState.Closed(), _dictation.State);
+        Assert.Equal(new PanelState.Closed(), _dictation.State);
         Assert.True(_recorder.CancelCount > 0);
         Assert.Equal(0, _recorder.StopCount);
     }
@@ -229,7 +251,7 @@ public sealed class Dictation_should_expected_behavior
         gate.SetResult();
         await begin;
 
-        Assert.Equal(new DictationState.Closed(), _dictation.State);
+        Assert.Equal(new PanelState.Closed(), _dictation.State);
         Assert.Equal(0, _recorder.StartCount);
     }
 
@@ -245,7 +267,7 @@ public sealed class Dictation_should_expected_behavior
         gate.SetResult();
         await begin;
 
-        Assert.Equal(new DictationState.Closed(), _dictation.State);
+        Assert.Equal(new PanelState.Closed(), _dictation.State);
     }
 
     [Fact]
@@ -255,7 +277,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Cancel();
 
-        Assert.Equal(new DictationState.Closed(), _dictation.State);
+        Assert.Equal(new PanelState.Closed(), _dictation.State);
         Assert.Equal(1, _recorder.CancelCount);
         Assert.Equal(0, _transcriber.CallCount);
     }
@@ -269,7 +291,7 @@ public sealed class Dictation_should_expected_behavior
         _clock.Advance(Limit);
         await _dictation.Tick();
 
-        Assert.Equal(new DictationState.Closed(), _dictation.State);
+        Assert.Equal(new PanelState.Closed(), _dictation.State);
         Assert.Equal(0, _transcriber.CallCount);
     }
 
@@ -285,9 +307,9 @@ public sealed class Dictation_should_expected_behavior
         gate.SetResult();
         await send;
 
-        Assert.Equal(new DictationState.Closed(), _dictation.State);
+        Assert.Equal(new PanelState.Closed(), _dictation.State);
         Assert.Equal(1, _interpreter.CallCount);
-        Assert.DoesNotContain(_changes, state => state is DictationState.DraftReady);
+        Assert.DoesNotContain(_changes, state => state is PanelState.DraftReady);
     }
 
     [Fact]
@@ -298,7 +320,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Cancel();
 
-        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
+        Assert.Equal(new PanelState.DraftReady(_interpreter.Draft), _dictation.State);
     }
 
     [Fact]
@@ -310,7 +332,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Retry();
 
-        Assert.Equal(new DictationState.Listening(TimeSpan.Zero), _dictation.State);
+        Assert.Equal(new PanelState.Listening(TimeSpan.Zero), _dictation.State);
         Assert.Equal(1, _recorder.StartCount);
     }
 
@@ -321,7 +343,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Retry();
 
-        Assert.Equal(new DictationState.Listening(TimeSpan.Zero), _dictation.State);
+        Assert.Equal(new PanelState.Listening(TimeSpan.Zero), _dictation.State);
         Assert.Equal(1, _recorder.StartCount);
     }
 
@@ -337,7 +359,7 @@ public sealed class Dictation_should_expected_behavior
         _clock.Advance(TimeSpan.FromSeconds(1));
         await _dictation.Tick();
 
-        Assert.Equal(new DictationState.Listening(TimeSpan.FromSeconds(1)), _dictation.State);
+        Assert.Equal(new PanelState.Listening(TimeSpan.FromSeconds(1)), _dictation.State);
     }
 
     private sealed class FakeMicrophoneAccess : IMicrophoneAccess
