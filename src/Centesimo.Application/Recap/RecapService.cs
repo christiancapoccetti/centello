@@ -24,9 +24,41 @@ public sealed class RecapService(ICategoryRepository categories, ITagRepository 
     private readonly IExpenseRepository _expenses = expenses;
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
 
-    public Task<Result<RecapDeck>> Get(Period period, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+    // The reads are awaited one after the other: the repositories share a scoped DbContext, which never allows two
+    // operations at once.
+    public async Task<Result<RecapDeck>> Get(Period period, CancellationToken cancellationToken = default)
+    {
+        if (RecapSpan.Of(period, _today()) is not { } span)
+            return Result<RecapDeck>.Failure(RecapErrors.NotAvailable);
 
-    public Task<Result<bool>> IsAvailable(Period period, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        var categoryResult = await _categories.GetAll(cancellationToken);
+        if (categoryResult.IsFailure)
+            return Result<RecapDeck>.Failure(categoryResult.Error);
+
+        var tagResult = await _tags.GetAll(cancellationToken);
+        if (tagResult.IsFailure)
+            return Result<RecapDeck>.Failure(tagResult.Error);
+
+        var expenseResult = await _expenses.GetBetween(new DateOnly(period.Start.Year - 1, 1, 1), span.Through,
+            cancellationToken);
+        if (expenseResult.IsFailure)
+            return Result<RecapDeck>.Failure(expenseResult.Error);
+
+        if (!span.HasEnough(expenseResult.Value))
+            return Result<RecapDeck>.Failure(RecapErrors.NotAvailable);
+
+        var scope = RecapScope.Of(span, categoryResult.Value, tagResult.Value, expenseResult.Value);
+        return Result<RecapDeck>.Success(RecapDeck.Build(scope));
+    }
+
+    public async Task<Result<bool>> IsAvailable(Period period, CancellationToken cancellationToken = default)
+    {
+        if (RecapSpan.Of(period, _today()) is not { } span)
+            return Result<bool>.Success(false);
+
+        var expenseResult = await _expenses.GetBetween(period.Start, span.Through, cancellationToken);
+        return expenseResult.IsFailure
+            ? Result<bool>.Failure(expenseResult.Error)
+            : Result<bool>.Success(span.HasEnough(expenseResult.Value));
+    }
 }
