@@ -56,7 +56,8 @@ public sealed class DailySpendChartView : ContentView
 
     private static Label CreateLabel(ThemeColor color, string fontFamily)
     {
-        var label = new Label { FontFamily = fontFamily, FontSize = 12, LineBreakMode = LineBreakMode.NoWrap };
+        // The chart's own words keep the size its geometry is drawn for; a screen reader gets its description.
+        var label = new Label { FontFamily = fontFamily, FontSize = 12, FontAutoScalingEnabled = false, LineBreakMode = LineBreakMode.NoWrap };
         label.SetThemeColor(Label.TextColorProperty, color);
         return label;
     }

@@ -93,7 +93,8 @@ public sealed class PaceChartView : ContentView
 
     private static Label CreateLabel(ThemeColor color, string fontFamily, double size = 12)
     {
-        var label = new Label { FontFamily = fontFamily, FontSize = size, LineBreakMode = LineBreakMode.NoWrap };
+        // The chart's own words keep the size its geometry is drawn for; a screen reader gets its description.
+        var label = new Label { FontFamily = fontFamily, FontSize = size, FontAutoScalingEnabled = false, LineBreakMode = LineBreakMode.NoWrap };
         label.SetThemeColor(Label.TextColorProperty, color);
         AutomationProperties.SetIsInAccessibleTree(label, false);
         return label;
