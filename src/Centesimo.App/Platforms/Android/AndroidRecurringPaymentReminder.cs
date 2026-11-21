@@ -3,7 +3,6 @@ using Android.Content;
 using Android.OS;
 using Centesimo.Application;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Maui;
 using System.Globalization;
 using System.Runtime.Versioning;
 
@@ -129,30 +128,8 @@ public sealed class RecurringPaymentReminderReceiver : BroadcastReceiver
         ProcessDueInBackground();
     }
 
-    private void ProcessDueInBackground()
-    {
-        var pendingResult = GoAsync();
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var application = IPlatformApplication.Current;
-                if (application is null)
-                    return;
-
-                var automation = application.Services
-                    .GetRequiredService<RecurringPaymentAutomation>();
-                await automation.ProcessDue();
-            }
-            catch
-            {
-            }
-            finally
-            {
-                pendingResult?.Finish();
-            }
-        });
-    }
+    private void ProcessDueInBackground() =>
+        ReceiverWork.Run(this, services => services.GetRequiredService<RecurringPaymentAutomation>().ProcessDue());
 
     [SupportedOSPlatform("android26.0")]
     private static void CreateChannel(NotificationManager manager) => manager.CreateNotificationChannel(

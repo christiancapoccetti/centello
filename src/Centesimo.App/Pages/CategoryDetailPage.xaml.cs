@@ -63,5 +63,5 @@ public partial class CategoryDetailPage : ContentPage, IQueryAttributable
     }
 
     private async void OnExpenseOpened(object? sender, Guid expenseId) =>
-        await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expenseId}");
+        await Shell.Current.GoToAsync(ExpenseEditorPage.Route(expenseId));
 }

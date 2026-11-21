@@ -64,11 +64,11 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         _original = Snapshot();
     }
 
-    public Task Load(Guid? expenseId = null) => Open(expenseId, null);
+    public Task Load(Guid? expenseId = null, Guid? categoryId = null) => Open(expenseId, categoryId, null);
 
-    public Task Load(ExpenseDraft draft) => Open(null, draft);
+    public Task Load(ExpenseDraft draft) => Open(null, null, draft);
 
-    private async Task Open(Guid? expenseId, ExpenseDraft? draft)
+    private async Task Open(Guid? expenseId, Guid? categoryId, ExpenseDraft? draft)
     {
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
@@ -82,6 +82,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 
         if (expenseId.HasValue)
             await LoadExpense(expenseId.Value);
+        else if (categoryId.HasValue)
+            await Picker.Suggest(categoryId, null);
 
         _original = Snapshot();
         if (draft is not null)

@@ -1,11 +1,11 @@
 using Centesimo.Domain;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.Application.Tests;
 
 public sealed class ExpenseDraftService_should_expected_behavior
 {
     private static readonly RecordedAudio Audio = new(new byte[] { 1, 2, 3, 4 });
+    private static readonly RecordedAudio Full = new(new byte[SpeechRecordingLimits.MaximumAudioBytes]);
     private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02];
     private static readonly Error RecordingFailure = new("Test.Recording", "Registrazione non riuscita.");
     private static readonly Error TranscriptionFailure = new("Test.Transcription", "Trascrizione non riuscita.");
@@ -40,13 +40,60 @@ public sealed class ExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
+    public void Treat_a_recording_of_the_maximum_length_as_full()
+    {
+        Assert.True(Full.IsFull);
+        Assert.False(new RecordedAudio(new byte[SpeechRecordingLimits.MaximumAudioBytes - 1]).IsFull);
+        Assert.False(Audio.IsFull);
+    }
+
+    [Fact]
+    public async Task Refuse_a_full_recording_when_asked_to()
+    {
+        _recorder.Audio = Full;
+
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(SpeechErrors.TooLong, result.Error);
+        Assert.Equal("Il comando vocale è troppo lungo. Riprova con una frase più breve.", result.Error.Message);
+        Assert.Equal(0, _transcriber.CallCount);
+        Assert.Equal(0, _interpreter.CallCount);
+    }
+
+    [Fact]
+    public async Task Send_a_full_recording_when_asked_to()
+    {
+        _recorder.Audio = Full;
+        _transcriber.Result = Result<string>.Success("cento euro carburante");
+        _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", DraftSource.Voice, "cento euro carburante");
+
+        var result = await _service.PrepareFromSpeech(WhenFull.Send);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Full, _transcriber.Audio);
+        Assert.Same(_interpreter.Draft, result.Value);
+    }
+
+    [Fact]
+    public async Task Send_a_recording_below_the_limit_whatever_the_choice()
+    {
+        _recorder.Audio = Audio;
+
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _transcriber.CallCount);
+    }
+
+    [Fact]
     public async Task Transcribe_the_recording_with_the_user_vocabulary_and_interpret_it()
     {
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Success("Ho speso 100 euro di carburante");
         _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", DraftSource.Voice, "Ho speso 100 euro di carburante");
 
-        var result = await _service.PrepareFromSpeech();
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(Audio, _transcriber.Audio);
@@ -63,7 +110,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     {
         _recorder.StopResult = Result<RecordedAudio>.Failure(RecordingFailure);
 
-        var result = await _service.PrepareFromSpeech();
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsFailure);
         Assert.Equal(RecordingFailure, result.Error);
@@ -77,7 +124,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Failure(TranscriptionFailure);
 
-        var result = await _service.PrepareFromSpeech();
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsFailure);
         Assert.Equal(TranscriptionFailure, result.Error);
@@ -92,7 +139,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _transcriber.Result = Result<string>.Success("cento euro carburante");
         _interpreter.Failure = InterpretationFailure;
 
-        var result = await _service.PrepareFromSpeech();
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsFailure);
         Assert.Equal(InterpretationFailure, result.Error);
@@ -106,7 +153,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _categories.Failure = failure;
 
-        var result = await _service.PrepareFromSpeech();
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsFailure);
         Assert.Equal(failure, result.Error);
@@ -132,7 +179,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _internet.IsAvailable = false;
 
-        var result = await _service.PrepareFromSpeech();
+        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DraftErrors.NoInternet, result.Error);
@@ -147,7 +194,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _transcriber.Result = Result<string>.Success("vecchia frase");
         _interpreter.Failure = InterpretationFailure;
-        await _service.PrepareFromSpeech();
+        await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         await _service.StartListening();
 
@@ -239,118 +286,5 @@ public sealed class ExpenseDraftService_should_expected_behavior
         var result = await _service.PrepareFromDocument(Jpeg);
 
         Assert.Equal(InterpretationFailure, result.Error);
-    }
-
-    private sealed class FakeInternetAccess : IInternetAccess
-    {
-        public bool IsAvailable { get; set; } = true;
-    }
-
-    private sealed class FakeSpeechRecorder : ISpeechRecorder
-    {
-        public RecordedAudio Audio { get; set; } = new(ReadOnlyMemory<byte>.Empty);
-        public Result<RecordedAudio>? StopResult { get; set; }
-        public int StartCount { get; private set; }
-        public int StopCount { get; private set; }
-        public bool IsListening => false;
-
-        public Task<Result> Start(CancellationToken cancellationToken = default)
-        {
-            StartCount++;
-            return Task.FromResult(Result.Success());
-        }
-
-        public Task<Result<RecordedAudio>> Stop(CancellationToken cancellationToken = default)
-        {
-            StopCount++;
-            return Task.FromResult(StopResult ?? Result<RecordedAudio>.Success(Audio));
-        }
-
-        public Task Cancel() => Task.CompletedTask;
-    }
-
-    private sealed class FakeSpeechTranscriber : ISpeechTranscriber
-    {
-        public Result<string> Result { get; set; } = Result<string>.Success("");
-        public RecordedAudio? Audio { get; private set; }
-        public IReadOnlyCollection<string> Keywords { get; private set; } = [];
-        public int CallCount { get; private set; }
-
-        public Task<Result<string>> Transcribe(
-            RecordedAudio audio,
-            IReadOnlyCollection<string> keywords,
-            CancellationToken cancellationToken = default)
-        {
-            CallCount++;
-            Audio = audio;
-            Keywords = keywords;
-            return Task.FromResult(Result);
-        }
-    }
-
-    private sealed class FakeExpenseInterpreter : IExpenseInterpreter
-    {
-        public ExpenseDraft Draft { get; set; } = new(null, null, null, null, "", DraftSource.Voice, "");
-        public Error? Failure { get; set; }
-        public string Phrase { get; private set; } = "";
-        public ExpenseDocument? Document { get; private set; }
-        public IReadOnlyCollection<DraftCategory> Categories { get; private set; } = [];
-        public int CallCount { get; private set; }
-
-        public Task<Result<ExpenseDraft>> Interpret(
-            string phrase,
-            IReadOnlyCollection<DraftCategory> categories,
-            DateOnly today,
-            CancellationToken cancellationToken = default)
-        {
-            CallCount++;
-            Phrase = phrase;
-            Categories = categories;
-            return Task.FromResult(Failure is null
-                ? Result<ExpenseDraft>.Success(Draft)
-                : Result<ExpenseDraft>.Failure(Failure));
-        }
-
-        public Task<Result<ExpenseDraft>> Interpret(
-            ExpenseDocument document,
-            IReadOnlyCollection<DraftCategory> categories,
-            DateOnly today,
-            CancellationToken cancellationToken = default)
-        {
-            CallCount++;
-            Document = document;
-            Categories = categories;
-            return Task.FromResult(Failure is null
-                ? Result<ExpenseDraft>.Success(Draft)
-                : Result<ExpenseDraft>.Failure(Failure));
-        }
-    }
-
-    private sealed class ServiceMap(CategoryService categories, TagService tags) : IServiceProvider
-    {
-        public object? GetService(Type serviceType) =>
-            serviceType == typeof(CategoryService) ? categories
-            : serviceType == typeof(TagService) ? tags
-            : null;
-    }
-
-    private sealed class CountingScopeFactory(IServiceProvider provider) : IServiceScopeFactory
-    {
-        public int CreatedCount { get; private set; }
-
-        public IServiceScope CreateScope()
-        {
-            CreatedCount++;
-            return new Scope(provider);
-        }
-
-        private sealed class Scope(IServiceProvider provider) : IServiceScope
-        {
-            public IServiceProvider ServiceProvider => provider;
-
-            public void Dispose()
-            {
-            }
-        }
     }
 }

@@ -51,10 +51,7 @@ public sealed class AndroidAudioRecorder : ISpeechRecorder, IDisposable
 
         try
         {
-            var audio = await session.Stop();
-            return session.IsLimitReached
-                ? Result<RecordedAudio>.Failure(new Error("Speech.TooLong", "Il comando vocale è troppo lungo. Riprova con una frase più breve."))
-                : Result<RecordedAudio>.Success(audio);
+            return Result<RecordedAudio>.Success(await session.Stop());
         }
         catch (Exception)
         {
@@ -108,7 +105,6 @@ public sealed class AndroidAudioRecorder : ISpeechRecorder, IDisposable
         private readonly MemoryStream _audio = new();
         private AudioRecord? _audioRecord;
         private Task? _recording;
-        public bool IsLimitReached { get; private set; }
 
         public void Start() => _recording = Task.Run(Record, CancellationToken.None);
 
@@ -147,13 +143,10 @@ public sealed class AndroidAudioRecorder : ISpeechRecorder, IDisposable
                         continue;
 
                     var bytes = MemoryMarshal.AsBytes(buffer.AsSpan(0, read));
-                    if (SpeechRecordingLimits.WouldExceedMaximum((int)_audio.Length, bytes.Length))
-                    {
-                        IsLimitReached = true;
+                    var fits = SpeechRecordingLimits.BytesThatFit((int)_audio.Length, bytes.Length);
+                    _audio.Write(bytes[..fits]);
+                    if (_audio.Length >= SpeechRecordingLimits.MaximumAudioBytes)
                         break;
-                    }
-
-                    _audio.Write(bytes);
                 }
             }
             finally

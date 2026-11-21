@@ -67,7 +67,7 @@ public partial class ExpensesPage : ContentPage, IQueryAttributable
     private async void OnShowAllClicked(object? sender, EventArgs e) => await _viewModel.Filter(null);
 
     private async void OnExpenseOpened(object? sender, Guid expenseId) =>
-        await Shell.Current.GoToAsync($"{nameof(ExpenseEditorPage)}?expenseId={expenseId}");
+        await Shell.Current.GoToAsync(ExpenseEditorPage.Route(expenseId));
 
     // The selected chip can be beyond the edge of the row: a filter that comes from another page, or a chip tapped
     // while half in view. The chips are drawn again on every load, so the scroll waits for their layout.

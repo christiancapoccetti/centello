@@ -18,7 +18,7 @@ public sealed class CategoryTile : Border
     public static readonly BindableProperty SizeProperty = BindableProperty.Create(nameof(Size), typeof(double),
         typeof(CategoryTile), 36d, propertyChanged: (tile, _, size) => ((CategoryTile)tile).ApplySize((double)size));
 
-    private const double GlyphScale = 0.58;
+    internal const double GlyphScale = 0.58;
     private readonly Label _glyph = new()
     {
         FontFamily = Fonts.Icons,

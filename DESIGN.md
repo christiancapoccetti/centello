@@ -280,7 +280,7 @@ This is a native Android app (.NET MAUI) locked to portrait. All measures below 
 
 ## Colors
 
-A graphite-and-warm-white neutral world, one coral accent, and a seven-slot pastel palette that only categories may wear. Every colour has a dark and a light value; the dark one is the reference and the `-light` sibling in the frontmatter is its paper-scheme twin. `src/Centesimo.App/Theming/ThemeColors.cs` is the only colour table in the app; `CategoryPalette.cs` is the only palette.
+A graphite-and-warm-white neutral world, one coral accent, and a seven-slot pastel palette that only categories may wear. Every colour has a dark and a light value; the dark one is the reference and the `-light` sibling in the frontmatter is its paper-scheme twin. `ThemeTokens` (`src/Centesimo.Application/Appearance/ThemeTokens.cs`) is the only colour table in the app: `ThemeColors.cs` reads it for MAUI, and the `@color/theme_*` resources the widgets use are generated from it and held to it by a test. `CategoryPalette.cs` is the only palette.
 
 ### Primary
 - **Signal Coral** (`accent-coral`, light `accent-light`): the add action. The plus of "Aggiungi spesa", the microphone and camera in the split pill, the plus on the extended FAB and tonal button, the on-state of a switch. It marks the one thing the app exists for.
@@ -362,13 +362,14 @@ Flat by construction: there is no shadow in the codebase. Depth is tonal and lin
 
 Two families that never mix: pills for what you press, and square or barely rounded geometry for what you read.
 
-- **Pills** (radius = half the height): primary button 56dp, filled and outlined buttons 48dp, extended FAB 56dp, split pill 60dp, segmented control 40dp, listening toast 36dp.
+- **Pills** (radius = half the height): primary button 56dp, filled and outlined buttons 48dp, extended FAB 56dp, split pill 60dp, segmented control 40dp, listening toast 36dp, the Aggiungi widget's pill.
 - **Square** (0): category tiles, category line segments, chart bars, fraction bars, palette swatches.
 - **Field** (4dp): text and date fields, menus.
 - **Chip** (8dp): choice chips.
 - **Container** (12dp): info cards and category picker cells.
 - **Card** (16dp): the bordered surface card.
 - **Sheet** (28dp top corners only): bottom sheets.
+- **Widget** (24dp, or the launcher's own corner on Android 12 and later): the surface of Il mese, Scorciatoie and Il ritmo.
 
 **The Hard Edge Rule.** Data graphics are drawn with antialiasing off, flat fills and 3dp gaps (2dp between days in a category's bars and between the pace chart's slots). Small values keep a visible minimum (2dp sliver, 4dp future stub) instead of vanishing.
 
@@ -387,6 +388,22 @@ Confident ink pills, no elevation.
 
 ### Split pill (signature)
 The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, and two 64dp icon segments on the right, each behind a 1dp outline divider: the coral microphone and the coral camera (26sp). Hold the microphone to dictate; while listening, a small outlined raised toast ("Registra… rilascia per inviare") floats 36dp above it. Tapping the camera opens a menu above it (the menu surface below, 48dp rows with a 22sp glyph and a SemiBold 16sp label): "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria", "Scegli un PDF". Both icon segments share one disabled state: with no OpenAI key saved they look disabled and tapping them leads to Settings.
+
+### Home screen widgets (signature)
+Four widgets that are the Home on the launcher, in the same flat graphite and the same Archivo.
+- **Aggiungi** (4x1, or 2x1): a raised pill with the coral plus, "Aggiungi spesa" and a divider, then the coral microphone; the 2x1 keeps only the plus and the microphone.
+- **Scorciatoie** (4x1): the four categories used most in the last 30 days (by count) as tiles with their name, then "Altra" for any other; each opens the editor on that category.
+- **Il mese** (2x2): the month, the total in the condensed numeral, the remaining budget, a short comparison chip, the category line and, when there is one, the over-budget category.
+- **Il ritmo** (4x2): the full comparison chip, a round coral plus and Oggi's daily chart with its pace line ("27 € al giorno").
+
+Tapping a widget opens the app on the matching screen; an editor opened from a widget returns to the launcher when it is saved or closed.
+
+**The Widget Words Are Pictures Rule.** Launchers ignore the app's font resources, so no widget word is a TextView. Every word is drawn in Archivo with tabular figures as a single-colour mask that the layout tints with its `@color/theme_*` colour, like the glyphs; a text with two colours (the budget sentence with its bold ink amount) is drawn twice, light and dark, and the launcher shows the copy that matches its scheme. Each image carries the same words as its description. Widget text therefore does not follow the system font size.
+
+**The Theme Resources Rule.** Widget layouts take colours only from `@color/theme_*`, generated from `ThemeTokens` in `values/` and `values-night/`, so a widget switches between light and dark with the launcher while the app is not running. Data graphics keep the hard-edge rules of the Home.
+
+### Voice panel (signature)
+The voice entry opened from the Aggiungi microphone: a translucent sheet over the launcher, on the scrim, that starts listening at once. A second tap on the microphone sends; so does reaching 20 seconds. "Annulla", a tap outside, Back or leaving the panel cancels. The draft then opens in the expense editor, as it does from Oggi, whose hold-to-talk still refuses a recording that reaches 20 seconds.
 
 ### Extended FAB
 Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action that floats over a list.
@@ -455,7 +472,7 @@ The category's colour in the editor, under a "Colore" field label between the na
 ## Do's and Don'ts
 
 ### Do:
-- **Do** take every colour from `ThemeColors` and `CategoryPalette`; give each new token a dark and a light value, with dark as the reference.
+- **Do** take every colour from `ThemeTokens` (through `ThemeColors`, or `@color/theme_*` on a widget) and `CategoryPalette`; give each new token a dark and a light value, with dark as the reference.
 - **Do** keep pages on the graphite ground with a 24dp gutter, and separate list rows with 1dp hairlines.
 - **Do** show a category as its square tile (dark glyph on its pastel ink) wherever it appears in a list, and in the editor's icon picker only for the selected icon, the others staying neutral.
 - **Do** suggest the least-used chromatic slot for a new category by preselecting it, and let the user pick another of the six.

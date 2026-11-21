@@ -1,6 +1,7 @@
 using Android.Content.Res;
 using Android.Widget;
 using Centesimo.App.Theming;
+using Centesimo.Application;
 using Google.Android.Material.Dialog;
 using Google.Android.Material.Shape;
 using Microsoft.Maui.Platform;

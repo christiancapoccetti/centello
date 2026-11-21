@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<BackupPage>();
         services.AddTransient<RestoreViewModel>();
         services.AddTransient<RestorePage>();
+        services.AddSingleton<AppEntryRouter>();
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
@@ -33,6 +34,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
         services.AddSingleton<IDownloads, MediaStoreDownloads>();
+        services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
+        services.AddSingleton<HomeScreenWidgets>();
+        services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreenWidgets>());
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();

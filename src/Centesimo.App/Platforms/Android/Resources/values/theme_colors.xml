@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="theme_ground">#FAFAF8</color>
+    <color name="theme_surface_raised">#EFEFEA</color>
+    <color name="theme_selected">#E3E3E2</color>
+    <color name="theme_ink">#16161A</color>
+    <color name="theme_mute">#62626A</color>
+    <color name="theme_hairline">#E4E4DF</color>
+    <color name="theme_outline">#DCDCD6</color>
+    <color name="theme_chart_bar">#C9C9C3</color>
+    <color name="theme_pace">#1F4FD8</color>
+    <color name="theme_accent">#E0503D</color>
+    <color name="theme_alert">#C8261A</color>
+    <color name="theme_positive_container">#E3F2EA</color>
+    <color name="theme_on_positive_container">#0B5A3D</color>
+    <color name="theme_tile_ink">#16161A</color>
+    <color name="theme_scrim">#80000000</color>
+</resources>
