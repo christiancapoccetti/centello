@@ -71,28 +71,44 @@ internal sealed class FakeSpeechTranscriber : ISpeechTranscriber
     }
 }
 
-internal sealed class FakeExpenseTextInterpreter : IExpenseTextInterpreter
+internal sealed class FakeExpenseInterpreter : IExpenseInterpreter
 {
-    public ExpenseSpeechDraft Draft { get; set; } = new(null, null, "", null, "", null, "", "");
+    public ExpenseDraft Draft { get; set; } = new(null, null, null, null, "", DraftSource.Voice, "");
     public Error? Failure { get; set; }
-    public string Text { get; private set; } = "";
-    public IReadOnlyCollection<SpeechCategory> Categories { get; private set; } = [];
+    public string Phrase { get; private set; } = "";
+    public ExpenseDocument? Document { get; private set; }
+    public IReadOnlyCollection<DraftCategory> Categories { get; private set; } = [];
     public int CallCount { get; private set; }
     public Action? OnInterpret { get; set; }
 
-    public Task<Result<ExpenseSpeechDraft>> Interpret(
-        string text,
-        IReadOnlyCollection<SpeechCategory> categories,
+    public Task<Result<ExpenseDraft>> Interpret(
+        string phrase,
+        IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default)
     {
+        Phrase = phrase;
+        return Interpreted(categories);
+    }
+
+    public Task<Result<ExpenseDraft>> Interpret(
+        ExpenseDocument document,
+        IReadOnlyCollection<DraftCategory> categories,
+        DateOnly today,
+        CancellationToken cancellationToken = default)
+    {
+        Document = document;
+        return Interpreted(categories);
+    }
+
+    private Task<Result<ExpenseDraft>> Interpreted(IReadOnlyCollection<DraftCategory> categories)
+    {
         CallCount++;
         OnInterpret?.Invoke();
-        Text = text;
         Categories = categories;
         return Task.FromResult(Failure is null
-            ? Result<ExpenseSpeechDraft>.Success(Draft)
-            : Result<ExpenseSpeechDraft>.Failure(Failure));
+            ? Result<ExpenseDraft>.Success(Draft)
+            : Result<ExpenseDraft>.Failure(Failure));
     }
 }
 

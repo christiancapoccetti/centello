@@ -4,19 +4,24 @@ using Centesimo.Application;
 
 namespace Centesimo.Infrastructure;
 
-/// <summary>Builds the Responses API request: instructions listing the user's keys, and a strict schema that only admits those keys.</summary>
 public static class ExpenseInterpretationRequestBuilder
 {
     private static readonly string[] ItalianDays = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 
-    public static JsonObject Build(string text, ExpenseInterpretationCatalog catalog, DateOnly today) => new()
+    public static JsonObject Build(string text, ExpenseInterpretationCatalog catalog, DateOnly today) =>
+        Request(PhraseInstructions(catalog, today), text, catalog);
+
+    public static JsonObject Build(ExpenseDocument document, ExpenseInterpretationCatalog catalog, DateOnly today) =>
+        Request(DocumentInstructions(catalog, today), new JsonArray(ContentPart(document)), catalog);
+
+    private static JsonObject Request(string instructions, JsonNode userContent, ExpenseInterpretationCatalog catalog) => new()
     {
         ["model"] = OpenAiModels.Interpretation,
         ["reasoning"] = new JsonObject { ["effort"] = "none" },
         ["store"] = false,
         ["input"] = new JsonArray(
-            Message("system", Instructions(catalog, today)),
-            Message("user", text)),
+            Message("system", instructions),
+            Message("user", userContent)),
         ["text"] = new JsonObject
         {
             ["format"] = new JsonObject
@@ -29,11 +34,33 @@ public static class ExpenseInterpretationRequestBuilder
         }
     };
 
-    private static JsonObject Message(string role, string content) => new()
+    private static JsonObject Message(string role, JsonNode content) => new()
     {
         ["role"] = role,
         ["content"] = content
     };
+
+    private static JsonObject ContentPart(ExpenseDocument document) =>
+        document.IsPdf ? FilePart(document) : ImagePart(document);
+
+    // Receipts print small; "high" keeps the total legible after OpenAI scales the image.
+    private static JsonObject ImagePart(ExpenseDocument document) => new()
+    {
+        ["type"] = "input_image",
+        ["image_url"] = DataUrl(document),
+        ["detail"] = "high"
+    };
+
+    private static JsonObject FilePart(ExpenseDocument document) => new()
+    {
+        ["type"] = "input_file",
+        ["filename"] = "spesa.pdf",
+        ["file_data"] = DataUrl(document),
+        ["detail"] = "high"
+    };
+
+    private static string DataUrl(ExpenseDocument document) =>
+        $"data:{document.MediaType};base64,{Convert.ToBase64String(document.Bytes.Span)}";
 
     // Strict structured outputs require every property to be listed as required and nullable ones to admit "null".
     private static JsonObject Schema(ExpenseInterpretationCatalog catalog) => new()
@@ -65,26 +92,43 @@ public static class ExpenseInterpretationRequestBuilder
         };
     }
 
-    private static string Instructions(ExpenseInterpretationCatalog catalog, DateOnly today)
-    {
-        var date = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var day = ItalianDays[(int)today.DayOfWeek];
-        var keys = catalog.PromptLines.Count == 0
+    private static string Day(DateOnly today) =>
+        $"{ItalianDays[(int)today.DayOfWeek]} {today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+
+    private static string Keys(ExpenseInterpretationCatalog catalog) =>
+        catalog.PromptLines.Count == 0
             ? "(nessuna categoria)"
             : string.Join('\n', catalog.PromptLines);
-        return $"""
-            Compili la bozza di una spesa a partire da una frase in italiano, scritta o dettata.
-            Oggi è {day} {date}.
 
-            Categorie e tag dell'utente. Usa solo queste chiavi:
-            {keys}
+    private static string PhraseInstructions(ExpenseInterpretationCatalog catalog, DateOnly today) => $"""
+        Compili la bozza di una spesa a partire da una frase in italiano, scritta o dettata.
+        Oggi è {Day(today)}.
 
-            Regole:
-            - amount: importo in euro come numero. "cento euro" è 100, "12,50" è 12.5. null se manca o non è chiaro.
-            - categoryKey: chiave della categoria che corrisponde chiaramente alla frase. null se nessuna corrisponde o se più categorie sono plausibili. Non indovinare.
-            - tagKey: chiave di un tag della categoria scelta, solo se corrisponde chiaramente. Altrimenti null.
-            - date: data della spesa nel formato AAAA-MM-GG. Risolvi espressioni come "ieri" o "lunedì scorso" a partire da oggi. null se la frase non indica una data.
-            - note: solo i dettagli che non sono già importo, categoria, tag o data. Altrimenti stringa vuota.
-            """;
-    }
+        Categorie e tag dell'utente. Usa solo queste chiavi:
+        {Keys(catalog)}
+
+        Regole:
+        - amount: importo in euro come numero. "cento euro" è 100, "12,50" è 12.5. null se manca o non è chiaro.
+        - categoryKey: chiave della categoria che corrisponde chiaramente alla frase. null se nessuna corrisponde o se più categorie sono plausibili. Non indovinare.
+        - tagKey: chiave di un tag della categoria scelta, solo se corrisponde chiaramente. Altrimenti null.
+        - date: data della spesa nel formato AAAA-MM-GG. Risolvi espressioni come "ieri" o "lunedì scorso" a partire da oggi. null se la frase non indica una data.
+        - note: solo i dettagli che non sono già importo, categoria, tag o data. Altrimenti stringa vuota.
+        """;
+
+    private static string DocumentInstructions(ExpenseInterpretationCatalog catalog, DateOnly today) => $"""
+        Compili la bozza di una spesa a partire dalla foto o dal PDF di uno scontrino, di una ricevuta, di una fattura o della schermata di un pagamento.
+        Oggi è {Day(today)}.
+
+        Categorie e tag dell'utente. Usa solo queste chiavi:
+        {Keys(catalog)}
+
+        Regole:
+        - Un documento è una sola spesa. Se ne mostra più di una, usa quella più in evidenza.
+        - amount: il totale effettivamente pagato, in euro, come numero (di solito la riga TOTALE, TOTALE EURO o IMPORTO PAGATO). Non usare subtotali, righe IVA, sconti, contanti versati o resto. null se il totale non è leggibile o se la valuta non è l'euro.
+        - categoryKey: chiave della categoria che corrisponde chiaramente al negozio o a ciò che è stato comprato. null se nessuna corrisponde o se più categorie sono plausibili. Non indovinare.
+        - tagKey: chiave di un tag della categoria scelta, solo se corrisponde chiaramente. Altrimenti null.
+        - date: data del documento nel formato AAAA-MM-GG. Sui documenti italiani la data è scritta GG/MM/AAAA. null se manca o non è leggibile. Non usare la data di oggi.
+        - note: il nome del negozio o del fornitore, se leggibile. Altrimenti stringa vuota.
+        - Se il documento non mostra una spesa, tutti i campi sono null e note è una stringa vuota.
+        """;
 }

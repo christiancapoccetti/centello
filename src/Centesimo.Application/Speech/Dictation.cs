@@ -12,8 +12,8 @@ public abstract record DictationState
     public sealed record Listening(TimeSpan Heard) : DictationState;
     public sealed record Preparing(TimeSpan Heard) : DictationState;
     public sealed record Failed(Error Error) : DictationState;
-    /// <summary>The draft waits in IPendingExpenseSpeechDraft: the panel opens the editor and closes.</summary>
-    public sealed record DraftReady : DictationState;
+    /// <summary>The panel hands the draft to the app, opens the editor and closes.</summary>
+    public sealed record DraftReady(ExpenseDraft Draft) : DictationState;
     /// <summary>Nothing was sent, or what came back was dropped.</summary>
     public sealed record Closed : DictationState;
 }
@@ -22,9 +22,9 @@ public abstract record DictationState
 /// main thread and every await returns to it, so State has one writer. A call that does not fit the state is ignored:
 /// a second tap while preparing does nothing, and Cancel after DraftReady keeps the draft for the editor.</summary>
 public sealed class Dictation(
-    SpeechExpenseDraftService speech,
+    ExpenseDraftService drafts,
+    OpenAiSettings settings,
     IMicrophoneAccess microphone,
-    IPendingExpenseSpeechDraft drafts,
     TimeProvider clock)
 {
     private static readonly TimeSpan Limit = TimeSpan.FromSeconds(SpeechRecordingLimits.MaximumDurationSeconds);
@@ -38,7 +38,7 @@ public sealed class Dictation(
     /// once -> Listening(0), or Failed when the network or the recorder says no.</summary>
     public async Task Begin()
     {
-        if (!await speech.IsAvailable())
+        if (!await settings.HasApiKey())
         {
             Move(new DictationState.NeedsApiKey());
             return;
@@ -54,10 +54,10 @@ public sealed class Dictation(
             return;
         }
 
-        var started = await speech.Start();
+        var started = await drafts.StartListening();
         if (State is not DictationState.Starting)
         {
-            await speech.Cancel();
+            await drafts.CancelListening();
             return;
         }
 
@@ -99,12 +99,9 @@ public sealed class Dictation(
         var result = await Prepare(preparing.Token);
         _preparing = null;
         if (State is DictationState.Closed)
-        {
-            drafts.Take();
             return;
-        }
 
-        Move(result.IsSuccess ? new DictationState.DraftReady() : new DictationState.Failed(result.Error));
+        Move(result.IsSuccess ? new DictationState.DraftReady(result.Value) : new DictationState.Failed(result.Error));
     }
 
     /// <summary>Any state but DraftReady -> Closed. Stops the recorder and cancels the preparation.</summary>
@@ -117,7 +114,7 @@ public sealed class Dictation(
         Move(new DictationState.Closed());
         _preparing?.Cancel();
         if (wasRecording)
-            await speech.Cancel();
+            await drafts.CancelListening();
     }
 
     /// <summary>Failed -> a new recording.</summary>
@@ -130,19 +127,19 @@ public sealed class Dictation(
         return Begin();
     }
 
-    private async Task<Result> Prepare(CancellationToken cancellationToken)
+    private async Task<Result<ExpenseDraft>> Prepare(CancellationToken cancellationToken)
     {
         try
         {
-            return await speech.StopAndPrepare(WhenFull.Send, cancellationToken);
+            return await drafts.PrepareFromSpeech(WhenFull.Send, cancellationToken);
         }
         catch (OperationCanceledException)
         {
-            return Result.Failure(SpeechErrors.Canceled);
+            return Result<ExpenseDraft>.Failure(DraftErrors.Canceled);
         }
         catch
         {
-            return Result.Failure(SpeechErrors.Failed);
+            return Result<ExpenseDraft>.Failure(SpeechErrors.ProcessingFailed);
         }
     }
 

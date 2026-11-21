@@ -43,7 +43,7 @@ public partial class SettingsPage : ContentPage
             return;
 
         // Annulla in the dialog leaves everything as it is: the key stays typed and nothing is said.
-        var accepted = await _confirmation.Ask("Inserimento vocale con OpenAI", OpenAiSettings.ConsentMessage, "Acconsento", "Annulla");
+        var accepted = await _confirmation.Ask("Voce e foto con OpenAI", OpenAiSettings.ConsentMessage, "Acconsento", "Annulla");
         if (await _viewModel.SaveApiKey(accepted))
             _snackbar.Show("Chiave salvata. Tieni premuto il microfono per dettare.");
     }

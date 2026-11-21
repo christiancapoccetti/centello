@@ -59,6 +59,9 @@ public static class MaterialSymbols
     public const string Pause = "\uE034";
     public const string PauseCircle = "\uE1A2";
     public const string Pets = "\uE91D";
+    public const string PhotoCamera = "\uE412";
+    public const string PhotoLibrary = "\uE413";
+    public const string PictureAsPdf = "\uE415";
     public const string PlayArrow = "\uE037";
     public const string ReceiptLong = "\uEF6E";
     public const string Redeem = "\uE8F6";

@@ -20,10 +20,10 @@
 
         <ScrollView x:Name="Form" Grid.Row="1">
             <VerticalStackLayout Padding="0,0,0,24">
-                <Border Margin="24,4,24,0" Padding="14,10" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{t:Theme PositiveContainer}" IsVisible="{Binding HasVoiceBanner}">
+                <Border Margin="24,4,24,0" Padding="14,10" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{t:Theme PositiveContainer}" IsVisible="{Binding HasDraft}">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                        <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme OnPositiveContainer}" VerticalOptions="Start" />
-                        <Label Grid.Column="1" Text="{Binding VoiceBanner}" Style="{StaticResource LabelLarge}" LineHeight="1.25" TextColor="{t:Theme OnPositiveContainer}" />
+                        <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{Binding Draft.Source.Glyph}" TextColor="{t:Theme OnPositiveContainer}" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Text="{Binding Draft.Banner}" Style="{StaticResource LabelLarge}" LineHeight="1.25" TextColor="{t:Theme OnPositiveContainer}" />
                     </Grid>
                 </Border>
                 <c:AmountField x:Name="AmountInput" Margin="24,8,24,0" Text="{Binding Amount}" ErrorText="{Binding AmountError}" />

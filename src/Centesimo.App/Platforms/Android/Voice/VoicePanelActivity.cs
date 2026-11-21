@@ -30,6 +30,7 @@ public sealed class VoicePanelActivity : AppCompatActivity
     private readonly CancellationTokenSource _ticking = new();
     private Dictation? _dictation;
     private VoicePanelSheet? _sheet;
+    private AppEntryRouter? _router;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -45,6 +46,7 @@ public sealed class VoicePanelActivity : AppCompatActivity
         var sheet = new VoicePanelSheet(this, services.GetRequiredService<IFontManager>(), IsDark(Resources!.Configuration!));
         _dictation = dictation;
         _sheet = sheet;
+        _router = services.GetRequiredService<AppEntryRouter>();
         SetContentView(sheet.Root);
         ApplySystemBars(IsDark(Resources.Configuration!));
 
@@ -102,8 +104,11 @@ public sealed class VoicePanelActivity : AppCompatActivity
     private void OnChanged(object? sender, DictationState state)
     {
         _sheet?.Show(state);
-        if (state is DictationState.DraftReady)
-            OpenApp(new AppEntry.VoiceDraft());
+        if (state is not DictationState.DraftReady ready)
+            return;
+
+        _router?.Receive(ready.Draft);
+        OpenApp(new AppEntry.VoiceDraft());
     }
 
     private void Dismiss()

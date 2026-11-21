@@ -24,8 +24,8 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 - Developer account: one-time fee and identity verification. The contact email becomes public, and the package name `it.christiancapoccetti.centesimo` cannot change after the first upload.
 - Share with family through the **internal testing** track (up to 100 testers, available within minutes, no full review). A new personal account must run a closed test with at least 12 testers for 14 days before it can publish to production.
-- Privacy policy on a public URL (for example GitHub Pages), in Italian. Required because the app records audio and sends it to OpenAI.
-- Data safety form: voice audio, its transcript and the category and tag names are sent to OpenAI only when voice entry is enabled, encrypted in transit; expenses never leave the device.
+- Privacy policy on a public URL (for example GitHub Pages), in Italian. Required because the app records audio and sends it, or a photo or PDF you choose, to OpenAI.
+- Data safety form: voice audio, its transcript, photos and PDFs you choose, and the category and tag names are sent to OpenAI only when voice, photo or PDF entry is used, encrypted in transit; expenses never leave the device. OpenAI keeps API inputs for abuse monitoring: word it as "Centesimo does not save them", never "not saved".
 - Financial features declaration: Centesimo tracks expenses and provides no financial services.
 - Content rating questionnaire, target audience, and the ads declaration (no ads).
 - Store listing: short and full description, at least two screenshots made with placeholder data (never the real Money Manager backup), a 1024×500 feature graphic, and the 512 px icon already in `docs/brand/`.
@@ -34,28 +34,16 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Check 16 KB memory page support for the native libraries (SQLite) in the Play Console App Bundle explorer, and keep the target SDK at the level Play requires (36 today).
 - Test the Release build end to end before every upload: trimming can break EF Core at runtime.
 
+### Screen sizes and performance
+
+- Check every screen on several Android sizes and densities: a small phone (about 360 dp wide), a large phone, a tablet, the largest system font size and display size, and both themes. Text must not be clipped, the bottom navigation labels must stay visible and the bar must respect the bottom safe area.
+- Measure performance on the Release build on a low-end device: cold start time, scrolling in `Spese` and the Insight charts with several years of expenses (the Money Manager import is a realistic data set, used only locally).
+- Review the Android vitals in the Play Console during internal testing (ANR, crashes, slow startup) before moving to a wider track.
+
 ### Product gaps for other users
 
 - Backup and restore (see Data portability): the manifest sets `allowBackup="false"` and there is no export, so changing phone or uninstalling loses every expense.
-- Voice entry needs the user's own OpenAI API key, which family members are unlikely to have: explain it in the listing and keep manual entry as the main path.
-
-## Accessibility and input
-
-- Voice control for navigating common actions (expense entry by voice already exists as `Inserimento vocale`).
-- Improved screen-reader descriptions and accessibility testing.
-- Optional biometric protection when opening the app.
-
-## Localization
-
-- Move user-facing text to localization resources.
-- Support English in addition to Italian.
-- Format currency, dates, and numbers according to the selected locale.
-
-## Attachments
-
-- Capture or select receipt photos.
-- Store attachments locally and manage their lifecycle.
-- Optional receipt text recognition to prefill an expense.
+- Voice, photo and PDF entry need the user's own OpenAI API key, which family members are unlikely to have: explain it in the listing and keep manual entry as the main path.
 
 ## Data portability
 
@@ -69,18 +57,22 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 - Optional hiding of amounts in the widgets.
 - Align Oggi's microphone consent with the panel's dialog.
 
-## Insights
+## App shortcuts
 
-- Configurable budget alerts.
-- "Una nuova abitudine" per tag, not only per category.
-- Move the home and the category detail onto one shared spending model, and delete `SpendBuckets` and the home's own comparison.
+- Launcher shortcuts (long press on the app icon), three in total:
+  - `Nuova spesa` (static): opens an empty expense editor.
+  - The two most used categories of the last 30 days (dynamic, with the category icon): open the expense editor with that category already selected, amount to type. They are refreshed when an expense is saved.
+- Each shortcut can be pinned to the home screen as its own icon.
 
-## Categories and recurring payments
+## Year in review
 
-- Store the archive and pause dates; the UI currently shows only `Archiviata` and `In pausa`.
+- "Il tuo anno in Centesimo", in the style of Spotify Wrapped: full-screen story cards at the end of the year with the yearly total, the most expensive month, the category that grew the most, the most regular habit and the record day.
+- Computed on the device from the yearly Insight data; nothing leaves the phone.
+- Available from December and kept reachable from Insight for past years.
 
-## Technical follow-ups
+## Ask Centesimo
 
-- Clear the DbContext change tracker after a failed save in `RepositoryBase`, so rejected entities do not linger in later saves.
-- `CategoryListService` repeats the positive-budget check that `PeriodBudget` owns; use `PeriodBudget` there.
-- `InsightsViewModel.EmptyTitle` still builds its wording from the period in the view model; move that wording next to the other period texts in `InsightTexts`.
+- Spoken questions about spending ("Quanto ho speso al ristorante a ottobre?", "Spendo più in benzina quest'anno o l'anno scorso?"), answered with a large figure, one sentence and a small chart; a tap opens the expenses behind the figure.
+- OpenAI only turns the question into a structured query (category, tag, period, kind of calculation) through the same constrained JSON schema as voice entry; the app computes the answer on the local database, so no expense leaves the phone.
+- Limited set of calculations: total, comparison between two periods, largest expense, average. Questions outside it get a plain "non so rispondere" instead of a guess.
+- The voice flow must tell a question from an expense: a field in the schema or two separate microphone modes.

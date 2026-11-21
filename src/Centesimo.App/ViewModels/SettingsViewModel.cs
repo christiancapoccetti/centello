@@ -6,7 +6,7 @@ namespace Centesimo.App.ViewModels;
 
 public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiSettings openAiSettings) : ObservableObject
 {
-    private const string NewKeyLead = "Detta una spesa con parole tue, per esempio “ieri 12 euro di pizza”. Serve una tua chiave API OpenAI.";
+    private const string NewKeyLead = "Detta una spesa con parole tue, per esempio “ieri 12 euro di pizza”, o fotografa uno scontrino o una fattura, o scegli un PDF. Serve una tua chiave API OpenAI.";
     private const string ReplacementLead = "La nuova chiave prende il posto di quella salvata.";
 
     private string _recurringSummary = "";
@@ -76,7 +76,7 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
         if (ApiKeyInput.HasValue())
             return true;
 
-        ApiKeyError = SpeechErrors.EmptyApiKey.Message;
+        ApiKeyError = DraftErrors.EmptyApiKey.Message;
         return false;
     }
 

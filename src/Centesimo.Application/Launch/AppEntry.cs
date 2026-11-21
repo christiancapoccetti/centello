@@ -19,7 +19,7 @@ public abstract record AppEntry
     /// <summary>The editor of a new expense, amount first. A category no longer active is dropped by the editor.</summary>
     public sealed record NewExpense(Guid? CategoryId) : AppEntry;
 
-    /// <summary>The editor of a new expense, filled with the draft the voice panel left in IPendingExpenseSpeechDraft.</summary>
+    /// <summary>The editor of a new expense, filled with the draft the voice panel handed to the app.</summary>
     public sealed record VoiceDraft : AppEntry;
 
     /// <summary>Impostazioni, where the OpenAI key is set.</summary>

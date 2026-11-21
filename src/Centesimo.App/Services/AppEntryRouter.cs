@@ -8,36 +8,35 @@ namespace Centesimo.App;
 /// entry of each intent and the window's activation opens it, so a cold and a warm start take the same path. One slot:
 /// a newer entry replaces one still waiting. It rebuilds the Oggi tab with one route, so an editor never lands on top
 /// of another, and it asks first when a page of that tab holds unsaved input.</summary>
-public sealed class AppEntryRouter(IConfirmation confirmation, IPendingExpenseSpeechDraft drafts)
+public sealed class AppEntryRouter(IConfirmation confirmation)
 {
-    private AppEntry? _waiting;
+    private readonly AppEntryInbox _inbox = new();
 
-    public bool HasWaiting => _waiting is not null;
+    public bool HasWaiting => _inbox.HasWaiting;
 
-    public void Receive(AppEntry entry) => _waiting = entry;
+    public void Receive(AppEntry entry) => _inbox.Receive(entry);
+
+    public void Receive(ExpenseDraft draft) => _inbox.Receive(draft);
 
     public async Task OpenWaiting()
     {
-        if (_waiting is not { } entry || Shell.Current is not { } shell)
+        if (Shell.Current is not { } shell || _inbox.Take() is not { } waiting)
             return;
 
-        _waiting = null;
-        var (route, rebuildsToday) = RouteOf(entry);
+        var (route, rebuildsToday) = RouteOf(waiting.Entry);
         if (rebuildsToday && TodayStack(shell).OfType<IHoldsUnsavedInput>().Any(page => page.HasUnsavedInput)
             && !await confirmation.AskToDiscard())
-        {
-            if (entry is AppEntry.VoiceDraft)
-                drafts.Take();
-
             return;
-        }
 
         // The same absolute route as the one on screen is no navigation at all: leave the editor first so the new one
         // is built and takes its query.
         if (rebuildsToday && TodayStack(shell).Any(page => page is not null))
             await shell.GoToAsync($"//{nameof(TodayPage)}");
 
-        await shell.GoToAsync(route);
+        if (waiting.Draft is { } draft)
+            await ExpenseEditorPage.OpenDraft(draft, fromOutside: true);
+        else
+            await shell.GoToAsync(route);
     }
 
     private static IReadOnlyList<Page?> TodayStack(Shell shell) =>

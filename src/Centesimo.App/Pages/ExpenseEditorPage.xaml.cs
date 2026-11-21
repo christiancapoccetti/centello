@@ -1,11 +1,14 @@
 using Centesimo.App.Controls;
 using Centesimo.App.ViewModels;
+using Centesimo.Application;
 using Centesimo.Domain;
 
 namespace Centesimo.App.Pages;
 
 public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHoldsUnsavedInput
 {
+    private const string DraftParameter = "draft";
+
     private readonly ExpenseEditorViewModel _viewModel;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
@@ -16,6 +19,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
     private Guid? _expenseId;
     private Guid? _categoryId;
     private bool _fromOutside;
+    private ExpenseDraft? _draft;
     private bool _isLoaded;
 
     public ExpenseEditorPage(ExpenseEditorViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
@@ -49,13 +53,28 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
             : $"{nameof(ExpenseEditorPage)}?{string.Join('&', query)}";
     }
 
+    /// <summary>Opens a new expense filled from a draft, on the home tab whichever tab is in front. The draft travels
+    /// with this one navigation only, so it can never reach a later "Aggiungi spesa".</summary>
+    public static Task OpenDraft(ExpenseDraft draft, bool fromOutside = false)
+    {
+        var parameters = new ShellNavigationQueryParameters { [DraftParameter] = draft };
+        if (fromOutside)
+            parameters[FromKey] = Outside;
+
+        return Shell.Current.GoToAsync($"//{nameof(TodayPage)}/{nameof(ExpenseEditorPage)}", parameters);
+    }
+
     public bool HasUnsavedInput => _viewModel.IsDirty;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
+        if (_isLoaded)
+            return;
+
         _expenseId = GuidOf(query, ExpenseIdKey);
         _categoryId = GuidOf(query, CategoryIdKey);
         _fromOutside = query.TryGetValue(FromKey, out var from) && from?.ToString() == Outside;
+        _draft = query.TryGetValue(DraftParameter, out var draft) ? draft as ExpenseDraft : null;
     }
 
     private static Guid? GuidOf(IDictionary<string, object> query, string key) =>
@@ -75,8 +94,8 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
         }
 
         _isLoaded = true;
-        await _viewModel.Load(_expenseId, _categoryId);
-        // A new expense starts from its amount. A stored expense or a draft from the voice is there to be read first.
+        await (_draft is { } draft ? _viewModel.Load(draft) : _viewModel.Load(_expenseId, _categoryId));
+        // A new expense starts from its amount. A stored expense or a draft from the voice or a photo is there to be read first.
         if (!_viewModel.IsEditMode && _viewModel.Amount.IsEmpty())
             AmountInput.FocusInput();
     }

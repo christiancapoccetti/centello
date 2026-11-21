@@ -1,11 +1,13 @@
 namespace Centesimo.Application;
 
-public sealed record ExpenseSpeechDraft(
+public sealed record ExpenseDraft(
     long? AmountCents,
     Guid? CategoryId,
-    string CategoryName,
     Guid? TagId,
-    string TagName,
     DateOnly? OccurredOn,
     string Note,
-    string Transcription);
+    DraftSource Source,
+    string Heard)
+{
+    public string Banner => Source.Banner(Heard);
+}

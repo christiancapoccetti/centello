@@ -13,8 +13,7 @@ public sealed class Dictation_should_expected_behavior
     private readonly FakeMicrophoneAccess _microphone = new();
     private readonly FakeSpeechRecorder _recorder = new() { Audio = Heard };
     private readonly FakeSpeechTranscriber _transcriber = new();
-    private readonly FakeExpenseTextInterpreter _interpreter = new();
-    private readonly PendingExpenseSpeechDraft _pending = new();
+    private readonly FakeExpenseInterpreter _interpreter = new();
     private readonly ManualTimeProvider _clock = new();
     private readonly List<DictationState> _changes = [];
     private readonly Dictation _dictation;
@@ -25,17 +24,15 @@ public sealed class Dictation_should_expected_behavior
         var scopes = new CountingScopeFactory(new ServiceMap(
             new CategoryService(categories),
             new TagService(categories, new FakeTagRepository())));
-        var speech = new SpeechExpenseDraftService(
+        var drafts = new ExpenseDraftService(
             _recorder,
             _transcriber,
             _interpreter,
-            new OpenAiSettings(_keys),
             new FakeInternetAccess(),
-            scopes,
-            _pending);
+            scopes);
         _transcriber.Result = Result<string>.Success("cento euro carburante");
-        _interpreter.Draft = new ExpenseSpeechDraft(10_000, null, "", null, "", null, "", "cento euro carburante");
-        _dictation = new Dictation(speech, _microphone, _pending, _clock);
+        _interpreter.Draft = new ExpenseDraft(10_000, null, null, null, "", DraftSource.Voice, "cento euro carburante");
+        _dictation = new Dictation(drafts, new OpenAiSettings(_keys), _microphone, _clock);
         _dictation.Changed += (_, state) => _changes.Add(state);
     }
 
@@ -109,10 +106,9 @@ public sealed class Dictation_should_expected_behavior
         _clock.Advance(Limit);
         await _dictation.Tick();
 
-        Assert.Equal(new DictationState.DraftReady(), _dictation.State);
+        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
         Assert.Equal(1, _transcriber.CallCount);
         Assert.Equal(Full, _transcriber.Audio);
-        Assert.NotNull(_pending.Take());
     }
 
     [Fact]
@@ -124,7 +120,7 @@ public sealed class Dictation_should_expected_behavior
         _clock.Advance(Limit - TimeSpan.FromMilliseconds(100));
         await _dictation.Send();
 
-        Assert.Equal(new DictationState.DraftReady(), _dictation.State);
+        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
     }
 
     [Fact]
@@ -143,7 +139,8 @@ public sealed class Dictation_should_expected_behavior
 
         Assert.Equal(1, _transcriber.CallCount);
         Assert.Equal(1, _recorder.StopCount);
-        Assert.Equal(new DictationState.DraftReady(), _dictation.State);
+        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
+        Assert.Single(_changes, state => state is DictationState.DraftReady);
     }
 
     [Fact]
@@ -192,7 +189,6 @@ public sealed class Dictation_should_expected_behavior
         await _dictation.Send();
 
         Assert.Equal(new DictationState.Failed(failure), _dictation.State);
-        Assert.Null(_pending.Take());
     }
 
     [Fact]
@@ -203,7 +199,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Send();
 
-        Assert.Equal(new DictationState.Failed(SpeechErrors.Failed), _dictation.State);
+        Assert.Equal(new DictationState.Failed(SpeechErrors.ProcessingFailed), _dictation.State);
     }
 
     [Fact]
@@ -290,23 +286,8 @@ public sealed class Dictation_should_expected_behavior
         await send;
 
         Assert.Equal(new DictationState.Closed(), _dictation.State);
-        Assert.Null(_pending.Take());
-    }
-
-    [Fact]
-    public async Task Take_back_a_draft_that_arrived_after_the_cancel()
-    {
-        await _dictation.Begin();
-        _interpreter.OnInterpret = () => _pending.Set(_interpreter.Draft);
-        var gate = new TaskCompletionSource();
-        _transcriber.Gate = gate.Task;
-
-        var send = _dictation.Send();
-        await _dictation.Cancel();
-        gate.SetResult();
-        await send;
-
-        Assert.Null(_pending.Take());
+        Assert.Equal(1, _interpreter.CallCount);
+        Assert.DoesNotContain(_changes, state => state is DictationState.DraftReady);
     }
 
     [Fact]
@@ -317,8 +298,7 @@ public sealed class Dictation_should_expected_behavior
 
         await _dictation.Cancel();
 
-        Assert.Equal(new DictationState.DraftReady(), _dictation.State);
-        Assert.NotNull(_pending.Take());
+        Assert.Equal(new DictationState.DraftReady(_interpreter.Draft), _dictation.State);
     }
 
     [Fact]

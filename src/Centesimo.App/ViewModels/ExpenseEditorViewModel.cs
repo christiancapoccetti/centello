@@ -9,14 +9,13 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 {
     private static readonly CultureInfo ItalianCulture = CultureInfo.GetCultureInfo("it-IT");
     private readonly ExpenseService _expenseService;
-    private readonly IPendingExpenseSpeechDraft _pendingSpeechDraft;
     private Guid? _expenseId;
     private string _amount = "";
     private DateTime _occurredOn = DateTime.Today;
     private string _note = "";
     private string _amountError = "";
     private string _errorMessage = "";
-    private string _voiceBanner = "";
+    private ExpenseDraft? _draft;
     private bool _isSaving;
     private FormState _original;
 
@@ -39,19 +38,16 @@ public sealed class ExpenseEditorViewModel : ObservableObject
     }
     public DateTime OccurredOn { get => _occurredOn; set => SetProperty(ref _occurredOn, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
-    /// <summary>What the voice heard, shown above a draft so the person can check it. Empty for a typed expense.</summary>
-    public string VoiceBanner
+    public ExpenseDraft? Draft
     {
-        get => _voiceBanner;
+        get => _draft;
         private set
         {
-            if (SetProperty(ref _voiceBanner, value))
-                OnPropertyChanged(nameof(HasVoiceBanner));
+            if (SetProperty(ref _draft, value))
+                OnPropertyChanged(nameof(HasDraft));
         }
     }
-    public bool HasVoiceBanner => VoiceBanner.HasValue();
-    /// <summary>True while the form differs from what is stored. A new expense starts from an empty form, so a draft
-    /// from the voice is unsaved input from the start.</summary>
+    public bool HasDraft => Draft?.Banner.HasValue() == true;
     public bool IsDirty => Snapshot() != _original;
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
     public string AmountError { get => _amountError; private set => SetProperty(ref _amountError, value); }
@@ -60,17 +56,19 @@ public sealed class ExpenseEditorViewModel : ObservableObject
 
     public ExpenseEditorViewModel(
         CategoryTagPicker picker,
-        ExpenseService expenseService,
-        IPendingExpenseSpeechDraft pendingSpeechDraft)
+        ExpenseService expenseService)
     {
         Picker = picker;
         _expenseService = expenseService;
-        _pendingSpeechDraft = pendingSpeechDraft;
         SaveCommand = new AsyncCommand(Save, () => !IsSaving);
         _original = Snapshot();
     }
 
-    public async Task Load(Guid? expenseId = null, Guid? categoryId = null)
+    public Task Load(Guid? expenseId = null, Guid? categoryId = null) => Open(expenseId, categoryId, null);
+
+    public Task Load(ExpenseDraft draft) => Open(null, null, draft);
+
+    private async Task Open(Guid? expenseId, Guid? categoryId, ExpenseDraft? draft)
     {
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
@@ -88,8 +86,8 @@ public sealed class ExpenseEditorViewModel : ObservableObject
             await Picker.Suggest(categoryId, null);
 
         _original = Snapshot();
-        if (!expenseId.HasValue)
-            await ApplyPendingSpeechDraft();
+        if (draft is not null)
+            await ApplyDraft(draft);
     }
 
     private async Task LoadExpense(Guid expenseId)
@@ -113,16 +111,12 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         await Picker.Restore(expense.CategoryId, expense.TagId);
     }
 
-    private async Task ApplyPendingSpeechDraft()
+    private async Task ApplyDraft(ExpenseDraft draft)
     {
-        var draft = _pendingSpeechDraft.Take();
-        if (draft is null)
-            return;
-
         Amount = draft.AmountCents is { } cents ? (cents / 100m).ToString("0.00", ItalianCulture) : "";
         OccurredOn = draft.OccurredOn?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
         Note = draft.Note;
-        VoiceBanner = draft.Transcription.HasValue() ? $"Dalla voce: “{draft.Transcription}” · controlla e salva" : "";
+        Draft = draft;
         await Picker.Suggest(draft.CategoryId, draft.TagId);
     }
 
