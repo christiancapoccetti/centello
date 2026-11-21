@@ -1,70 +1,70 @@
 ---
-title: Informativa sulla privacy di Quattrino
+title: Quattrino privacy policy
 ---
 
-# Informativa sulla privacy di Quattrino
+# Quattrino privacy policy
 
-Ultimo aggiornamento: 21 novembre 2026
+Last updated: 21 November 2026
 
-Quattrino è un'app Android per tenere traccia delle spese personali, sviluppata da Christian Capoccetti come progetto personale. Questa informativa spiega quali dati usa l'app, dove vanno e quali scelte hai.
+Quattrino is an Android app for tracking personal expenses, developed by Christian Capoccetti as a personal project. This policy explains what data the app uses, where it goes and what choices you have.
 
-## In breve
+## In short
 
-- Le tue spese restano sul tuo telefono. L'app non ha un server e lo sviluppatore non riceve nessun tuo dato.
-- Solo se usi l'inserimento con la voce, da una foto o da un PDF, quello che detti, fotografi o scegli viene inviato a OpenAI con la tua chiave API.
-- Niente pubblicità, niente account, niente strumenti di analisi o di tracciamento.
+- Your expenses stay on your phone. The app has no server and the developer receives none of your data.
+- Only if you use voice, photo or PDF entry is what you say, photograph or pick sent to OpenAI, using your own API key.
+- No ads, no accounts, no analytics or tracking tools.
 
-## Chi sviluppa l'app e come contattarlo
+## Who develops the app and how to get in touch
 
-Christian Capoccetti. Per domande o richieste su questa informativa apri una segnalazione su [GitHub Issues](https://github.com/christiancapoccetti/centesimo/issues).
+Christian Capoccetti. For questions or requests about this policy, open an issue on [GitHub Issues](https://github.com/christiancapoccetti/centesimo/issues).
 
-Le segnalazioni su GitHub sono pubbliche: non scrivere dati personali. Se la richiesta li richiede, nella risposta ti indicherò un canale privato.
+GitHub issues are public: do not include personal data. If your request needs it, the reply will point you to a private channel.
 
-## Dati che restano sul telefono
+## Data that stays on your phone
 
-- Spese, categorie, tag, budget, pagamenti regolari e impostazioni sono salvati in un database sul telefono.
-- La tua chiave API OpenAI, se la inserisci, è salvata nell'archivio protetto di Android e viene usata solo per chiamare OpenAI.
+- Expenses, categories, tags, budgets, recurring payments and settings are stored in a database on your phone.
+- Your OpenAI API key, if you enter one, is stored in Android's protected storage and used only to call OpenAI.
 
-## Cosa viene inviato a OpenAI, e quando
+## What is sent to OpenAI, and when
 
-L'invio avviene solo quando usi la voce, una foto o un PDF, dopo che hai inserito la tua chiave API e accettato l'avviso sul consenso. Vengono inviati:
+Data is sent only when you use voice, a photo or a PDF, after you have entered your API key and accepted the consent notice. What is sent:
 
-- l'audio che registri, fino a 20 secondi, tenuto in memoria e mai salvato dall'app;
-- il testo trascritto dall'audio;
-- la foto che scatti o scegli, ridotta e ripulita dai dati EXIF e dalla posizione GPS, oppure il PDF che scegli;
-- i nomi delle tue categorie e dei tag attivi e la data di oggi, per interpretare la spesa.
+- the audio you record, up to 20 seconds, kept in memory and never saved by the app;
+- the text transcribed from that audio;
+- the photo you take or pick, scaled down and stripped of EXIF data and GPS location, or the PDF you pick;
+- the names of your active categories and tags and today's date, so the expense can be interpreted.
 
-Le altre spese e il database non vengono mai inviati. I dati viaggiano cifrati (HTTPS).
+Your other expenses and the database are never sent. Data is encrypted in transit (HTTPS).
 
-Poiché l'invio usa la tua chiave, rientra nel tuo rapporto con OpenAI e nelle sue condizioni e [informativa sulla privacy](https://openai.com/policies/). OpenAI può conservare per un periodo limitato i dati ricevuti tramite API per controllare gli abusi. Quattrino non li salva.
+Because the request uses your own key, it falls under your relationship with OpenAI and its terms and [privacy policy](https://openai.com/policies/). OpenAI may keep data received through its API for a limited time to monitor abuse. Quattrino does not save it.
 
-L'inserimento a mano funziona sempre, anche senza chiave e senza connessione.
+Manual entry always works, without a key and without a connection.
 
-## Backup
+## Backups
 
-- **Backup automatico di Android:** se è attivo sul tuo telefono, Android salva una copia del database delle spese nel tuo account Google. La chiave API OpenAI non è inclusa. Il backup è gestito da Google secondo le impostazioni del tuo account.
-- **File di backup ed esportazioni CSV:** li crei tu e vengono salvati nella cartella Download del telefono. Restano sotto il tuo controllo.
+- **Android automatic backup:** if it is turned on for your phone, Android saves a copy of the expense database to your Google account. Your OpenAI API key is not included. The backup is handled by Google according to your account settings.
+- **Backup files and CSV exports:** you create them, and they are saved to your phone's Download folder. They remain under your control.
 
-## Permessi
+## Permissions
 
-- **Microfono:** solo mentre detti una spesa.
-- **Fotocamera:** solo per fotografare una spesa, come uno scontrino o una fattura.
-- **Notifiche:** per il riepilogo del mese e dell'anno. La notifica non mostra importi e puoi disattivarla nelle impostazioni dell'app.
-- **Internet e stato della rete:** solo per comunicare con OpenAI.
-- **Avvio del telefono:** per riprogrammare la notifica del riepilogo dopo un riavvio.
+- **Microphone:** only while you dictate an expense.
+- **Camera:** only to photograph an expense, such as a receipt or an invoice.
+- **Notifications:** for the month and year recap. The notification never shows amounts, and you can turn it off in the app's settings.
+- **Internet and network state:** only to communicate with OpenAI.
+- **Run at startup:** to reschedule the recap notification after the phone restarts.
 
-## Conservazione e cancellazione
+## Retention and deletion
 
-I dati restano sul telefono finché non li cancelli. Puoi eliminare singole spese, rimuovere la chiave API nelle impostazioni o disinstallare l'app, che cancella il database dal telefono. Il backup nel tuo account Google si gestisce dalle impostazioni di Google.
+Your data stays on your phone until you delete it. You can delete single expenses, remove your API key in the settings, or uninstall the app, which deletes the database from your phone. The backup in your Google account is managed from your Google settings.
 
-## I tuoi diritti
+## Your rights
 
-Lo sviluppatore non riceve i tuoi dati, quindi non ha dati da mostrarti, correggere o cancellare: li controlli direttamente sul telefono. Per i dati inviati a OpenAI puoi rivolgerti a OpenAI. Puoi sempre presentare un reclamo al [Garante per la protezione dei dati personali](https://www.garanteprivacy.it/).
+The developer does not receive your data, so there is no data held by the developer to show, correct or delete: you control it directly on your phone. For data sent to OpenAI, you can contact OpenAI. You can always lodge a complaint with your data protection authority; in Italy, the [Garante per la protezione dei dati personali](https://www.garanteprivacy.it/).
 
-## Minori
+## Children
 
-Quattrino non è destinata ai minori di 14 anni.
+Quattrino is not intended for children under 14.
 
-## Modifiche
+## Changes
 
-Eventuali modifiche a questa informativa saranno pubblicate su questa pagina con la data aggiornata. La cronologia delle versioni è nel [repository del progetto](https://github.com/christiancapoccetti/centesimo/commits/main/docs/privacy-policy.md).
+Any change to this policy will be published on this page with an updated date. The version history is in the [project repository](https://github.com/christiancapoccetti/centesimo/commits/main/docs/privacy-policy.md).
