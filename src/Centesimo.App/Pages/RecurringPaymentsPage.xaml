@@ -19,7 +19,7 @@
                     <VerticalStackLayout>
                         <!-- A long title gives way and the badge keeps its place beside it. -->
                         <FlexLayout Direction="Row" AlignItems="Center">
-                            <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" FlexLayout.Shrink="1" />
+                            <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="1" FlexLayout.Shrink="1" />
                             <!-- The gap is padding: FlexLayout counts an item margin twice. -->
                             <ContentView Padding="6,0,0,0" FlexLayout.Shrink="0" IsVisible="{Binding HasBadge}">
                                 <Border Style="{StaticResource Badge}">
