@@ -30,6 +30,7 @@ public partial class TextField : ContentView
     public TextField()
     {
         InitializeComponent();
+        Caption.SizeChanged += (_, _) => FieldOutline.PlaceBox(Box, Caption);
         ApplyOutline();
         ApplyReveal();
     }
@@ -49,10 +50,18 @@ public partial class TextField : ContentView
     /// <summary>The keyboard confirmed what was typed.</summary>
     public event EventHandler? Completed;
 
+    /// <summary>The cursor went into the field, and the keyboard is about to take the lower part of the page.</summary>
+    public event EventHandler? FocusGained;
+
     /// <summary>Puts the cursor in the field and opens the keyboard.</summary>
     public void FocusInput() => Input.Focus();
 
-    private void OnFocusChanged(object? sender, FocusEventArgs e) => ApplyOutline();
+    private void OnFocusChanged(object? sender, FocusEventArgs e)
+    {
+        ApplyOutline();
+        if (e.IsFocused)
+            FocusGained?.Invoke(this, EventArgs.Empty);
+    }
 
     private void OnCompleted(object? sender, EventArgs e) => Completed?.Invoke(this, EventArgs.Empty);
 

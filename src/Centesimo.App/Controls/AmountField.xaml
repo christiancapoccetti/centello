@@ -21,8 +21,9 @@
                               MaxLength="10"
                               FontFamily="{x:Static t:Fonts.CondensedExtraBold}"
                               FontSize="60"
+                              FontAutoScalingEnabled="False"
                               SemanticProperties.Description="Importo in euro" />
-                <Label x:Name="Euro" Text="€" FontFamily="{x:Static t:Fonts.CondensedExtraBold}" FontSize="34" VerticalOptions="End" AutomationProperties.IsInAccessibleTree="False" />
+                <Label x:Name="Euro" Text="€" FontFamily="{x:Static t:Fonts.CondensedExtraBold}" FontSize="34" FontAutoScalingEnabled="False" VerticalOptions="End" AutomationProperties.IsInAccessibleTree="False" />
             </HorizontalStackLayout>
         </Grid>
         <BoxView x:Name="Underline" HeightRequest="2" />

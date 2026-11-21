@@ -5,9 +5,9 @@
              xmlns:c="clr-namespace:Centesimo.App.Controls"
              x:Class="Centesimo.App.Controls.TextField"
              x:Name="Root">
-    <!-- The label sits on the top edge of the box, so the first row starts 8 above the box. -->
-    <Grid RowDefinitions="64,Auto">
-        <Border x:Name="Box" Margin="0,8,0,0" StrokeShape="RoundRectangle 4" BackgroundColor="Transparent">
+    <!-- The label sits on the top edge of the box, so the first row starts half a label above the box (PlaceBox). -->
+    <Grid RowDefinitions="Auto,Auto">
+        <Border x:Name="Box" Margin="0,8,0,0" MinimumHeightRequest="56" StrokeShape="RoundRectangle 4" BackgroundColor="Transparent">
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnBoxTapped" />
             </Border.GestureRecognizers>

@@ -8,6 +8,10 @@ namespace Centesimo.App.Controls;
 internal static class FieldOutline
 {
     private const double SidePadding = 16;
+    // Half of the label at its usual size: the room the box leaves above itself for the label on its edge.
+    private const double LabelOverhang = 8;
+    // The air between the lower half of a larger label and the text under it.
+    private const double LabelAir = 4;
 
     public static void Apply(Border box, Label caption, bool isFocused, bool hasError, bool isReadOnly)
     {
@@ -16,6 +20,17 @@ internal static class FieldOutline
         caption.SetThemeColor(Label.TextColorProperty, emphasis);
         // The focused outline is one unit wider. The padding gives that unit back, so focusing never moves the text.
         box.StrokeThickness = isFocused ? 2 : 1;
-        box.Padding = new Thickness(SidePadding - box.StrokeThickness + 1, 0);
+        var side = SidePadding - box.StrokeThickness + 1;
+        box.Padding = new Thickness(side, box.Padding.Top, side, 0);
+    }
+
+    /// <summary>With a larger system font the label is taller. The box moves down by half of it, and what is in the box
+    /// moves down by what the label takes of it, so the label never covers what is typed.</summary>
+    public static void PlaceBox(Border box, Label caption)
+    {
+        var half = caption.Height / 2;
+        box.Margin = new Thickness(0, Math.Max(LabelOverhang, half), 0, 0);
+        box.Padding = new Thickness(box.Padding.Left, half > LabelOverhang ? half - LabelOverhang + LabelAir : 0,
+            box.Padding.Right, 0);
     }
 }
