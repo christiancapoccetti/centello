@@ -407,7 +407,7 @@ Tapping a widget opens the app on the matching screen; an editor opened from a w
 ### Entry panel (signature)
 The sheet opened from the Aggiungi microphone or camera, or from the "Spesa a voce" and "Spesa da foto" shortcuts: translucent, over the launcher, on the scrim. `PanelActivity` hosts voice (`Dictation`) or photo (`PhotoReading`), and `PanelFaces.Of` holds every word it shows.
 - **Voice:** starts listening at once. A second tap on the microphone sends; so does reaching 20 seconds. "Annulla", a tap outside, Back or leaving the panel cancels. Oggi's hold-to-talk still refuses a recording that reaches 20 seconds.
-- **Photo:** the camera opens at once (the gallery below Android 13), after the same camera consent as Oggi. The panel stays alive behind the camera, then shows the reading face ("Lettura della foto", a progress bar and the privacy line) over the launcher. "Annulla" or backing out of the camera closes it. If Android ended the process behind the camera, the sheet says "La foto non è arrivata a Centesimo. Riprova.".
+- **Photo:** the camera opens at once (the gallery below Android 13), after the same camera consent as Oggi. The panel stays alive behind the camera, then shows the reading face ("Lettura della foto", a progress bar and the privacy line) over the launcher. "Annulla" or backing out of the camera closes it. If Android ended the process behind the camera, the sheet says "La foto non è arrivata a Quattrino. Riprova.".
 - **No key:** the sheet gives the missing-key sentence of its source and "Apri impostazioni".
 
 The draft then opens in the expense editor, as it does from Oggi.
@@ -430,7 +430,7 @@ Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action th
 - **Surface card:** ground fill, 1dp hairline stroke, 16dp radius, 18dp padding: errors and notes.
 - **Info card:** raised fill, no stroke, 12dp radius, 16dp padding.
 - **Menu surface:** raised fill, outline stroke, 4dp radius, 8dp vertical padding, 220dp minimum width.
-- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim. The reading sheet is shared by voice, photo and PDF ("Inserimento vocale", "Lettura della foto", "Lettura del PDF"): title, a progress bar and one privacy line (for example "Foto inviata a OpenAI, Centesimo non la salva").
+- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim. The reading sheet is shared by voice, photo and PDF ("Inserimento vocale", "Lettura della foto", "Lettura del PDF"): title, a progress bar and one privacy line (for example "Foto inviata a OpenAI, Quattrino non la salva").
 
 ### Inputs / Fields
 - **Style:** outlined box, 4dp radius, 56dp, transparent fill, 16sp text, 16dp sides; the SemiBold 12sp label sits on the top edge with a ground-coloured backing.

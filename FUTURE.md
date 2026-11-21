@@ -15,7 +15,7 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 ### Logos, name and copyright
 
 - Confirm that the mark, the launcher icon and the Play Store icon in `docs/brand/` are original work owned by the author.
-- Search the name `Centesimo` on the Play Store and in the trademark registers (UIBM, EUIPO) for conflicting finance apps or marks.
+- The app is shown as `Quattrino`, a working name: `Centesimo` clashes with the UIBM marks "Il Centesimo" of CDS SPA (classes 16, 35-45) and their "il Centesimo" app on Google Play. Before a public release, settle the final name and a logo that fits it (the current mark is a "C"), then search the name on the Play Store and in the trademark registers (UIBM, EUIPO; classes 9, 36, 42).
 - Re-check `THIRD_PARTY_NOTICES.md` against the bundled packages (`project.assets.json`) whenever dependencies or the .NET SDK change. Done on 2026-11-20: every bundled library is listed, the .NET Foundation is named as the holder of the .NET components, and the full MIT, BSD 2-Clause, Apache 2.0 and OFL texts plus the .NET runtime notices ship with the app.
 - Tag the commit of every published build on GitHub, so every build points at the exact code it was made from.
 

@@ -1,5 +1,7 @@
 # Centesimo
 
+The app is shown to users as **Quattrino**, a working name; Centesimo remains the project and technical name (repository, namespaces, package `it.christiancapoccetti.centesimo`).
+
 Centesimo is a simple Android expense tracker built with .NET MAUI, designed and developed by Christian Capoccetti. The product research, the design, the architecture and the structure of the code are the author's own work; AI coding assistants were used as tools to write and review the implementation under the author's direction. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice, photo and PDF entry sends what you speak, photograph or pick to OpenAI (see below).
 
 ## Features
@@ -95,7 +97,7 @@ Copyright © 2026 Christian Capoccetti.
 
 Centesimo is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE): you may read, use, change and share the code for noncommercial purposes only. Commercial use is not permitted.
 
-The name "Centesimo" and the logo in `docs/brand/` are not licensed.
+The names "Centesimo" and "Quattrino" and the logo in `docs/brand/` are not licensed.
 
 Versions published up to the commit that adopted this license remain available under the GNU General Public License v3.0.
 
