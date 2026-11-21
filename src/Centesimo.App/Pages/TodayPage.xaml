@@ -8,9 +8,9 @@
              x:Class="Centesimo.App.Pages.TodayPage"
              Title="Oggi"
              SafeAreaEdges="All">
-    <Grid RowDefinitions="56,*,Auto">
+    <Grid RowDefinitions="Auto,*,Auto">
 
-        <c:PeriodSwitcher Margin="24,0,8,0" VerticalOptions="Center" IsPageTitle="True" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
+        <c:PeriodSwitcher Margin="24,0,8,0" MinimumHeightRequest="56" VerticalOptions="Center" IsPageTitle="True" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="24,0,24,24">
@@ -25,8 +25,8 @@
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="{Binding Overview.Total}" />
-                                <Span Text=" " FontSize="18" />
-                                <Span Text="€" FontSize="38" />
+                                <Span Text="&#160;" FontSize="18" FontAutoScalingEnabled="False" />
+                                <Span Text="€" FontSize="38" FontAutoScalingEnabled="False" />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
@@ -39,14 +39,15 @@
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
-                    <Border Margin="0,6,0,0" Padding="6,0,10,0" HeightRequest="26" HorizontalOptions="Start" StrokeThickness="0" BackgroundColor="{t:Theme SurfaceRaised}" IsVisible="{Binding Overview.HasComparison}" SemanticProperties.Description="{Binding Overview.Comparison.Description}">
+                    <Border Margin="0,6,0,0" Padding="6,0,10,0" MinimumHeightRequest="26" HorizontalOptions="Start" StrokeThickness="0" BackgroundColor="{t:Theme SurfaceRaised}" IsVisible="{Binding Overview.HasComparison}" SemanticProperties.Description="{Binding Overview.Comparison.Description}">
                         <Border.Triggers>
                             <DataTrigger TargetType="Border" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
                                 <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
                             </DataTrigger>
                         </Border.Triggers>
-                        <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
-                            <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.East}">
+                        <!-- A long comparison gives way with an ellipsis and the arrow keeps its place beside it. -->
+                        <FlexLayout Direction="Row" AlignItems="Center">
+                            <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.East}" FlexLayout.Shrink="0">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
                                         <Setter Property="Text" Value="{x:Static app:MaterialSymbols.SouthEast}" />
@@ -57,14 +58,14 @@
                                     </DataTrigger>
                                 </Label.Triggers>
                             </Label>
-                            <Label Text="{Binding Overview.Comparison.Text}" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center">
+                            <Label Text="{Binding Overview.Comparison.Text}" Style="{StaticResource LabelLarge}" Padding="4,0,0,0" LineBreakMode="TailTruncation" MaxLines="1" FlexLayout.Shrink="1" VerticalTextAlignment="Center">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
                                         <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
                                     </DataTrigger>
                                 </Label.Triggers>
                             </Label>
-                        </HorizontalStackLayout>
+                        </FlexLayout>
                     </Border>
 
                     <c:CategoryLineView Margin="0,24,0,0" HeightRequest="14" Segments="{Binding Overview.Categories.Segments}" IsVisible="{Binding Overview.Categories.HasSegments}" SemanticProperties.Description="{Binding Overview.Categories.Description}" />
@@ -150,10 +151,16 @@
                 </DataTrigger>
             </Border.Triggers>
             <Grid ColumnDefinitions="*,1,64,1,64">
-                <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
-                    <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Add}" TextColor="{t:Theme Accent}" />
-                    <Label Text="Aggiungi spesa" FontFamily="{x:Static t:Fonts.Bold}" FontSize="17" VerticalTextAlignment="Center" AutomationProperties.IsInAccessibleTree="False" />
-                </HorizontalStackLayout>
+                <!-- The plus is a span of the words, so with a large font they wrap together inside what the two icon
+                     segments leave, and never reach them. -->
+                <Label Margin="8,0" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontFamily="{x:Static t:Fonts.Bold}" FontSize="17" AutomationProperties.IsInAccessibleTree="False">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="{x:Static app:MaterialSymbols.Add}" FontFamily="{x:Static t:Fonts.Icons}" FontSize="24" FontAutoScalingEnabled="False" TextColor="{t:Theme Accent}" />
+                            <Span Text="&#160;&#160;Aggiungi spesa" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
                 <Button BackgroundColor="Transparent" Text="" Clicked="OnAddExpenseClicked" SemanticProperties.Description="Aggiungi spesa" />
                 <BoxView Grid.Column="1" Color="{t:Theme Outline}" />
                 <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsCaptureAvailable}" Pressed="OnSpeechPressed" Released="OnSpeechReleased" SemanticProperties.Description="Tieni premuto per dettare" />
