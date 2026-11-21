@@ -136,23 +136,4 @@ public sealed class RecurringPaymentAutomation_should_expected_behavior
                 await _release.Task;
         }
     }
-
-    private sealed class FakeServiceProvider(params object[] services) : IServiceProvider
-    {
-        public object? GetService(Type serviceType) => services.FirstOrDefault(serviceType.IsInstanceOfType);
-    }
-
-    private sealed class FakeScopeFactory(IServiceProvider provider) : IServiceScopeFactory
-    {
-        public IServiceScope CreateScope() => new Scope(provider);
-
-        private sealed class Scope(IServiceProvider provider) : IServiceScope
-        {
-            public IServiceProvider ServiceProvider => provider;
-
-            public void Dispose()
-            {
-            }
-        }
-    }
 }

@@ -1,8 +1,19 @@
+using Centesimo.Application;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centesimo.App;
 
 public static class RecapNoticeServices
 {
-    public static IServiceCollection AddRecapNotices(this IServiceCollection services) => services;
+    public static IServiceCollection AddRecapNotices(this IServiceCollection services)
+    {
+        services.AddSingleton<IRecapNoticeSettings, PreferencesRecapNoticeSettings>();
+        services.AddSingleton<RecapNoticeAutomation>();
+#if ANDROID
+        services.AddSingleton<IRecapNoticeBoard, AndroidRecapNoticeBoard>();
+#else
+        services.AddSingleton<IRecapNoticeBoard, NoOpRecapNoticeBoard>();
+#endif
+        return services;
+    }
 }

@@ -33,6 +33,17 @@ public partial class SettingsPage : ContentPage
     private async void OnLicensesTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(LicensesPage));
 
+    private async void OnRecapNoticeToggled(object? sender, ToggledEventArgs e)
+    {
+        if (_viewModel.RecapNoticeBlocked)
+        {
+            AppInfo.ShowSettingsUI();
+            return;
+        }
+
+        await _viewModel.SetRecapNotice(e.Value);
+    }
+
     private void OnReplaceClicked(object? sender, EventArgs e) => _viewModel.StartReplacing();
 
     private void OnCancelReplaceClicked(object? sender, EventArgs e) => _viewModel.StopReplacing();
