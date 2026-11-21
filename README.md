@@ -93,5 +93,10 @@ Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft
 
 Copyright © 2026 Christian Capoccetti.
 
-Centesimo is licensed under the [GNU General Public License v3.0](LICENSE).
-The corresponding source code for distributed APKs is available as described in [SOURCE_OFFER.md](SOURCE_OFFER.md).
+Centesimo is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE): you may read, use, change and share the code for noncommercial purposes only. Commercial use is not permitted.
+
+The name "Centesimo" and the logo in `docs/brand/` are not licensed.
+
+Versions published up to the commit that adopted this license remain available under the GNU General Public License v3.0.
+
+Contributions are accepted only under the terms in [CONTRIBUTING.md](CONTRIBUTING.md).
