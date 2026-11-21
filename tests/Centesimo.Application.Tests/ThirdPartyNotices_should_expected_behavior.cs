@@ -141,4 +141,14 @@ public sealed class ThirdPartyNotices_should_expected_behavior
 
         Assert.Equal("GNU GENERAL PUBLIC LICENSE Version 3\n\nThe licenses for most software are designed to take away.", LicenseText.Reflow(text));
     }
+
+    [Fact]
+    public void Show_a_markdown_license_as_plain_paragraphs()
+    {
+        var markdown = "Required Notice: Copyright A (https://a.example)\r\n\r\n# Terms 1.0\r\n\r\n<https://terms.example/1.0>\r\n\r\n## Notices\r\n\r\nSee [Distribution](#distribution) and lines beginning with `Notice:`.\r\n\r\n> Notice: Copyright B\r\n\r\n***As is, without warranty.*** The **licensor** is you.\r\n";
+
+        Assert.Equal(
+            "Required Notice: Copyright A (https://a.example)\n\nTerms 1.0\n\nhttps://terms.example/1.0\n\nNotices\n\nSee Distribution and lines beginning with Notice:.\n\nNotice: Copyright B\n\nAs is, without warranty. The licensor is you.",
+            LicenseText.FromMarkdown(markdown));
+    }
 }
