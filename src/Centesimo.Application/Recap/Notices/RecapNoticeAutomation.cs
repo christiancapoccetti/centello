@@ -19,7 +19,7 @@ public sealed class RecapNoticeAutomation(IServiceScopeFactory scopeFactory, IRe
     public static string Describe(RecapNoticeState state, bool canPost)
     {
         if (state == RecapNoticeState.On && !canPost)
-            return "Consenti le notifiche a Centesimo nelle impostazioni di Android";
+            return "Consenti le notifiche a Quattrino nelle impostazioni di Android";
 
         return IsEnabled(state, canPost) ? "Il 1° del mese, alle 9" : "Spento";
     }

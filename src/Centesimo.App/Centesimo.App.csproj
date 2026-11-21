@@ -7,7 +7,7 @@
     <SingleProject>true</SingleProject>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <ApplicationTitle>Centesimo</ApplicationTitle>
+    <ApplicationTitle>Quattrino</ApplicationTitle>
     <ApplicationId>it.christiancapoccetti.centesimo</ApplicationId>
     <ApplicationDisplayVersion>1.1</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>

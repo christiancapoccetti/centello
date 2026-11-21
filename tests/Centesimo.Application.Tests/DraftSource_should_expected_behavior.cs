@@ -37,7 +37,7 @@ public sealed class DraftSource_should_expected_behavior
         Assert.Equal(MaterialSymbols.PhotoCamera, DraftSource.Photo.Glyph);
         Assert.Equal("Lettura della foto", DraftSource.Photo.SheetTitle);
         Assert.Equal("Cerco importo, data e negozio…", DraftSource.Photo.ReadingLine);
-        Assert.Equal("Foto inviata a OpenAI, Centesimo non la salva", DraftSource.Photo.PrivacyNote);
+        Assert.Equal("Foto inviata a OpenAI, Quattrino non la salva", DraftSource.Photo.PrivacyNote);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class DraftSource_should_expected_behavior
         Assert.Equal(MaterialSymbols.PictureAsPdf, DraftSource.Pdf.Glyph);
         Assert.Equal("Lettura del PDF", DraftSource.Pdf.SheetTitle);
         Assert.Equal(DraftSource.Photo.ReadingLine, DraftSource.Pdf.ReadingLine);
-        Assert.Equal("PDF inviato a OpenAI, Centesimo non lo salva", DraftSource.Pdf.PrivacyNote);
+        Assert.Equal("PDF inviato a OpenAI, Quattrino non lo salva", DraftSource.Pdf.PrivacyNote);
     }
 
     [Fact]
