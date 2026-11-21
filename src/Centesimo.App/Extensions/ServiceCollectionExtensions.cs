@@ -9,14 +9,17 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddUi(this IServiceCollection services)
     {
+        // Android can recreate MainActivity while the process lives, and every window gets its own Shell. The Shell and
+        // the tab pages hold the renderers of the activity that showed them, so they are never shared between windows.
+        // The view models are, so the state and the data they hold outlive the activity.
         services.AddSingleton<TodayViewModel>();
-        services.AddSingleton<TodayPage>();
+        services.AddTransient<TodayPage>();
         services.AddSingleton<InsightsViewModel>();
-        services.AddSingleton<InsightsPage>();
+        services.AddTransient<InsightsPage>();
         services.AddSingleton<CategoriesViewModel>();
-        services.AddSingleton<CategoriesPage>();
+        services.AddTransient<CategoriesPage>();
         services.AddSingleton<SettingsViewModel>();
-        services.AddSingleton<SettingsPage>();
+        services.AddTransient<SettingsPage>();
         services.AddTransient<LicensesViewModel>();
         services.AddTransient<LicensesPage>();
         services.AddTransient<BackupViewModel>();
@@ -45,7 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISnackbar, NoSnackbar>();
         services.AddSingleton<IDownloads, NoDownloads>();
 #endif
-        services.AddSingleton<AppShell>();
+        services.AddTransient<AppShell>();
         services.AddSingleton<Func<AppShell>>(provider =>
             () => provider.GetRequiredService<AppShell>());
         services.AddTransient<CategoryEditorViewModel>();
