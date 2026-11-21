@@ -54,8 +54,8 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 ## Home screen widgets
 
-- Quick-entry widget: add an expense by hand or by voice without opening the app first.
-- Summary widget: month total, remaining budget and the comparison with the previous period.
+- Optional hiding of amounts in the widgets.
+- Align Oggi's microphone consent with the panel's dialog.
 
 ## App shortcuts
 

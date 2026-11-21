@@ -1,6 +1,7 @@
 using Android.Views;
 using Android.Widget;
 using Centesimo.App.Theming;
+using Centesimo.Application;
 using Google.Android.Material.BottomNavigation;
 using Google.Android.Material.Snackbar;
 using Microsoft.Maui.Platform;

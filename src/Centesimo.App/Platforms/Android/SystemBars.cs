@@ -2,6 +2,7 @@ using AndroidX.AppCompat.App;
 using AndroidX.Core.View;
 using AndroidX.Fragment.App;
 using Centesimo.App.Theming;
+using Centesimo.Application;
 using Microsoft.Maui.Platform;
 
 namespace Centesimo.App;

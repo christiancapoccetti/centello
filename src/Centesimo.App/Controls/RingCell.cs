@@ -1,4 +1,5 @@
 using Centesimo.App.Theming;
+using Centesimo.Application;
 using Microsoft.Maui.Controls.Shapes;
 
 namespace Centesimo.App.Controls;

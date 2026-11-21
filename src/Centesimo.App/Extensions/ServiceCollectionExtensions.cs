@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LicensesViewModel>();
         services.AddTransient<LicensesPage>();
         services.AddSingleton<RecurringPaymentAutomation>();
+        services.AddSingleton<AppEntryRouter>();
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
         services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
@@ -29,6 +30,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
+        services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
+        services.AddSingleton<HomeScreenWidgets>();
+        services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreenWidgets>());
 #else
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();

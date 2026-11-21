@@ -1,4 +1,5 @@
 ﻿using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Centesimo.Application;
@@ -14,12 +15,21 @@ public class MainActivity : MauiAppCompatActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        if (savedInstanceState is null)
+            Receive(Intent);
+
         ApplySystemBars();
         if (App is not { } app)
             return;
 
         app.RequestedThemeChanged += OnRequestedThemeChanged;
         app.ModalPushed += OnModalPushed;
+    }
+
+    protected override void OnNewIntent(Intent? intent)
+    {
+        base.OnNewIntent(intent);
+        Receive(intent);
     }
 
     protected override void OnDestroy()
@@ -31,6 +41,18 @@ public class MainActivity : MauiAppCompatActivity
         }
 
         base.OnDestroy();
+    }
+
+    // A launch from Recents carries the first intent again: its entry was handled then.
+    private static void Receive(Intent? intent)
+    {
+        if (intent is null || intent.Flags.HasFlag(ActivityFlags.LaunchedFromHistory))
+            return;
+
+        if (AppEntry.Parse(intent.DataString) is not { } entry || IPlatformApplication.Current is not { } application)
+            return;
+
+        application.Services.GetRequiredService<AppEntryRouter>().Receive(entry);
     }
 
     private void OnRequestedThemeChanged(object? sender, AppThemeChangedEventArgs e) => ApplySystemBars();

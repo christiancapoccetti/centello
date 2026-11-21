@@ -5,14 +5,20 @@ using Centesimo.Domain;
 
 namespace Centesimo.App.Pages;
 
-public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
+public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHoldsUnsavedInput
 {
     private const string DraftParameter = "draft";
 
     private readonly ExpenseEditorViewModel _viewModel;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
+    private const string ExpenseIdKey = "expenseId";
+    private const string CategoryIdKey = "categoryId";
+    private const string FromKey = "from";
+    private const string Outside = "outside";
     private Guid? _expenseId;
+    private Guid? _categoryId;
+    private bool _fromOutside;
     private ExpenseDraft? _draft;
     private bool _isLoaded;
 
@@ -27,21 +33,54 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
         viewModel.Rejected += OnRejected;
     }
 
+    /// <summary>The route that opens a stored expense, or the empty form of a new one, optionally with a category
+    /// already chosen. An editor opened from outside the app sends the person back to the home screen when it
+    /// closes.</summary>
+    public static string Route(Guid? expenseId = null, Guid? categoryId = null, bool fromOutside = false)
+    {
+        List<string> query = [];
+        if (expenseId.HasValue)
+            query.Add($"{ExpenseIdKey}={expenseId}");
+
+        if (categoryId.HasValue)
+            query.Add($"{CategoryIdKey}={categoryId}");
+
+        if (fromOutside)
+            query.Add($"{FromKey}={Outside}");
+
+        return query.Count == 0
+            ? nameof(ExpenseEditorPage)
+            : $"{nameof(ExpenseEditorPage)}?{string.Join('&', query)}";
+    }
+
     /// <summary>Opens a new expense filled from a draft, on the home tab whichever tab is in front. The draft travels
     /// with this one navigation only, so it can never reach a later "Aggiungi spesa".</summary>
-    public static Task OpenDraft(ExpenseDraft draft) =>
-        Shell.Current.GoToAsync(
-            $"//{nameof(TodayPage)}/{nameof(ExpenseEditorPage)}",
-            new ShellNavigationQueryParameters { [DraftParameter] = draft });
+    public static Task OpenDraft(ExpenseDraft draft, bool fromOutside = false)
+    {
+        var parameters = new ShellNavigationQueryParameters { [DraftParameter] = draft };
+        if (fromOutside)
+            parameters[FromKey] = Outside;
+
+        return Shell.Current.GoToAsync($"//{nameof(TodayPage)}/{nameof(ExpenseEditorPage)}", parameters);
+    }
+
+    public bool HasUnsavedInput => _viewModel.IsDirty;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        _expenseId = query.TryGetValue("expenseId", out var value)
-            && Guid.TryParse(value?.ToString(), out var expenseId)
-                ? expenseId
-                : null;
+        if (_isLoaded)
+            return;
+
+        _expenseId = GuidOf(query, ExpenseIdKey);
+        _categoryId = GuidOf(query, CategoryIdKey);
+        _fromOutside = query.TryGetValue(FromKey, out var from) && from?.ToString() == Outside;
         _draft = query.TryGetValue(DraftParameter, out var draft) ? draft as ExpenseDraft : null;
     }
+
+    private static Guid? GuidOf(IDictionary<string, object> query, string key) =>
+        query.TryGetValue(key, out var value) && Guid.TryParse(value?.ToString(), out var id)
+            ? id
+            : null;
 
     // The page appears again when the category editor closes or the app returns to the front. Loading again would
     // throw away what was typed, so later appearances only refresh the categories on offer.
@@ -55,7 +94,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
         }
 
         _isLoaded = true;
-        await (_draft is { } draft ? _viewModel.Load(draft) : _viewModel.Load(_expenseId));
+        await (_draft is { } draft ? _viewModel.Load(draft) : _viewModel.Load(_expenseId, _categoryId));
         // A new expense starts from its amount. A stored expense or a draft from the voice or a photo is there to be read first.
         if (!_viewModel.IsEditMode && _viewModel.Amount.IsEmpty())
             AmountInput.FocusInput();
@@ -81,7 +120,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
         if (_viewModel.IsDirty && !await _confirmation.AskToDiscard())
             return;
 
-        await Shell.Current.GoToAsync("..");
+        await Pop();
     }
 
     private async void OnCategoryTapped(object? sender, object category)
@@ -122,7 +161,16 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable
 
     private async Task Leave(string message)
     {
+        await Pop();
+        if (!_fromOutside)
+            _snackbar.Show(message);
+    }
+
+    // From outside nobody would see the snackbar: the person goes back to where they were.
+    private async Task Pop()
+    {
         await Shell.Current.GoToAsync("..");
-        _snackbar.Show(message);
+        if (_fromOutside)
+            BackToLauncher.Go();
     }
 }

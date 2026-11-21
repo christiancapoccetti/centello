@@ -14,8 +14,10 @@ public static class ServiceCollectionExtensions
         if (databasePath.IsEmpty())
             throw new ArgumentException("Database path is required.", nameof(databasePath));
 
-        services.AddDbContext<CentesimoDbContext>(options =>
-            options.UseSqlite($"Data Source={databasePath}"));
+        services.AddSingleton(provider => new StoreChangeInterceptor(provider.GetService<IStoreChangeListener>()));
+        services.AddDbContext<CentesimoDbContext>((provider, options) => options
+            .UseSqlite($"Data Source={databasePath}")
+            .AddInterceptors(provider.GetRequiredService<StoreChangeInterceptor>()));
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IExpenseRepository, ExpenseRepository>();

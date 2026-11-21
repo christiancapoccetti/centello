@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_add_description">Aggiungi spesa</string>
+    <string name="widget_dictate_description">Inserimento vocale</string>
+    <string name="widget_other_category_description">Altra categoria, aggiungi spesa</string>
+</resources>

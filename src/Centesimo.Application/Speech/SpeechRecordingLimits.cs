@@ -10,6 +10,6 @@ public static class SpeechRecordingLimits
 
     public static bool IsTap(TimeSpan held) => held < MinimumHold;
 
-    public static bool WouldExceedMaximum(int currentBytes, int additionalBytes) =>
-        currentBytes < 0 || additionalBytes < 0 || currentBytes > MaximumAudioBytes - additionalBytes;
+    public static int BytesThatFit(int currentBytes, int additionalBytes) =>
+        Math.Clamp(MaximumAudioBytes - currentBytes, 0, additionalBytes);
 }
