@@ -10,14 +10,14 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 ### Business model
 
 - Define the business model (free, donations, paid app, or optional paid features). It decides whether a Play payments profile and Google Play Billing are needed, and what the store listing promises.
-- GPL-3.0 allows selling the app, but the source of every published build must stay available (see `SOURCE_OFFER.md`): factor that into any paid option.
+- PolyForm Noncommercial 1.0.0 bars others from commercial use, not the author, who can still sell the app. Contributions come under `CONTRIBUTING.md`, so they can ship in a paid version too. Versions published before the change stay under GPL-3.0, which allows their commercial reuse.
 
 ### Logos, name and copyright
 
 - Confirm that the mark, the launcher icon and the Play Store icon in `docs/brand/` are original work owned by the author.
 - Search the name `Centesimo` on the Play Store and in the trademark registers (UIBM, EUIPO) for conflicting finance apps or marks.
 - Re-check `THIRD_PARTY_NOTICES.md` against the bundled packages (`project.assets.json`) whenever dependencies or the .NET SDK change. Done on 2026-11-20: every bundled library is listed, the .NET Foundation is named as the holder of the .NET components, and the full MIT, BSD 2-Clause, Apache 2.0 and OFL texts plus the .NET runtime notices ship with the app.
-- Tag the commit of every published build on GitHub, so the source offer points at the exact code.
+- Tag the commit of every published build on GitHub, so every build points at the exact code it was made from.
 
 ### Google Play requirements
 

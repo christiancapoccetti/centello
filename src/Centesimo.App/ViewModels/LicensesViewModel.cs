@@ -5,7 +5,7 @@ namespace Centesimo.App.ViewModels;
 
 public sealed class LicensesViewModel : ObservableObject
 {
-    private const string LicenseAsset = "GPL-3.0.txt";
+    private const string LicenseAsset = "PolyForm-Noncommercial-1.0.0.md";
     private const string NoticesAsset = "THIRD_PARTY_NOTICES.txt";
     // Copied verbatim from the .NET runtime packs: they cover what those runtimes compile in, as zlib-ng or lz4.
     private static readonly (string Asset, string Name)[] RuntimeNotices =
@@ -14,12 +14,12 @@ public sealed class LicensesViewModel : ObservableObject
         ("DOTNET_ANDROID_THIRD_PARTY_NOTICES.txt", "Componenti inclusi in .NET for Android"),
     ];
 
-    private string _gplText = "";
+    private string _licenseTerms = "";
     private IReadOnlyList<NoticeComponent> _components = [];
     private string _componentsMessage = "";
     private bool _isLoaded;
 
-    public string GplText { get => _gplText; private set => SetProperty(ref _gplText, value); }
+    public string LicenseTerms { get => _licenseTerms; private set => SetProperty(ref _licenseTerms, value); }
     public IReadOnlyList<NoticeComponent> Components { get => _components; private set => SetProperty(ref _components, value); }
     /// <summary>Why the list is empty, or nothing while it is not.</summary>
     public string ComponentsMessage
@@ -45,7 +45,7 @@ public sealed class LicensesViewModel : ObservableObject
         await Task.WhenAll([licenseRead, noticesRead, .. runtimeReads]);
 
         var license = licenseRead.Result;
-        GplText = license is null ? "Non è stato possibile caricare il testo della licenza." : LicenseText.Reflow(license);
+        LicenseTerms = license is null ? "Non è stato possibile caricare il testo della licenza." : LicenseText.FromMarkdown(license);
         var notices = noticesRead.Result is null ? [] : ThirdPartyNotices.Parse(noticesRead.Result);
         if (notices.Count == 0)
         {

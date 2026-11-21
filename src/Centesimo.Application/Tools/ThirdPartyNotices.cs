@@ -102,4 +102,15 @@ public static class LicenseText
         Regex
             .Split(text.Replace("\r\n", "\n").Trim(), @"\n\s*\n")
             .Select(paragraph => Regex.Replace(paragraph, @"\s+", " ").Trim()));
+
+    /// <summary>A license written in Markdown, as PolyForm publishes its terms, shown as plain paragraphs: headings,
+    /// quotes, emphasis, code and links keep their words and lose their marks.</summary>
+    public static string FromMarkdown(string markdown)
+    {
+        var text = Regex.Replace(markdown, @"^[ \t]*(#+|>)[ \t]?", "", RegexOptions.Multiline);
+        text = Regex.Replace(text, @"\[([^\]]+)\]\([^)]*\)", "$1");
+        text = Regex.Replace(text, @"<(https?://[^>]+)>", "$1");
+        text = Regex.Replace(text, @"\*{1,3}([^*\n]+?)\*{1,3}", "$1");
+        return Reflow(text.Replace("`", ""));
+    }
 }
