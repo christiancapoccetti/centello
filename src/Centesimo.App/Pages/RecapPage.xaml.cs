@@ -13,14 +13,22 @@ public partial class RecapPage : ContentPage, IQueryAttributable
 {
     private readonly RecapViewModel _viewModel;
     private readonly IStoryBars _bars;
+    private readonly StoryTouches _touches;
+    private readonly StoryPlayer _player;
+    private readonly RecapPress _press = new();
+    private Window? _window;
     private bool _isInitialized;
     private double _builtWidth;
 
-    public RecapPage(RecapViewModel viewModel, IStoryBars bars)
+    public RecapPage(RecapViewModel viewModel, IStoryBars bars, StoryTouches touches, IScreenReader screenReader)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _bars = bars;
+        _touches = touches;
+        _player = new StoryPlayer(Dispatcher.CreateTimer(), screenReader);
+        _player.CardChanged += Show;
+        _player.Progressed += Progress.Fill;
         BindingContext = viewModel;
         SizeChanged += (_, _) => Rebuild();
     }
@@ -49,19 +57,63 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         if (Microsoft.Maui.Controls.Application.Current is { } app)
             app.RequestedThemeChanged += OnThemeChanged;
 
+        _touches.Pressed += OnPressed;
+        _touches.Released += OnReleased;
+        if (Window is { } window)
+        {
+            _window = window;
+            window.Activated += OnWindowActivated;
+            window.Deactivated += OnWindowDeactivated;
+        }
+
+        _player.IsActive = true;
+        _player.IsVisible = true;
         await _viewModel.Load();
         Show();
+        if (_viewModel.Story is { } story)
+            _player.Play(story);
     }
 
-    // The bars belong to the card in front: another page over the story gives them back.
+    // The bars belong to the card in front: another page over the story gives them back. The clock waits with them.
     protected override void OnDisappearing()
     {
         if (Microsoft.Maui.Controls.Application.Current is { } app)
             app.RequestedThemeChanged -= OnThemeChanged;
 
+        _touches.Pressed -= OnPressed;
+        _touches.Released -= OnReleased;
+        if (_window is { } window)
+        {
+            window.Activated -= OnWindowActivated;
+            window.Deactivated -= OnWindowDeactivated;
+            _window = null;
+        }
+
+        _press.Up(Now);
+        _player.IsHeld = false;
+        _player.IsVisible = false;
         _bars.Release();
         base.OnDisappearing();
     }
+
+    private static TimeSpan Now => TimeSpan.FromMilliseconds(Environment.TickCount64);
+
+    // The story stops the moment a finger lands and goes on when it lifts.
+    private void OnPressed()
+    {
+        _press.Down(Now);
+        _player.IsHeld = true;
+    }
+
+    private void OnReleased()
+    {
+        _press.Up(Now);
+        _player.IsHeld = false;
+    }
+
+    private void OnWindowActivated(object? sender, EventArgs e) => _player.IsActive = true;
+
+    private void OnWindowDeactivated(object? sender, EventArgs e) => _player.IsActive = false;
 
     private void OnThemeChanged(object? sender, AppThemeChangedEventArgs e) => Show();
 
@@ -80,7 +132,7 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         var card = story.Current;
         var ink = StoryInk.Of(card.Top, IsDark);
         CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, OpenExpense, Exit, Restart));
-        Progress.Show(story.Index, story.Count, ink);
+        Progress.Show(story.Index, story.Count, ink, _player.Fill);
         TitleLabel.TextColor = ink.Ink;
         TitleLabel.FormattedText = TitleOf(story.Deck, ink);
         CloseButton.TextColor = ink.Ink;
@@ -96,20 +148,26 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         return title;
     }
 
+    // A press that lasted was a hold, not a tap: the story only paused.
     private void OnCardTapped(object? sender, TappedEventArgs e)
     {
-        if (e.GetPosition(CardHost) is not { } at)
+        if (_press.WasHold || e.GetPosition(CardHost) is not { } at)
             return;
 
         var moved = at.X < CardHost.Width / 2 ? _viewModel.Previous() : _viewModel.Next();
         if (moved)
             Show();
+        else
+            Progress.Fill(_player.Fill);
+
+        _player.Refresh();
     }
 
     private void Restart()
     {
         _viewModel.Restart();
         Show();
+        _player.Refresh();
     }
 
     private async void Exit(RecapExitTarget target)

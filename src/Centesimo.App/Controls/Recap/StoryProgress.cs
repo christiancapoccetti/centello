@@ -2,13 +2,14 @@ using Centesimo.App.Theming;
 
 namespace Centesimo.App.Controls.Recap;
 
-/// <summary>One segment per card at the top of the story: the cards seen are full, the one on screen is half
-/// full, the rest wait at 28%. It speaks as "Scheda 3 di 11".</summary>
+/// <summary>One segment per card at the top of the story: the cards seen are full, the one on screen fills with the
+/// time spent on it, the rest wait at 28%. It speaks as "Scheda 3 di 11".</summary>
 public sealed class StoryProgress : Grid
 {
     private const double SegmentHeight = 3;
     private const float RestAlpha = 0.28f;
-    private const double NowShare = 0.45;
+
+    private Grid? _share;
 
     public StoryProgress()
     {
@@ -17,10 +18,11 @@ public sealed class StoryProgress : Grid
         InputTransparent = true;
     }
 
-    public void Show(int index, int count, StoryInk ink)
+    public void Show(int index, int count, StoryInk ink, double fill)
     {
         Children.Clear();
         ColumnDefinitions.Clear();
+        _share = null;
         for (var segment = 0; segment < count; segment++)
         {
             ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
@@ -30,17 +32,29 @@ public sealed class StoryProgress : Grid
                 rest.Color = ink.Ink;
 
             if (segment == index)
-                cell.Add(Share(ink));
+                cell.Add(_share = Share(ink));
 
             this.Add(cell, segment, 0);
         }
 
+        Fill(fill);
         SemanticProperties.SetDescription(this, $"Scheda {index + 1} di {count}");
     }
 
-    private static View Share(StoryInk ink) => new Grid
+    /// <summary>How much of the segment on screen is full, from 0 to 1.</summary>
+    public void Fill(double fill)
     {
-        ColumnDefinitions = [new ColumnDefinition(new GridLength(NowShare, GridUnitType.Star)), new ColumnDefinition(new GridLength(1 - NowShare, GridUnitType.Star))],
+        if (_share is null)
+            return;
+
+        var share = Math.Clamp(fill, 0, 1);
+        _share.ColumnDefinitions[0].Width = new GridLength(share, GridUnitType.Star);
+        _share.ColumnDefinitions[1].Width = new GridLength(1 - share, GridUnitType.Star);
+    }
+
+    private static Grid Share(StoryInk ink) => new()
+    {
+        ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)],
         Children = { new BoxView { Color = ink.Ink } }
     };
 }
