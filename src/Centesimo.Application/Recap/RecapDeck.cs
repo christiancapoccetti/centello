@@ -22,6 +22,7 @@ public sealed record RecapDeck
         RecapCard.Total.Of,
         RecapCard.Months.Of,
         RecapCard.RecordDay.Of,
+        RecapCard.Weekday.Of,
         RecapCard.Categories.Of,
         RecapCard.Changes.Of,
         RecapCard.SmallExpenses.Of,
