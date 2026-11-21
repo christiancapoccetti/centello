@@ -1,9 +1,10 @@
 namespace Centesimo.App.Controls;
 
-/// <summary>What touching a settings line does: nothing, run an action here, or open another screen.</summary>
+/// <summary>What touching a settings line does: nothing, run an action here, open another screen, or ask to flip a switch.</summary>
 public enum SettingsRowKind
 {
     Info,
     Action,
-    Navigation
+    Navigation,
+    Toggle
 }
