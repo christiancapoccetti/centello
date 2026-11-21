@@ -4,7 +4,7 @@ namespace Centesimo.Application.Tests;
 
 /// <summary>A small world of categories, tags and expenses behind the repository fakes, and the deck the PUBLIC
 /// <see cref="RecapService"/> builds from it on a fixed day. Each instance is its own world.</summary>
-internal sealed class RecapWorld(DateOnly? today = null)
+internal sealed partial class RecapWorld(DateOnly? today = null)
 {
     public static readonly DateOnly Today = new(2026, 12, 1);
 
@@ -34,10 +34,10 @@ internal sealed class RecapWorld(DateOnly? today = null)
     }
 
     public Expense Spend(Category category, long cents, DateOnly on, Tag? tag = null, string note = "",
-        bool automatic = false)
+        bool automatic = false, Guid? payment = null)
     {
         var expense = new Expense(Guid.NewGuid(), category.CategoryId, new Money(cents), on, tag?.TagId, note,
-            recurringPaymentId: automatic ? Guid.NewGuid() : null);
+            recurringPaymentId: payment ?? (automatic ? Guid.NewGuid() : null));
         Expenses.Items.Add(expense);
         return expense;
     }
@@ -66,6 +66,15 @@ internal sealed class RecapWorld(DateOnly? today = null)
         for (var index = 0; index < count; index++)
             Spend(category, index == 0 ? each + totalCents % count : each,
                 new DateOnly(year, index % lastMonth + 1, index / lastMonth % 28 + 1));
+    }
+
+    /// <summary>One expense of <paramref name="cents"/> carrying <paramref name="tag"/> per use, <paramref name="perMonth"/>
+    /// (January first) of them in each month of the year.</summary>
+    public void SpendWithTag(Category category, Tag tag, long cents, int year, params int[] perMonth)
+    {
+        for (var month = 1; month <= perMonth.Length; month++)
+            for (var use = 0; use < perMonth[month - 1]; use++)
+                Spend(category, cents, new DateOnly(year, month, use % 28 + 1), tag);
     }
 
     public async Task<RecapDeck> Deck(Period period) => (await Service.Get(period)).Value;

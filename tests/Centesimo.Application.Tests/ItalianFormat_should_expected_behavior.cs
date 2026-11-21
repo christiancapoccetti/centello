@@ -65,6 +65,13 @@ public sealed class ItalianFormat_should_expected_behavior
         Assert.Equal(expected, ItalianFormat.Weekday(day));
 
     [Theory]
+    [InlineData(DayOfWeek.Saturday, "sab")]
+    [InlineData(DayOfWeek.Sunday, "dom")]
+    [InlineData(DayOfWeek.Monday, "lun")]
+    public void Abbreviate_a_weekday(DayOfWeek day, string expected) =>
+        Assert.Equal(expected, ItalianFormat.ShortWeekday(day));
+
+    [Theory]
     [InlineData(20, "al 20 novembre")]
     [InlineData(8, "all'8 novembre")]
     [InlineData(11, "all'11 novembre")]

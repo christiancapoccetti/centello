@@ -113,4 +113,45 @@ public sealed class RecapTexts_should_expected_behavior
         Assert.Equal("del 2024", RecapTexts.Against(closed, Period.Year(2024)));
         Assert.Equal("del 2025 al 20 novembre", RecapTexts.Against(soFar, Period.Year(2025)));
     }
+
+    [Fact]
+    public void Should_say_what_a_change_is_measured_against()
+    {
+        var month = RecapSpan.Of(Period.Month(2026, 10), Today)!;
+        var january = RecapSpan.Of(Period.Month(2026, 1), Today)!;
+        var closed = RecapSpan.Of(Period.Year(2025), Today)!;
+        var soFar = RecapSpan.Of(Period.Year(2026), Today)!;
+
+        Assert.Equal("rispetto a settembre", RecapTexts.Versus(month));
+        Assert.Equal("rispetto a dicembre 2025", RecapTexts.Versus(january));
+        Assert.Equal("rispetto al 2024", RecapTexts.Versus(closed));
+        Assert.Equal("rispetto al 2025 fino al 20 novembre", RecapTexts.Versus(soFar));
+    }
+
+    [Theory]
+    [InlineData(4, "il 4")]
+    [InlineData(8, "l'8")]
+    [InlineData(11, "l'11")]
+    [InlineData(18, "il 18")]
+    public void Should_put_the_article_before_a_day(int day, string expected) =>
+        Assert.Equal(expected, RecapTexts.TheDay(day));
+
+    [Theory]
+    [InlineData(31, "Il ")]
+    [InlineData(18, "Il ")]
+    [InlineData(8, "L'")]
+    [InlineData(11, "L'")]
+    [InlineData(80, "L'")]
+    [InlineData(85, "L'")]
+    [InlineData(90, "Il ")]
+    public void Should_put_the_article_before_a_percentage(int percent, string expected) =>
+        Assert.Equal(expected, RecapTexts.ThePercent(percent));
+
+    [Theory]
+    [InlineData("", new string[0])]
+    [InlineData("a", new[] { "a" })]
+    [InlineData("a e b", new[] { "a", "b" })]
+    [InlineData("a, b e c", new[] { "a", "b", "c" })]
+    public void Should_join_a_list_the_italian_way(string expected, string[] items) =>
+        Assert.Equal(expected, RecapTexts.List(items));
 }
