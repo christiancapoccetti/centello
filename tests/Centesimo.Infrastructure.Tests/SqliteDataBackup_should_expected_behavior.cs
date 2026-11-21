@@ -36,12 +36,13 @@ public sealed class SqliteDataBackup_should_expected_behavior : IDisposable
         _database.Dispose();
     }
 
-    private SqliteDataBackup Backup(DateTimeOffset? now = null) =>
+    private SqliteDataBackup Backup(DateTimeOffset? now = null, IStoreChangeListener? listener = null) =>
         new(_database.Context,
             new RecurringPaymentAutomation(_services.GetRequiredService<IServiceScopeFactory>(),
                 new NoOpRecurringPaymentReminder()),
             () => now ?? CreatedAt,
-            Staging);
+            Staging,
+            listener);
 
     private static SqliteConnection Open(string path, string mode = "ReadOnly")
     {
@@ -252,6 +253,39 @@ public sealed class SqliteDataBackup_should_expected_behavior : IDisposable
         Assert.Equal(CreatedAt, preview.CreatedAt);
         Assert.True(restored.IsSuccess);
         Assert.Equal(inBackup.Order(), ExpenseIds().Order());
+    }
+
+    [Fact]
+    public async Task Tell_the_store_listener_once_the_restored_data_is_readable()
+    {
+        var file = await CreateBackupFile();
+        await AddExpenses(2);
+        var listener = new CountingListener(() => Scalar<int>(_database.FilePath, "SELECT COUNT(*) FROM Expenses"));
+        var backup = Backup(listener: listener);
+        var preview = await AnalyseToPreview(file);
+
+        await backup.Restore(preview);
+
+        Assert.Equal([2], listener.ExpensesSeen);
+    }
+
+    [Fact]
+    public async Task Stay_silent_when_the_restore_is_refused()
+    {
+        var file = await CreateBackupFile();
+        var listener = new CountingListener(() => 0);
+        var preview = (await AnalyseToPreview(file)) with { StagedPath = file };
+
+        await Backup(listener: listener).Restore(preview);
+
+        Assert.Empty(listener.ExpensesSeen);
+    }
+
+    private sealed class CountingListener(Func<int> countExpenses) : IStoreChangeListener
+    {
+        public List<int> ExpensesSeen { get; } = [];
+
+        public void StoreChanged() => ExpensesSeen.Add(countExpenses());
     }
 
     [Fact]

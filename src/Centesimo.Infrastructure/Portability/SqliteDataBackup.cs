@@ -12,7 +12,8 @@ namespace Centesimo.Infrastructure;
 /// it to the current schema, drops the mark and copies it into the live file with SQLite's online backup, so open
 /// connections stay valid and a crash leaves the old data.</summary>
 public sealed class SqliteDataBackup(CentesimoDbContext context, RecurringPaymentAutomation automation,
-    Func<DateTimeOffset>? now = null, string stagingDirectory = "") : IDataBackup
+    Func<DateTimeOffset>? now = null, string stagingDirectory = "", IStoreChangeListener? listener = null)
+    : IDataBackup
 {
     private const string BackupContentType = "application/octet-stream";
     private const string MarkTable = "CentesimoBackup";
@@ -196,6 +197,8 @@ public sealed class SqliteDataBackup(CentesimoDbContext context, RecurringPaymen
             return Result.Failure(PortabilityErrors.RestoreFailed);
         }
 
+        // The copy bypasses EF, so the store change interceptor never sees it.
+        listener?.StoreChanged();
         DeleteStaged(stagedPath);
         return Result.Success();
     }
