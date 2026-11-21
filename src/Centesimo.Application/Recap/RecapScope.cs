@@ -48,22 +48,11 @@ internal sealed class RecapScope
             SameMonthLastYear = isMonth ? SpentIn(expenses, Period.Month(period.Start.Year - 1, period.Start.Month)) : 0,
             Variable = variable,
             Catalog = catalog,
-            TagUses = TagUsesOf(variable, catalog)
+            TagUses = TagUse.Of(variable, catalog)
         };
     }
 
     private static long SpentIn(IEnumerable<Expense> expenses, Period period) => expenses
         .Where(expense => period.Contains(expense.OccurredOn))
         .Sum(expense => expense.Amount.Cents);
-
-    private static List<TagUse> TagUsesOf(IEnumerable<Expense> variable, RecapCatalog catalog) => variable
-        .Where(expense => expense.TagId.HasValue)
-        .GroupBy(expense => expense.TagId!.Value)
-        .Select(group => (Tag: catalog.Tag(group.Key), Expenses: group.ToList()))
-        .Where(use => use.Tag is not null)
-        .Select(use => new TagUse(use.Tag!, catalog.Category(use.Tag!.CategoryId), use.Expenses))
-        .OrderByDescending(use => use.Count)
-        .ThenByDescending(use => use.Cents)
-        .ThenBy(use => use.Tag.Name, StringComparer.Ordinal)
-        .ToList();
 }

@@ -11,7 +11,8 @@ public sealed record RecapDeck
         RecapCard.RecordDay.Of,
         RecapCard.Categories.Of,
         RecapCard.Changes.Of,
-        RecapCard.NewHabit.Of
+        RecapCard.NewHabit.Of,
+        RecapCard.SmallExpenses.Of
     ];
 
     private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> YearCards =
@@ -19,7 +20,8 @@ public sealed record RecapDeck
         RecapCard.Total.Of,
         RecapCard.RecordDay.Of,
         RecapCard.Categories.Of,
-        RecapCard.Changes.Of
+        RecapCard.Changes.Of,
+        RecapCard.SmallExpenses.Of
     ];
 
     public RecapDeck(RecapSpan span, RecapCard.Cover cover, IReadOnlyList<RecapCard> middle, RecapCard.Summary summary)
