@@ -18,14 +18,15 @@
         <CollectionView Grid.Row="2" ItemsSource="{Binding Rows}" SelectionMode="None" IsVisible="{Binding HasRows}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Margin="24,0" HeightRequest="58" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
+                    <Grid Margin="24,0" MinimumHeightRequest="58" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
                         <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                            <HorizontalStackLayout Spacing="6">
-                                <Label Style="{StaticResource IconGlyph}" FontSize="16" Text="{x:Static app:MaterialSymbols.Error}" TextColor="{t:Theme Alert}" VerticalOptions="Center" IsVisible="{Binding IsOverBudget}" />
-                                <Label Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" />
-                            </HorizontalStackLayout>
-                            <Label Text="{Binding Detail}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
+                        <VerticalStackLayout Grid.Column="1" Padding="0,6" VerticalOptions="Center">
+                            <!-- The name takes what the mark leaves of the width, so a long one ends in an ellipsis before the arrow. -->
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Label Margin="0,0,6,0" Style="{StaticResource IconGlyph}" FontSize="16" Text="{x:Static app:MaterialSymbols.Error}" TextColor="{t:Theme Alert}" VerticalOptions="Center" IsVisible="{Binding IsOverBudget}" />
+                                <Label Grid.Column="1" Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" />
+                            </Grid>
+                            <Label Text="{Binding Detail}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" MaxLines="2" />
                         </VerticalStackLayout>
                         <Label Grid.Column="2" Margin="0,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" />
                         <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />

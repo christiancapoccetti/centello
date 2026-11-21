@@ -44,6 +44,12 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
     private readonly float _density = context.Resources!.DisplayMetrics!.Density;
     private readonly int _densityDpi = (int)context.Resources!.DisplayMetrics!.DensityDpi;
 
+    /// <summary>The height in dp that a layout gives <paramref name="bitmap"/> when it wraps it.</summary>
+    public static float HeightDp(AndroidBitmap bitmap) => bitmap.Height * 160f / bitmap.Density;
+
+    /// <summary>The width in dp that a layout gives <paramref name="bitmap"/> when it wraps it.</summary>
+    public static float WidthDp(AndroidBitmap bitmap) => bitmap.Width * 160f / bitmap.Density;
+
     /// <summary>An icon glyph centred in a square of <paramref name="sizeDp"/>, the box the Home gives it.</summary>
     public AndroidBitmap Glyph(string codepoint, float sizeDp)
     {

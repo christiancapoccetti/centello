@@ -9,7 +9,7 @@
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              Style="{StaticResource EdgeToEdgePage}">
-    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,48,Auto,*">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,Auto,Auto,*">
         <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="Spese" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />

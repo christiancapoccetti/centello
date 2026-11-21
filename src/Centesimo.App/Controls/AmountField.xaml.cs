@@ -17,6 +17,8 @@ public partial class AmountField : ContentView
     public AmountField()
     {
         InitializeComponent();
+        // An entry keeps the width it was measured at, and what is typed after the first figures would scroll out of it.
+        Input.TextChanged += (_, _) => ((IView)Input).InvalidateMeasure();
         ApplyRule();
     }
 

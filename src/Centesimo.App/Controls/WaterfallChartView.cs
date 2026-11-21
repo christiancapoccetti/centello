@@ -24,11 +24,14 @@ public sealed class WaterfallChartView : ContentView
 
     private readonly WaterfallCanvas _canvas = new();
     private readonly Grid _values = new() { ColumnSpacing = Gap };
+    // The value labels with the whole text each one was given: what a label shows depends on its column.
+    private readonly List<(Label Label, string Full)> _valueLabels = [];
     private readonly Grid _foot = new() { ColumnSpacing = Gap, Margin = new Thickness(0, FootGap, 0, 0) };
     private readonly Label _scale = CreateScaleLabel();
 
     public WaterfallChartView()
     {
+        _values.SizeChanged += (_, _) => Fit();
         Content = new VerticalStackLayout
         {
             Children =
@@ -86,11 +89,36 @@ public sealed class WaterfallChartView : ContentView
         _canvas.Invalidate();
         SemanticProperties.SetDescription(_canvas, chart?.Description);
         Rebuild(chart);
+        Fit();
         Place();
+    }
+
+    // A value is as wide as its digits and a column is an eighth of the width: the label shrinks first, and when that
+    // is not enough it takes the thousands mark, so no digit is cut off at the edge of the column.
+    private void Fit()
+    {
+        if (Chart is not { } chart || _values.Width <= 0)
+            return;
+
+        var column = ColumnWidth(_values.Width, chart.Steps.Count + 2);
+        foreach (var (label, full) in _valueLabels)
+        {
+            var fitted = WaterfallLabels.Fit(full, column, (text, size) => Measure(label, text, size));
+            label.Text = fitted.Text;
+            label.FontSize = fitted.SizeSp;
+        }
+    }
+
+    private static double Measure(Label label, string text, double size)
+    {
+        label.Text = text;
+        label.FontSize = size;
+        return label.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
     }
 
     private void Rebuild(WaterfallChart? chart)
     {
+        _valueLabels.Clear();
         _values.Children.Clear();
         _values.ColumnDefinitions.Clear();
         _foot.Children.Clear();
@@ -120,8 +148,9 @@ public sealed class WaterfallChartView : ContentView
 
     private Label ValueLabel(string text, string fontFamily)
     {
-        var label = CreateLabel(text, fontFamily, 12);
+        var label = CreateLabel(text, fontFamily, WaterfallLabels.NormalSizeSp);
         label.VerticalOptions = LayoutOptions.Start;
+        _valueLabels.Add((label, text));
         // A label knows its height only once laid out, and its place depends on it.
         label.SizeChanged += (_, _) => Place();
         return label;
@@ -141,6 +170,9 @@ public sealed class WaterfallChartView : ContentView
             Text = text,
             FontFamily = fontFamily,
             FontSize = size,
+            // The chart's own words stay the size of its columns when the system font grows; a screen reader gets the
+            // description of the chart.
+            FontAutoScalingEnabled = false,
             HorizontalTextAlignment = TextAlignment.Center,
             LineBreakMode = LineBreakMode.NoWrap
         };

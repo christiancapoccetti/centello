@@ -33,6 +33,7 @@ public sealed class Chip : ContentView
     private readonly Label _glyph = new()
     {
         FontFamily = Fonts.Icons,
+        FontAutoScalingEnabled = false,
         FontSize = 18,
         Margin = new Thickness(-4, 0, 0, 0),
         VerticalTextAlignment = TextAlignment.Center
@@ -49,6 +50,7 @@ public sealed class Chip : ContentView
     private readonly Label _trailing = new()
     {
         FontFamily = Fonts.Icons,
+        FontAutoScalingEnabled = false,
         FontSize = 18,
         WidthRequest = 24,
         HorizontalTextAlignment = TextAlignment.Center,
@@ -56,14 +58,14 @@ public sealed class Chip : ContentView
     };
     private readonly Border _shape = new()
     {
-        HeightRequest = 32,
+        MinimumHeightRequest = 32,
         VerticalOptions = LayoutOptions.Center,
         StrokeShape = new RoundRectangle { CornerRadius = 8 }
     };
 
     public Chip()
     {
-        HeightRequest = 48;
+        MinimumHeightRequest = 48;
         _shape.Content = new HorizontalStackLayout { Spacing = 6, Children = { _tile, _dot, _glyph, _text, _trailing } };
         Content = _shape;
         _glyph.SetThemeColor(Label.TextColorProperty, ThemeColor.Ink);

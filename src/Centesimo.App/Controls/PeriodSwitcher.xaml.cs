@@ -38,11 +38,11 @@ public partial class PeriodSwitcher : ContentView
     {
         Title.FontSize = IsPageTitle ? 20 : 18;
         Year.FontSize = IsPageTitle ? 16 : 15;
-        Cue.IsVisible = CanToggle;
+        Cue.Text = CanToggle ? MaterialSymbols.ExpandMore : "";
         PeriodName.Text = Period is null ? "" : ItalianFormat.PeriodName(Period);
         Year.Text = Period?.Start.Year.ToString() ?? "";
-        SemanticProperties.SetDescription(TitleArea, Period is null ? "" : ItalianFormat.PeriodTitle(Period));
-        SemanticProperties.SetHint(TitleArea, CanToggle ? "Tocca per passare tra mese e anno" : "");
+        SemanticProperties.SetDescription(Title, Period is null ? "" : ItalianFormat.PeriodTitle(Period));
+        SemanticProperties.SetHint(Title, CanToggle ? "Tocca per passare tra mese e anno" : "");
         SemanticProperties.SetDescription(Previous, CanToggle ? "Periodo precedente" : "Mese precedente");
         SemanticProperties.SetDescription(Next, CanToggle ? "Periodo successivo" : "Mese successivo");
     }

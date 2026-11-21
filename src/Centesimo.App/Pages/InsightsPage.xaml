@@ -7,7 +7,7 @@
              x:Class="Centesimo.App.Pages.InsightsPage"
              Title="Insight"
              SafeAreaEdges="All">
-    <Grid RowDefinitions="56,48,*">
+    <Grid RowDefinitions="56,Auto,*">
         <Label Margin="24,0" Text="Insight" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
 
         <c:PeriodSwitcher Grid.Row="1" Margin="24,0,8,0" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
@@ -23,8 +23,8 @@
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="{Binding Total}" />
-                                <Span Text=" " FontSize="12" />
-                                <Span Text="€" FontSize="28" />
+                                <Span Text="&#160;" FontSize="12" FontAutoScalingEnabled="False" />
+                                <Span Text="€" FontSize="28" FontAutoScalingEnabled="False" />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
@@ -68,37 +68,40 @@
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Categories}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto,Auto" ColumnSpacing="14" RowDefinitions="*,1">
+                                <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
                                     <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                                    <VerticalStackLayout Grid.Column="1" Padding="0,8" VerticalOptions="Center">
-                                        <Label Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" />
-                                        <!-- The bar is the spending against the largest category, the number is the share of the total. -->
-                                        <HorizontalStackLayout Spacing="8" Margin="0,2,0,0">
-                                            <c:FractionBar WidthRequest="96" HeightRequest="4" VerticalOptions="Center" Fraction="{Binding ShareOfTop}" ColorKey="{Binding ColorKey}" />
-                                            <Label Text="{Binding Share}" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                                            <Border Style="{StaticResource Badge}" VerticalOptions="Center">
-                                                <Border.Triggers>
-                                                    <DataTrigger TargetType="Border" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
-                                                        <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
-                                                    </DataTrigger>
-                                                </Border.Triggers>
-                                                <Label Text="{Binding Change.Text}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" VerticalTextAlignment="Center">
-                                                    <Label.Triggers>
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
-                                                            <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
+                                    <c:TrailingValueLayout Grid.Column="1" Margin="0,8">
+                                        <VerticalStackLayout>
+                                            <Label Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" />
+                                            <!-- The bar is the spending against the largest category, the number is the share of the total.
+                                                 What does not fit on the line goes to the next one, so the badge never crowds the amount. -->
+                                            <FlexLayout Wrap="Wrap" AlignItems="Center" Margin="0,2,0,0">
+                                                <c:FractionBar WidthRequest="96" HeightRequest="4" Margin="0,0,8,0" Fraction="{Binding ShareOfTop}" ColorKey="{Binding ColorKey}" />
+                                                <Label Text="{Binding Share}" Style="{StaticResource Caption}" Margin="0,0,8,0" VerticalOptions="Center" />
+                                                <Border Style="{StaticResource Badge}" VerticalOptions="Center">
+                                                    <Border.Triggers>
+                                                        <DataTrigger TargetType="Border" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
+                                                            <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
                                                         </DataTrigger>
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Same}">
-                                                            <Setter Property="TextColor" Value="{t:Theme Mute}" />
-                                                        </DataTrigger>
-                                                    </Label.Triggers>
-                                                </Label>
-                                            </Border>
-                                        </HorizontalStackLayout>
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource AmountLabel}" VerticalOptions="Center" />
-                                    <Label Grid.Column="3" Margin="-8,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" />
-                                    <BoxView Grid.Row="1" Grid.ColumnSpan="4" Style="{StaticResource Hairline}" />
-                                    <Button Grid.RowSpan="2" Grid.ColumnSpan="4" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria" />
+                                                    </Border.Triggers>
+                                                    <Label Text="{Binding Change.Text}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" VerticalTextAlignment="Center">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
+                                                                <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Same}">
+                                                                <Setter Property="TextColor" Value="{t:Theme Mute}" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                </Border>
+                                            </FlexLayout>
+                                        </VerticalStackLayout>
+                                        <Label Text="{Binding Amount}" Style="{StaticResource AmountLabel}" />
+                                    </c:TrailingValueLayout>
+                                    <Label Grid.Column="2" Margin="-8,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" />
+                                    <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
+                                    <Button Grid.RowSpan="2" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria" />
                                 </Grid>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>

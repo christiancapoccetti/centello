@@ -61,9 +61,7 @@
         <Setter Property="TextColor" Value="{t:Theme Ground}" />
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="17" />
-        <Setter Property="HeightRequest" Value="56" />
         <Setter Property="MinimumHeightRequest" Value="56" />
-        <Setter Property="MaximumHeightRequest" Value="56" />
         <Setter Property="CornerRadius" Value="28" />
         <Setter Property="Padding" Value="24,0" />
     </Style>
@@ -81,7 +79,7 @@
         <Setter Property="TextColor" Value="{t:Theme Ink}" />
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="16" />
-        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
         <Setter Property="CornerRadius" Value="24" />
         <Setter Property="Padding" Value="24,0" />
     </Style>
@@ -102,7 +100,7 @@
         <Setter Property="TextColor" Value="{t:Theme Ground}" />
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="16" />
-        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
         <Setter Property="CornerRadius" Value="24" />
         <Setter Property="Padding" Value="24,0" />
     </Style>
@@ -118,7 +116,7 @@
         <Setter Property="TextColor" Value="{t:Theme Ink}" />
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="16" />
-        <Setter Property="HeightRequest" Value="56" />
+        <Setter Property="MinimumHeightRequest" Value="56" />
         <Setter Property="CornerRadius" Value="28" />
         <Setter Property="Padding" Value="16,0,20,0" />
         <Setter Property="ContentLayout" Value="Left,10" />
@@ -130,6 +128,7 @@
     </Style>
     <Style x:Key="IconGlyphButton" TargetType="Button">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Icons}" />
+        <Setter Property="FontAutoScalingEnabled" Value="False" />
         <Setter Property="FontSize" Value="24" />
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="TextColor" Value="{t:Theme Ink}" />
@@ -164,7 +163,7 @@
         <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
         <Setter Property="Stroke" Value="{t:Theme Outline}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="HeightRequest" Value="60" />
+        <Setter Property="MinimumHeightRequest" Value="60" />
         <Setter Property="StrokeShape">
             <Setter.Value>
                 <RoundRectangle CornerRadius="30" />
@@ -174,7 +173,7 @@
     <Style x:Key="Badge" TargetType="Border">
         <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
         <Setter Property="StrokeThickness" Value="0" />
-        <Setter Property="HeightRequest" Value="20" />
+        <Setter Property="MinimumHeightRequest" Value="20" />
         <Setter Property="Padding" Value="6,0" />
     </Style>
     <Style x:Key="InfoCard" TargetType="Border">
