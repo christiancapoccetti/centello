@@ -29,7 +29,7 @@ public sealed class RecapNoticeAutomation_should_expected_behavior
     [InlineData(RecapNoticeState.Undecided, true, "Il 1° del mese, alle 9")]
     [InlineData(RecapNoticeState.Undecided, false, "Spento")]
     [InlineData(RecapNoticeState.Off, true, "Spento")]
-    [InlineData(RecapNoticeState.On, false, "Consenti le notifiche a Centesimo nelle impostazioni di Android")]
+    [InlineData(RecapNoticeState.On, false, "Consenti le notifiche a Quattrino nelle impostazioni di Android")]
     public void Describe_the_row(RecapNoticeState state, bool canPost, string expected) =>
         Assert.Equal(expected, RecapNoticeAutomation.Describe(state, canPost));
 
