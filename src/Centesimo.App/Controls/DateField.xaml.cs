@@ -19,6 +19,7 @@ public partial class DateField : ContentView
     public DateField()
     {
         InitializeComponent();
+        Caption.SizeChanged += (_, _) => FieldOutline.PlaceBox(Box, Caption);
         Apply();
     }
 

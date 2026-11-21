@@ -10,7 +10,7 @@
     <Grid RowDefinitions="56,*">
         <Label Padding="24,0" Text="Impostazioni" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
 
-        <ScrollView Grid.Row="1">
+        <ScrollView x:Name="Form" Grid.Row="1">
             <VerticalStackLayout Padding="0,0,0,24">
                 <Label Text="Dati" Style="{StaticResource SectionTitle}" Margin="24,8,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Repeat}" Title="Pagamenti regolari" Detail="{Binding RecurringSummary}" Kind="Navigation" Tapped="OnRecurringPaymentsTapped" />
@@ -22,23 +22,20 @@
                 <Label Text="Voce e foto" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <VerticalStackLayout IsVisible="{Binding ShowKeyStatus}">
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Mic}" Title="Attivo" Detail="Chiave OpenAI salvata" IsPositive="True" />
-                    <Grid Margin="24,12,24,0" ColumnDefinitions="Auto,*,Auto">
+                    <FlexLayout Margin="24,12,24,0" Wrap="Wrap" JustifyContent="SpaceBetween" AlignItems="Center">
                         <Button Text="Sostituisci chiave" Style="{StaticResource OutlinedButton}" Clicked="OnReplaceClicked" />
-                        <Button Grid.Column="2" Text="Rimuovi" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" TextColor="{t:Theme Alert}" Clicked="OnRemoveClicked" />
-                    </Grid>
+                        <Button Text="Rimuovi" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" TextColor="{t:Theme Alert}" Clicked="OnRemoveClicked" />
+                    </FlexLayout>
                 </VerticalStackLayout>
                 <VerticalStackLayout IsVisible="{Binding ShowKeyForm}">
                     <Label Text="{Binding KeyLead}" Style="{StaticResource Lead}" Margin="24,4,24,0" LineHeight="1.45" />
-                    <c:TextField Margin="24,14,24,0" Label="Chiave API OpenAI" Placeholder="sk-…" IsPassword="True" Text="{Binding ApiKeyInput}" ErrorText="{Binding ApiKeyError}" />
-                    <HorizontalStackLayout Margin="24,12,24,0" Spacing="12">
-                        <Button Text="Salva chiave" Style="{StaticResource FilledButton}" Clicked="OnSaveKeyClicked" />
+                    <c:TextField x:Name="KeyField" Margin="24,14,24,0" FocusGained="OnKeyFieldFocused" Label="Chiave API OpenAI" Placeholder="sk-…" IsPassword="True" Text="{Binding ApiKeyInput}" ErrorText="{Binding ApiKeyError}" />
+                    <FlexLayout Margin="24,12,24,0" Wrap="Wrap" AlignItems="Center">
+                        <Button x:Name="SaveKeyButton" Text="Salva chiave" Margin="0,0,12,0" Style="{StaticResource FilledButton}" Clicked="OnSaveKeyClicked" />
                         <Button Text="Annulla" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" IsVisible="{Binding IsReplacing}" Clicked="OnCancelReplaceClicked" />
-                    </HorizontalStackLayout>
+                    </FlexLayout>
                 </VerticalStackLayout>
-                <HorizontalStackLayout Margin="24,12,24,0" Spacing="8">
-                    <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Cloud}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
-                    <Label Text="Audio, foto, PDF e testo della spesa vengono inviati a OpenAI; Centesimo non salva né l'audio né le foto né i PDF e le spese restano sul telefono." Style="{StaticResource Caption}" LineHeight="1.45" MaximumWidthRequest="320" />
-                </HorizontalStackLayout>
+                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Cloud}" Text="Audio, foto, PDF e testo della spesa vengono inviati a OpenAI; Centesimo non salva né l'audio né le foto né i PDF e le spese restano sul telefono." />
 
                 <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Info}" Title="{Binding VersionText}" />

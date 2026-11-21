@@ -9,7 +9,7 @@
     <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
         <Label x:Name="Mark" Style="{StaticResource IconGlyph}" Text="{Binding Glyph, Source={x:Reference Root}}" VerticalOptions="Center" />
         <VerticalStackLayout Grid.Column="1" Padding="0,10" VerticalOptions="Center">
-            <Label Text="{Binding Title, Source={x:Reference Root}}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="1" />
+            <Label Text="{Binding Title, Source={x:Reference Root}}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" />
             <Label x:Name="DetailLabel" Text="{Binding Detail, Source={x:Reference Root}}" Style="{StaticResource Caption}" />
         </VerticalStackLayout>
         <Switch x:Name="Switcher" Grid.Column="2" VerticalOptions="Center" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" IsVisible="False" />

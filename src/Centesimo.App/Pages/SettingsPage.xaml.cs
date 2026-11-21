@@ -5,6 +5,9 @@ namespace Centesimo.App.Pages;
 
 public partial class SettingsPage : ContentPage
 {
+    private const int KeyboardWaitAttempts = 15;
+    private static readonly TimeSpan KeyboardWaitStep = TimeSpan.FromMilliseconds(100);
+
     private readonly SettingsViewModel _viewModel;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
@@ -32,6 +35,17 @@ public partial class SettingsPage : ContentPage
 
     private async void OnLicensesTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(LicensesPage));
+
+    // The tab bar stays above the keyboard on this page, so with both open the button under the field is behind the
+    // bar. Once the keyboard has taken its room, which shows as the form getting shorter, the page scrolls to the button.
+    private async void OnKeyFieldFocused(object? sender, EventArgs e)
+    {
+        var height = Form.Height;
+        for (var attempt = 0; attempt < KeyboardWaitAttempts && Form.Height >= height; attempt++)
+            await Task.Delay(KeyboardWaitStep);
+
+        await Form.ScrollToAsync(SaveKeyButton, ScrollToPosition.End, true);
+    }
 
     private async void OnRecapNoticeToggled(object? sender, ToggledEventArgs e)
     {

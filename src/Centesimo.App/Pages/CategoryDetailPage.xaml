@@ -9,7 +9,7 @@
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              Style="{StaticResource EdgeToEdgePage}">
-    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,48,*">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,Auto,*">
         <Grid Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Detail.Name}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
@@ -31,8 +31,8 @@
                             <Label.FormattedText>
                                 <FormattedString>
                                     <Span Text="{Binding Detail.Total}" />
-                                    <Span Text=" " FontSize="12" />
-                                    <Span Text="€" FontSize="28" />
+                                    <Span Text="&#160;" FontSize="12" FontAutoScalingEnabled="False" />
+                                    <Span Text="€" FontSize="28" FontAutoScalingEnabled="False" />
                                 </FormattedString>
                             </Label.FormattedText>
                         </Label>

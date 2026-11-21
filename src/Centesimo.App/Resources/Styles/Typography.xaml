@@ -7,14 +7,18 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextColor" Value="{t:Theme Ink}" />
     </Style>
+    <!-- The numerals of money at display size are the largest text on a page already: they keep their size when the
+         system font grows, so a total stays on one line next to the larger text around it. -->
     <Style x:Key="TotalDisplay" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
         <Setter Property="FontSize" Value="68" />
+        <Setter Property="FontAutoScalingEnabled" Value="False" />
         <Setter Property="LineHeight" Value="1" />
     </Style>
     <Style x:Key="SummaryDisplay" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
         <Setter Property="FontSize" Value="48" />
+        <Setter Property="FontAutoScalingEnabled" Value="False" />
         <Setter Property="LineHeight" Value="1" />
     </Style>
     <Style x:Key="HeadlineLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
@@ -97,8 +101,10 @@
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="16" />
     </Style>
+    <!-- A glyph is a picture in a box of its own size: it keeps that size when the system font grows. -->
     <Style x:Key="IconGlyph" TargetType="Label">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Icons}" />
+        <Setter Property="FontAutoScalingEnabled" Value="False" />
         <Setter Property="FontSize" Value="24" />
         <Setter Property="TextColor" Value="{t:Theme Ink}" />
         <Setter Property="VerticalTextAlignment" Value="Center" />

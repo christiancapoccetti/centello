@@ -340,13 +340,15 @@ Slots, stored by key in `Categories.Color`: coral (Corallo), peri (Pervinca), bu
 
 **The One Loud Numeral Rule.** Archivo Condensed ExtraBold is for money at display size only: the total, the summary, the amount being typed. It is never a heading face.
 
+**The Large Text Rule.** Every page must read at the largest system font (200%) on a 360dp phone, and on a 320dp one with the largest display size: no text cut without an ellipsis, no figure lost, no overlap. Heights are minimums (an expense row is 58dp at least, a chip 32dp, a button 48dp), and text wraps or ends in an ellipsis inside the width it is given, never in a stack that measures it with no limit. A row that ends in an amount (`TrailingValueLayout`) moves the amount under its text when the text would keep less than 120dp. Glyphs, the display numerals (the total, a summary, the amount being typed) and the words inside charts keep their drawn size, since a box or a column is built around them; a chart carries its words in its description.
+
 **The No Small Caps Rule.** No uppercase labels, no letter-spacing, no kickers above titles. A section is named by its title in sentence case.
 
 ## Layout
 
 A single portrait column with a 24dp side gutter on every page. The home is a fixed 56dp top row (the period switcher: month in bold, year in regular mute, previous and next arrows as 48dp buttons), a scrolling middle, and a bottom dock holding the split pill with 24dp side and 12dp vertical margins, above the four-tab navigation bar (`Oggi`, `Insight`, `Categorie`, `Impostazioni`).
 
-Lists are rows, not cards: an expense row is 58dp high (36dp tile, 14dp gap, title over caption, amount right-aligned) with a 1dp hairline under it; a settings row is at least 64dp with the same 36/14 rhythm. Empty states are centred stacks with 32dp sides and 56dp of top room under a 40sp mute glyph. Form field labels start 24dp below what is above them.
+Lists are rows, not cards: an expense row is 58dp at least (36dp tile, 14dp gap, title over caption, amount right-aligned) with a 1dp hairline under it; a settings row is at least 64dp with the same 36/14 rhythm. Empty states are centred stacks with 32dp sides and 56dp of top room under a 40sp mute glyph. Form field labels start 24dp below what is above them.
 
 The spacing rhythm is 4, 6, 8, 12, 14, 16, 24dp, with 3dp gaps inside charts (2dp between the 31 slots of the pace chart). Every touch target is at least 48 by 48dp; where a visual element is smaller (a 32dp chip, a key item, the "Vedi tutte" link) padding makes up the target and negative margins give the room back, so the visual rhythm is not loosened to fit the finger.
 
@@ -393,7 +395,7 @@ The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi
 Four widgets that are the Home on the launcher, in the same flat graphite and the same Archivo.
 - **Aggiungi** (resizable in both directions): four shapes chosen by its size and the measured width of its words (`AddWidgetShapes.Of`). 2x1: the coral plus and microphone. 3x1: plus, microphone and camera as icons. 4x1: a raised pill with the coral plus, "Aggiungi spesa" and a divider, then the coral microphone and camera, as Oggi's dock. 4x2: a full-width "Aggiungi spesa" pill over "A voce" and "Da foto".
 - **Scorciatoie** (4x1): the four categories used most in the last 30 days (by count) as tiles with their name, then "Altra" for any other; each opens the editor on that category.
-- **Il mese** (2x2): the month, the total in the condensed numeral, the remaining budget, a short comparison chip, the category line and, when there is one, the over-budget category.
+- **Il mese** (2x2, resizable to 3x2, 2x3 and 3x3): the month (with the year when it fits beside it), the total in the condensed numeral, the remaining budget, a short comparison chip, the category line and, when there is one, the over-budget category. The size the launcher reports sets its shape (`MonthWidgetShapes`): the tightest padding and the smallest total on a 2x2, a larger total when wide. Then the rows that fit are drawn, in this order of loss: the chip goes first, then the alert shrinks from its full sentence to one line cut with an ellipsis, then the category line goes and, last, the alert (the category line comes back when only one of the two fits); the month, the total and the budget sentence always stay.
 - **Il ritmo** (4x2): the full comparison chip, a round coral plus and Oggi's daily chart with its pace line ("27 € al giorno").
 
 Tapping a widget opens the app on the matching screen; an editor opened from a widget returns to the launcher when it is saved or closed. The gallery and the PDF stay inside Oggi.
