@@ -7,13 +7,15 @@ public sealed record RecapDeck
     private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> MonthCards =
     [
         RecapCard.Total.Of,
-        RecapCard.RecordDay.Of
+        RecapCard.RecordDay.Of,
+        RecapCard.Categories.Of
     ];
 
     private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> YearCards =
     [
         RecapCard.Total.Of,
-        RecapCard.RecordDay.Of
+        RecapCard.RecordDay.Of,
+        RecapCard.Categories.Of
     ];
 
     public RecapDeck(RecapSpan span, RecapCard.Cover cover, IReadOnlyList<RecapCard> middle, RecapCard.Summary summary)
