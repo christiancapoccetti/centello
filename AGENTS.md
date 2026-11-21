@@ -54,3 +54,5 @@ Coding guidelines for Centesimo. Project-local agent instructions override or ex
 ## Git
 
 - Never push to `master` or `main` unless the user explicitly asks for that push; otherwise all changes go through the project's normal branch and review workflow, and pushing is done by the user.
+- Do not add `Co-Authored-By` lines or any other AI attribution (session links, "Generated with" footers) to commit messages or pull request descriptions.
+- `plans/` and `.impeccable/` are local working files: never commit them. They are excluded through `.git/info/exclude`.
