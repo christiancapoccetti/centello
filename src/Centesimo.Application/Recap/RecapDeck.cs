@@ -4,6 +4,10 @@ namespace Centesimo.Application;
 /// is the invariant: nothing else can put a card before the cover or after the summary.</summary>
 public sealed record RecapDeck
 {
+    private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> MonthCards = [RecapCard.Total.Of];
+
+    private static readonly IReadOnlyList<Func<RecapScope, RecapCard?>> YearCards = [RecapCard.Total.Of];
+
     public RecapDeck(RecapSpan span, RecapCard.Cover cover, IReadOnlyList<RecapCard> middle, RecapCard.Summary summary)
     {
         Span = span;
@@ -17,5 +21,18 @@ public sealed record RecapDeck
     public string Badge { get; }
     public IReadOnlyList<RecapCard> Cards { get; }
 
-    internal static RecapDeck Build(RecapScope scope) => throw new NotImplementedException();
+    internal static RecapDeck Build(RecapScope scope)
+    {
+        var middle = TableOf(scope.Span.Period.Kind)
+            .Select(card => card(scope))
+            .OfType<RecapCard>()
+            .ToList();
+        return new RecapDeck(scope.Span, RecapCard.Cover.Of(scope), middle, RecapCard.Summary.Of(scope, middle));
+    }
+
+    private static IReadOnlyList<Func<RecapScope, RecapCard?>> TableOf(PeriodKind kind) => kind switch
+    {
+        PeriodKind.Month => MonthCards,
+        PeriodKind.Year => YearCards
+    };
 }
