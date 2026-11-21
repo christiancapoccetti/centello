@@ -36,10 +36,12 @@ public sealed record LocalInsight(InsightKind Kind, string Title, string Descrip
 /// <summary>From and To bound what was spent. IsToDate is true for the period that contains today, which is compared
 /// up to today with the same days of the previous one. ComparedSpentCents is null when nothing was spent in the
 /// compared days. Summary is the sentence under the total, in euros. Pace is the cumulative chart, and Waterfall the
-/// steps from the compared total to the spent one: null when there is nothing to compare or nothing changed.</summary>
+/// steps from the compared total to the spent one: null when there is nothing to compare or nothing changed. Recap is
+/// the row that opens the story of the period, null when it has none.</summary>
 public sealed record InsightsOverview(Period Period, HomeNavigation Navigation, DateOnly From, DateOnly To,
     bool IsToDate, long SpentCents, long? ComparedSpentCents, BudgetSummary Summary, PaceChart Pace,
-    WaterfallChart? Waterfall, IReadOnlyList<InsightCategory> Categories, IReadOnlyList<LocalInsight> Insights)
+    WaterfallChart? Waterfall, IReadOnlyList<InsightCategory> Categories, IReadOnlyList<LocalInsight> Insights,
+    InsightRecap? Recap)
 {
     public bool HasWaterfall => Waterfall is not null;
 }
@@ -76,7 +78,7 @@ public sealed class InsightsService(ICategoryRepository categories, IExpenseRepo
             spending.IsToDate, spending.Spent, compared,
             InsightTexts.Summary(period, spending.IsToDate, spending.Spent, compared),
             PaceChart.For(spending, PeriodBudget.OfActive(period, categories)), WaterfallChart.For(spending),
-            Rows(spending), BuildInsights(spending));
+            Rows(spending), BuildInsights(spending), InsightRecap.For(period, today, spending.Current));
     }
 
     private static IReadOnlyList<InsightCategory> Rows(SpendComparison spending) => spending.Categories

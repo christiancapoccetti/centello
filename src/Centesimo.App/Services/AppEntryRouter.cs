@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Centesimo.App.Pages;
+using Centesimo.App.ViewModels;
 using Centesimo.Application;
 
 namespace Centesimo.App;
@@ -8,7 +9,7 @@ namespace Centesimo.App;
 /// entry of each intent and the window's activation opens it, so a cold and a warm start take the same path. One slot:
 /// a newer entry replaces one still waiting. It rebuilds the Oggi tab with one route, so an editor never lands on top
 /// of another, and it asks first when a page of that tab holds unsaved input.</summary>
-public sealed class AppEntryRouter(IConfirmation confirmation)
+public sealed class AppEntryRouter(IConfirmation confirmation, InsightsViewModel insights)
 {
     private readonly AppEntryInbox _inbox = new();
 
@@ -24,6 +25,10 @@ public sealed class AppEntryRouter(IConfirmation confirmation)
             return;
 
         var (route, rebuildsToday) = RouteOf(waiting.Entry);
+        // Insight moves to the period first, so every exit of the story is a local pop and Back lands on that period.
+        if (waiting.Entry is AppEntry.Screen.Recap recap)
+            await insights.Show(recap.Period);
+
         if (rebuildsToday && TodayStack(shell).OfType<IHoldsUnsavedInput>().Any(page => page.HasUnsavedInput)
             && !await confirmation.AskToDiscard())
             return;
@@ -53,7 +58,7 @@ public sealed class AppEntryRouter(IConfirmation confirmation)
             ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(categoryId: expense.CategoryId, fromOutside: true)}", true),
         AppEntry.Screen.Draft => ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(fromOutside: true)}", true),
         AppEntry.Screen.Settings => ($"//{nameof(SettingsPage)}", false),
-        AppEntry.Screen.Recap => ($"//{nameof(InsightsPage)}", false),
+        AppEntry.Screen.Recap recap => ($"//{nameof(InsightsPage)}/{RecapPage.Route(recap.Period)}", false),
         _ => throw new UnreachableException()
     };
 }

@@ -22,6 +22,28 @@
         <Setter Property="FontSize" Value="28" />
         <Setter Property="LineHeight" Value="1.2" />
     </Style>
+    <!-- The recap story: the numeral of a card, its one-line verdict and the sentence that leads into it. Cards set
+         their own ink over these, since a card can sit on a category's color. -->
+    <Style x:Key="StoryTotal" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
+        <Setter Property="FontSize" Value="76" />
+        <Setter Property="LineHeight" Value="1" />
+    </Style>
+    <Style x:Key="StoryAmount" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.CondensedExtraBold}" />
+        <Setter Property="FontSize" Value="56" />
+        <Setter Property="LineHeight" Value="1" />
+    </Style>
+    <Style x:Key="StoryHeadline" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="LineHeight" Value="1.12" />
+    </Style>
+    <Style x:Key="StoryLead" TargetType="Label" BasedOn="{StaticResource BaseText}">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="LineHeight" Value="1.35" />
+        <Setter Property="TextColor" Value="{t:Theme Mute}" />
+    </Style>
     <Style x:Key="TitleLarge" TargetType="Label" BasedOn="{StaticResource BaseText}">
         <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
         <Setter Property="FontSize" Value="20" />

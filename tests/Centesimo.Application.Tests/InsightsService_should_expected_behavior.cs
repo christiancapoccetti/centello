@@ -489,4 +489,73 @@ public sealed class InsightsService_should_expected_behavior
         categoryRepository.Items.AddRange(categories);
         return new InsightsService(categoryRepository, expenses ?? new FakeExpenseRepository(), () => today);
     }
+
+    [Fact]
+    public async Task Should_offer_the_recap_of_a_closed_month_with_enough_expenses()
+    {
+        var overview = await Recap(Period.Month(2026, 10), SpendOnDays(new DateOnly(2026, 10, 1), 12, 1));
+
+        Assert.Equal(new InsightRecap(Period.Month(2026, 10), "Rivedi il tuo ottobre", "Il riepilogo del mese, in poche schede"),
+            overview.Recap);
+    }
+
+    [Fact]
+    public async Task Should_not_offer_the_recap_of_the_month_of_today()
+    {
+        var overview = await Recap(Period.Month(2026, 11), SpendOnDays(new DateOnly(2026, 11, 1), 12, 1));
+
+        Assert.Null(overview.Recap);
+    }
+
+    [Fact]
+    public async Task Should_not_offer_the_recap_of_a_thin_month()
+    {
+        var overview = await Recap(Period.Month(2026, 10), SpendOnDays(new DateOnly(2026, 10, 1), 4, 1));
+
+        Assert.Null(overview.Recap);
+    }
+
+    [Fact]
+    public async Task Should_offer_the_recap_of_a_closed_year()
+    {
+        var overview = await Recap(Period.Year(2025), SpendOnDays(new DateOnly(2025, 1, 5), 36, 10));
+
+        Assert.Equal(new InsightRecap(Period.Year(2025), "Rivedi il tuo 2025", "Il riepilogo dell'anno, in poche schede"),
+            overview.Recap);
+    }
+
+    [Fact]
+    public async Task Should_offer_the_year_so_far_up_to_yesterday()
+    {
+        var overview = await Recap(Period.Year(2026), SpendOnDays(new DateOnly(2026, 1, 5), 36, 10));
+
+        Assert.Equal(new InsightRecap(Period.Year(2026), "Il tuo 2026 finora", "Fino al 20 novembre, in poche schede"),
+            overview.Recap);
+    }
+
+    [Fact]
+    public async Task Should_count_the_year_so_far_only_up_to_yesterday()
+    {
+        var spending = SpendOnDays(new DateOnly(2026, 1, 5), 29, 10)
+            .Append(new Expense(Guid.NewGuid(), RecapCategory.CategoryId, new Money(1000), new DateOnly(2026, 11, 21)));
+
+        var overview = await Recap(Period.Year(2026), spending);
+
+        Assert.Null(overview.Recap);
+    }
+
+    // A fixed category and one expense every `step` days from `first`: `count` expenses.
+    private static IReadOnlyList<Expense> SpendOnDays(DateOnly first, int count, int step) => Enumerable
+        .Range(0, count)
+        .Select(index => new Expense(Guid.NewGuid(), RecapCategory.CategoryId, new Money(1000), first.AddDays(index * step)))
+        .ToList();
+
+    private static readonly Category RecapCategory = new(Guid.NewGuid(), "Spesa", "cart", "#196D61");
+
+    private static async Task<InsightsOverview> Recap(Period period, IEnumerable<Expense> spending)
+    {
+        var expenses = new FakeExpenseRepository();
+        expenses.Items.AddRange(spending);
+        return (await CreateService(new DateOnly(2026, 11, 21), RecapCategory, expenses).Get(period)).Value;
+    }
 }
