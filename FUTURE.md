@@ -15,7 +15,7 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 ### Logos, name and copyright
 
 - Confirm that the mark, the launcher icon and the Play Store icon in `docs/brand/` are original work owned by the author.
-- The app is shown as `Quattrino`, a working name: `Centesimo` clashes with the UIBM marks "Il Centesimo" of CDS SPA (classes 16, 35-45) and their "il Centesimo" app on Google Play. Before a public release, settle the final name and a logo that fits it (the current mark is a "C"), then search the name on the Play Store and in the trademark registers (UIBM, EUIPO; classes 9, 36, 42).
+- The app needs a new name, chosen last, with a logo that fits it (the current mark is a "C"). `Centesimo` clashes with the UIBM marks "Il Centesimo" of CDS SPA (classes 16, 35-45) and their "il Centesimo" app on Google Play; `Quattrino`, the current working name, clashes with other finance apps. Before adopting a name, search it on the Play Store and the App Store and in the trademark registers (TMview: UIBM, EUIPO; classes 9, 36, 42).
 - Re-check `THIRD_PARTY_NOTICES.md` against the bundled packages (`project.assets.json`) whenever dependencies or the .NET SDK change. Done on 2026-11-20: every bundled library is listed, the .NET Foundation is named as the holder of the .NET components, and the full MIT, BSD 2-Clause, Apache 2.0 and OFL texts plus the .NET runtime notices ship with the app.
 - Tag the commit of every published build on GitHub, so every build points at the exact code it was made from.
 
@@ -23,13 +23,9 @@ What must be decided or checked before Centesimo is published on Google Play, ev
 
 - Developer account: one-time fee and identity verification. The contact email becomes public, and the package name `it.christiancapoccetti.centesimo` cannot change after the first upload.
 - Share with family through the **internal testing** track (up to 100 testers, available within minutes, no full review). A new personal account must run a closed test with at least 12 testers for 14 days before it can publish to production.
-- Privacy policy: drafted in English in `docs/privacy-policy.md`, with GitHub Issues as the contact until a public contact email exists. Publish it with GitHub Pages (Settings → Pages → deploy from `main`, folder `/docs`) and give Play Console its URL. Play also expects the policy to be reachable from inside the app: add a link under `Informazioni` in Settings.
-- Data safety form: voice audio, its transcript, photos and PDFs you choose, and the category and tag names are sent to OpenAI only when voice, photo or PDF entry is used, encrypted in transit; expenses leave the device only through Android Auto Backup to the user's own Google account. OpenAI keeps API inputs for abuse monitoring: word it as "Quattrino does not save them", never "not saved".
-- Financial features declaration: Centesimo tracks expenses and provides no financial services.
-- Content rating questionnaire, target audience, and the ads declaration (no ads).
-- Store listing: short and full description, at least two screenshots made with placeholder data, a 1024×500 feature graphic, and the 512 px icon already in `docs/brand/`.
-- Ship a signed Android App Bundle (AAB) with Play App Signing. Keep the upload key outside the repository with a backup, and add `*.keystore` and `*.jks` to `.gitignore` (today only `*.pfx` is ignored).
-- Increase `ApplicationVersion` for every upload.
+- Privacy policy: `docs/privacy-policy.md`, published with GitHub Pages and linked under `Informazioni` in Settings. GitHub Issues is the contact until a public contact email exists. It names the app, so update it with the new name.
+- Play Console answers (trader status, store listing texts, app content, data safety, first release steps) are drafted in `docs/play-console.md`. Screenshots, the feature graphic and the 512 px icon wait for the new name and logo.
+- Signed bundle and upload key: see "Build for Google Play" in the README. Increase `ApplicationVersion` for every upload.
 - Check 16 KB memory page support for the native libraries (SQLite) in the Play Console App Bundle explorer, and keep the target SDK at the level Play requires (36 today).
 - Test the Release build end to end before every upload: trimming can break EF Core at runtime.
 
