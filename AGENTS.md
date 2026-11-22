@@ -54,5 +54,5 @@ Coding guidelines for Centello. Project-local agent instructions override or ext
 ## Git
 
 - Never push to `master` or `main` unless the user explicitly asks for that push; otherwise all changes go through the project's normal branch and review workflow, and pushing is done by the user.
-- Do not add `Co-Authored-By` lines or any other AI attribution (session links, "Generated with" footers) to commit messages or pull request descriptions.
-- `plans/` and `.impeccable/` are local working files: never commit them. They are excluded through `.git/info/exclude`.
+- Keep commit messages and pull request descriptions focused on the change. Omit attribution trailers and session links.
+- Keep local plans and tool-specific working files out of commits. Use `.git/info/exclude` for these files.

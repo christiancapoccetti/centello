@@ -1,14 +1,12 @@
 # Product
 
-<!-- impeccable:product-schema 1 -->
-
 ## Platform
 
 android
 
 ## Users
 
-Two real users today: the developer and their partner, each using Centello daily on their own Android phone. The app is published on Google Play. It is built as if it had a wider audience, so every flow, empty state and error must make sense to someone who did not write the app.
+Centello is for people who record their daily expenses on an Android phone. Its flows, empty states and errors must make sense to someone opening the app for the first time.
 
 The core situation is logging a purchase right after it happens: phone in hand, often on the move, with no patience for forms. A second, calmer situation is reviewing the month or year to see where the money went.
 
