@@ -18,7 +18,7 @@ Centesimo is a simple Android expense tracker built with .NET MAUI, designed and
 - Dark and light theme following the Android setting; the app is locked to portrait.
 - Application data is stored locally in SQLite. Centesimo does not require an account and has no backend or sync. Apart from Android Auto Backup to your own Google account, the only data that leaves the device is what you send with voice, photo or PDF entry (audio and text, a photo, or a PDF), and only when you enable it.
 
-Android Auto Backup saves the database (and only the database) to your own Google account, so a new phone with the same account gets the expenses back. The OpenAI key, the reminder settings and the preferences are not backed up: enter the key again on the new phone, and the reminders are rebuilt at first launch. Storing receipt photos, localization, and configurable budget alerts are not part of the current version. See [FUTURE.md](FUTURE.md) for the roadmap.
+Android Auto Backup saves the database (and only the database) to your own Google account, so a new phone with the same account gets the expenses back. The OpenAI key, the reminder settings and the preferences are not backed up: enter the key again on the new phone, and the reminders are rebuilt at first launch. Storing receipt photos, localization, and configurable budget alerts are not part of the current version. The roadmap is tracked in [GitHub issues](https://github.com/christiancapoccetti/centesimo/issues).
 
 ## Home screen widgets
 
@@ -93,7 +93,13 @@ $env:PLAY_UPLOAD_PASSWORD = Read-Host "Upload key password"
 dotnet publish src/Centesimo.App/Centesimo.App.csproj -c Release -f net10.0-android -p:PlayRelease=true
 ```
 
-The signed bundle is `src/Centesimo.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab` (the `.aab` without `-Signed` is unsigned). Before uploading, check that it carries the upload key, not `CN=Android Debug`, with `keytool -printcert -jarfile <bundle>`. Tag the commit of every uploaded build as `v<ApplicationDisplayVersion>-build<ApplicationVersion>` (for example `v1.1-build2`). The privacy policy is published with GitHub Pages at <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>.
+The signed bundle is `src/Centesimo.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab` (the `.aab` without `-Signed` is unsigned). Before uploading, check that it carries the upload key, not `CN=Android Debug`, with `keytool -printcert -jarfile <bundle>`. Tag the commit of every uploaded build as `v<ApplicationDisplayVersion>-build<ApplicationVersion>` (for example `v1.1-build2`). The privacy policy is published with GitHub Pages at <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>, and the Play Console answers are drafted in [docs/play-console.md](docs/play-console.md).
+
+Before every upload:
+
+- Test the Release build end to end on a phone: trimming can break EF Core at runtime.
+- Keep the target SDK at the level Play requires (36 today), and check 16 KB memory page support for the native libraries in the Play Console App Bundle explorer.
+- When dependencies or the .NET SDK change, re-check `THIRD_PARTY_NOTICES.md` against the bundled packages (`project.assets.json`).
 
 ## Voice, photo and PDF entry with OpenAI
 
