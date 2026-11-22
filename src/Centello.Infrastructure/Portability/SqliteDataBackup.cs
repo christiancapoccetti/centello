@@ -144,6 +144,10 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
                 out var createdAt))
             return Result<DateTimeOffset>.Failure(PortabilityErrors.NotABackup);
 
+        // A lock copied from the exporting device cannot have an owner in this private staging database.
+        if (await Count(connection, "type = 'table' AND name = '__EFMigrationsLock'", cancellationToken) > 0)
+            await Execute(connection, "DELETE FROM __EFMigrationsLock WHERE Id = 1", cancellationToken);
+
         await Execute(connection, $"DROP TABLE {marker}", cancellationToken);
         return Result<DateTimeOffset>.Success(createdAt);
     }

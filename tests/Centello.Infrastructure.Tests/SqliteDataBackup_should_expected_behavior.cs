@@ -180,6 +180,24 @@ public sealed class SqliteDataBackup_should_expected_behavior : IDisposable
         Assert.StartsWith(directory, result.Value.FilePath);
     }
 
+    [Fact]
+    public async Task Restore_expenses_from_a_backup_made_with_a_migration_lock()
+    {
+        Run(_database.FilePath, "INSERT INTO __EFMigrationsLock (Id, Timestamp) VALUES (1, CURRENT_TIMESTAMP)");
+        var ids = ExpenseIds();
+        var file = await CreateBackupFile();
+        await AddExpenses(1);
+
+        await using var stream = File.OpenRead(file);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var analysed = await Backup().Analyse(stream, timeout.Token);
+
+        Assert.True(analysed.IsSuccess);
+        Assert.Equal(1, Scalar<long>(_database.FilePath, "SELECT COUNT(*) FROM __EFMigrationsLock"));
+        Assert.True((await Backup().Restore(analysed.Value)).IsSuccess);
+        Assert.Equal(ids.Order(), ExpenseIds().Order());
+    }
+
     private async Task<string> CreateBackupFile()
     {
         var result = await Backup().Create(ExportDirectory);
