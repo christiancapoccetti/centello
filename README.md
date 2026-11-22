@@ -76,6 +76,26 @@ dotnet build src/Centesimo.App/Centesimo.App.csproj -t:Run -f net10.0-android `
 
 Confirm that the target device is available with `adb devices` before running the app. The minimum supported Android API level is 24.
 
+## Build for Google Play
+
+Google Play takes an Android App Bundle (AAB) signed with the upload key; Play App Signing then re-signs the app it delivers. A plain Release build stays an APK signed with the local debug key, so an app installed from Play cannot be updated by a local build, nor the other way round.
+
+Create the upload key once, outside the repository, and keep a backup of the file and its password (Google can reset a lost upload key, but it takes a support request):
+
+```powershell
+keytool -genkeypair -v -keystore "$HOME\keys\play-upload.jks" -alias upload -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Before every upload, raise `ApplicationVersion` in `src/Centesimo.App/Centesimo.App.csproj`, then build the bundle with the key path and password in environment variables:
+
+```powershell
+$env:PLAY_UPLOAD_KEYSTORE = "$HOME\keys\play-upload.jks"
+$env:PLAY_UPLOAD_PASSWORD = Read-Host "Upload key password"
+dotnet publish src/Centesimo.App/Centesimo.App.csproj -c Release -f net10.0-android -p:PlayRelease=true
+```
+
+The signed bundle is `src/Centesimo.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab`. Tag the commit of every uploaded build. The privacy policy is published with GitHub Pages at <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>.
+
 ## Voice, photo and PDF entry with OpenAI
 
 Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft; photo and PDF entry do the same from a receipt photo or a PDF. It is optional and uses your own OpenAI API key.
