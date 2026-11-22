@@ -84,15 +84,16 @@ Create the upload key once, outside the repository, and keep a backup of the fil
 keytool -genkeypair -v -keystore "$HOME\keys\play-upload.jks" -alias upload -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Before every upload, raise `ApplicationVersion` in `src/Centesimo.App/Centesimo.App.csproj`, then build the bundle with the key path and password in environment variables:
+Before every upload, raise `ApplicationVersion` in `src/Centesimo.App/Centesimo.App.csproj`, then build the bundle with the key path and password in environment variables. Delete the Release outputs first: a bundle left there by an earlier build is signed with the debug key, and Play rejects it.
 
 ```powershell
+Remove-Item -Recurse -Force src\Centesimo.App\bin\Release, src\Centesimo.App\obj\Release -ErrorAction SilentlyContinue
 $env:PLAY_UPLOAD_KEYSTORE = "$HOME\keys\play-upload.jks"
 $env:PLAY_UPLOAD_PASSWORD = Read-Host "Upload key password"
 dotnet publish src/Centesimo.App/Centesimo.App.csproj -c Release -f net10.0-android -p:PlayRelease=true
 ```
 
-The signed bundle is `src/Centesimo.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab`. Tag the commit of every uploaded build. The privacy policy is published with GitHub Pages at <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>.
+The signed bundle is `src/Centesimo.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab` (the `.aab` without `-Signed` is unsigned). Before uploading, check that it carries the upload key, not `CN=Android Debug`, with `keytool -printcert -jarfile <bundle>`. Tag the commit of every uploaded build as `v<ApplicationDisplayVersion>-build<ApplicationVersion>` (for example `v1.1-build2`). The privacy policy is published with GitHub Pages at <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>.
 
 ## Voice, photo and PDF entry with OpenAI
 
