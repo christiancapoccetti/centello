@@ -16,6 +16,24 @@
     <NoWarn>$(NoWarn);CS8524</NoWarn>
   </PropertyGroup>
 
+  <!-- The Google Play build signs an AAB with the upload key. Path and password come from environment variables, so
+       neither is ever in the repository. A plain Release build stays an APK signed with this machine's debug key, for
+       installing on test phones. -->
+  <PropertyGroup Condition="'$(PlayRelease)' == 'true'">
+    <AndroidPackageFormat>aab</AndroidPackageFormat>
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(PLAY_UPLOAD_KEYSTORE)</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>upload</AndroidSigningKeyAlias>
+    <AndroidSigningStorePass>env:PLAY_UPLOAD_PASSWORD</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>env:PLAY_UPLOAD_PASSWORD</AndroidSigningKeyPass>
+  </PropertyGroup>
+
+  <Target Name="RequirePlayUploadKey" BeforeTargets="Build" Condition="'$(PlayRelease)' == 'true'">
+    <Error Condition="'$(Configuration)' != 'Release'" Text="PlayRelease builds only with -c Release." />
+    <Error Condition="'$(PLAY_UPLOAD_KEYSTORE)' == '' Or '$(PLAY_UPLOAD_PASSWORD)' == ''" Text="PlayRelease needs PLAY_UPLOAD_KEYSTORE (the path to the upload key) and PLAY_UPLOAD_PASSWORD." />
+    <Error Condition="!Exists('$(PLAY_UPLOAD_KEYSTORE)')" Text="The upload key was not found at PLAY_UPLOAD_KEYSTORE: $(PLAY_UPLOAD_KEYSTORE)" />
+  </Target>
+
   <ItemGroup>
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#141516" BaseSize="128,128" />
     <MauiFont Include="Resources\Fonts\*" />

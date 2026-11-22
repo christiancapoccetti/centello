@@ -270,6 +270,9 @@ ClientBin/
 *.dbproj.schemaview
 *.jfm
 *.pfx
+# Android signing keys (the Google Play upload key) never belong in the repository
+*.keystore
+*.jks
 *.publishsettings
 orleans.codegen.cs
 
