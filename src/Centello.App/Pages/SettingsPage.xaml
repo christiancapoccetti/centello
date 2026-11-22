@@ -22,7 +22,8 @@
 
                 <Label Text="Voce e foto" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <VerticalStackLayout IsVisible="{Binding ShowKeyStatus}">
-                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Mic}" Title="Attivo" Detail="Chiave OpenAI salvata" IsPositive="True" />
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Mic}" Title="{Binding KeyStatusTitle}" Detail="{Binding KeyStatusDetail}" IsPositive="{Binding IsKeyActive}" />
+                    <Button Margin="24,12,24,0" HorizontalOptions="Start" Text="Rivedi il consenso" Style="{StaticResource FilledButton}" IsVisible="{Binding NeedsKeyConsent}" Clicked="OnAuthorizeKeyClicked" />
                     <FlexLayout Margin="24,12,24,0" Wrap="Wrap" JustifyContent="SpaceBetween" AlignItems="Center">
                         <Button Text="Sostituisci chiave" Style="{StaticResource OutlinedButton}" Clicked="OnReplaceClicked" />
                         <Button Text="Rimuovi" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" TextColor="{t:Theme Alert}" Clicked="OnRemoveClicked" />

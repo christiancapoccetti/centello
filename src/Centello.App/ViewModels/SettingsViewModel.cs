@@ -12,7 +12,7 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
     private const string ReplacementLead = "La nuova chiave prende il posto di quella salvata.";
 
     private string _recurringSummary = "";
-    private bool _hasApiKey;
+    private OpenAiApiKeyStatus _keyStatus;
     private bool _isReplacing;
     private string _apiKeyInput = "";
     private string _apiKeyError = "";
@@ -26,13 +26,19 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
     public bool RecapNoticeBlocked { get => _recapNoticeBlocked; private set => SetProperty(ref _recapNoticeBlocked, value); }
     public string RecurringSummary { get => _recurringSummary; private set => SetProperty(ref _recurringSummary, value); }
     public string VersionText => $"Versione {AppInfo.Current.VersionString}";
-    public bool HasApiKey
+    private OpenAiApiKeyStatus KeyStatus
     {
-        get => _hasApiKey;
-        private set
+        get => _keyStatus;
+        set
         {
-            if (SetProperty(ref _hasApiKey, value))
-                NotifyKeyStateChanged();
+            if (!SetProperty(ref _keyStatus, value))
+                return;
+
+            NotifyKeyStateChanged();
+            OnPropertyChanged(nameof(IsKeyActive));
+            OnPropertyChanged(nameof(NeedsKeyConsent));
+            OnPropertyChanged(nameof(KeyStatusTitle));
+            OnPropertyChanged(nameof(KeyStatusDetail));
         }
     }
     /// <summary>The person is typing a key to put in place of the one saved.</summary>
@@ -45,8 +51,14 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
                 NotifyKeyStateChanged();
         }
     }
-    public bool ShowKeyStatus => HasApiKey && !IsReplacing;
+    public bool ShowKeyStatus => KeyStatus != OpenAiApiKeyStatus.Missing && !IsReplacing;
     public bool ShowKeyForm => !ShowKeyStatus;
+    public bool IsKeyActive => KeyStatus == OpenAiApiKeyStatus.Active;
+    public bool NeedsKeyConsent => KeyStatus == OpenAiApiKeyStatus.ConsentRequired;
+    public string KeyStatusTitle => IsKeyActive ? "Attivo" : "Consenso da aggiornare";
+    public string KeyStatusDetail => IsKeyActive
+        ? "Chiave OpenAI salvata"
+        : "Voce, foto e PDF restano disattivati fino al tuo consenso.";
     public string KeyLead => IsReplacing ? ReplacementLead : NewKeyLead;
     public string ApiKeyInput
     {
@@ -75,7 +87,7 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
     public async Task Load()
     {
         RefreshRecapNotice();
-        HasApiKey = await openAiSettings.HasApiKey();
+        KeyStatus = await openAiSettings.GetApiKeyStatus();
         using var scope = scopeFactory.CreateScope();
         var list = await scope.ServiceProvider.GetRequiredService<RecurringPaymentListService>().Get();
         // The row keeps its last words when the list cannot be read: the payments page says what went wrong.
@@ -116,15 +128,22 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
 
         ClearInput();
         IsReplacing = false;
-        HasApiKey = true;
+        KeyStatus = OpenAiApiKeyStatus.Active;
         return true;
+    }
+
+    public async Task<Result> AuthorizeStoredApiKey()
+    {
+        var result = await openAiSettings.AuthorizeStoredApiKey(consentAccepted: true);
+        KeyStatus = await openAiSettings.GetApiKeyStatus();
+        return result;
     }
 
     public void RemoveApiKey()
     {
         openAiSettings.ClearApiKey();
         ClearInput();
-        HasApiKey = false;
+        KeyStatus = OpenAiApiKeyStatus.Missing;
     }
 
     public void RefreshRecapNotice()

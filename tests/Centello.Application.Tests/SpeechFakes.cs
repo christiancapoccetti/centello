@@ -5,8 +5,13 @@ namespace Centello.Application.Tests;
 internal sealed class FakeApiKeyStore : IOpenAiApiKeyStore
 {
     public string Key { get; set; } = "";
-    public Task<string> GetApiKey() => Task.FromResult(Key);
-    public Task SetApiKey(string apiKey) => Task.CompletedTask;
+    public Task<StoredOpenAiApiKey?> GetApiKey() => Task.FromResult<StoredOpenAiApiKey?>(
+        new StoredOpenAiApiKey(Key, OpenAiSettings.CurrentConsentVersion));
+    public Task SetApiKey(StoredOpenAiApiKey apiKey)
+    {
+        Key = apiKey.Value;
+        return Task.CompletedTask;
+    }
     public void ClearApiKey() => Key = "";
 }
 

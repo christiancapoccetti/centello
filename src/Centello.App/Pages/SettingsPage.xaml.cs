@@ -13,6 +13,7 @@ public partial class SettingsPage : ContentPage
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
     private Window? _settingsWindow;
+    private bool _keyActionInProgress;
 
     public SettingsPage(SettingsViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
     {
@@ -85,18 +86,25 @@ public partial class SettingsPage : ContentPage
 
     private void OnCancelReplaceClicked(object? sender, EventArgs e) => _viewModel.StopReplacing();
 
-    private async void OnSaveKeyClicked(object? sender, EventArgs e)
+    private async void OnSaveKeyClicked(object? sender, EventArgs e) => await RunKeyAction(async () =>
     {
         if (!_viewModel.HasKeyToSave())
             return;
 
-        // Annulla in the dialog leaves everything as it is: the key stays typed and nothing is said.
-        var accepted = await _confirmation.Ask("Voce, foto e PDF con OpenAI", OpenAiSettings.ConsentMessage, "Acconsento", "Annulla");
-        if (await _viewModel.SaveApiKey(accepted))
+        if (await _viewModel.SaveApiKey(await AskOpenAiConsent()))
             _snackbar.Show("Chiave salvata. Tieni premuto il microfono per dettare.");
-    }
+    });
 
-    private async void OnRemoveClicked(object? sender, EventArgs e)
+    private async void OnAuthorizeKeyClicked(object? sender, EventArgs e) => await RunKeyAction(async () =>
+    {
+        if (!await AskOpenAiConsent())
+            return;
+
+        var result = await _viewModel.AuthorizeStoredApiKey();
+        _snackbar.Show(result.IsSuccess ? "Voce, foto e PDF riattivati" : result.Error.Message);
+    });
+
+    private async void OnRemoveClicked(object? sender, EventArgs e) => await RunKeyAction(async () =>
     {
         var confirmed = await _confirmation.Ask(
             "Rimuovere la chiave OpenAI?",
@@ -109,5 +117,24 @@ public partial class SettingsPage : ContentPage
 
         _viewModel.RemoveApiKey();
         _snackbar.Show("Chiave rimossa");
+    });
+
+    private Task<bool> AskOpenAiConsent() => _confirmation.Ask(
+        "Voce, foto e PDF con OpenAI", OpenAiSettings.ConsentMessage, "Acconsento", "Annulla");
+
+    private async Task RunKeyAction(Func<Task> action)
+    {
+        if (_keyActionInProgress)
+            return;
+
+        _keyActionInProgress = true;
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            _keyActionInProgress = false;
+        }
     }
 }

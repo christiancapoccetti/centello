@@ -129,8 +129,8 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
 
     private sealed class InMemoryOpenAiApiKeyStore : IOpenAiApiKeyStore
     {
-        public Task<string> GetApiKey() => Task.FromResult("");
-        public Task SetApiKey(string apiKey) => Task.CompletedTask;
+        public Task<StoredOpenAiApiKey?> GetApiKey() => Task.FromResult<StoredOpenAiApiKey?>(null);
+        public Task SetApiKey(StoredOpenAiApiKey apiKey) => Task.CompletedTask;
         public void ClearApiKey()
         {
         }
