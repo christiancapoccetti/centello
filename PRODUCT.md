@@ -38,7 +38,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 - Local-first by construction: SQLite on the device, no account, no backend, no sync. Android Auto Backup copies only the database to the user's own Google account (the OpenAI key is excluded); a backup file and a CSV of every expense can be saved in the Download folder, and a backup file can be restored after a preview. Apart from that, the only data that leaves the phone is the voice-entry audio and its transcript, or the photo or PDF chosen for entry, plus active category and tag names and today's date, sent to OpenAI with the user's own API key and only after explicit consent. Manual entry always works offline.
 - Stack: .NET 10 MAUI, Android only (min API 24), MVVM, Clean Architecture, Result Pattern.
 - User-facing text is Italian and currently hardcoded; amounts are in euros with Italian formatting (`486,20 €`).
-- Not in scope yet (see `FUTURE.md`): storing receipt photos, localization/English, configurable budget alerts, biometric lock.
+- Not in scope yet: storing receipt photos, localization/English, configurable budget alerts, biometric lock.
 
 ## Brand Commitments
 
@@ -47,7 +47,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Evidence on Hand
 
-- Product docs: `README.md`, `FUTURE.md`, `DESIGN.md` (visual system) and `docs/mockups/centesimo-prototype.html` (approved prototype of every screen).
+- Product docs: `README.md`, `DESIGN.md` (visual system) and `docs/mockups/centesimo-prototype.html` (approved prototype of every screen). The roadmap lives in GitHub issues.
 - No reviews, testimonials, download counts or store listing exist. Do not invent any.
 
 ## Product Principles
@@ -63,4 +63,4 @@ Success means expenses actually get logged, because entry is fast enough that sk
 - Touch targets of at least 48 × 48 dp.
 - Icons support text and are never the only way to understand something; charts carry text alternatives (for example, "Andamento giornaliero: picco di 74,50 € il 18 luglio").
 - Bottom-navigation labels must stay visible on narrow screens, and the bar respects the bottom safe area.
-- Screen-reader descriptions are a known gap planned in `FUTURE.md`.
+- Screen-reader descriptions are a known gap.
