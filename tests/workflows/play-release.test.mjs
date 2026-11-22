@@ -65,7 +65,10 @@ test('uploads a signed bundle, publishes its Italian notes and commits the edit'
 });
 
 test('a retry after a successful commit does not upload the artifact again', async () => {
-  const { calls, api } = play({ releases: [completed], bundles: [{ versionCode: 22, sha256 }] });
+  const { calls, api } = play({
+    releases: [completed],
+    bundles: [{ versionCode: 22, sha256 }, { versionCode: 100, sha256: 'newer bundle' }],
+  });
   await publishBeta(api, 'alpha', release, sha256);
   assert.deepEqual(calls.map(call => call.method), ['POST', 'GET', 'GET', 'DELETE']);
 });

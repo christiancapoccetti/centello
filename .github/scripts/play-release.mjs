@@ -87,6 +87,8 @@ export async function publishBeta(api, track, release, sha256) {
     }
 
     const { bundles = [] } = await api('GET', edit + '/bundles');
+    if (!alreadyPublished && bundles.some(bundle => Number(bundle.versionCode) > release.versionCode))
+      throw new Error('Google Play already has a bundle with a newer version code.');
     const existing = bundles.find(bundle => Number(bundle.versionCode) === release.versionCode);
     if (alreadyPublished && !existing)
       throw new Error('The original tracked bundle could not be verified.');
