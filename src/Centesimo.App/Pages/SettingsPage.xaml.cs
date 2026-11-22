@@ -5,6 +5,7 @@ namespace Centesimo.App.Pages;
 
 public partial class SettingsPage : ContentPage
 {
+    private const string PrivacyPolicyUrl = "https://christiancapoccetti.github.io/centesimo/privacy-policy.html";
     private const int KeyboardWaitAttempts = 15;
     private static readonly TimeSpan KeyboardWaitStep = TimeSpan.FromMilliseconds(100);
 
@@ -35,6 +36,18 @@ public partial class SettingsPage : ContentPage
 
     private async void OnLicensesTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(LicensesPage));
+
+    private async void OnPrivacyPolicyTapped(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Launcher.Default.OpenAsync(new Uri(PrivacyPolicyUrl));
+        }
+        catch
+        {
+            _snackbar.Show("Non è stato possibile aprire il browser");
+        }
+    }
 
     // The tab bar stays above the keyboard on this page, so with both open the button under the field is behind the
     // bar. Once the keyboard has taken its room, which shows as the form getting shorter, the page scrolls to the button.
