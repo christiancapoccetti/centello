@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:t="clr-namespace:Centello.App.Theming"
+                    xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application">
+    <Style TargetType="Page" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ground}" />
+    </Style>
+    <!-- A pushed list page (its own style, so it repeats the ground of the page style) draws under the transparent navigation bar, so its list scrolls behind the bar and the last
+         row can still end above it. The bottom edge is left alone here and taken by the scroll content (ListScroll,
+         ListEnd), and by whatever floats over it. -->
+    <Style x:Key="EdgeToEdgePage" TargetType="ContentPage">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ground}" />
+        <Setter Property="SafeAreaEdges" Value="Container,Container,Container,None" />
+    </Style>
+    <Style x:Key="EdgeToEdgeRoot" TargetType="Grid">
+        <Setter Property="SafeAreaEdges" Value="None" />
+    </Style>
+    <Style x:Key="ListScroll" TargetType="ScrollView">
+        <Setter Property="SafeAreaEdges" Value="None,None,None,Container" />
+    </Style>
+    <Style TargetType="Label" BasedOn="{StaticResource BaseText}" />
+    <Style TargetType="Entry" ApplyToDerivedTypes="True">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="PlaceholderColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style TargetType="Editor">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="PlaceholderColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style TargetType="Picker">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="TitleColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style TargetType="DatePicker">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Regular}" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+    </Style>
+    <Style TargetType="ActivityIndicator">
+        <Setter Property="Color" Value="{t:Theme Ink}" />
+    </Style>
+    <Style TargetType="ProgressBar">
+        <Setter Property="ProgressColor" Value="{t:Theme Ink}" />
+    </Style>
+    <Style TargetType="Switch">
+        <Setter Property="OnColor" Value="{t:Theme Accent}" />
+    </Style>
+    <Style TargetType="Shell" ApplyToDerivedTypes="True">
+        <Setter Property="Shell.BackgroundColor" Value="{t:Theme Ground}" />
+        <Setter Property="Shell.NavBarIsVisible" Value="False" />
+        <Setter Property="Shell.TabBarBackgroundColor" Value="{t:Theme Ground}" />
+        <Setter Property="Shell.TabBarForegroundColor" Value="{t:Theme Ink}" />
+        <Setter Property="Shell.TabBarTitleColor" Value="{t:Theme Ink}" />
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{t:Theme Mute}" />
+    </Style>
+    <Style x:Key="PrimaryActionButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ink}" />
+        <Setter Property="TextColor" Value="{t:Theme Ground}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="MinimumHeightRequest" Value="56" />
+        <Setter Property="CornerRadius" Value="28" />
+        <Setter Property="Padding" Value="24,0" />
+    </Style>
+    <Style x:Key="TextActionButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="Padding" Value="12,8" />
+    </Style>
+    <Style x:Key="OutlinedButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderColor" Value="{t:Theme Mute}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="Padding" Value="24,0" />
+    </Style>
+    <!-- The one action of an empty page: quieter than the primary button, with the plus of the floating one. -->
+    <Style x:Key="TonalButton" TargetType="Button" BasedOn="{StaticResource OutlinedButton}">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="BorderColor" Value="{t:Theme Outline}" />
+        <Setter Property="ContentLayout" Value="Left,8" />
+        <Setter Property="ImageSource">
+            <Setter.Value>
+                <FontImageSource Glyph="{x:Static app:MaterialSymbols.Add}" FontFamily="{x:Static t:Fonts.Icons}" Size="20" Color="{t:Theme Accent}" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- The main action of a form that is not docked at the bottom: 48 high, as wide as its text unless stretched. -->
+    <Style x:Key="FilledButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ink}" />
+        <Setter Property="TextColor" Value="{t:Theme Ground}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="Padding" Value="24,0" />
+    </Style>
+    <Style x:Key="DangerOutlinedButton" TargetType="Button" BasedOn="{StaticResource OutlinedButton}">
+        <Setter Property="BorderColor" Value="{t:Theme Alert}" />
+        <Setter Property="TextColor" Value="{t:Theme Alert}" />
+    </Style>
+    <!-- The action that floats over a list: "+" and what it adds. -->
+    <Style x:Key="ExtendedFab" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="BorderColor" Value="{t:Theme Outline}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Bold}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="MinimumHeightRequest" Value="56" />
+        <Setter Property="CornerRadius" Value="28" />
+        <Setter Property="Padding" Value="16,0,20,0" />
+        <Setter Property="ContentLayout" Value="Left,10" />
+        <Setter Property="ImageSource">
+            <Setter.Value>
+                <FontImageSource Glyph="{x:Static app:MaterialSymbols.Add}" FontFamily="{x:Static t:Fonts.Icons}" Size="24" Color="{t:Theme Accent}" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="IconGlyphButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="{x:Static t:Fonts.Icons}" />
+        <Setter Property="FontAutoScalingEnabled" Value="False" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{t:Theme Ink}" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="Opacity" Value="0.3" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+    <Style x:Key="SurfaceCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme Ground}" />
+        <Setter Property="Stroke" Value="{t:Theme Hairline}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="18" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="16" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="SplitPill" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="Stroke" Value="{t:Theme Outline}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="MinimumHeightRequest" Value="60" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="30" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Badge" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="MinimumHeightRequest" Value="20" />
+        <Setter Property="Padding" Value="6,0" />
+    </Style>
+    <Style x:Key="InfoCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="12" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="MenuSurface" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{t:Theme SurfaceRaised}" />
+        <Setter Property="Stroke" Value="{t:Theme Outline}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="0,8" />
+        <Setter Property="MinimumWidthRequest" Value="220" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="4" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Hairline" TargetType="BoxView">
+        <Setter Property="Color" Value="{t:Theme Hairline}" />
+        <Setter Property="HeightRequest" Value="1" />
+    </Style>
+</ResourceDictionary>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.Centello.Day" parent="">
+        <item name="android:visibility">gone</item>
+    </style>
+    <style name="Widget.Centello.Night" parent="">
+        <item name="android:visibility">visible</item>
+    </style>
+
+    <style name="Widget.Centello.DayTile" parent="Widget.Centello.Day">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <style name="Widget.Centello.NightTile" parent="Widget.Centello.Night">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+</resources>

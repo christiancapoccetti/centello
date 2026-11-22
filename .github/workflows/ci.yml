@@ -25,17 +25,17 @@ jobs:
 
       - name: Restore and build
         run: |
-          dotnet restore Centesimo.slnx
-          dotnet build Centesimo.slnx -c Debug --no-restore
+          dotnet restore Centello.slnx
+          dotnet build Centello.slnx -c Debug --no-restore
 
       - name: Check development package identity
         shell: pwsh
-        run: ./tests/android/check-variant.ps1 -Manifest src/Centesimo.App/obj/Debug/net10.0-android/android/AndroidManifest.xml -Variant Dev
+        run: ./tests/android/check-variant.ps1 -Manifest src/Centello.App/obj/Debug/net10.0-android/android/AndroidManifest.xml -Variant Dev
 
       - name: Run tests with branch and line coverage
         id: tests
         run: |
-          dotnet test Centesimo.slnx -c Debug --no-build --no-restore \
+          dotnet test Centello.slnx -c Debug --no-build --no-restore \
             --results-directory TestResults --collect:"XPlat Code Coverage;Format=opencover"
 
       - name: Merge coverage reports
@@ -44,7 +44,7 @@ jobs:
           dotnet tool install dotnet-reportgenerator-globaltool --version 5.5.11 --framework net10.0 --tool-path "$RUNNER_TEMP/report-tools"
           "$RUNNER_TEMP/report-tools/reportgenerator" \
             "-reports:TestResults/*/coverage.opencover.xml" \
-            "-assemblyfilters:+Centesimo.Domain;+Centesimo.Application;+Centesimo.Infrastructure" \
+            "-assemblyfilters:+Centello.Domain;+Centello.Application;+Centello.Infrastructure" \
             "-targetdir:Coverage" "-reporttypes:Cobertura;MarkdownSummaryGithub"
           cat Coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
 
@@ -52,7 +52,7 @@ jobs:
         shell: pwsh
         run: |
           $report = [xml](Get-Content -Raw Coverage/Cobertura.xml)
-          $expected = @('Centesimo.Application', 'Centesimo.Domain', 'Centesimo.Infrastructure')
+          $expected = @('Centello.Application', 'Centello.Domain', 'Centello.Infrastructure')
           $packages = @($report.SelectNodes('/coverage/packages/package'))
           $measured = @($packages | Where-Object { $_.SelectSingleNode('classes/class/lines/line') } | ForEach-Object { $_.name })
           if ($packages.Count -ne $expected.Count -or (Compare-Object $expected $measured -CaseSensitive)) {

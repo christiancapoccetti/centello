@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centello.App.Theming"
+             xmlns:c="clr-namespace:Centello.App.Controls"
+             xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
+             x:Class="Centello.App.Pages.LicensesPage"
+             Title="Licenze"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             Style="{StaticResource EdgeToEdgePage}">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,*">
+        <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
+            <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
+            <Label Grid.Column="1" Margin="4,0,0,0" Text="Licenze" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <ScrollView Grid.Row="1" Style="{StaticResource ListScroll}">
+            <VerticalStackLayout Padding="0,0,0,24">
+                <VerticalStackLayout Margin="24,8,24,12">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Image WidthRequest="40" HeightRequest="40" Margin="-6,0,0,0" VerticalOptions="Center" Source="{AppThemeBinding Light=segno_su_chiaro.png, Dark=segno_su_scuro.png}" SemanticProperties.Description="Segno di Centello" />
+                        <Label Grid.Column="1" Text="Centello" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
+                    </Grid>
+                    <Label Text="Codice sorgente pubblico con licenza PolyForm Noncommercial 1.0.0: puoi leggerlo, usarlo, modificarlo e condividerlo solo per scopi non commerciali. L'uso commerciale non è consentito." FontSize="15" LineHeight="1.5" Margin="0,8,0,0" />
+                    <Label Text="Il nome Centello e il logo non sono concessi in licenza. Il programma è fornito così com'è, SENZA ALCUNA GARANZIA." FontSize="15" LineHeight="1.5" Margin="0,8,0,0" />
+                    <Label Text="Copyright © 2026 Christian Capoccetti" Style="{StaticResource Caption}" FontSize="14" Margin="0,8,0,0" />
+                    <!-- The link is what the person reads and the button over it is what they touch. -->
+                    <Grid MinimumHeightRequest="48" HorizontalOptions="Start" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
+                        <Label Text="Codice sorgente su GitHub" FontFamily="{x:Static t:Fonts.Bold}" FontSize="15" TextDecorations="Underline" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.OpenInNew}" />
+                        <Button Grid.ColumnSpan="2" BackgroundColor="Transparent" Text="" Clicked="OnSourceClicked" SemanticProperties.Description="Codice sorgente su GitHub" SemanticProperties.Hint="Si apre nel browser" />
+                    </Grid>
+                </VerticalStackLayout>
+
+                <c:ExpandableRow Title="Testo completo della licenza" Subtitle="PolyForm Noncommercial 1.0.0" Text="{Binding LicenseTerms}" />
+
+                <Label Text="Componenti open source" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                <Label Text="{Binding ComponentsMessage}" Style="{StaticResource Lead}" Margin="24,4,24,0" IsVisible="{Binding HasComponentsMessage}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Components}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <c:ExpandableRow Title="{Binding Name}" Subtitle="{Binding License}" Text="{Binding Text}" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

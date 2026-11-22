@@ -188,10 +188,10 @@ const status=`<div class="status"><span>9:41</span><span>${ms('signal_cellular_a
 const tabs=`<div class="tabs"><div>${ms('today')}Oggi</div><div>${ms('bar_chart')}Insight</div><div>${ms('category')}Categorie</div><div class="on">${ms('settings')}Impostazioni</div></div><div class="gest"></div>`;
 const gest=`<div class="gest"></div>`;
 const srow=(icon,t,d,{nav=false,cls=''}={})=>`<div class="srow ${cls}">${ms(icon)}<div class="txt"><div class="t">${t}</div>${d?`<div class="d">${d}</div>`:''}</div>${nav?`<span class="ms chev">chevron_right</span>`:'<span></span>'}</div>`;
-const googleNote=`<div class="note">${ms('cloud')}<p>Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centesimo su un telefono nuovo.</p></div>`;
+const googleNote=`<div class="note">${ms('cloud')}<p>Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centello su un telefono nuovo.</p></div>`;
 const voice=`<p class="sec">Inserimento vocale</p>${srow('mic','Attivo','Chiave OpenAI salvata',{cls:'pos'})}
  <div class="btns"><span class="btn outlined">Sostituisci chiave</span><span class="btn text" style="margin-left:auto;color:var(--alert)">Rimuovi</span></div>`;
-const info=`<p class="sec">Informazioni</p>${srow('info','Versione 1.4.0')}${srow('description','Licenze','Centesimo e componenti open source',{nav:true})}`;
+const info=`<p class="sec">Informazioni</p>${srow('info','Versione 1.4.0')}${srow('description','Licenze','Centello e componenti open source',{nav:true})}`;
 
 const settings=dati=>`${status}<div class="top tab"><b>Impostazioni</b></div><div class="scroll">
  <p class="sec first">Dati</p>${srow('repeat','Pagamenti regolari','6 attivi',{nav:true})}${dati}${voice}${info}</div>${tabs}`;
@@ -209,7 +209,7 @@ const dialog=`<div class="scrimL"></div><div class="dialog"><h3>Ripristinare que
  <div class="acts"><span>Annulla</span><span class="x">Ripristina</span></div></div>`;
 const snack=t=>`<div class="snack">${t}</div>`;
 
-const fileLine=`<div class="file">${ms('description')}<div><b>centesimo-2026-11-12.backup</b><small>Backup del 12 novembre 2026, 21:40</small></div></div>`;
+const fileLine=`<div class="file">${ms('description')}<div><b>centello-2026-11-12.backup</b><small>Backup del 12 novembre 2026, 21:40</small></div></div>`;
 const cmp=`<div class="cmp"><div class="h"><span style="text-align:left"></span><span>Nel file</span><span>Sul telefono</span></div>
  <div class="r">Spese<b>1.284</b><span>1.302</span></div>
  <div class="r">Categorie<b>23</b><span>24</span></div>
@@ -225,12 +225,12 @@ const b3=push('Ripristina backup',`${restoreLead}${fileLine}
  <div style="margin-top:20px"><span class="btn outlined block">Vai a Oggi</span></div>`);
 const b4=push('Ripristina backup',`${restoreLead}
  <div class="file">${ms('description')}<div><b>spese-novembre.pdf</b></div></div>
- <div class="err">${ms('error')}<p>Questo file non è un backup di Centesimo. Scegli un file creato con "Crea file di backup".</p></div>
+ <div class="err">${ms('error')}<p>Questo file non è un backup di Centello. Scegli un file creato con "Crea file di backup".</p></div>
  <div style="margin-top:20px"><span class="btn filled block">${ms('upload_file')}Scegli un altro file</span></div>`);
 
 const c2=push('Backup ed export',`
  <p class="sec first">Account Google</p>${srow('cloud','Backup automatico','Gestito da Android')}
- <div class="note">${ms('info')}<p>Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centesimo su un telefono nuovo.</p></div>
+ <div class="note">${ms('info')}<p>Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centello su un telefono nuovo.</p></div>
  <p class="sec">File di backup</p>${srow('save','Crea file di backup','Spese, categorie, tag e pagamenti regolari')}${srow('restore','Ripristina da file','Sostituisce i dati di questo telefono',{nav:true})}
  <p class="sec">Foglio di calcolo</p>${srow('table_view','Esporta spese in CSV','Tutte le spese, per Excel o Fogli')}`);
 
@@ -245,12 +245,12 @@ put('today',settings(datiToday));
 put('a1',settings(datiA));
 put('a2',settings(datiA)+dialog);
 put('a3',settings(datiA)+snack('Dati ripristinati dal backup del 12 novembre 2026.'));
-put('a4',settings(datiA)+snack('Questo file non è un backup di Centesimo.'));
+put('a4',settings(datiA)+snack('Questo file non è un backup di Centello.'));
 put('b1',b1);put('b2',b2);put('b3',b3);put('b4',b4);
 put('c1',settings(datiC.replace('</div></div>','</div></div>')));
 put('c2',c2);
-put('s1',settings(datiA)+sheet('centesimo-spese-2026-11-20.csv','86 kB · 1.302 spese','table_view'));
-put('s2',settings(datiA)+sheet('centesimo-2026-11-20.backup','412 kB','save'));
+put('s1',settings(datiA)+sheet('centello-spese-2026-11-20.csv','86 kB · 1.302 spese','table_view'));
+put('s2',settings(datiA)+sheet('centello-2026-11-20.backup','412 kB','save'));
 
 if(location.hash.includes('chiaro')) document.documentElement.classList.remove('dark');
 document.querySelectorAll('.theme button').forEach(btn=>btn.addEventListener('click',()=>{

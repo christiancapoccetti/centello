@@ -1,6 +1,6 @@
 # Agent Guidelines
 
-Coding guidelines for Centesimo. Project-local agent instructions override or extend these rules.
+Coding guidelines for Centello. Project-local agent instructions override or extend these rules.
 
 ## Language
 
@@ -42,7 +42,7 @@ Coding guidelines for Centesimo. Project-local agent instructions override or ex
 ## Testing
 
 - Create one test class per source class, named `{ClassName}_should_expected_behavior`.
-- Move private helpers with testable logic into dedicated testable classes (for example, `Centesimo.Application/Tools/`).
+- Move private helpers with testable logic into dedicated testable classes (for example, `Centello.Application/Tools/`).
 
 ## After every change
 

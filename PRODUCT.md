@@ -8,20 +8,20 @@ android
 
 ## Users
 
-Two real users today: the developer and their partner, each using Centesimo daily on their own Android phone. The app is not published; the APK is sideloaded. It is built as if it had a wider audience, so every flow, empty state and error must make sense to someone who did not write the app.
+Two real users today: the developer and their partner, each using Centello daily on their own Android phone. The app is published on Google Play. It is built as if it had a wider audience, so every flow, empty state and error must make sense to someone who did not write the app.
 
 The core situation is logging a purchase right after it happens: phone in hand, often on the move, with no patience for forms. A second, calmer situation is reviewing the month or year to see where the money went.
 
 ## Product Purpose
 
-Centesimo is a personal expense tracker. It exists to make recording an expense nearly effortless and to turn the recorded history into a clear picture of how spending changes over time.
+Centello is a personal expense tracker. It exists to make recording an expense nearly effortless and to turn the recorded history into a clear picture of how spending changes over time.
 
 Success means expenses actually get logged, because entry is fast enough that skipping it is not tempting, and that a glance at Today or Insight answers "how am I doing this month compared with before?"
 
 ## Positioning
 
 - **Fastest entry.** Logging an expense takes seconds. Today is the home screen, and voice entry ("Inserimento vocale") turns a spoken Italian phrase such as "ieri 12 euro di pizza" into a pre-filled draft constrained to the user's own categories and tags. A photo of a receipt or a PDF does the same.
-- **Spending awareness, not budget planning.** Centesimo shows trends, comparisons between periods and categories, and history-based insights. Category budgets exist but stay light; the app must not turn into a planning or alerting tool.
+- **Spending awareness, not budget planning.** Centello shows trends, comparisons between periods and categories, and history-based insights. Category budgets exist but stay light; the app must not turn into a planning or alerting tool.
 
 ## Operating Context
 
@@ -42,13 +42,13 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Brand Commitments
 
-- Name: **Centesimo**. The mark (a warm-white C with a coral segment, supplied by the owner) lives in `docs/brand/` as SVG plus the 512 px Play Store icon; the launcher icon is the adaptive icon in `src/Centesimo.App/Platforms/Android/Resources/`.
+- Name: **Centello**. The mark (a warm-white C with a coral segment, supplied by the owner) lives in `docs/brand/` as SVG plus the 512 px Play Store icon; the launcher icon is the adaptive icon in `src/Centello.App/Platforms/Android/Resources/`.
 - Voice: Italian, informal second person (`tu`), short and plain; privacy is stated factually ("Restano privati sul dispositivo"), never as a marketing claim.
 
 ## Evidence on Hand
 
-- Product docs: `README.md`, `DESIGN.md` (visual system) and `docs/mockups/centesimo-prototype.html` (approved prototype of every screen). The roadmap lives in GitHub issues.
-- No reviews, testimonials, download counts or store listing exist. Do not invent any.
+- Product docs: `README.md`, `DESIGN.md` (visual system) and `docs/mockups/centello-prototype.html` (approved prototype of every screen). The roadmap lives in GitHub issues.
+- Use verified sources for reviews, testimonials and download counts.
 
 ## Product Principles
 

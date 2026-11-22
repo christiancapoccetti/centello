@@ -1,5 +1,5 @@
 name: Set up Android build tools
-description: Install the .NET SDK, MAUI workload and Android SDK used by Centesimo.
+description: Install the .NET SDK, MAUI workload and Android SDK used by Centello.
 runs:
   using: composite
   steps:
@@ -7,7 +7,7 @@ runs:
       with:
         dotnet-version: 10.0.402
       env:
-        DOTNET_INSTALL_DIR: ${{ runner.temp }}/centesimo-dotnet
+        DOTNET_INSTALL_DIR: ${{ runner.temp }}/centello-dotnet
 
     - name: Install Android build tools
       shell: bash

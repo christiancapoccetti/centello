@@ -1,12 +1,12 @@
 ---
-title: Centesimo privacy policy
+title: Centello privacy policy
 ---
 
-# Centesimo privacy policy
+# Centello privacy policy
 
 Last updated: 21 November 2026
 
-Centesimo is an Android app for tracking personal expenses, developed by Christian Capoccetti as a personal project. This policy explains what data the app uses, where it goes and what choices you have.
+Centello is an Android app for tracking personal expenses, developed by Christian Capoccetti as a personal project. This policy explains what data the app uses, where it goes and what choices you have.
 
 ## In short
 
@@ -16,7 +16,7 @@ Centesimo is an Android app for tracking personal expenses, developed by Christi
 
 ## Who develops the app and how to get in touch
 
-Christian Capoccetti. For questions or requests about this policy, open an issue on [GitHub Issues](https://github.com/christiancapoccetti/centesimo/issues).
+Christian Capoccetti. For questions or requests about this policy, open an issue on [GitHub Issues](https://github.com/christiancapoccetti/centello/issues).
 
 GitHub issues are public: do not include personal data. If your request needs it, the reply will point you to a private channel.
 
@@ -36,7 +36,7 @@ Data is sent only when you use voice, a photo or a PDF, after you have entered y
 
 Your other expenses and the database are never sent. Data is encrypted in transit (HTTPS).
 
-Because the request uses your own key, it falls under your relationship with OpenAI and its terms and [privacy policy](https://openai.com/policies/). OpenAI may keep data received through its API for a limited time to monitor abuse. Centesimo does not save it.
+Because the request uses your own key, it falls under your relationship with OpenAI and its terms and [privacy policy](https://openai.com/policies/). OpenAI may keep data received through its API for a limited time to monitor abuse. Centello does not save it.
 
 Manual entry always works, without a key and without a connection.
 
@@ -63,8 +63,8 @@ The developer does not receive your data, so there is no data held by the develo
 
 ## Children
 
-Centesimo is not intended for children under 14.
+Centello is not intended for children under 14.
 
 ## Changes
 
-Any change to this policy will be published on this page with an updated date. The version history is in the [project repository](https://github.com/christiancapoccetti/centesimo/commits/main/docs/privacy-policy.md).
+Any change to this policy will be published on this page with an updated date. The version history is in the [project repository](https://github.com/christiancapoccetti/centello/commits/main/docs/privacy-policy.md).

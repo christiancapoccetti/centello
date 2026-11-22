@@ -77,7 +77,7 @@ jobs:
 
       - name: Restore Android dependencies
         if: steps.previous.outputs.id == ''
-        run: dotnet restore src/Centesimo.App/Centesimo.App.csproj
+        run: dotnet restore src/Centello.App/Centello.App.csproj
 
       - name: Confirm the approved commit and changelog before signing
         if: steps.previous.outputs.id == ''
@@ -101,13 +101,13 @@ jobs:
           printf '%s' "$PLAY_UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$PLAY_UPLOAD_KEYSTORE"
           unset PLAY_UPLOAD_KEYSTORE_BASE64
           printf '%s' "$PLAY_UPLOAD_PASSWORD" > "$signing/password"
-          dotnet publish src/Centesimo.App/Centesimo.App.csproj --no-restore -c Release -f net10.0-android \
+          dotnet publish src/Centello.App/Centello.App.csproj --no-restore -c Release -f net10.0-android \
             -p:PlayRelease=true -p:AndroidPackageFormats=aab \
             "-p:ApplicationVersion=$VERSION_CODE" "-p:ApplicationDisplayVersion=$VERSION" \
             "-p:AndroidSigningKeyPass=file:$signing/password" "-p:AndroidSigningStorePass=file:$signing/password" \
             -o "$RUNNER_TEMP/publish"
           pwsh -NoProfile -File tests/android/check-variant.ps1 \
-            -Manifest src/Centesimo.App/obj/Release/net10.0-android/android/AndroidManifest.xml -Variant Play
+            -Manifest src/Centello.App/obj/Release/net10.0-android/android/AndroidManifest.xml -Variant Play
           cp "$RUNNER_TEMP/publish/$PLAY_PACKAGE-Signed.aab" "$RUNNER_TEMP/play/app.aab"
           jarsigner -verify -strict -keystore "$PLAY_UPLOAD_KEYSTORE" -storepass:file "$signing/password" "$RUNNER_TEMP/play/app.aab" upload
           cd "$RUNNER_TEMP/play"

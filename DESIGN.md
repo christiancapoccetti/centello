@@ -1,5 +1,5 @@
 ---
-name: Centesimo
+name: Centello
 description: A personal expense tracker for Android; a month you read in one glance, an expense you add in one tap.
 colors:
   graphite-ground: "#141516"
@@ -259,13 +259,13 @@ components:
     textColor: "{colors.on-positive-container}"
 ---
 
-# Design System: Centesimo
+# Design System: Centello
 
 ## Overview
 
 **Creative North Star: "Industrial Graphics on Graphite"**
 
-Centesimo reads like a piece of Italian industrial graphics (the Olivetti and Pintori school) printed on the graphite of a station departure board. The ground is a near-black graphite, type is a warm white, and everything that carries meaning is flat: flat pastel inks for categories, flat bars for days, a flat line for the month. Nothing floats, nothing glows, nothing has a shadow. Depth comes from one raised graphite tone and 1dp hairlines.
+Centello reads like a piece of Italian industrial graphics (the Olivetti and Pintori school) printed on the graphite of a station departure board. The ground is a near-black graphite, type is a warm white, and everything that carries meaning is flat: flat pastel inks for categories, flat bars for days, a flat line for the month. Nothing floats, nothing glows, nothing has a shadow. Depth comes from one raised graphite tone and 1dp hairlines.
 
 The system is dense but quiet. One condensed extra-bold numeral (the month's total) is the loudest thing on any screen; everything else is Archivo at body sizes in ink or mute grey, with tabular figures so every amount lines up. Colour is reserved: the category palette belongs to categories alone, and a single coral marks the act of adding an expense. Dark is the reference scheme; light is a paper twin with the same roles, and both follow the system setting.
 
@@ -280,7 +280,7 @@ This is a native Android app (.NET MAUI) locked to portrait. All measures below 
 
 ## Colors
 
-A graphite-and-warm-white neutral world, one coral accent, and a seven-slot pastel palette that only categories may wear. Every colour has a dark and a light value; the dark one is the reference and the `-light` sibling in the frontmatter is its paper-scheme twin. `ThemeTokens` (`src/Centesimo.Application/Appearance/ThemeTokens.cs`) is the only colour table in the app: `ThemeColors.cs` reads it for MAUI, and the `@color/theme_*` resources the widgets use are generated from it and held to it by a test. `CategoryPalette.cs` is the only palette.
+A graphite-and-warm-white neutral world, one coral accent, and a seven-slot pastel palette that only categories may wear. Every colour has a dark and a light value; the dark one is the reference and the `-light` sibling in the frontmatter is its paper-scheme twin. `ThemeTokens` (`src/Centello.Application/Appearance/ThemeTokens.cs`) is the only colour table in the app: `ThemeColors.cs` reads it for MAUI, and the `@color/theme_*` resources the widgets use are generated from it and held to it by a test. `CategoryPalette.cs` is the only palette.
 
 ### Primary
 - **Signal Coral** (`accent-coral`, light `accent-light`): the add action. The plus of "Aggiungi spesa", the microphone and camera in the split pill, the plus on the extended FAB and tonal button, the on-state of a switch. It marks the one thing the app exists for.
@@ -402,12 +402,12 @@ Tapping a widget opens the app on the matching screen; an editor opened from a w
 
 **The Widget Words Are Pictures Rule.** Launchers ignore the app's font resources, so no widget word is a TextView. Every word is drawn in Archivo with tabular figures as a single-colour mask that the layout tints with its `@color/theme_*` colour, like the glyphs; a text with two colours (the budget sentence with its bold ink amount) is drawn twice, light and dark, and the launcher shows the copy that matches its scheme. Each image carries the same words as its description. Widget text therefore does not follow the system font size.
 
-**The Theme Resources Rule.** Widget layouts take colours only from `@color/theme_*`, generated from `ThemeTokens` in `src/Centesimo.App/Platforms/Android/Resources/values/` and `src/Centesimo.App/Platforms/Android/Resources/values-night/`, so a widget switches between light and dark with the launcher while the app is not running. Data graphics keep the hard-edge rules of the Home.
+**The Theme Resources Rule.** Widget layouts take colours only from `@color/theme_*`, generated from `ThemeTokens` in `src/Centello.App/Platforms/Android/Resources/values/` and `src/Centello.App/Platforms/Android/Resources/values-night/`, so a widget switches between light and dark with the launcher while the app is not running. Data graphics keep the hard-edge rules of the Home.
 
 ### Entry panel (signature)
 The sheet opened from the Aggiungi microphone or camera, or from the "Spesa a voce" and "Spesa da foto" shortcuts: translucent, over the launcher, on the scrim. `PanelActivity` hosts voice (`Dictation`) or photo (`PhotoReading`), and `PanelFaces.Of` holds every word it shows.
 - **Voice:** starts listening at once. A second tap on the microphone sends; so does reaching 20 seconds. "Annulla", a tap outside, Back or leaving the panel cancels. Oggi's hold-to-talk still refuses a recording that reaches 20 seconds.
-- **Photo:** the camera opens at once (the gallery below Android 13), after the same camera consent as Oggi. The panel stays alive behind the camera, then shows the reading face ("Lettura della foto", a progress bar and the privacy line) over the launcher. "Annulla" or backing out of the camera closes it. If Android ended the process behind the camera, the sheet says "La foto non è arrivata a Centesimo. Riprova.".
+- **Photo:** the camera opens at once (the gallery below Android 13), after the same camera consent as Oggi. The panel stays alive behind the camera, then shows the reading face ("Lettura della foto", a progress bar and the privacy line) over the launcher. "Annulla" or backing out of the camera closes it. If Android ended the process behind the camera, the sheet says "La foto non è arrivata a Centello. Riprova.".
 - **No key:** the sheet gives the missing-key sentence of its source and "Apri impostazioni".
 
 The draft then opens in the expense editor, as it does from Oggi.
@@ -430,7 +430,7 @@ Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action th
 - **Surface card:** ground fill, 1dp hairline stroke, 16dp radius, 18dp padding: errors and notes.
 - **Info card:** raised fill, no stroke, 12dp radius, 16dp padding.
 - **Menu surface:** raised fill, outline stroke, 4dp radius, 8dp vertical padding, 220dp minimum width.
-- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim. The reading sheet is shared by voice, photo and PDF ("Inserimento vocale", "Lettura della foto", "Lettura del PDF"): title, a progress bar and one privacy line (for example "Foto inviata a OpenAI, Centesimo non la salva").
+- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim. The reading sheet is shared by voice, photo and PDF ("Inserimento vocale", "Lettura della foto", "Lettura del PDF"): title, a progress bar and one privacy line (for example "Foto inviata a OpenAI, Centello non la salva").
 
 ### Inputs / Fields
 - **Style:** outlined box, 4dp radius, 56dp, transparent fill, 16sp text, 16dp sides; the SemiBold 12sp label sits on the top edge with a ground-coloured backing.

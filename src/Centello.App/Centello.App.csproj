@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Centello.App</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationTitle>Centello</ApplicationTitle>
+    <ApplicationId>it.christiancapoccetti.centesimo</ApplicationId>
+    <ApplicationDisplayVersion>1.2</ApplicationDisplayVersion>
+    <ApplicationVersion>3</ApplicationVersion>
+    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
+    <!-- Leaves CS8509 on: an enum switch with no discard arm fails the build when a member has no arm. -->
+    <NoWarn>$(NoWarn);CS8524</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' Or '$(DevBuild)' == 'true'">
+    <ApplicationTitle>Centello Dev</ApplicationTitle>
+    <ApplicationId>$(ApplicationId).dev</ApplicationId>
+    <DefineConstants>$(DefineConstants);CENTELLO_DEV</DefineConstants>
+    <AndroidPackageFormats>apk</AndroidPackageFormats>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DevBuild)' == 'true' And '$(Configuration)' == 'Release'">
+    <IntermediateOutputPath>obj/Dev/Release/</IntermediateOutputPath>
+    <OutputPath>bin/Dev/Release/</OutputPath>
+  </PropertyGroup>
+
+  <!-- The Google Play build signs an AAB with the upload key. Path and password come from environment variables, so
+       neither is ever in the repository. A plain Release build stays an APK signed with this machine's debug key, for
+       installing on test phones. -->
+  <PropertyGroup Condition="'$(PlayRelease)' == 'true'">
+    <AndroidPackageFormat>aab</AndroidPackageFormat>
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(PLAY_UPLOAD_KEYSTORE)</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>upload</AndroidSigningKeyAlias>
+    <AndroidSigningStorePass>env:PLAY_UPLOAD_PASSWORD</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>env:PLAY_UPLOAD_PASSWORD</AndroidSigningKeyPass>
+  </PropertyGroup>
+
+  <Target Name="RequirePlayUploadKey" BeforeTargets="PrepareForBuild" Condition="'$(PlayRelease)' == 'true'">
+    <Error Condition="'$(DevBuild)' == 'true'" Text="DevBuild and PlayRelease cannot be combined." />
+    <Error Condition="'$(Configuration)' != 'Release'" Text="PlayRelease builds only with -c Release." />
+    <Error Condition="'$(PLAY_UPLOAD_KEYSTORE)' == '' Or '$(PLAY_UPLOAD_PASSWORD)' == ''" Text="PlayRelease needs PLAY_UPLOAD_KEYSTORE (the path to the upload key) and PLAY_UPLOAD_PASSWORD." />
+    <Error Condition="!Exists('$(PLAY_UPLOAD_KEYSTORE)')" Text="The upload key was not found at PLAY_UPLOAD_KEYSTORE: $(PLAY_UPLOAD_KEYSTORE)" />
+  </Target>
+
+  <ItemGroup>
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#141516" BaseSize="128,128" />
+    <MauiFont Include="Resources\Fonts\*" />
+    <MauiImage Include="..\..\docs\brand\segno-colore-su-scuro.svg" Link="Resources\Images\segno_su_scuro.svg" BaseSize="64,64" />
+    <MauiImage Include="..\..\docs\brand\segno-colore-su-chiaro.svg" Link="Resources\Images\segno_su_chiaro.svg" BaseSize="64,64" />
+    <MauiAsset Include="Resources\Raw\*" LogicalName="%(Filename)%(Extension)" />
+    <MauiAsset Include="..\..\LICENSE" LogicalName="PolyForm-Noncommercial-1.0.0.md" />
+    <!-- The Android tab bar label style can only name a font resource, so the SemiBold cut is also packaged as one. -->
+    <AndroidResource Include="Resources\Fonts\Archivo-SemiBold.ttf" LogicalName="font\archivo_semibold.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Centello.Application\Centello.Application.csproj" />
+    <ProjectReference Include="..\Centello.Infrastructure\Centello.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

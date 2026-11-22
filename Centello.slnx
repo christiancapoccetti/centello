@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Centello.App/Centello.App.csproj" />
+    <Project Path="src/Centello.Application/Centello.Application.csproj" />
+    <Project Path="src/Centello.Domain/Centello.Domain.csproj" />
+    <Project Path="src/Centello.Infrastructure/Centello.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Centello.Application.Tests/Centello.Application.Tests.csproj" />
+    <Project Path="tests/Centello.Domain.Tests/Centello.Domain.Tests.csproj" />
+    <Project Path="tests/Centello.Infrastructure.Tests/Centello.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

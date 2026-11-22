@@ -1,0 +1,75 @@
+using Centello.App.ViewModels;
+using Centello.Application;
+
+namespace Centello.App.Pages;
+
+public partial class BackupPage : ContentPage
+{
+    private readonly BackupViewModel _viewModel;
+    private readonly ISnackbar _snackbar;
+    private readonly IDownloads _downloads;
+
+    public BackupPage(BackupViewModel viewModel, ISnackbar snackbar, IDownloads downloads)
+    {
+        InitializeComponent();
+        _viewModel = viewModel;
+        _snackbar = snackbar;
+        _downloads = downloads;
+        BindingContext = viewModel;
+    }
+
+    private async void OnBackClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("..");
+
+    private async void OnCreateBackupTapped(object? sender, EventArgs e) =>
+        await Present(await _viewModel.CreateBackup(), "File di backup");
+
+    private async void OnRestoreTapped(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(nameof(RestorePage));
+
+    private async void OnExportCsvTapped(object? sender, EventArgs e) =>
+        await Present(await _viewModel.ExportExpenses(), "Esporta spese");
+
+    private async Task Present(Result<ExportedFile>? result, string title)
+    {
+        if (result is null)
+            return;
+
+        if (result.IsFailure)
+        {
+            _snackbar.Show(result.Error.Message);
+            return;
+        }
+
+        var file = result.Value;
+        if (!_downloads.CanSave)
+        {
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = title,
+                File = new ShareFile(file.FilePath, file.ContentType)
+            });
+            return;
+        }
+
+        var saved = await _downloads.Save(file);
+        if (saved.IsFailure)
+        {
+            _snackbar.Show(saved.Error.Message);
+            return;
+        }
+
+        _snackbar.Show($"Salvato in Download: {Path.GetFileName(file.FilePath)}");
+        DeleteCacheCopy(file);
+    }
+
+    private static void DeleteCacheCopy(ExportedFile file)
+    {
+        try
+        {
+            File.Delete(file.FilePath);
+        }
+        catch (IOException)
+        {
+        }
+    }
+}
