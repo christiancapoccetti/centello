@@ -16,7 +16,7 @@ namespace Centesimo.App;
     Theme = "@style/Centesimo.Panel",
     Exported = PanelActivity.ShellCanStart,
     ExcludeFromRecents = true,
-    TaskAffinity = "it.christiancapoccetti.centesimo.panel",
+    TaskAffinity = "${applicationId}.panel",
     LaunchMode = LaunchMode.SingleTask,
     ConfigurationChanges = ConfigChanges.UiMode | ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 public sealed class PanelActivity : AppCompatActivity

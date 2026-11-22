@@ -8,7 +8,7 @@ using Centesimo.Application;
 
 namespace Centesimo.App;
 
-[BroadcastReceiver(Label = "Aggiungi spesa", Exported = false)]
+[BroadcastReceiver(Label = LauncherLabels.Prefix + "Aggiungi spesa", Exported = false)]
 [IntentFilter([AppWidgetManager.ActionAppwidgetUpdate])]
 [MetaData(AppWidgetManager.MetaDataAppwidgetProvider, Resource = "@xml/widget_add_info")]
 public sealed class AddWidget : CentesimoWidgetProvider

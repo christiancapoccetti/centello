@@ -74,6 +74,22 @@ dotnet build src/Centesimo.App/Centesimo.App.csproj -t:Run -f net10.0-android `
 
 Confirm that the target device is available with `adb devices` before running the app. The minimum supported Android API level is 24.
 
+Debug builds use the development identity by default: the launcher shows `Centesimo Dev`, and Android installs it as `it.christiancapoccetti.centesimo.dev`. The long-press shortcuts, widgets and launcher panel use the same development identity. Development data stays on the Android device in the development app's private database and preferences, separate from the original Play app and its data.
+
+To create a Release-configuration development APK, use `DevBuild=true`:
+
+```powershell
+dotnet publish src/Centesimo.App/Centesimo.App.csproj -c Release -f net10.0-android -p:DevBuild=true
+```
+
+The APK is written under `src/Centesimo.App/bin/Dev/Release/net10.0-android/publish/`. Install it with:
+
+```powershell
+adb install -r src/Centesimo.App/bin/Dev/Release/net10.0-android/publish/it.christiancapoccetti.centesimo.dev-Signed.apk
+```
+
+Development APKs use the workstation's Android debug key. The same key is sufficient to install updates, and Debug and Release development builds share the same app ID and device data. Google Play remains the original `it.christiancapoccetti.centesimo` app; build it using the Play instructions below.
+
 ## Build for Google Play
 
 Google Play takes an Android App Bundle (AAB) signed with the upload key; Play App Signing then re-signs the app it delivers. A plain Release build stays an APK signed with the local debug key, so an app installed from Play cannot be updated by a local build, nor the other way round.

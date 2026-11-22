@@ -8,7 +8,7 @@ using Centesimo.Application;
 
 namespace Centesimo.App;
 
-[BroadcastReceiver(Label = "Il ritmo", Exported = false)]
+[BroadcastReceiver(Label = LauncherLabels.Prefix + "Il ritmo", Exported = false)]
 [IntentFilter([AppWidgetManager.ActionAppwidgetUpdate])]
 [MetaData(AppWidgetManager.MetaDataAppwidgetProvider, Resource = "@xml/widget_rhythm_info")]
 public sealed class RhythmWidget : CentesimoWidgetProvider
