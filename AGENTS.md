@@ -46,8 +46,8 @@ Coding guidelines for Centello. Project-local agent instructions override or ext
 
 ## After every change
 
-- Run `dotnet build` and relevant tests; skip tests only for legacy code.
-- Before pushing, run the full test suite with zero failures.
+- Choose verification based on what the change can affect. For workflow changes, exercise the affected workflow step.
+- Before pushing, run tests when needed to verify affected behavior. Run the full suite when the impact warrants it.
 - Clean up in cascade: remove redundant code, parameters, methods, and classes created by the change.
 - Check whether existing documentation needs alignment. Add new documentation only for business- or architecture-critical changes, and keep it concise.
 

@@ -16,4 +16,4 @@ runs:
         echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
         echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
         "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
-        dotnet workload install maui-android --skip-manifest-update
+        dotnet workload install maui-android --version "$(dotnet --version)"
