@@ -13,7 +13,7 @@ public sealed class OpenAiSettings(IOpenAiApiKeyStore store) : IOpenAiApiKeyProv
 {
     public const string ConsentMessage =
         "Usando OpenAI, l'audio registrato, le foto e i PDF delle spese e il testo della spesa vengono inviati a OpenAI per la trascrizione e la lettura. " +
-        "Quattrino non salva né l'audio né le foto né i PDF: le tue spese restano solo sul dispositivo. " +
+        "Centesimo non salva né l'audio né le foto né i PDF: le tue spese restano solo sul dispositivo. " +
         "La chiave è conservata in modo sicuro sul telefono, ma una chiave su un'app non ha le garanzie di un server: usala solo per uso personale.";
 
     public Task<string> GetApiKey() => store.GetApiKey();

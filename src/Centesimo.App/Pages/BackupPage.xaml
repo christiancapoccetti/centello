@@ -19,7 +19,7 @@
             <VerticalStackLayout Padding="0,0,0,24">
                 <Label Text="Account Google" Style="{StaticResource SectionTitle}" Margin="24,8,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Cloud}" Title="Backup automatico" Detail="Gestito da Android" />
-                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Info}" Text="Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Quattrino su un telefono nuovo." />
+                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Info}" Text="Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centesimo su un telefono nuovo." />
 
                 <Label Text="File di backup" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Save}" Title="Crea file di backup" Detail="Spese, categorie, tag e pagamenti regolari" Kind="Action" Tapped="OnCreateBackupTapped" />

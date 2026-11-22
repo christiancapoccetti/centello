@@ -16,11 +16,11 @@ public static class PortabilityErrors
 
     public static readonly Error NotABackup = new(
         "Backup.NotABackup",
-        "Questo file non è un backup di Quattrino. Scegli un file creato con “Crea file di backup”.");
+        "Questo file non è un backup di Centesimo. Scegli un file creato con “Crea file di backup”.");
 
     public static readonly Error NewerVersion = new(
         "Backup.NewerVersion",
-        "Questo backup viene da una versione più recente di Quattrino. Aggiorna l'app e riprova.");
+        "Questo backup viene da una versione più recente di Centesimo. Aggiorna l'app e riprova.");
 
     public static readonly Error Damaged = new(
         "Backup.Damaged",
