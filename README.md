@@ -142,15 +142,15 @@ The workflow retains its signed bundle for 3 days and reuses it on retries. If a
 
 ### Manual fallback
 
-For an intentional manual upload, use the local upload key and Play Console. Raise `ApplicationVersion` before each upload. Keep the keystore and its password file outside the repository. Supply a file readable only by your user, containing the password on its first line. Set the two paths and publish:
+For an intentional manual upload, use the local upload key and Play Console. Raise `ApplicationVersion` before each upload. Keep the keystore and its password file outside the repository. Supply a file readable only by your user, containing the password on its first line. Set the two paths and build the signed bundle.
 
 ```powershell
 $env:PLAY_UPLOAD_KEYSTORE = "$HOME\keys\play-upload.jks"
 $env:PLAY_UPLOAD_PASSWORD_FILE = Read-Host "Path to the private upload password file"
-dotnet publish src/Centello.App/Centello.App.csproj -c Release -f net10.0-android -p:PlayRelease=true
+dotnet build src/Centello.App/Centello.App.csproj -c Release -t:SignAndroidPackage -p:PlayRelease=true
 ```
 
-The signed bundle is `src/Centello.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab`; the `.aab` without `-Signed` is unsigned. Check the signer with `keytool -printcert -jarfile <bundle>` before uploading. Before a manual upload, test the Release build end to end on a phone, check Play's current target SDK and 16 KB memory page requirements, and re-check `THIRD_PARTY_NOTICES.md` against bundled packages after dependency or .NET SDK changes. The privacy policy is published at <https://christiancapoccetti.github.io/centello/privacy-policy.html>, and Play Console listing and policy answers are in [docs/play-console.md](docs/play-console.md).
+The signed bundle is `src/Centello.App/bin/Release/net10.0-android/it.christiancapoccetti.centesimo-Signed.aab`; the `.aab` without `-Signed` is unsigned. Check the signer with `keytool -printcert -jarfile <bundle>` before uploading. Before a manual upload, test the Release build end to end on a phone, check Play's current target SDK and 16 KB memory page requirements, and re-check `THIRD_PARTY_NOTICES.md` against bundled packages after dependency or .NET SDK changes. The privacy policy is published at <https://christiancapoccetti.github.io/centello/privacy-policy.html>, and Play Console listing and policy answers are in [docs/play-console.md](docs/play-console.md).
 
 ## Voice, photo and PDF entry with OpenAI
 

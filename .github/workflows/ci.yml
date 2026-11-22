@@ -59,6 +59,22 @@ jobs:
             throw "Incomplete coverage. Expected $($expected -join ', '). Measured: $($measured -join ', ')."
           }
 
+      - name: Build and verify Play bundle with a temporary key
+        env:
+          PLAY_PACKAGE: it.christiancapoccetti.centesimo
+        run: |
+          set -euo pipefail
+          umask 077
+          signing=$(mktemp -d)
+          trap 'rm -rf -- "$signing"' EXIT
+          export PLAY_UPLOAD_KEYSTORE="$signing/upload.jks"
+          export PLAY_UPLOAD_PASSWORD_FILE="$signing/password"
+          printf '%s' 'centello-ci-key' > "$PLAY_UPLOAD_PASSWORD_FILE"
+          keytool -genkeypair -storetype JKS -keystore "$PLAY_UPLOAD_KEYSTORE" \
+            -storepass:file "$PLAY_UPLOAD_PASSWORD_FILE" -keypass:file "$PLAY_UPLOAD_PASSWORD_FILE" \
+            -alias upload -keyalg RSA -keysize 2048 -validity 365 -dname 'CN=Centello CI'
+          bash .github/scripts/build-play-bundle.sh "$signing/app.aab" 3 1.2.0
+
       - name: Offer release of the verified main commit
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |

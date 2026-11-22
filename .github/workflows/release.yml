@@ -75,10 +75,6 @@ jobs:
       - uses: ./.github/actions/setup-android
         if: steps.previous.outputs.id == ''
 
-      - name: Restore Android dependencies
-        if: steps.previous.outputs.id == ''
-        run: dotnet restore src/Centello.App/Centello.App.csproj
-
       - name: Confirm the approved commit and changelog before signing
         if: steps.previous.outputs.id == ''
         env:
@@ -103,14 +99,7 @@ jobs:
           export PLAY_UPLOAD_PASSWORD_FILE="$signing/password"
           printf '%s' "$PLAY_UPLOAD_PASSWORD" > "$PLAY_UPLOAD_PASSWORD_FILE"
           unset PLAY_UPLOAD_PASSWORD
-          dotnet publish src/Centello.App/Centello.App.csproj --no-restore -c Release -f net10.0-android \
-            -p:PlayRelease=true \
-            "-p:ApplicationVersion=$VERSION_CODE" "-p:ApplicationDisplayVersion=$VERSION" \
-            -o "$RUNNER_TEMP/publish"
-          pwsh -NoProfile -File tests/android/check-variant.ps1 \
-            -Manifest src/Centello.App/obj/Release/net10.0-android/android/AndroidManifest.xml -Variant Play
-          cp "$RUNNER_TEMP/publish/$PLAY_PACKAGE-Signed.aab" "$RUNNER_TEMP/play/app.aab"
-          jarsigner -verify -strict -keystore "$PLAY_UPLOAD_KEYSTORE" -storepass:file "$signing/password" "$RUNNER_TEMP/play/app.aab" upload
+          bash .github/scripts/build-play-bundle.sh "$RUNNER_TEMP/play/app.aab" "$VERSION_CODE" "$VERSION"
           cd "$RUNNER_TEMP/play"
           sha256sum app.aab release.json > checksums.sha256
 
