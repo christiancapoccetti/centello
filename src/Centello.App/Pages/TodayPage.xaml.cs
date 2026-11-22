@@ -1,3 +1,4 @@
+using Centello.App.Controls;
 using Centello.App.ViewModels;
 using Centello.Application;
 
@@ -6,6 +7,8 @@ namespace Centello.App.Pages;
 public partial class TodayPage : ContentPage
 {
     private readonly TodayViewModel _viewModel;
+    private readonly PhoneLandscapeTrigger _landscapeTrigger;
+    private readonly BrowseScrollAnchor _scrollAnchor;
     private readonly ExpenseDraftService _drafts;
     private readonly OpenAiSettings _settings;
     private readonly PhotoPicker _photos;
@@ -26,6 +29,29 @@ public partial class TodayPage : ContentPage
         _snackbar = snackbar;
         viewModel.CanTakePhoto = PhotoPicker.CanCapture;
         BindingContext = viewModel;
+        _scrollAnchor = new BrowseScrollAnchor(TodayOverview, TodayActivity);
+        _landscapeTrigger = BrowseLayout.FindTrigger(PageLayout);
+        _landscapeTrigger.IsActiveChanged += OnLandscapeChanged;
+    }
+
+    private void OnLandscapeChanged(object? sender, EventArgs e)
+    {
+        _scrollAnchor.CaptureBeforeReflow();
+        ArrangePanes();
+        _scrollAnchor.RestoreAfterLayout();
+    }
+
+    private void ArrangePanes()
+    {
+        if (_landscapeTrigger.IsActive)
+        {
+            Overview.Children.Remove(Activity);
+            TodayActivity.Content = Activity;
+            return;
+        }
+
+        TodayActivity.Content = null;
+        Overview.Children.Add(Activity);
     }
 
     protected override async void OnAppearing()

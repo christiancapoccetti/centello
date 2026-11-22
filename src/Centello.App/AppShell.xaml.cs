@@ -1,3 +1,4 @@
+using Centello.App.Controls;
 using Centello.App.Pages;
 using Centello.App.Theming;
 using Centello.Application;
@@ -19,16 +20,23 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(LicensesPage), typeof(LicensesPage));
         Routing.RegisterRoute(nameof(BackupPage), typeof(BackupPage));
         Routing.RegisterRoute(nameof(RestorePage), typeof(RestorePage));
-        Items.Add(new TabBar
+        var tabs = new TabBar();
+        ContentPage[] pages = [todayPage, insightsPage, categoriesPage, settingsPage];
+        ShellContent[] destinations =
+        [
+            CreateTab("Oggi", nameof(TodayPage), MaterialSymbols.Today, todayPage),
+            CreateTab("Insight", nameof(InsightsPage), MaterialSymbols.BarChart, insightsPage),
+            CreateTab("Categorie", nameof(CategoriesPage), MaterialSymbols.Category, categoriesPage),
+            CreateTab("Impostazioni", nameof(SettingsPage), MaterialSymbols.Settings, settingsPage)
+        ];
+        for (var index = 0; index < pages.Length; index++)
         {
-            Items =
-            {
-                CreateTab("Oggi", "TodayPage", MaterialSymbols.Today, todayPage),
-                CreateTab("Insight", "InsightsPage", MaterialSymbols.BarChart, insightsPage),
-                CreateTab("Categorie", "CategoriesPage", MaterialSymbols.Category, categoriesPage),
-                CreateTab("Impostazioni", "SettingsPage", MaterialSymbols.Settings, settingsPage)
-            }
-        });
+            var page = pages[index];
+            tabs.Items.Add(destinations[index]);
+            page.Content = new RootTabLayout(page, destinations, destinations[index], target => tabs.CurrentItem = tabs.Items[target]);
+        }
+
+        Items.Add(tabs);
     }
 
     private static ShellContent CreateTab(string title, string route, string glyph, Page page) => new()

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Compile Include="..\..\src\Centello.App\Controls\BrowseScrollOffset.cs" Link="BrowseScrollOffset.cs" />
+    <Compile Include="..\..\src\Centello.App\Controls\PhoneLandscapeSize.cs" Link="PhoneLandscapeSize.cs" />
   </ItemGroup>
 
   <ItemGroup>

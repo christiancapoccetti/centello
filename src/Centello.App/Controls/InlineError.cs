@@ -34,17 +34,6 @@ public sealed class InlineError : Grid
 
     public string Text { get => (string)GetValue(TextProperty); set => SetValue(TextProperty, value); }
 
-    /// <summary>Brings the first error of a form into view. A save that stops on a field out of sight would look
-    /// like a button that does nothing.</summary>
-    public static async Task ShowFirst(ScrollView form)
-    {
-        var first = form.GetVisualTreeDescendants().OfType<InlineError>().FirstOrDefault(error => error.IsVisible);
-        if (first is null)
-            return;
-
-        await form.ScrollToAsync(first, ScrollToPosition.Center, true);
-    }
-
     private void Apply(string? text)
     {
         _message.Text = text ?? "";

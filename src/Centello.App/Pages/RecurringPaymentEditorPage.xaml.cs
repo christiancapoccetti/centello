@@ -127,7 +127,7 @@ public partial class RecurringPaymentEditorPage : ContentPage, IQueryAttributabl
 
     private async void OnSaved(object? sender, EventArgs e) => await Leave("Pagamento salvato");
 
-    private async void OnRejected(object? sender, EventArgs e) => await InlineError.ShowFirst(Form);
+    private async void OnRejected(object? sender, EventArgs e) => await Form.ShowFirstError();
 
     // Pause, resume and end act on the stored payment, so unsaved edits are lost just as when the page is closed.
     private async Task<bool> CanDiscardEdits() => !_viewModel.IsDirty || await _confirmation.AskToDiscard();

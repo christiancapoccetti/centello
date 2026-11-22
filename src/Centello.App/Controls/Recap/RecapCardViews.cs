@@ -7,7 +7,7 @@ namespace Centello.App.Controls.Recap;
 /// fails here until the kind has a layout. A card paints its own surface to the edges of the screen and pads its
 /// content into the safe area and below the story's top bar, so the page only has to put the view on screen. Buttons
 /// inside a card keep their own taps; everything else lets the page's tap through.</summary>
-internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> openExpense, Action<RecapExitTarget> exit,
+internal sealed class RecapCardViews(bool isDark, double width, double height, bool landscape, Action<Guid> openExpense, Action<RecapExitTarget> exit,
     Action restart) : IRecapCardVisitor<View>
 {
     /// <summary>The story's top bar: 6 above the segments, 3 for them, the 48 high title row.</summary>
@@ -15,6 +15,7 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
     private const double Gutter = 24;
     private const double Rise = 40;
     private const double Foot = 28;
+    private const double LandscapeGap = 24;
 
     private double Content => width - 2 * Gutter;
 
@@ -30,10 +31,14 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
             Margin = new Thickness(0, 18, 0, 22),
             Children = { Glyph(MaterialSymbols.TouchApp, ink, 18), StoryBlocks.Caption(card.Hint, ink) }
         };
+        if (landscape)
+            return Card(ink, Stack(title, Above(StoryBlocks.Phrase(new RecapPhrase(card.Subtitle), ink), 8), hint),
+                Chart(card.Chart, ink, isYear ? 100 : 120));
+
         return Card(ink, null, Stack(
             title,
             Above(StoryBlocks.Phrase(new RecapPhrase(card.Subtitle), ink), 8),
-            Above(new RecapBarsView(card.Chart, ink, isYear ? 100 : 120), Rise),
+            Above(Chart(card.Chart, ink, isYear ? 100 : 120), Rise),
             hint));
     }
 
@@ -76,10 +81,18 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
                 () => openExpense(expense.ExpenseId)));
 
         var note = Above(StoryBlocks.Caption(card.Note, ink), 10);
+        if (landscape)
+        {
+            if (card.Days is { } days)
+                top.Add(Above(Chart(days, ink, 72), 12));
+
+            return Card(ink, top, Stack(expenses, note));
+        }
+
         if (card.Days is null)
             return Card(ink, top, Stack(expenses, note, Space(Foot - 10)));
 
-        top.Add(Above(new RecapBarsView(card.Days, ink, 72), 26));
+        top.Add(Above(Chart(card.Days, ink, 72), 26));
         top.Add(expenses);
         top.Add(note);
         return Card(ink, top, null);
@@ -88,6 +101,13 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
     public View Categories(RecapCard.Categories card)
     {
         var ground = Ink(RecapSurface.Ground);
+        if (landscape)
+        {
+            var shares = Stacked(card.Shares);
+            shares.HeightRequest = Math.Clamp(height - TopBar - 40, 150, 300);
+            return Card(ground, StoryBlocks.Phrase(card.Lead, ground, 22), shares);
+        }
+
         var root = Surface(ground);
         var inner = new Grid
         {
@@ -105,6 +125,13 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
 
     public View Changes(RecapCard.Changes card)
     {
+        if (landscape)
+        {
+            var top = card.Rise is { } increase ? Change(increase) : null;
+            var bottom = card.Fall is { } decrease ? Change(decrease) : null;
+            return Card(Ink(card.Top), top, bottom);
+        }
+
         var halves = new Grid { RowSpacing = 0, SafeAreaEdges = SafeAreaEdges.None };
         if (card.Rise is { } rise)
             halves.AddRowDefinition(new RowDefinition(GridLength.Star));
@@ -132,7 +159,7 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
         days.Add(to, 1, 0);
         days.Margin = new Thickness(0, 12, 0, Foot);
         return Card(ink, Hero(card.Category, card.Lead, card.Tag, card.Detail, 40, ink),
-            Stack(new RecapBarsView(card.Days, ink, 64), days));
+            Stack(Chart(card.Days, ink, 64), days));
     }
 
     public View TagOfYear(RecapCard.TagOfYear card) => Tag(card.Category, card.Lead, card.Tag, card.Detail, card.Chart, card.Surface);
@@ -154,7 +181,7 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
         end.HorizontalOptions = LayoutOptions.End;
         labels.Add(end, 2, 0);
         return Card(ink, Hero(card.Category, card.Lead, card.Tag, card.Detail, 44, ink),
-            Stack(new RecapBarsView(card.Weeks, ink, 96), labels));
+            Stack(Chart(card.Weeks, ink, 96), labels));
     }
 
     public View NewHabits(RecapCard.NewHabits card)
@@ -173,13 +200,21 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
     {
         var ink = Ink(RecapSurface.Ground);
         var isDense = card.Units.ColorKeys.Count > 100;
-        var units = new RecapUnitsView(card.Units, ink, Content, 300, isDense ? 8 : 33);
+        View Units(double contentWidth) => new RecapUnitsView(card.Units, ink, contentWidth,
+            landscape ? LandscapePlot(180) : 300, isDense ? 8 : 33);
+        var units = FitWidth(Units);
         var top = Stack(
             Above(StoryBlocks.Lead(card.Lead, ink), Rise),
             Above(StoryBlocks.Amount(card.Amount, ink, isTotal: false, margin: 4), 8),
             Above(StoryBlocks.Phrase(card.Detail, ink), 8));
         if (card.TopTag is not { } tag)
             return Card(ink, top, Stack(units, Space(Foot + 2)));
+
+        if (landscape)
+        {
+            var featured = StoryBlocks.Line(tag.Category, tag.Tag, tag.Detail, tag.Amount, ink);
+            return Card(ink, top, Stack(units, Above(StoryBlocks.Rule(ink), 8), featured));
+        }
 
         top.Add(Above(units, 28));
         var line = StoryBlocks.Line(tag.Category, tag.Tag, tag.Detail, tag.Amount, ink);
@@ -228,10 +263,10 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
         var ink = Ink(RecapSurface.Ground);
         var isCalendar = card.Days.Columns <= 7;
         var headline = StoryBlocks.Headline(card.Headline, ink, isCalendar ? 38 : 34);
-        headline.LineBreakMode = LineBreakMode.NoWrap;
+        headline.LineBreakMode = landscape ? LineBreakMode.WordWrap : LineBreakMode.NoWrap;
         return Card(ink,
             Stack(Above(StoryBlocks.Lead(card.Lead, ink), Rise), Above(headline, 6)),
-            Stack(new RecapGridView(card.Days, ink, Content), Above(StoryBlocks.Caption(card.Note, ink), 12), Space(Foot)));
+            Stack(FitWidth(contentWidth => new RecapGridView(card.Days, ink, contentWidth)), Above(StoryBlocks.Caption(card.Note, ink), 12), Space(Foot)));
     }
 
     public View YearSoFar(RecapCard.YearSoFar card)
@@ -258,7 +293,7 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
                 }
             }
         };
-        return Card(ink, top, Stack(new RecapBarsView(card.Chart, ink, 200), key));
+        return Card(ink, top, Stack(Chart(card.Chart, ink, 200), key));
     }
 
     public View Summary(RecapCard.Summary card)
@@ -289,13 +324,13 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
         var ink = Ink(RecapSurface.Ground);
         return Card(ink,
             Stack(Above(StoryBlocks.Headline(headline, ink), Rise), Above(StoryBlocks.Phrase(detail, ink), 8)),
-            Stack(new RecapBarsView(chart, ink, plot), Space(Foot - 10)));
+            Stack(Chart(chart, ink, plot), Space(Foot - 10)));
     }
 
     private View Tag(RecapCategory category, string lead, string tag, RecapPhrase detail, RecapBars chart, RecapSurface surface)
     {
         var ink = Ink(surface);
-        return Card(ink, Hero(category, lead, tag, detail, 44, ink), Stack(new RecapBarsView(chart, ink, 88), Space(Foot)));
+        return Card(ink, Hero(category, lead, tag, detail, 44, ink), Stack(Chart(chart, ink, 88), Space(Foot)));
     }
 
     private static View Hero(RecapCategory category, string lead, string tag, RecapPhrase detail, double size, StoryInk ink)
@@ -399,7 +434,7 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
         return block;
     }
 
-    private View Half(RecapChange change, bool isUpper)
+    private View Change(RecapChange change, bool pad = true)
     {
         var ink = Ink(change.Surface);
         var who = new HorizontalStackLayout { Spacing = 10, Margin = new Thickness(0, 0, 0, 10) };
@@ -409,6 +444,15 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
             who,
             StoryBlocks.Amount(change.Amount, ink, isTotal: false, margin: 4),
             Above(StoryBlocks.Phrase(new RecapPhrase(change.Detail), ink, 15), 8));
+        var surface = Surface(ink);
+        surface.Padding = pad ? new Thickness(16) : new Thickness(0);
+        surface.Add(content);
+        return surface;
+    }
+
+    private View Half(RecapChange change, bool isUpper)
+    {
+        var content = Change(change, pad: false);
         var inner = new Grid
         {
             SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container, isUpper ? SafeAreaRegions.Container : SafeAreaRegions.None,
@@ -418,7 +462,7 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
         };
         content.VerticalOptions = isUpper ? LayoutOptions.End : LayoutOptions.Start;
         inner.Add(content);
-        var half = Surface(ink);
+        var half = Surface(Ink(change.Surface));
         half.Add(inner);
         return half;
     }
@@ -426,7 +470,67 @@ internal sealed class RecapCardViews(bool isDark, double width, Action<Guid> ope
     private static Grid Surface(StoryInk ink) => new() { BackgroundColor = ink.Ground, SafeAreaEdges = SafeAreaEdges.None };
 
     /// <summary>A card on its surface: the top group, what is left, the bottom group.</summary>
-    private static View Card(StoryInk ink, View? top, View? bottom)
+    private View Card(StoryInk ink, View? top, View? bottom)
+    {
+        return landscape ? LandscapeCard(ink, top, bottom) : PortraitCard(ink, top, bottom);
+    }
+
+    private static View LandscapeCard(StoryInk ink, View? left, View? right)
+    {
+        var body = new Grid
+        {
+            SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container),
+            Padding = new Thickness(Gutter, TopBar + 8, Gutter, 8),
+            ColumnSpacing = LandscapeGap,
+            ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)]
+        };
+        if (left is not null && right is not null)
+        {
+            body.Add(Pane(left), 0);
+            body.Add(Pane(right), 1);
+        }
+        else if ((left ?? right) is { } content)
+        {
+            var pane = Pane(content);
+            Grid.SetColumnSpan(pane, 2);
+            body.Add(pane);
+        }
+
+        var card = Surface(ink);
+        card.Add(body);
+        return card;
+    }
+
+    private static ScrollView Pane(View content) => new()
+    {
+        Content = content,
+        VerticalScrollBarVisibility = ScrollBarVisibility.Never
+    };
+
+    private View FitWidth(Func<double, View> create)
+    {
+        if (!landscape)
+            return create(Content);
+
+        var host = new ContentView();
+        var widthInUse = 0.0;
+        host.SizeChanged += (_, _) =>
+        {
+            if (host.Width <= 0 || Math.Abs(host.Width - widthInUse) <= 0.5)
+                return;
+
+            widthInUse = host.Width;
+            host.Content = create(widthInUse);
+        };
+        return host;
+    }
+
+    private RecapBarsView Chart(RecapBars bars, StoryInk ink, double plotHeight) =>
+        new(bars, ink, landscape ? LandscapePlot(plotHeight) : plotHeight);
+
+    private double LandscapePlot(double plotHeight) => Math.Min(plotHeight, Math.Max(48, height - TopBar - 110));
+
+    private static View PortraitCard(StoryInk ink, View? top, View? bottom)
     {
         var body = new Grid
         {

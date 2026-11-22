@@ -53,11 +53,11 @@ public partial class SettingsPage : ContentPage
     // bar. Once the keyboard has taken its room, which shows as the form getting shorter, the page scrolls to the button.
     private async void OnKeyFieldFocused(object? sender, EventArgs e)
     {
-        var height = Form.Height;
-        for (var attempt = 0; attempt < KeyboardWaitAttempts && Form.Height >= height; attempt++)
+        var height = Form.ScrollFor(SaveKeyButton).Height;
+        for (var attempt = 0; attempt < KeyboardWaitAttempts && Form.ScrollFor(SaveKeyButton).Height >= height; attempt++)
             await Task.Delay(KeyboardWaitStep);
 
-        await Form.ScrollToAsync(SaveKeyButton, ScrollToPosition.End, true);
+        await Form.ScrollFor(SaveKeyButton).ScrollToAsync(SaveKeyButton, ScrollToPosition.End, true);
     }
 
     private async void OnRecapNoticeToggled(object? sender, ToggledEventArgs e)

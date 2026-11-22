@@ -5,51 +5,86 @@
              xmlns:c="clr-namespace:Centello.App.Controls"
              xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
              x:Class="Centello.App.Pages.ExpensesPage"
+             x:Name="RootPage"
              Title="Spese"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              Style="{StaticResource EdgeToEdgePage}">
-    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,Auto,Auto,*">
-        <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
+    <Grid x:Name="PageLayout" Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,0">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <c:PhoneLandscapeTrigger Page="{x:Reference RootPage}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Property="ColumnDefinitions" Value="43*,57*" />
+                        <Setter TargetName="Filters" Property="Grid.RowSpan" Value="2" />
+                        <Setter TargetName="ChipScroll" Property="ScrollView.Orientation" Value="Vertical" />
+                        <Setter TargetName="CategoryChips" Property="FlexLayout.Wrap" Value="Wrap" />
+                        <Setter TargetName="CategoryChips" Property="FlexLayout.AlignContent" Value="Start" />
+                        <Setter TargetName="History" Property="Grid.Row" Value="1" />
+                        <Setter TargetName="History" Property="Grid.RowSpan" Value="2" />
+                        <Setter TargetName="History" Property="Grid.Column" Value="1" />
+                        <Setter TargetName="EmptyHistory" Property="Layout.Padding" Value="16,8,16,24" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Portrait">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="True" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid Grid.ColumnSpan="2" MinimumHeightRequest="56" Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="Spese" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
         </Grid>
 
-        <c:PeriodSwitcher Grid.Row="1" Margin="24,0,8,0" CanToggle="False" Period="{Binding History.Period}" HasNext="{Binding History.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" />
+        <Grid x:Name="Filters" Grid.Row="1" RowDefinitions="Auto,*">
+            <c:PeriodSwitcher Margin="24,0,8,0" CanToggle="False" Period="{Binding History.Period}" HasNext="{Binding History.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" />
 
-        <ScrollView x:Name="ChipScroll" Grid.Row="2" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-            <HorizontalStackLayout Padding="24,0" Spacing="8" BindableLayout.ItemsSource="{Binding Chips}">
-                <BindableLayout.ItemTemplate>
+            <ScrollView x:Name="ChipScroll" Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <FlexLayout x:Name="CategoryChips" Padding="24,0,16,0" IsClippedToBounds="True" AlignItems="Start" BindableLayout.ItemsSource="{Binding Chips}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <ContentView Padding="0,0,8,0">
+                                <c:Chip Text="{Binding Name}" ColorKey="{Binding ColorKey}" IsSelected="{Binding IsSelected}" HasCheck="False" Tapped="OnChipTapped" />
+                            </ContentView>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </ScrollView>
+        </Grid>
+
+        <Grid x:Name="History" Grid.Row="2">
+            <c:InlineError Margin="24,8" VerticalOptions="Start" Text="{Binding ErrorMessage}" />
+
+            <CollectionView x:Name="HistoryList" ItemsSource="{Binding Groups}" IsGrouped="True" SelectionMode="None" IsVisible="{Binding HasGroups}">
+                <CollectionView.GroupHeaderTemplate>
                     <DataTemplate>
-                        <c:Chip Text="{Binding Name}" ColorKey="{Binding ColorKey}" IsSelected="{Binding IsSelected}" HasCheck="False" Tapped="OnChipTapped" />
+                        <c:ExpenseGroupHeader />
                     </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </HorizontalStackLayout>
-        </ScrollView>
+                </CollectionView.GroupHeaderTemplate>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <c:ExpenseRow Margin="24,0" Opened="OnExpenseOpened" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.Footer>
+                    <c:ListEnd />
+                </CollectionView.Footer>
+            </CollectionView>
 
-        <c:InlineError Grid.Row="3" Margin="24,8" VerticalOptions="Start" Text="{Binding ErrorMessage}" />
-
-        <CollectionView Grid.Row="3" ItemsSource="{Binding Groups}" IsGrouped="True" SelectionMode="None" IsVisible="{Binding HasGroups}">
-            <CollectionView.GroupHeaderTemplate>
-                <DataTemplate>
-                    <c:ExpenseGroupHeader />
-                </DataTemplate>
-            </CollectionView.GroupHeaderTemplate>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <c:ExpenseRow Margin="24,0" Opened="OnExpenseOpened" />
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-            <CollectionView.Footer>
-                <c:ListEnd />
-            </CollectionView.Footer>
-        </CollectionView>
-
-        <VerticalStackLayout Grid.Row="3" Padding="32,56,32,24" IsVisible="{Binding IsEmpty}">
-            <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.SearchOff}" TextColor="{t:Theme Mute}" />
-            <Label Text="{Binding History.EmptyText}" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
-            <Label Text="Prova un altro mese o togli il filtro." Style="{StaticResource Lead}" Margin="0,4,0,0" HorizontalTextAlignment="Center" IsVisible="{Binding HasFilter}" />
-            <Button Text="Mostra tutte" Style="{StaticResource OutlinedButton}" Margin="0,20,0,0" HorizontalOptions="Center" IsVisible="{Binding HasFilter}" Clicked="OnShowAllClicked" />
-        </VerticalStackLayout>
+            <ScrollView IsVisible="{Binding IsEmpty}">
+                <VerticalStackLayout x:Name="EmptyHistory" Padding="32,56,32,24">
+                    <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.SearchOff}" TextColor="{t:Theme Mute}" />
+                    <Label Text="{Binding History.EmptyText}" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+                    <Label Text="Prova un altro mese o togli il filtro." Style="{StaticResource Lead}" Margin="0,4,0,0" HorizontalTextAlignment="Center" IsVisible="{Binding HasFilter}" />
+                    <Button Text="Mostra tutte" Style="{StaticResource OutlinedButton}" Margin="0,20,0,0" HorizontalOptions="Center" IsVisible="{Binding HasFilter}" Clicked="OnShowAllClicked" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
     </Grid>
 </ContentPage>

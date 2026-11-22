@@ -1,3 +1,4 @@
+using Centello.App.Controls;
 using Centello.App.Controls.Recap;
 using Centello.App.Theming;
 using Centello.App.ViewModels;
@@ -19,6 +20,8 @@ public partial class RecapPage : ContentPage, IQueryAttributable
     private Window? _window;
     private bool _isInitialized;
     private double _builtWidth;
+    private double _builtHeight;
+    private bool _builtLandscape;
 
     public RecapPage(RecapViewModel viewModel, IStoryBars bars, StoryTouches touches, IScreenReader screenReader)
     {
@@ -119,7 +122,9 @@ public partial class RecapPage : ContentPage, IQueryAttributable
 
     private void Rebuild()
     {
-        if (Math.Abs(Width - _builtWidth) > 0.5)
+        var landscape = PhoneLandscape.IsActive(this);
+        if (_builtLandscape != landscape || Math.Abs(Width - _builtWidth) > 0.5 ||
+            (landscape && Math.Abs(Height - _builtHeight) > 0.5))
             Show();
     }
 
@@ -129,13 +134,21 @@ public partial class RecapPage : ContentPage, IQueryAttributable
             return;
 
         _builtWidth = Width;
+        _builtHeight = Height;
+        _builtLandscape = PhoneLandscape.IsActive(this);
         var card = story.Current;
         var ink = StoryInk.Of(card.Top, IsDark);
-        CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, OpenExpense, Exit, Restart));
+        CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, Height, _builtLandscape, OpenExpense, Exit, Restart));
         Progress.Show(story.Index, story.Count, ink, _player.Fill);
         TitleLabel.TextColor = ink.Ink;
         TitleLabel.FormattedText = TitleOf(story.Deck, ink);
         CloseButton.TextColor = ink.Ink;
+        PreviousButton.TextColor = ink.Ink;
+        PreviousButton.IsVisible = _builtLandscape;
+        PreviousButton.IsEnabled = story.Index > 0;
+        NextButton.TextColor = ink.Ink;
+        NextButton.IsVisible = _builtLandscape;
+        NextButton.IsEnabled = story.Index < story.Count - 1;
         _bars.Hold(card.Top, card.Bottom);
     }
 
@@ -154,7 +167,16 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         if (_press.WasHold || e.GetPosition(CardHost) is not { } at)
             return;
 
-        var moved = at.X < CardHost.Width / 2 ? _viewModel.Previous() : _viewModel.Next();
+        Move(previous: at.X < CardHost.Width / 2);
+    }
+
+    private void OnPreviousClicked(object? sender, EventArgs e) => Move(previous: true);
+
+    private void OnNextClicked(object? sender, EventArgs e) => Move(previous: false);
+
+    private void Move(bool previous)
+    {
+        var moved = previous ? _viewModel.Previous() : _viewModel.Next();
         if (moved)
             Show();
         else

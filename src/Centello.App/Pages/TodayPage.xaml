@@ -6,27 +6,55 @@
              xmlns:local="clr-namespace:Centello.App"
              xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
              x:Class="Centello.App.Pages.TodayPage"
+             x:Name="RootPage"
              Title="Oggi"
              SafeAreaEdges="All">
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid x:Name="PageLayout" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,0">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <c:PhoneLandscapeTrigger Page="{x:Reference RootPage}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Property="ColumnDefinitions" Value="46*,54*" />
+                        <Setter TargetName="TodayActivity" Property="ScrollView.IsVisible" Value="True" />
+                        <Setter TargetName="TotalAmount" Property="Label.FontSize" Value="52" />
+                        <Setter TargetName="TotalCurrency" Property="Span.FontSize" Value="28" />
+                        <Setter TargetName="OverviewBody" Property="Layout.Padding" Value="16,0,12,16" />
+                        <Setter TargetName="Activity" Property="Layout.Padding" Value="12,0,16,16" />
+                        <Setter TargetName="CaptureDock" Property="Border.Margin" Value="16,8,12,8" />
+                        <Setter TargetName="CaptureButtons" Property="Grid.ColumnDefinitions" Value="*,1,48,1,48" />
+                        <Setter TargetName="PhotoMenu" Property="Border.Margin" Value="16,0,16,72" />
+                        <Setter TargetName="PhotoMenu" Property="Border.HorizontalOptions" Value="Start" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Portrait">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="True" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
 
-        <c:PeriodSwitcher Margin="24,0,8,0" MinimumHeightRequest="56" VerticalOptions="Center" IsPageTitle="True" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24,0,24,24">
+        <c:PeriodSwitcher Grid.ColumnSpan="2" Margin="24,0,8,0" MinimumHeightRequest="56" VerticalOptions="Center" IsPageTitle="True" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
+
+        <ScrollView x:Name="TodayOverview" Grid.Row="1">
+            <VerticalStackLayout x:Name="OverviewBody" Padding="24,0,24,24">
                 <Border Style="{StaticResource SurfaceCard}" Margin="0,16,0,0" IsVisible="{Binding HasError}">
                     <Label Text="{Binding ErrorMessage}" TextColor="{t:Theme Alert}" />
                 </Border>
 
-                <VerticalStackLayout IsVisible="{Binding HasOverview}">
+                <VerticalStackLayout x:Name="Overview" IsVisible="{Binding HasOverview}">
                     <!-- Android keeps the font ascent above a 68sp line and the descent below it, about 20dp each.
                          The negative margins here and on the next label take that room back. -->
-                    <Label Style="{StaticResource TotalDisplay}" Margin="0,-3,0,0">
+                    <Label x:Name="TotalAmount" Style="{StaticResource TotalDisplay}" Margin="0,-3,0,0">
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="{Binding Overview.Total}" />
                                 <Span Text="&#160;" FontSize="18" FontAutoScalingEnabled="False" />
-                                <Span Text="€" FontSize="38" FontAutoScalingEnabled="False" />
+                                <Span x:Name="TotalCurrency" Text="€" FontSize="38" FontAutoScalingEnabled="False" />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
@@ -95,54 +123,58 @@
                         </BindableLayout.ItemTemplate>
                     </c:OneLineLayout>
 
-                    <VerticalStackLayout IsVisible="{Binding Overview.HasCategories}">
-                        <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
+                    <c:DailySpendChartView Chart="{Binding Overview.Chart}" IsVisible="{Binding Overview.HasCategories}" />
 
-                        <!-- The link is as high as the whole header, so the touch target is 47 high and its words sit on
-                             the line of the title. -->
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
-                            <c:ActionLink Grid.Column="1" Text="Vedi tutte" Padding="10,24,0,3" Margin="0,0,-4,0" Tapped="OnAllExpensesTapped" />
-                        </Grid>
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Overview.Latest}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate>
-                                    <c:ExpenseRow Opened="OnExpenseOpened" />
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
+                    <VerticalStackLayout x:Name="Activity" IsVisible="{Binding HasOverview}">
+                        <VerticalStackLayout IsVisible="{Binding Overview.HasCategories}">
+                            <!-- The link is as high as the whole header, so the touch target is 47 high and its words sit on
+                                 the line of the title. -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
+                                <c:ActionLink Grid.Column="1" Text="Vedi tutte" Padding="10,24,0,3" Margin="0,0,-4,0" Tapped="OnAllExpensesTapped" />
+                            </Grid>
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Overview.Latest}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <c:ExpenseRow Opened="OnExpenseOpened" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <Label Text="Ancora nessuna spesa in questo periodo." Style="{StaticResource BodyMedium}" Margin="0,8,0,0" IsVisible="{Binding Overview.HasNoLatest}" />
                         </VerticalStackLayout>
-                        <Label Text="Ancora nessuna spesa in questo periodo." Style="{StaticResource BodyMedium}" Margin="0,8,0,0" IsVisible="{Binding Overview.HasNoLatest}" />
-                    </VerticalStackLayout>
 
-                    <!-- The first run: without a category there is nothing an expense could go to, so the home
-                         offers the common ones instead of an empty chart. -->
-                    <VerticalStackLayout IsVisible="{Binding Overview.IsFirstRun}">
-                        <Label Text="Crea le tue categorie per iniziare" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
-                        <Label Text="Le più comuni sono già scelte. Togli quelle che non ti servono: potrai cambiarle quando vuoi." Style="{StaticResource Lead}" Margin="0,4,0,0" />
-                        <FlexLayout Margin="0,4,-8,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Suggestions}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate>
-                                    <!-- The gap between chips is padding: FlexLayout counts an item margin twice. -->
-                                    <ContentView Padding="0,0,8,0">
-                                        <c:Chip Text="{Binding Name}" IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" IsSelected="{Binding IsSelected}" HasCheck="False" Tapped="OnSuggestionTapped" />
-                                    </ContentView>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </FlexLayout>
-                        <Button Text="Crea categorie" Style="{StaticResource FilledButton}" Margin="0,12,0,0" IsEnabled="{Binding CanCreateSuggested}" Clicked="OnCreateSuggestedClicked">
-                            <Button.Triggers>
-                                <Trigger TargetType="Button" Property="IsEnabled" Value="False">
-                                    <Setter Property="Opacity" Value="0.38" />
-                                </Trigger>
-                            </Button.Triggers>
-                        </Button>
-                        <Button Text="Crea a mano" Style="{StaticResource TextActionButton}" Margin="0,8,0,0" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" Clicked="OnCreateByHandClicked" />
+                        <!-- The first run: without a category there is nothing an expense could go to, so the home
+                             offers the common ones instead of an empty chart. -->
+                        <VerticalStackLayout IsVisible="{Binding Overview.IsFirstRun}">
+                            <Label Text="Crea le tue categorie per iniziare" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
+                            <Label Text="Le più comuni sono già scelte. Togli quelle che non ti servono: potrai cambiarle quando vuoi." Style="{StaticResource Lead}" Margin="0,4,0,0" />
+                            <FlexLayout Margin="0,4,-8,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Suggestions}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- The gap between chips is padding: FlexLayout counts an item margin twice. -->
+                                        <ContentView Padding="0,0,8,0">
+                                            <c:Chip Text="{Binding Name}" IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" IsSelected="{Binding IsSelected}" HasCheck="False" Tapped="OnSuggestionTapped" />
+                                        </ContentView>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                            <Button Text="Crea categorie" Style="{StaticResource FilledButton}" Margin="0,12,0,0" IsEnabled="{Binding CanCreateSuggested}" Clicked="OnCreateSuggestedClicked">
+                                <Button.Triggers>
+                                    <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.38" />
+                                    </Trigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Text="Crea a mano" Style="{StaticResource TextActionButton}" Margin="0,8,0,0" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" Clicked="OnCreateByHandClicked" />
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
 
-        <Border Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}" local:SnackbarAnchor.IsAnchor="True">
+        <ScrollView x:Name="TodayActivity" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" IsVisible="False" />
+
+        <Border x:Name="CaptureDock" Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}" local:SnackbarAnchor.IsAnchor="True">
             <Border.Triggers>
                 <!-- Until a category exists there is nothing to add an expense to. -->
                 <DataTrigger TargetType="Border" Binding="{Binding Overview.IsFirstRun}" Value="True">
@@ -150,7 +182,7 @@
                     <Setter Property="InputTransparent" Value="True" />
                 </DataTrigger>
             </Border.Triggers>
-            <Grid ColumnDefinitions="*,1,64,1,64">
+            <Grid x:Name="CaptureButtons" ColumnDefinitions="*,1,64,1,64">
                 <!-- The plus is a span of the words, so with a large font they wrap together inside what the two icon
                      segments leave, and never reach them. -->
                 <Label Margin="8,0" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontFamily="{x:Static t:Fonts.Bold}" FontSize="17" AutomationProperties.IsInAccessibleTree="False">
@@ -183,11 +215,11 @@
             </HorizontalStackLayout>
         </Border>
 
-        <Grid Grid.RowSpan="3" IsVisible="{Binding Capture.IsChoosingPhoto}" BackgroundColor="Transparent">
+        <Grid Grid.RowSpan="3" Grid.ColumnSpan="2" IsVisible="{Binding Capture.IsChoosingPhoto}" BackgroundColor="Transparent">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnPhotoMenuDismissed" />
             </Grid.GestureRecognizers>
-            <Border Style="{StaticResource MenuSurface}" Margin="0,0,24,84" HorizontalOptions="End" VerticalOptions="End">
+            <Border x:Name="PhotoMenu" Style="{StaticResource MenuSurface}" Margin="0,0,24,84" HorizontalOptions="End" VerticalOptions="End">
                 <VerticalStackLayout>
                     <Grid HeightRequest="48" Padding="16,0" ColumnDefinitions="Auto,*" ColumnSpacing="14" IsVisible="{Binding CanTakePhoto}">
                         <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.PhotoCamera}" />
@@ -207,7 +239,7 @@
                 </VerticalStackLayout>
             </Border>
         </Grid>
-        <Grid Grid.RowSpan="3" IsVisible="{Binding Capture.IsSheetVisible}" BackgroundColor="{t:Theme Scrim}">
+        <Grid Grid.RowSpan="3" Grid.ColumnSpan="2" IsVisible="{Binding Capture.IsSheetVisible}" BackgroundColor="{t:Theme Scrim}">
             <Border VerticalOptions="End" BackgroundColor="{t:Theme Ground}" StrokeThickness="0" StrokeShape="RoundRectangle 28,28,0,0" Padding="24,24,24,28">
                 <VerticalStackLayout Spacing="16">
                     <Label Text="{Binding Capture.Source.SheetTitle}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" />

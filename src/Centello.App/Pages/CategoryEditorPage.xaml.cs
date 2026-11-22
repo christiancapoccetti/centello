@@ -128,7 +128,7 @@ public partial class CategoryEditorPage : ContentPage, IQueryAttributable, IHold
 
     private async void OnSaved(object? sender, EventArgs e) => await Leave(_viewModel.Done("salvata"));
 
-    private async void OnRejected(object? sender, EventArgs e) => await InlineError.ShowFirst(Form);
+    private async void OnRejected(object? sender, EventArgs e) => await Form.ShowFirstError();
 
     private async Task Leave(string message)
     {

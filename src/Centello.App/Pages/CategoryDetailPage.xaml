@@ -5,12 +5,36 @@
              xmlns:c="clr-namespace:Centello.App.Controls"
              xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
              x:Class="Centello.App.Pages.CategoryDetailPage"
+             x:Name="RootPage"
              Title="{Binding Detail.Name}"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              Style="{StaticResource EdgeToEdgePage}">
-    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,Auto,*">
-        <Grid Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
+    <Grid x:Name="PageLayout" Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,0">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <c:PhoneLandscapeTrigger Page="{x:Reference RootPage}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Property="ColumnDefinitions" Value="43*,57*" />
+                        <Setter TargetName="CategorySummary" Property="ScrollView.IsVisible" Value="True" />
+                        <Setter TargetName="CategoryMovements" Property="Grid.Row" Value="1" />
+                        <Setter TargetName="CategoryMovements" Property="Grid.RowSpan" Value="2" />
+                        <Setter TargetName="CategoryMovements" Property="Grid.Column" Value="1" />
+                        <Setter TargetName="EmptyMovements" Property="Layout.Padding" Value="16,8,16,24" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Portrait">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="True" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid Grid.ColumnSpan="2" MinimumHeightRequest="56" Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Detail.Name}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
             <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Edit}" Clicked="OnEditClicked" SemanticProperties.Description="Modifica categoria" />
@@ -18,47 +42,50 @@
 
         <c:PeriodSwitcher Grid.Row="1" Margin="24,0,8,0" Period="{Binding Detail.Period}" HasNext="{Binding Detail.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
 
-        <!-- The summary scrolls away with the expenses, so a long list has the whole page. -->
-        <CollectionView Grid.Row="2" ItemsSource="{Binding Groups}" IsGrouped="True" SelectionMode="None">
+        <ScrollView x:Name="CategorySummary" Grid.Row="2" IsVisible="False" />
+
+        <CollectionView x:Name="CategoryMovements" Grid.Row="2" ItemsSource="{Binding Groups}" IsGrouped="True" SelectionMode="None">
             <CollectionView.Header>
-                <VerticalStackLayout>
-                    <c:InlineError Margin="24,8,24,0" Text="{Binding ErrorMessage}" />
-                    <Grid Margin="24,12,24,0" ColumnDefinitions="36,*" ColumnSpacing="14">
-                        <c:CategoryTile IconKey="{Binding Detail.IconKey}" ColorKey="{Binding Detail.ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                        <!-- Android keeps the font ascent above a 48sp line and the descent below it. The negative
-                             margins take that room back. -->
-                        <Label Grid.Column="1" Style="{StaticResource SummaryDisplay}" Margin="0,-8,0,-8" VerticalOptions="Center">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="{Binding Detail.Total}" />
-                                    <Span Text="&#160;" FontSize="12" FontAutoScalingEnabled="False" />
-                                    <Span Text="€" FontSize="28" FontAutoScalingEnabled="False" />
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
-                    </Grid>
-                    <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0" IsVisible="{Binding IsWithinBudget}">
-                        <Label.FormattedText>
-                            <FormattedString>
-                                <Span Text="{Binding Detail.Budget.Lead}" />
-                                <Span Text="{Binding Detail.Budget.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
-                                <Span Text="{Binding Detail.Budget.Tail}" />
-                            </FormattedString>
-                        </Label.FormattedText>
-                    </Label>
-                    <Grid Margin="24,8,24,0" ColumnDefinitions="Auto,*" ColumnSpacing="6" IsVisible="{Binding Detail.IsOverBudget, FallbackValue=False}">
-                        <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.Error}" TextColor="{t:Theme Alert}" VerticalOptions="Start" />
-                        <Label Grid.Column="1" Style="{StaticResource BodyLarge}" FontFamily="{x:Static t:Fonts.SemiBold}" TextColor="{t:Theme Alert}">
+                <VerticalStackLayout x:Name="MovementHeader">
+                    <VerticalStackLayout x:Name="Summary">
+                        <c:InlineError Margin="24,8,24,0" Text="{Binding ErrorMessage}" />
+                        <Grid Margin="24,12,24,0" ColumnDefinitions="36,*" ColumnSpacing="14">
+                            <c:CategoryTile IconKey="{Binding Detail.IconKey}" ColorKey="{Binding Detail.ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                            <!-- Android keeps the font ascent above a 48sp line and the descent below it. The negative
+                                 margins take that room back. -->
+                            <Label Grid.Column="1" Style="{StaticResource SummaryDisplay}" Margin="0,-8,0,-8" VerticalOptions="Center">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Detail.Total}" />
+                                        <Span Text="&#160;" FontSize="12" FontAutoScalingEnabled="False" />
+                                        <Span Text="€" FontSize="28" FontAutoScalingEnabled="False" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </Grid>
+                        <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0" IsVisible="{Binding IsWithinBudget}">
                             <Label.FormattedText>
                                 <FormattedString>
                                     <Span Text="{Binding Detail.Budget.Lead}" />
-                                    <Span Text="{Binding Detail.Budget.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" />
+                                    <Span Text="{Binding Detail.Budget.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
                                     <Span Text="{Binding Detail.Budget.Tail}" />
                                 </FormattedString>
                             </Label.FormattedText>
                         </Label>
-                    </Grid>
-                    <c:CategoryBarsView Margin="24,24,24,0" HeightRequest="56" Bars="{Binding Detail.Bars}" ColorKey="{Binding Detail.ColorKey}" SemanticProperties.Description="{Binding BarsDescription}" />
+                        <Grid Margin="24,8,24,0" ColumnDefinitions="Auto,*" ColumnSpacing="6" IsVisible="{Binding Detail.IsOverBudget, FallbackValue=False}">
+                            <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.Error}" TextColor="{t:Theme Alert}" VerticalOptions="Start" />
+                            <Label Grid.Column="1" Style="{StaticResource BodyLarge}" FontFamily="{x:Static t:Fonts.SemiBold}" TextColor="{t:Theme Alert}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Detail.Budget.Lead}" />
+                                        <Span Text="{Binding Detail.Budget.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" />
+                                        <Span Text="{Binding Detail.Budget.Tail}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </Grid>
+                        <c:CategoryBarsView Margin="24,24,24,0" HeightRequest="56" Bars="{Binding Detail.Bars}" ColorKey="{Binding Detail.ColorKey}" SemanticProperties.Description="{Binding BarsDescription}" />
+                    </VerticalStackLayout>
                     <ScrollView Margin="0,12,0,0" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding HasTagChips}">
                         <HorizontalStackLayout Padding="24,0" Spacing="8" BindableLayout.ItemsSource="{Binding Detail.Tags}">
                             <BindableLayout.ItemTemplate>
@@ -68,7 +95,7 @@
                             </BindableLayout.ItemTemplate>
                         </HorizontalStackLayout>
                     </ScrollView>
-                    <VerticalStackLayout Padding="32,56,32,24" IsVisible="{Binding IsEmpty}">
+                    <VerticalStackLayout x:Name="EmptyMovements" Padding="32,56,32,24" IsVisible="{Binding IsEmpty}">
                         <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.SearchOff}" TextColor="{t:Theme Mute}" />
                         <Label Text="{Binding Detail.EmptyText}" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
