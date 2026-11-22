@@ -42,12 +42,12 @@ internal sealed record SpendComparison(
         var active = categories
             .Where(category => !category.IsArchived)
             .ToDictionary(category => category.CategoryId);
-        var spends = current
-            .Concat(compared)
-            .Select(expense => expense.CategoryId)
-            .Distinct()
+        var currentByCategory = current.ToLookup(expense => expense.CategoryId);
+        var comparedByCategory = compared.ToLookup(expense => expense.CategoryId);
+        var spends = currentByCategory.Select(group => group.Key)
+            .Union(comparedByCategory.Select(group => group.Key))
             .Where(active.ContainsKey)
-            .Select(categoryId => new CategorySpend(active[categoryId], SpentIn(current, categoryId), SpentIn(compared, categoryId)))
+            .Select(id => new CategorySpend(active[id], Sum(currentByCategory[id]), Sum(comparedByCategory[id])))
             .OrderByDescending(spend => spend.Spent)
             .ThenBy(spend => spend.Category.Name)
             .ToList();
@@ -57,10 +57,6 @@ internal sealed record SpendComparison(
     private static List<Expense> Between(IReadOnlyList<Expense> expenses, DateOnly from, DateOnly to) => expenses
         .Where(expense => expense.OccurredOn >= from && expense.OccurredOn <= to)
         .ToList();
-
-    private static long SpentIn(IEnumerable<Expense> expenses, Guid categoryId) => expenses
-        .Where(expense => expense.CategoryId == categoryId)
-        .Sum(expense => expense.Amount.Cents);
 
     private static long Sum(IEnumerable<Expense> expenses) => expenses.Sum(expense => expense.Amount.Cents);
 }
