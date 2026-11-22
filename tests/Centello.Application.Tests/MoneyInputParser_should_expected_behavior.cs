@@ -24,12 +24,27 @@ public sealed class MoneyInputParser_should_expected_behavior
         Assert.Equal("Money.InvalidInput",
             MoneyInputParser.ParseOptional(value, CultureInfo.InvariantCulture).Error.Code);
 
-    [Fact]
-    public void Parse_a_positive_italian_amount_to_cents()
+    [Theory]
+    [InlineData("12,5")]
+    [InlineData("12,50")]
+    [InlineData("12.50")]
+    [InlineData(" 12.5 ")]
+    public void Parse_a_positive_italian_amount_to_cents(string value)
     {
-        var result = MoneyInputParser.ParsePositive("12,5", CultureInfo.GetCultureInfo("it-IT"));
+        var result = MoneyInputParser.ParsePositive(value, CultureInfo.GetCultureInfo("it-IT"));
 
         Assert.Equal(1_250, result.Value.Cents);
+    }
+
+    [Theory]
+    [InlineData(123_456)]
+    [InlineData(long.MaxValue)]
+    public void Parse_the_amount_format_used_by_editors(long cents)
+    {
+        var culture = CultureInfo.GetCultureInfo("it-IT");
+        var prefilled = (cents / 100m).ToString("0.00", culture);
+
+        Assert.Equal(cents, MoneyInputParser.ParseOptional(prefilled, culture).Value?.Cents);
     }
 
     [Theory]
@@ -47,6 +62,13 @@ public sealed class MoneyInputParser_should_expected_behavior
 
     [Theory]
     [InlineData("12,345")]
+    [InlineData("12.345")]
+    [InlineData("12,500")]
+    [InlineData("12.500")]
+    [InlineData("1.234,50")]
+    [InlineData("1,234.50")]
+    [InlineData("12.50.00")]
+    [InlineData("92233720368547758,08")]
     [InlineData("abc")]
     public void Say_how_to_write_a_positive_amount_that_cannot_be_read(string value) =>
         Assert.Equal(MoneyInputParser.InvalidMoney,

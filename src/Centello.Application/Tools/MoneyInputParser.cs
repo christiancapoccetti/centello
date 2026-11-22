@@ -30,16 +30,22 @@ public static class MoneyInputParser
         if (value.IsEmpty())
             return Result<Money?>.Success(null);
 
-        if (!decimal.TryParse(value, NumberStyles.Number, culture, out var amount) || amount < 0)
+        var input = value!.Trim();
+        var decimalSeparator = culture.NumberFormat.NumberDecimalSeparator;
+        if (decimalSeparator == ",")
+            input = input.Replace('.', ',');
+
+        var separatorIndex = input.IndexOf(decimalSeparator, StringComparison.Ordinal);
+        if (separatorIndex >= 0 && input.Length - separatorIndex - decimalSeparator.Length > 2)
+            return Result<Money?>.Failure(InvalidMoney);
+
+        const NumberStyles style = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
+        if (!decimal.TryParse(input, style, culture, out var amount) || amount < 0)
             return Result<Money?>.Failure(InvalidMoney);
 
         try
         {
             return Result<Money?>.Success(Money.FromDecimal(amount));
-        }
-        catch (ArgumentException)
-        {
-            return Result<Money?>.Failure(InvalidMoney);
         }
         catch (OverflowException)
         {

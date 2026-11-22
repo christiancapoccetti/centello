@@ -89,6 +89,7 @@ public sealed class InsightTexts_should_expected_behavior
     public void Should_badge_how_a_category_moved()
     {
         Assert.Equal(new InsightChange("+18%", InsightChangeTone.Higher), InsightTexts.Change(0.18));
+        Assert.Equal(new InsightChange("+2999999900%", InsightChangeTone.Higher), InsightTexts.Change(29_999_999));
         Assert.Equal(new InsightChange("−47%", InsightChangeTone.Lower), InsightTexts.Change(-0.47));
         Assert.Equal(new InsightChange("uguale", InsightChangeTone.Same), InsightTexts.Change(0.004));
         Assert.Equal(new InsightChange("nuovo", InsightChangeTone.New), InsightTexts.Change(null));

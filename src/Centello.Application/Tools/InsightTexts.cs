@@ -100,6 +100,6 @@ public static class InsightTexts
         return isToDate ? "Da gennaio a oggi hai speso" : $"Nel {period.Start.Year} hai speso";
     }
 
-    private static int Percent(double fraction) =>
-        (int)Math.Round(Math.Abs(fraction) * 100, MidpointRounding.AwayFromZero);
+    private static decimal Percent(double fraction) =>
+        (decimal)Math.Round(Math.Abs(fraction) * 100, MidpointRounding.AwayFromZero);
 }

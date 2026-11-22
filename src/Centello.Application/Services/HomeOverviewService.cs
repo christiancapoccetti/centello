@@ -229,7 +229,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
             return null;
 
         var current = SpentBetween(expenses, window.CurrentFrom, window.CurrentTo);
-        var percent = (int)Math.Round(Math.Abs(current - previous) * 100m / previous, MidpointRounding.AwayFromZero);
+        var percent = Math.Round(Math.Abs(current - previous) * 100m / previous, MidpointRounding.AwayFromZero);
         var trend = percent == 0
             ? ComparisonTrend.Same
             : current < previous ? ComparisonTrend.Lower : ComparisonTrend.Higher;

@@ -205,6 +205,24 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_compare_large_spending_increases_without_wrapping_the_percentage()
+    {
+        var category = NewCategory("Spesa");
+        var expenses = new[]
+        {
+            Spend(category, 30_000_000, new DateOnly(2026, 11, 5)),
+            Spend(category, 1, new DateOnly(2026, 10, 5))
+        };
+
+        var overview = await Overview([category], expenses);
+
+        Assert.Equal(
+            new PeriodComparison("2999999900% in più di ottobre", "2999999900% su ottobre", ComparisonTrend.Higher,
+                "Rispetto agli stessi giorni di ottobre: 2999999900% in più."),
+            overview.Comparison);
+    }
+
+    [Fact]
     public async Task Should_compare_a_lower_current_month_with_the_previous_one()
     {
         var category = NewCategory("Spesa");

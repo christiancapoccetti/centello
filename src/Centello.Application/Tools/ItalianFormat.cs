@@ -111,7 +111,7 @@ public static class ItalianFormat
     }
 
     /// <summary>"6%"</summary>
-    public static string Percent(int percent) => $"{percent}%";
+    public static string Percent(decimal percent) => percent.ToString("0", CultureInfo.InvariantCulture) + "%";
 
     private static string RelativeDay(DateOnly date, DateOnly today, Func<DateOnly, string> otherwise) => date == today
         ? "Oggi"
