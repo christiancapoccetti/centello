@@ -18,6 +18,7 @@
 
                 <Label Text="Notifiche" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Notifications}" Title="Riepilogo del mese" Detail="{Binding RecapNoticeDetail}" IsOn="{Binding RecapNoticeOn, Mode=OneWay}" Kind="Toggle" Toggled="OnRecapNoticeToggled" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Notifications}" Title="Apri impostazioni Android" Kind="Action" IsVisible="{Binding RecapNoticeBlocked}" Tapped="OnAndroidNotificationSettingsTapped" />
 
                 <Label Text="Voce e foto" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <VerticalStackLayout IsVisible="{Binding ShowKeyStatus}">

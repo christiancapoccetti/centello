@@ -12,6 +12,7 @@ public partial class SettingsPage : ContentPage
     private readonly SettingsViewModel _viewModel;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
+    private Window? _settingsWindow;
 
     public SettingsPage(SettingsViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
     {
@@ -25,8 +26,23 @@ public partial class SettingsPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _settingsWindow = Window;
+        if (_settingsWindow is not null)
+            _settingsWindow.Activated += OnWindowActivated;
+
         await _viewModel.Load();
     }
+
+    protected override void OnDisappearing()
+    {
+        if (_settingsWindow is not null)
+            _settingsWindow.Activated -= OnWindowActivated;
+
+        _settingsWindow = null;
+        base.OnDisappearing();
+    }
+
+    private void OnWindowActivated(object? sender, EventArgs e) => _viewModel.RefreshRecapNotice();
 
     private async void OnRecurringPaymentsTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(RecurringPaymentsPage));
@@ -60,16 +76,10 @@ public partial class SettingsPage : ContentPage
         await Form.ScrollToAsync(SaveKeyButton, ScrollToPosition.End, true);
     }
 
-    private async void OnRecapNoticeToggled(object? sender, ToggledEventArgs e)
-    {
-        if (_viewModel.RecapNoticeBlocked)
-        {
-            AppInfo.ShowSettingsUI();
-            return;
-        }
-
+    private async void OnRecapNoticeToggled(object? sender, ToggledEventArgs e) =>
         await _viewModel.SetRecapNotice(e.Value);
-    }
+
+    private void OnAndroidNotificationSettingsTapped(object? sender, EventArgs e) => AppInfo.ShowSettingsUI();
 
     private void OnReplaceClicked(object? sender, EventArgs e) => _viewModel.StartReplacing();
 

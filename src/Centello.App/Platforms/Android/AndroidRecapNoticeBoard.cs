@@ -10,12 +10,12 @@ public sealed class AndroidRecapNoticeBoard : IRecapNoticeBoard
     private const string ChannelId = "riepiloghi";
     private const int NotificationId = 1;
 
-    public bool CanPost => Manager(Context)?.AreNotificationsEnabled() ?? false;
+    public bool CanPost => Manager(Context) is { } manager && CanPostOn(manager);
 
     public Task<bool> Post(RecapNotice notice)
     {
         var context = Context;
-        if (Manager(context) is not { } manager || !manager.AreNotificationsEnabled())
+        if (Manager(context) is not { } manager || !CanPostOn(manager))
             return Task.FromResult(false);
 
         var builder = OperatingSystem.IsAndroidVersionAtLeast(26)
@@ -28,7 +28,7 @@ public sealed class AndroidRecapNoticeBoard : IRecapNoticeBoard
             .SetSmallIcon(Resource.Drawable.ic_stat_centello)
             .SetContentIntent(EntryLinks.Pending(context, notice.Entry))
             .SetAutoCancel(true)
-            .SetVisibility(NotificationVisibility.Public)
+            .SetVisibility(NotificationVisibility.Secret)
             .Build());
         return Task.FromResult(true);
     }
@@ -46,6 +46,7 @@ public sealed class AndroidRecapNoticeBoard : IRecapNoticeBoard
     public Task Disarm()
     {
         var context = Context;
+        Manager(context)?.Cancel(NotificationId);
         if (Pending(context, PendingIntentFlags.NoCreate) is not { } pending)
             return Task.CompletedTask;
 
@@ -53,6 +54,10 @@ public sealed class AndroidRecapNoticeBoard : IRecapNoticeBoard
         pending.Cancel();
         return Task.CompletedTask;
     }
+
+    private static bool CanPostOn(NotificationManager manager) => manager.AreNotificationsEnabled()
+        && (!OperatingSystem.IsAndroidVersionAtLeast(26)
+            || manager.GetNotificationChannel(ChannelId)?.Importance != NotificationImportance.None);
 
     private static Context Context => Android.App.Application.Context;
 

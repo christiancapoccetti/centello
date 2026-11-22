@@ -69,12 +69,12 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
             await notificationPermission.Request();
 
         await recapNotices.Choose(on ? RecapNoticeState.On : RecapNoticeState.Off);
-        ShowRecapNotice();
+        RefreshRecapNotice();
     }
 
     public async Task Load()
     {
-        ShowRecapNotice();
+        RefreshRecapNotice();
         HasApiKey = await openAiSettings.HasApiKey();
         using var scope = scopeFactory.CreateScope();
         var list = await scope.ServiceProvider.GetRequiredService<RecurringPaymentListService>().Get();
@@ -127,12 +127,12 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, OpenAiS
         HasApiKey = false;
     }
 
-    private void ShowRecapNotice()
+    public void RefreshRecapNotice()
     {
         var state = recapNoticeSettings.State;
         var canPost = recapNoticeBoard.CanPost;
-        RecapNoticeOn = canPost && RecapNoticeAutomation.IsEnabled(state, canPost);
-        RecapNoticeBlocked = state == RecapNoticeState.On && !canPost;
+        RecapNoticeOn = RecapNoticeAutomation.IsEnabled(state);
+        RecapNoticeBlocked = RecapNoticeOn && !canPost;
         RecapNoticeDetail = RecapNoticeAutomation.Describe(state, canPost);
     }
 

@@ -15,18 +15,15 @@ public sealed class RecapNoticeAutomation_should_expected_behavior
         new(new FakeScopeFactory(new FakeServiceProvider(_recaps)), _board, _settings, () => _now);
 
     [Theory]
-    [InlineData(RecapNoticeState.On, true, true)]
-    [InlineData(RecapNoticeState.On, false, true)]
-    [InlineData(RecapNoticeState.Undecided, true, true)]
-    [InlineData(RecapNoticeState.Undecided, false, false)]
-    [InlineData(RecapNoticeState.Off, true, false)]
-    [InlineData(RecapNoticeState.Off, false, false)]
-    public void Enable_on_or_when_undecided_with_the_permission(RecapNoticeState state, bool canPost, bool expected) =>
-        Assert.Equal(expected, RecapNoticeAutomation.IsEnabled(state, canPost));
+    [InlineData(RecapNoticeState.On, true)]
+    [InlineData(RecapNoticeState.Undecided, false)]
+    [InlineData(RecapNoticeState.Off, false)]
+    public void Enable_only_after_an_explicit_choice(RecapNoticeState state, bool expected) =>
+        Assert.Equal(expected, RecapNoticeAutomation.IsEnabled(state));
 
     [Theory]
-    [InlineData(RecapNoticeState.On, true, "Il 1° del mese, alle 9")]
-    [InlineData(RecapNoticeState.Undecided, true, "Il 1° del mese, alle 9")]
+    [InlineData(RecapNoticeState.On, true, "Il 1° del mese, a partire dalle 9")]
+    [InlineData(RecapNoticeState.Undecided, true, "Spento")]
     [InlineData(RecapNoticeState.Undecided, false, "Spento")]
     [InlineData(RecapNoticeState.Off, true, "Spento")]
     [InlineData(RecapNoticeState.On, false, "Consenti le notifiche a Centello nelle impostazioni di Android")]
@@ -83,14 +80,16 @@ public sealed class RecapNoticeAutomation_should_expected_behavior
     }
 
     [Fact]
-    public async Task Treat_undecided_with_the_permission_as_on()
+    public async Task Disarm_when_undecided_even_with_the_permission()
     {
         _settings.State = RecapNoticeState.Undecided;
         _recaps.Available.Add(November);
 
         await Automation().Sync();
 
-        Assert.Single(_board.Posted);
+        Assert.Empty(_board.Posted);
+        Assert.Empty(_board.Armed);
+        Assert.Equal(1, _board.Disarmed);
     }
 
     [Fact]
@@ -104,6 +103,20 @@ public sealed class RecapNoticeAutomation_should_expected_behavior
 
         Assert.Empty(_board.Posted);
         Assert.Equal(1, _board.Disarmed);
+    }
+
+    [Fact]
+    public async Task Keep_an_explicit_opt_in_while_Android_blocks_the_notification()
+    {
+        _board.CanPost = false;
+        _recaps.Available.Add(November);
+
+        await Automation().Choose(RecapNoticeState.On);
+
+        Assert.Equal(RecapNoticeState.On, _settings.State);
+        Assert.Empty(_board.Posted);
+        Assert.Equal("", _settings.LastHandledKey);
+        Assert.Single(_board.Armed);
     }
 
     [Fact]
@@ -201,6 +214,8 @@ public sealed class RecapNoticeAutomation_should_expected_behavior
     [Fact]
     public async Task Cancel_the_alarm_when_choosing_off()
     {
+        _board.CanPost = false;
+
         await Automation().Choose(RecapNoticeState.Off);
 
         Assert.Equal(RecapNoticeState.Off, _settings.State);

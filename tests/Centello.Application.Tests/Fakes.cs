@@ -50,11 +50,16 @@ internal sealed class FakeExpenseRepository : IExpenseRepository
 internal sealed class FakeRecurringPaymentRepository : IRecurringPaymentRepository
 {
     public List<RecurringPayment> Items { get; } = [];
+    public List<RecurrenceOccurrence> RecordedOccurrences { get; } = [];
     public Error? Failure { get; set; }
     public Task<Result> Add(RecurringPayment value, CancellationToken token = default) { Items.Add(value); return Task.FromResult(Result.Success()); }
     public Task<Result<RecurringPayment?>> Get(Guid id, CancellationToken token = default) => Task.FromResult(Failure is null ? Result<RecurringPayment?>.Success(Items.SingleOrDefault(x => x.RecurringPaymentId == id)) : Result<RecurringPayment?>.Failure(Failure));
     public Task<Result<IReadOnlyList<RecurringPayment>>> GetAll(CancellationToken token = default) => Task.FromResult(Failure is null ? Result<IReadOnlyList<RecurringPayment>>.Success(Items.OrderBy(x => x.NextDueOn).ToList()) : Result<IReadOnlyList<RecurringPayment>>.Failure(Failure));
     public Task<Result<IReadOnlyList<RecurringPayment>>> GetDue(DateOnly throughDate, CancellationToken token = default) => Task.FromResult(Result<IReadOnlyList<RecurringPayment>>.Success(Items.Where(x => !x.IsSuspended && x.NextDueOn <= throughDate && (!x.EndsOn.HasValue || x.NextDueOn <= x.EndsOn.Value)).ToList()));
+    public Task<Result<bool>> HasRecordedOccurrenceOn(DateOnly dueOn, CancellationToken token = default) =>
+        Task.FromResult(Result<bool>.Success(RecordedOccurrences.Any(occurrence => occurrence.DueOn == dueOn
+            && Items.Any(payment => payment.RecurringPaymentId == occurrence.RecurringPaymentId && !payment.IsSuspended))));
+
     public async Task<Result> Update(Guid recurringPaymentId, Func<RecurringPayment, Result> update,
         CancellationToken token = default)
     {
@@ -85,7 +90,10 @@ internal sealed class FakeRecurringOccurrenceProcessor(FakeRecurringPaymentRepos
 
         var added = _occurrences.Add((recurringPaymentId, payment.NextDueOn));
         if (added)
+        {
             expenses.Items.Add(payment.CreateExpense(Guid.CreateVersion7()));
+            payments.RecordedOccurrences.Add(new RecurrenceOccurrence(recurringPaymentId, payment.NextDueOn));
+        }
 
         payment.MoveToNextOccurrence();
         return Result<RecurringOccurrenceOutcome>.Success(added

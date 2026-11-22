@@ -4,24 +4,44 @@ namespace Centello.Application.Tests;
 
 public sealed class UpcomingRecurringPaymentService_should_expected_behavior
 {
+    private static readonly DateOnly Today = new(2026, 7, 20);
+
     [Fact]
-    public async Task Return_only_active_payments_due_in_the_reminder_window_with_stable_identifier()
+    public async Task Schedule_the_next_active_payment_even_when_it_is_more_than_a_week_away()
     {
         var repository = new FakeRecurringPaymentRepository();
-        var payment = new RecurringPayment(Guid.NewGuid(), Guid.NewGuid(), new Money(1_200),
-            RecurrenceFrequency.Monthly, new DateOnly(2026, 7, 23));
-        repository.Items.Add(payment);
-        repository.Items.Add(new(Guid.NewGuid(), Guid.NewGuid(), new Money(100),
-            RecurrenceFrequency.Monthly, new DateOnly(2026, 8, 1)));
-        var suspended = new RecurringPayment(Guid.NewGuid(), Guid.NewGuid(), new Money(100),
-            RecurrenceFrequency.Monthly, new DateOnly(2026, 7, 22));
+        var suspended = Payment(Today.AddDays(1));
         suspended.Suspend();
-        repository.Items.Add(suspended);
+        var ended = Payment(Today.AddDays(2));
+        ended.End(Today.AddDays(-1));
+        repository.Items.AddRange([suspended, ended, Payment(Today.AddDays(32)), Payment(Today.AddDays(30))]);
 
-        var result = await new UpcomingRecurringPaymentService(repository).GetUpcoming(new DateOnly(2026, 7, 20));
+        var result = await new UpcomingRecurringPaymentService(repository).GetSchedule(Today);
 
-        var reminder = Assert.Single(result.Value);
-        Assert.Equal(payment.RecurringPaymentId, reminder.RecurringPaymentId);
-        Assert.Equal($"recurring-{payment.RecurringPaymentId:N}-20260723", reminder.NotificationId);
+        Assert.Null(result.Value.NotifyAt);
+        Assert.Equal(Today.AddDays(30).ToDateTime(new TimeOnly(9, 0)), result.Value.NextDueAt);
     }
+
+    [Fact]
+    public async Task Keep_todays_reminder_when_processing_advanced_past_the_last_occurrence()
+    {
+        var repository = new FakeRecurringPaymentRepository();
+        var payment = Payment(Today);
+        payment.End(Today);
+        payment.MoveToNextOccurrence();
+        repository.Items.Add(payment);
+        repository.RecordedOccurrences.Add(new RecurrenceOccurrence(payment.RecurringPaymentId, Today));
+        var service = new UpcomingRecurringPaymentService(repository);
+
+        var first = await service.GetSchedule(Today);
+        var resync = await service.GetSchedule(Today);
+
+        Assert.Equal(Today.ToDateTime(new TimeOnly(9, 0)), first.Value.NotifyAt);
+        Assert.Null(first.Value.NextDueAt);
+        Assert.Equal(first.Value, resync.Value);
+        Assert.Null((await service.GetSchedule(Today.AddDays(1))).Value.NotifyAt);
+    }
+
+    private static RecurringPayment Payment(DateOnly nextDueOn) =>
+        new(Guid.NewGuid(), Guid.NewGuid(), new Money(1_200), RecurrenceFrequency.Monthly, nextDueOn);
 }

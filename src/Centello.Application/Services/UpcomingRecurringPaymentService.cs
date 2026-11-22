@@ -2,31 +2,30 @@ using Centello.Domain;
 
 namespace Centello.Application;
 
-public sealed record UpcomingRecurringPaymentReminder(Guid RecurringPaymentId, DateOnly DueOn,
-    long AmountCents, string NotificationId);
+public sealed record RecurringPaymentReminderSchedule(DateTime? NotifyAt, DateTime? NextDueAt);
 
 public sealed class UpcomingRecurringPaymentService(IRecurringPaymentRepository recurringPayments)
 {
-    public async Task<Result<IReadOnlyList<UpcomingRecurringPaymentReminder>>> GetUpcoming(DateOnly today,
-        int daysAhead = 7, CancellationToken cancellationToken = default)
-    {
-        if (daysAhead < 0)
-            return Result<IReadOnlyList<UpcomingRecurringPaymentReminder>>.Failure(ApplicationErrors.InvalidEndDate);
+    private static readonly TimeOnly ReminderTime = new(9, 0);
 
+    public async Task<Result<RecurringPaymentReminderSchedule>> GetSchedule(DateOnly today,
+        CancellationToken cancellationToken = default)
+    {
         var payments = await recurringPayments.GetAll(cancellationToken);
         if (payments.IsFailure)
-            return Result<IReadOnlyList<UpcomingRecurringPaymentReminder>>.Failure(payments.Error);
+            return Result<RecurringPaymentReminderSchedule>.Failure(payments.Error);
 
-        var lastDay = today.AddDays(daysAhead);
-        var reminders = payments.Value
-            .Where(payment => !payment.IsSuspended
-                && payment.NextDueOn >= today
-                && payment.NextDueOn <= lastDay
-                && payment.NextDueOn <= payment.EndsOn.GetValueOrDefault(DateOnly.MaxValue))
-            .Select(payment => new UpcomingRecurringPaymentReminder(payment.RecurringPaymentId,
-                payment.NextDueOn, payment.Amount.Cents,
-                $"recurring-{payment.RecurringPaymentId:N}-{payment.NextDueOn:yyyyMMdd}"))
-            .ToList();
-        return Result<IReadOnlyList<UpcomingRecurringPaymentReminder>>.Success(reminders);
+        // The due pass has advanced the payment, so its recorded occurrence is the source for today's reminder.
+        var dueToday = await recurringPayments.HasRecordedOccurrenceOn(today, cancellationToken);
+        if (dueToday.IsFailure)
+            return Result<RecurringPaymentReminderSchedule>.Failure(dueToday.Error);
+
+        var next = payments.Value
+            .Where(payment => payment.Status == RecurringPaymentStatus.Active && payment.NextDueOn > today)
+            .Select(payment => (DateOnly?)payment.NextDueOn)
+            .Min();
+        return Result<RecurringPaymentReminderSchedule>.Success(new(
+            dueToday.Value ? today.ToDateTime(ReminderTime) : null,
+            next?.ToDateTime(ReminderTime)));
     }
 }

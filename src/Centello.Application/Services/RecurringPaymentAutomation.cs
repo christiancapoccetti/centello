@@ -4,12 +4,12 @@ namespace Centello.Application;
 
 public interface IRecurringPaymentReminder
 {
-    Task Resync(IReadOnlyList<UpcomingRecurringPaymentReminder> reminders);
+    Task Resync(RecurringPaymentReminderSchedule schedule);
 }
 
 public sealed class NoOpRecurringPaymentReminder : IRecurringPaymentReminder
 {
-    public Task Resync(IReadOnlyList<UpcomingRecurringPaymentReminder> reminders) => Task.CompletedTask;
+    public Task Resync(RecurringPaymentReminderSchedule schedule) => Task.CompletedTask;
 }
 
 /// <summary>The only background writer of the database. One gate serializes its passes with the work that must
@@ -19,9 +19,11 @@ public sealed class RecurringPaymentAutomation(IServiceScopeFactory scopeFactory
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
 
-    public async Task ProcessDue()
+    public async Task ProcessDue(bool waitForCurrentPass = false)
     {
-        if (!await _gate.WaitAsync(0))
+        if (waitForCurrentPass)
+            await _gate.WaitAsync();
+        else if (!await _gate.WaitAsync(0))
             return;
 
         try
@@ -63,11 +65,11 @@ public sealed class RecurringPaymentAutomation(IServiceScopeFactory scopeFactory
                 return;
 
             var upcoming = scope.ServiceProvider.GetRequiredService<UpcomingRecurringPaymentService>();
-            var reminders = await upcoming.GetUpcoming(today);
-            if (reminders.IsFailure)
+            var schedule = await upcoming.GetSchedule(today);
+            if (schedule.IsFailure)
                 return;
 
-            await reminder.Resync(reminders.Value);
+            await reminder.Resync(schedule.Value);
         }
         catch
         {

@@ -34,7 +34,8 @@ public sealed class RecurringPaymentAutomation_should_expected_behavior
 
         Assert.Equal(2, _expenses.Items.Count);
         var resynced = Assert.Single(_reminder.Resynced);
-        Assert.Single(resynced);
+        Assert.Equal(Today.ToDateTime(new TimeOnly(9, 0)), resynced.NotifyAt);
+        Assert.Equal(Today.AddDays(7).ToDateTime(new TimeOnly(9, 0)), resynced.NextDueAt);
     }
 
     [Fact]
@@ -50,6 +51,24 @@ public sealed class RecurringPaymentAutomation_should_expected_behavior
         await running;
 
         Assert.Single(_reminder.Resynced);
+    }
+
+    [Fact]
+    public async Task Recompute_the_schedule_when_a_change_arrives_during_a_pass()
+    {
+        _reminder.Hold();
+        var running = _automation.ProcessDue();
+        await _reminder.Entered;
+
+        _payments.Items.Add(new RecurringPayment(Guid.NewGuid(), Guid.NewGuid(), new Money(1_000),
+            RecurrenceFrequency.Monthly, Today.AddMonths(1)));
+        var refresh = _automation.ProcessDue(waitForCurrentPass: true);
+        _reminder.Release();
+        await Task.WhenAll(running, refresh);
+
+        Assert.Equal(2, _reminder.Resynced.Count);
+        Assert.Null(_reminder.Resynced[0].NextDueAt);
+        Assert.Equal(Today.AddMonths(1).ToDateTime(new TimeOnly(9, 0)), _reminder.Resynced[1].NextDueAt);
     }
 
     [Fact]
@@ -117,7 +136,7 @@ public sealed class RecurringPaymentAutomation_should_expected_behavior
         private TaskCompletionSource? _release;
         private readonly TaskCompletionSource _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public List<IReadOnlyList<UpcomingRecurringPaymentReminder>> Resynced { get; } = [];
+        public List<RecurringPaymentReminderSchedule> Resynced { get; } = [];
         public bool FailOnResync { get; set; }
         public Task Entered => _entered.Task;
 
@@ -125,12 +144,12 @@ public sealed class RecurringPaymentAutomation_should_expected_behavior
 
         public void Release() => _release!.SetResult();
 
-        public async Task Resync(IReadOnlyList<UpcomingRecurringPaymentReminder> reminders)
+        public async Task Resync(RecurringPaymentReminderSchedule schedule)
         {
             if (FailOnResync)
                 throw new InvalidOperationException();
 
-            Resynced.Add(reminders);
+            Resynced.Add(schedule);
             _entered.TrySetResult();
             if (_release is not null)
                 await _release.Task;

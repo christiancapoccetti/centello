@@ -156,7 +156,7 @@ public sealed class RecurringPaymentEditorViewModel : ObservableObject
         IsReminderOffered = false;
         var allowed = await _reminderOffer.Accept();
         if (allowed)
-            await _automation.ProcessDue();
+            await _automation.ProcessDue(waitForCurrentPass: true);
 
         return allowed;
     }
@@ -255,7 +255,7 @@ public sealed class RecurringPaymentEditorViewModel : ObservableObject
         if (IsReminderOffered)
             _reminderOffer.Close();
 
-        await _automation.ProcessDue();
+        await _automation.ProcessDue(waitForCurrentPass: true);
         Saved?.Invoke(this, EventArgs.Empty);
     }
 
@@ -277,7 +277,7 @@ public sealed class RecurringPaymentEditorViewModel : ObservableObject
         if (result.IsFailure)
             ErrorMessage = result.Error.Message;
         else
-            await _automation.ProcessDue();
+            await _automation.ProcessDue(waitForCurrentPass: true);
 
         return result;
     }
