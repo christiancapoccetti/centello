@@ -8,21 +8,26 @@ namespace Centello.Infrastructure;
 public sealed class SqliteDatabaseStartup(IServiceScopeFactory scopeFactory, ILogger<SqliteDatabaseStartup>? logger = null)
 {
     private const int CommandTimeoutSeconds = 2;
-    private volatile bool _isReady;
+    private readonly object _startup = new();
+    private Task<bool>? _attempt;
 
-    public bool IsReady => _isReady;
+    public bool IsReady => Volatile.Read(ref _attempt) is { IsCompletedSuccessfully: true } attempt && attempt.Result;
 
-    public Task Run() => Task.Run(Apply);
-
-    private async Task Apply()
+    public Task<bool> Run()
     {
-        if (IsReady)
-            return;
+        lock (_startup)
+        {
+            if (_attempt is null || (_attempt.IsCompleted && !IsReady))
+                _attempt = Task.Run(Apply);
 
+            return _attempt;
+        }
+    }
+
+    private async Task<bool> Apply()
+    {
         try
         {
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(4));
-            var cancellationToken = timeout.Token;
             await using var scope = scopeFactory.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<CentelloDbContext>();
             var connection = (SqliteConnection)context.Database.GetDbConnection();
@@ -30,22 +35,23 @@ public sealed class SqliteDatabaseStartup(IServiceScopeFactory scopeFactory, ILo
             context.Database.SetCommandTimeout(CommandTimeoutSeconds);
 
             await using var gate = OpenMigrationGate(connection.DataSource);
-            await gate.OpenAsync(cancellationToken);
+            await gate.OpenAsync();
             // All app migrations share this SQLite writer reservation. The OS releases it on process death.
             await using var reservation = gate.BeginTransaction(deferred: false);
-            if ((await context.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
+            if ((await context.Database.GetPendingMigrationsAsync()).Any())
             {
                 if (File.Exists(connection.DataSource))
-                    await ClearAbandonedLock(connection, cancellationToken);
+                    await ClearAbandonedLock(connection);
 
-                await context.Database.MigrateAsync(cancellationToken);
+                await context.Database.MigrateAsync();
             }
 
-            _isReady = true;
+            return true;
         }
         catch (Exception exception)
         {
             logger?.LogWarning(exception, "Could not initialize the database.");
+            return false;
         }
     }
 
@@ -57,20 +63,20 @@ public sealed class SqliteDatabaseStartup(IServiceScopeFactory scopeFactory, ILo
             Pooling = false
         }.ToString());
 
-    private static async Task ClearAbandonedLock(SqliteConnection connection, CancellationToken cancellationToken)
+    private static async Task ClearAbandonedLock(SqliteConnection connection)
     {
-        await connection.OpenAsync(cancellationToken);
+        await connection.OpenAsync();
         try
         {
             await using var command = connection.CreateCommand();
             command.CommandText = "SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = '__EFMigrationsLock'";
-            if (await command.ExecuteScalarAsync(cancellationToken) is null)
+            if (await command.ExecuteScalarAsync() is null)
                 return;
 
             // Android stops the previous version when replacing the package. Every current app migrator holds the
             // sidecar reservation, so a row without that reservation was left by an interrupted migration.
             command.CommandText = "DELETE FROM __EFMigrationsLock WHERE Id = 1";
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            await command.ExecuteNonQueryAsync();
         }
         finally
         {

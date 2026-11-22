@@ -1,7 +1,6 @@
 using Centello.App.Theming;
 using Centello.Application;
 using Centello.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Storage;
 
 namespace Centello.App;
@@ -27,9 +26,6 @@ public static class MauiProgram
             .AddInfrastructure(databasePath)
             .AddUi();
 
-        var app = builder.Build();
-        app.Services.GetRequiredService<SqliteDatabaseStartup>().Run().GetAwaiter().GetResult();
-
-        return app;
+        return builder.Build();
     }
 }

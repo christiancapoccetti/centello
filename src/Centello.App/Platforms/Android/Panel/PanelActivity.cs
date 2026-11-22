@@ -35,7 +35,7 @@ public sealed class PanelActivity : AppCompatActivity
     private PanelSheet? _sheet;
     private AppEntryRouter? _router;
 
-    protected override void OnCreate(Bundle? savedInstanceState)
+    protected override async void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
         if (IPlatformApplication.Current?.Services is not { } services)
@@ -44,7 +44,11 @@ public sealed class PanelActivity : AppCompatActivity
             return;
         }
 
-        if (!services.GetRequiredService<SqliteDatabaseStartup>().IsReady)
+        var ready = await services.GetRequiredService<SqliteDatabaseStartup>().Run();
+        if (IsFinishing || IsDestroyed)
+            return;
+
+        if (!ready)
         {
             StartActivity(new Intent(this, typeof(MainActivity))
                 .AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop));
@@ -74,7 +78,8 @@ public sealed class PanelActivity : AppCompatActivity
     {
         base.OnNewIntent(intent);
         Intent = intent;
-        Start(EntryOf(intent), restored: false);
+        if (_sheet is not null)
+            Start(EntryOf(intent), restored: false);
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)

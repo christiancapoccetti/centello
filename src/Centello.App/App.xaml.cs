@@ -31,29 +31,17 @@ public partial class App : Microsoft.Maui.Controls.Application
     protected override Window CreateWindow(IActivationState? activationState)
     {
         var window = new Window();
-        window.Page = _databaseStartup.IsReady ? _appShellFactory() : StartupError(window);
+        window.Page = _databaseStartup.IsReady ? _appShellFactory() : StartupPage(window);
         window.Activated += OnWindowActivated;
         return window;
     }
 
-    private ContentPage StartupError(Window window)
+    private ContentPage StartupPage(Window window)
     {
-        var retry = new Button { Text = "Riprova" };
-        retry.Clicked += async (_, _) =>
-        {
-            retry.IsEnabled = false;
-            await _databaseStartup.Run();
-            if (!_databaseStartup.IsReady)
-            {
-                retry.IsEnabled = true;
-                return;
-            }
-
-            window.Page = _appShellFactory();
-            OnWindowActivated(window, EventArgs.Empty);
-        };
-
-        return new ContentPage
+        const string opening = "Apertura dei dati in corso…";
+        var status = new Label { Text = opening, FontSize = 20 };
+        var retry = new Button { Text = "Riprova", IsVisible = false };
+        var page = new ContentPage
         {
             Title = "Centello",
             Content = new VerticalStackLayout
@@ -63,11 +51,42 @@ public partial class App : Microsoft.Maui.Controls.Application
                 VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    new Label { Text = "Centello non è riuscito ad aprire i dati del telefono.", FontSize = 20 },
+                    status,
                     retry
                 }
             }
         };
+        page.Loaded += OnLoaded;
+        retry.Clicked += async (_, _) => await Open();
+        return page;
+
+        async void OnLoaded(object? sender, EventArgs args)
+        {
+            page.Loaded -= OnLoaded;
+            await Open();
+        }
+
+        async Task Open()
+        {
+            if (!ReferenceEquals(window.Page, page))
+                return;
+
+            retry.IsVisible = false;
+            status.Text = opening;
+            var ready = await _databaseStartup.Run();
+            if (!ReferenceEquals(window.Page, page))
+                return;
+
+            if (!ready)
+            {
+                status.Text = "Centello non è riuscito ad aprire i dati del telefono.";
+                retry.IsVisible = true;
+                return;
+            }
+
+            window.Page = _appShellFactory();
+            OnWindowActivated(window, EventArgs.Empty);
+        }
     }
 
     private void OnWindowActivated(object? sender, EventArgs eventArgs)

@@ -1,5 +1,7 @@
+using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +55,36 @@ public sealed class SqliteDatabaseStartup_should_expected_behavior : IDisposable
     }
 
     [Fact]
+    public async Task Finish_a_slow_migration_for_every_startup_caller()
+    {
+        PreparePreviousVersion();
+        var pause = new MigrationPause();
+        await using var services = new ServiceCollection()
+            .AddInfrastructure(_database.FilePath)
+            .AddDbContext<CentelloDbContext>(options => options.AddInterceptors(pause))
+            .BuildServiceProvider();
+        var startup = services.GetRequiredService<SqliteDatabaseStartup>();
+        var first = startup.Run();
+        await pause.Started.Task.WaitAsync(TimeSpan.FromSeconds(15));
+        var second = startup.Run();
+        try
+        {
+            Assert.Same(first, second);
+            Assert.False(startup.IsReady);
+            await Task.Delay(TimeSpan.FromMilliseconds(4200));
+        }
+        finally
+        {
+            pause.Release.TrySetResult();
+        }
+
+        Assert.True(await first);
+        Assert.True(await second);
+        Assert.True(startup.IsReady);
+        Assert.Empty(await _database.Context.Database.GetPendingMigrationsAsync());
+    }
+
+    [Fact]
     public async Task Initialize_a_new_database_in_wal_mode()
     {
         var newPath = Path.Combine(_database.Folder, "new.db3");
@@ -86,4 +118,21 @@ public sealed class SqliteDatabaseStartup_should_expected_behavior : IDisposable
     private async Task<long> MigrationLockRows() => await _database.Context.Database
         .SqlQueryRaw<long>("SELECT COUNT(*) AS Value FROM __EFMigrationsLock")
         .SingleAsync();
+
+    private sealed class MigrationPause : DbCommandInterceptor
+    {
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (!command.CommandText.TrimStart().StartsWith("UPDATE Categories", StringComparison.Ordinal))
+                return result;
+
+            Started.TrySetResult();
+            await Release.Task.WaitAsync(cancellationToken);
+            return result;
+        }
+    }
 }

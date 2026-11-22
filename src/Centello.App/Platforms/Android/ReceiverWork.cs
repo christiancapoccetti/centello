@@ -16,7 +16,7 @@ internal static class ReceiverWork
             try
             {
                 if (IPlatformApplication.Current?.Services is not { } services
-                    || !services.GetRequiredService<SqliteDatabaseStartup>().IsReady)
+                    || !await services.GetRequiredService<SqliteDatabaseStartup>().Run())
                     return;
 
                 await work(services);
