@@ -31,7 +31,10 @@ public static class MauiProgram
         var app = builder.Build();
         using var scope = app.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<CentelloDbContext>();
-        dbContext.Database.Migrate();
+        // SQLite may retain a migration lock after an interrupted launch.
+        if (dbContext.Database.GetPendingMigrations().Any())
+            dbContext.Database.Migrate();
+
         return app;
     }
 }
