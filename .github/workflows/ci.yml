@@ -36,7 +36,7 @@ jobs:
         id: tests
         run: |
           dotnet test Centesimo.slnx -c Debug --no-build --no-restore \
-            --logger trx --results-directory TestResults --collect:"XPlat Code Coverage;Format=opencover"
+            --results-directory TestResults --collect:"XPlat Code Coverage;Format=opencover"
 
       - name: Merge coverage reports
         if: ${{ !cancelled() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') }}
@@ -45,7 +45,7 @@ jobs:
           "$RUNNER_TEMP/report-tools/reportgenerator" \
             "-reports:TestResults/*/coverage.opencover.xml" \
             "-assemblyfilters:+Centesimo.Domain;+Centesimo.Application;+Centesimo.Infrastructure" \
-            "-targetdir:Coverage" "-reporttypes:Html;Cobertura;MarkdownSummaryGithub"
+            "-targetdir:Coverage" "-reporttypes:Cobertura;MarkdownSummaryGithub"
           cat Coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Check coverage includes every tested assembly
@@ -58,17 +58,6 @@ jobs:
           if ($packages.Count -ne $expected.Count -or (Compare-Object $expected $measured -CaseSensitive)) {
             throw "Incomplete coverage. Expected $($expected -join ', '). Measured: $($measured -join ', ')."
           }
-
-      - name: Retain test results and coverage
-        if: ${{ !cancelled() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: test-results-and-coverage
-          path: |
-            TestResults
-            Coverage
-          if-no-files-found: error
-          retention-days: 14
 
       - name: Offer release of the verified main commit
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

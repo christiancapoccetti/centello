@@ -119,7 +119,7 @@ jobs:
           name: play-bundle-${{ github.run_id }}
           path: ${{ runner.temp }}/play/
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 3
           compression-level: 0
 
   deploy:
