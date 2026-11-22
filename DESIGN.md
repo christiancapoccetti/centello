@@ -386,10 +386,10 @@ Confident ink pills, no elevation.
 - **Tonal:** raised fill, outline stroke, coral plus glyph: the one action of an empty page.
 - **Text:** transparent, ink SemiBold, 48dp minimum.
 - **Icon:** 48dp square, 24sp glyph in ink; disabled at 30% opacity.
-- **Disabled:** a disabled primary or the first-run split pill drops to 38% opacity.
+- **Disabled.** A disabled primary button drops to 38% opacity.
 
 ### Split pill (signature)
-The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, and two 64dp icon segments on the right, each behind a 1dp outline divider: the coral microphone and the coral camera (26sp). Hold the microphone to dictate; while listening, a small outlined raised toast ("Registra… rilascia per inviare") floats 36dp above it. Tapping the camera opens a menu above it (the menu surface below, 48dp rows with a 22sp glyph and a SemiBold 16sp label): "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria", "Scegli un PDF". Both icon segments share one disabled state: with no OpenAI key saved they look disabled and tapping them leads to Settings.
+The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, and two 64dp icon segments on the right, each behind a 1dp outline divider: the coral microphone and the coral camera (26sp). Hold the microphone to dictate; while listening, a small outlined raised toast ("Registra… rilascia per inviare") floats 36dp above it. Tapping the camera opens a menu above it (the menu surface below, 48dp rows with a 22sp glyph and a SemiBold 16sp label): "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria", "Scegli un PDF". On first run, the plus opens the manual expense editor, where the user can create a category. The microphone and camera require an active category. Once a category is available, tapping either segment without a saved OpenAI key opens Settings.
 
 ### Home screen widgets (signature)
 Four widgets that are the Home on the launcher, in the same flat graphite and the same Archivo.
@@ -474,7 +474,7 @@ When the levels are close, the scale does not start at zero and both end bars ar
 
 ### Recap story (signature)
 The full-screen story of a closed month or year ("Il tuo novembre", "Il tuo 2026"), pushed over Insight with no tab bar. It is the one place the palette leaves its tiles: a card about a category fills the whole screen with that category's ink under tile-ink text. Coral never paints a card (coral means "add an expense"), so a coral category's card stays on the graphite ground and keeps its ink in tile and bars.
-- **Progress:** one segment per card at the top, filling over 7 seconds, then the next card. Holding pauses; a tap on the left or right side goes back or forward; the summary card stops and does not advance.
+- **Progress:** one segment per card at the top, filling over 7 seconds, then the next card. Holding pauses; a tap on the left or right side goes back or forward; the summary card stops and does not advance. With a screen reader active, previous and next buttons replace timed playback and focus moves to the card title.
 - **Type:** the card numeral is Archivo Condensed ExtraBold at 76sp for a total and 56sp for any other amount (euro sign 40sp and 30sp, after a thin space), a 30sp Bold headline for the verdict and a 17sp mute lead; the One Loud Numeral Rule holds. Cards set their own ink, since a card can sit on a category colour.
 - **System bars:** the status and navigation bars follow the surface of the card on screen (`IStoryBars`, `SystemBars`) and return to the app's own when the story closes.
 - **Content:** each card says one thing and appears only when the period has enough to say it; thresholds live in `RecapRules`.
