@@ -1,5 +1,5 @@
 using Android.Content;
-using Android.Views.Accessibility;
+using AccessibilityManager = Android.Views.Accessibility.AccessibilityManager;
 
 namespace Centello.App;
 
@@ -11,9 +11,15 @@ public sealed class AndroidScreenReader : IScreenReader
     public AndroidScreenReader()
     {
         if (_manager is { } manager)
-            manager.TouchExplorationStateChange += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
+            manager.AddTouchExplorationStateChangeListener(new TouchExplorationListener(() => Changed?.Invoke(this, EventArgs.Empty)));
     }
 
     public bool IsOn => _manager is { IsTouchExplorationEnabled: true };
     public event EventHandler? Changed;
+
+    private sealed class TouchExplorationListener(Action changed) : Java.Lang.Object,
+        AccessibilityManager.ITouchExplorationStateChangeListener
+    {
+        public void OnTouchExplorationStateChanged(bool enabled) => changed();
+    }
 }
