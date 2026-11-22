@@ -1,0 +1,19 @@
+name: Set up Android build tools
+description: Install the .NET SDK, MAUI workload and Android SDK used by Centesimo.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+      with:
+        dotnet-version: 10.0.402
+      env:
+        DOTNET_INSTALL_DIR: ${{ runner.temp }}/centesimo-dotnet
+
+    - name: Install Android build tools
+      shell: bash
+      run: |
+        export JAVA_HOME="$JAVA_HOME_17_X64"
+        echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+        echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+        dotnet workload install maui-android --skip-manifest-update

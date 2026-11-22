@@ -1,0 +1,166 @@
+name: Release to closed beta
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: google-play-closed-beta
+  cancel-in-progress: false
+
+env:
+  PLAY_PACKAGE: it.christiancapoccetti.centesimo
+  RELEASE_ID: ${{ github.event.release.id }}
+
+jobs:
+  eligible:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require a verified main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]
+          repo="repos/$GITHUB_REPOSITORY"
+          test "$(gh api "$repo/commits/$GITHUB_REF_NAME" --jq .sha)" = "$GITHUB_SHA"
+          if [[ "$(gh api "$repo/commits/main" --jq .sha)" != "$GITHUB_SHA" ]]; then
+            echo "::error::The release tag must point to the current main commit."
+            exit 1
+          fi
+          count=$(gh api "$repo/actions/workflows/ci.yml/runs?event=push&branch=main&head_sha=$GITHUB_SHA&status=success&per_page=1" --jq .total_count)
+          if (( count == 0 )); then
+            echo "::error::This commit needs a successful push run of CI on main."
+            exit 1
+          fi
+
+  bundle:
+    needs: eligible
+    runs-on: ubuntu-24.04
+    environment: play-closed-beta
+    steps:
+      - name: Reuse the signed artifact from a previous attempt
+        id: previous
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          name="play-bundle-$GITHUB_RUN_ID"
+          id=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?name=$name" \
+            --jq ".artifacts[] | select(.name == \"$name\" and .expired == false) | .id")
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        if: steps.previous.outputs.id == ''
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Validate the release form
+        id: form
+        if: steps.previous.outputs.id == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAY_VERSION_CODE_BASE: ${{ vars.PLAY_VERSION_CODE_BASE }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/play"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > "$RUNNER_TEMP/release.json"
+          node .github/scripts/play-release.mjs prepare "$RUNNER_TEMP/release.json" "$RUNNER_TEMP/play/release.json"
+
+      - uses: ./.github/actions/setup-android
+        if: steps.previous.outputs.id == ''
+
+      - name: Restore Android dependencies
+        if: steps.previous.outputs.id == ''
+        run: dotnet restore src/Centesimo.App/Centesimo.App.csproj
+
+      - name: Confirm the approved commit and changelog before signing
+        if: steps.previous.outputs.id == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/play-release.mjs confirm "$RUNNER_TEMP/play/release.json"
+
+      - name: Sign and verify the Play bundle
+        if: steps.previous.outputs.id == ''
+        env:
+          PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
+          PLAY_UPLOAD_PASSWORD: ${{ secrets.PLAY_UPLOAD_PASSWORD }}
+          VERSION: ${{ steps.form.outputs.version }}
+          VERSION_CODE: ${{ steps.form.outputs.code }}
+        run: |
+          set -euo pipefail
+          umask 077
+          signing=$(mktemp -d)
+          trap 'rm -rf -- "$signing"' EXIT
+          export PLAY_UPLOAD_KEYSTORE="$signing/upload.jks"
+          printf '%s' "$PLAY_UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$PLAY_UPLOAD_KEYSTORE"
+          unset PLAY_UPLOAD_KEYSTORE_BASE64
+          printf '%s' "$PLAY_UPLOAD_PASSWORD" > "$signing/password"
+          dotnet publish src/Centesimo.App/Centesimo.App.csproj --no-restore -c Release -f net10.0-android \
+            -p:PlayRelease=true -p:AndroidPackageFormats=aab \
+            "-p:ApplicationVersion=$VERSION_CODE" "-p:ApplicationDisplayVersion=$VERSION" \
+            "-p:AndroidSigningKeyPass=file:$signing/password" "-p:AndroidSigningStorePass=file:$signing/password" \
+            -o "$RUNNER_TEMP/publish"
+          pwsh -NoProfile -File tests/android/check-variant.ps1 \
+            -Manifest src/Centesimo.App/obj/Release/net10.0-android/android/AndroidManifest.xml -Variant Play
+          cp "$RUNNER_TEMP/publish/$PLAY_PACKAGE-Signed.aab" "$RUNNER_TEMP/play/app.aab"
+          jarsigner -verify -strict -keystore "$PLAY_UPLOAD_KEYSTORE" -storepass:file "$signing/password" "$RUNNER_TEMP/play/app.aab" upload
+          cd "$RUNNER_TEMP/play"
+          sha256sum app.aab release.json > checksums.sha256
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.previous.outputs.id == ''
+        with:
+          name: play-bundle-${{ github.run_id }}
+          path: ${{ runner.temp }}/play/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+  deploy:
+    needs: bundle
+    runs-on: ubuntu-24.04
+    environment: play-closed-beta
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: play-bundle-${{ github.run_id }}
+          path: ${{ runner.temp }}/play/
+
+      - name: Check artifact integrity
+        working-directory: ${{ runner.temp }}/play/
+        run: sha256sum --check checksums.sha256
+
+      - name: Confirm the approved commit and changelog before deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/play-release.mjs confirm "$RUNNER_TEMP/play/release.json"
+
+      - uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        id: google
+        with:
+          credentials_json: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          create_credentials_file: false
+          export_environment_variables: false
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Publish the verified artifact to closed testing
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          PLAY_CLOSED_TRACK: ${{ vars.PLAY_CLOSED_TRACK }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/play-release.mjs publish "$RUNNER_TEMP/play/release.json" "$RUNNER_TEMP/play/app.aab"
+          code=$(jq -r .versionCode "$RUNNER_TEMP/play/release.json")
+          echo "Published **$GITHUB_REF_NAME** (version code $code, commit \`$GITHUB_SHA\`) to **$PLAY_CLOSED_TRACK**." >> "$GITHUB_STEP_SUMMARY"
