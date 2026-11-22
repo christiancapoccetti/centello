@@ -9,7 +9,7 @@ using Centesimo.Application;
 
 namespace Centesimo.App;
 
-[BroadcastReceiver(Label = "Il mese", Exported = false)]
+[BroadcastReceiver(Label = LauncherLabels.Prefix + "Il mese", Exported = false)]
 [IntentFilter([AppWidgetManager.ActionAppwidgetUpdate])]
 [MetaData(AppWidgetManager.MetaDataAppwidgetProvider, Resource = "@xml/widget_month_info")]
 public sealed class MonthWidget : CentesimoWidgetProvider

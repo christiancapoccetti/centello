@@ -74,17 +74,75 @@ dotnet build src/Centesimo.App/Centesimo.App.csproj -t:Run -f net10.0-android `
 
 Confirm that the target device is available with `adb devices` before running the app. The minimum supported Android API level is 24.
 
-## Build for Google Play
+Debug builds use the development identity by default: the launcher shows `Centesimo Dev`, and Android installs it as `it.christiancapoccetti.centesimo.dev`. The long-press shortcuts, widgets and launcher panel use the same development identity. Development data stays on the Android device in the development app's private database and preferences, separate from the original Play app and its data.
 
-Google Play takes an Android App Bundle (AAB) signed with the upload key; Play App Signing then re-signs the app it delivers. A plain Release build stays an APK signed with the local debug key, so an app installed from Play cannot be updated by a local build, nor the other way round.
-
-Create the upload key once, outside the repository, and keep a backup of the file and its password (Google can reset a lost upload key, but it takes a support request):
+To create a Release-configuration development APK, use `DevBuild=true`:
 
 ```powershell
-keytool -genkeypair -v -keystore "$HOME\keys\play-upload.jks" -alias upload -keyalg RSA -keysize 4096 -validity 10000
+dotnet publish src/Centesimo.App/Centesimo.App.csproj -c Release -f net10.0-android -p:DevBuild=true
 ```
 
-Before every upload, raise `ApplicationVersion` in `src/Centesimo.App/Centesimo.App.csproj`, then build the bundle with the key path and password in environment variables. Delete the Release outputs first: a bundle left there by an earlier build is signed with the debug key, and Play rejects it.
+The APK is written under `src/Centesimo.App/bin/Dev/Release/net10.0-android/publish/`. Install it with:
+
+```powershell
+adb install -r src/Centesimo.App/bin/Dev/Release/net10.0-android/publish/it.christiancapoccetti.centesimo.dev-Signed.apk
+```
+
+Development APKs use the workstation's Android debug key. The same key is sufficient to install updates, and Debug and Release development builds share the same app ID and device data. Google Play remains the original `it.christiancapoccetti.centesimo` app; build it using the Play instructions below.
+
+## Build for Google Play
+
+Google Play receives a signed Android App Bundle (AAB); Play App Signing re-signs the app delivered to users. The automated workflow expects an existing Play app and closed testing track. Complete any initial app or track setup manually if Play Console requires it. A normal Release build remains a locally debug-signed APK and cannot update a Play installation.
+
+### One-time release setup
+
+1. For an existing Play app, keep using its current upload key and closed testing track. Create a replacement key only if setting up a new app. The workflow targets the API track identifier `alpha` when `PLAY_CLOSED_TRACK` is explicitly set to `alpha`; configure this variable to the exact identifier of an existing closed track.
+2. In Google Cloud, enable the Android Publisher API (`androidpublisher.googleapis.com`) and IAM Service Account Credentials API (`iamcredentials.googleapis.com`) for the service account's project. The pinned `google-github-actions/auth` action generates an access token from the JSON key, so grant that service account `roles/iam.serviceAccountTokenCreator` on itself. Add it as a Play Console user with **Release apps to testing tracks** permission and access to this app.
+3. Create the GitHub Actions environment before setting environment secrets. From the repository root, run `gh auth login`, then:
+
+   ```powershell
+   gh api --method PUT repos/{owner}/{repo}/environments/play-closed-beta
+   ```
+
+   Replace `{owner}/{repo}` with the repository slug. On a fresh repository this creates the environment used by the release workflow. In **Settings → Environments → play-closed-beta**, set **Deployment branches and tags** to **Selected branches and tags**, then allow only the `v*` tag pattern.
+4. If this is a new app without an upload key, create one outside the repository and keep a secure backup of its file and password. For an existing app, use its existing upload key:
+
+   ```powershell
+   keytool -genkeypair -v -keystore "$HOME\keys\play-upload.jks" -alias upload -keyalg RSA -keysize 4096 -validity 10000
+   ```
+
+5. Add these two **environment secrets** to `play-closed-beta`: `PLAY_UPLOAD_KEYSTORE_BASE64` (the upload keystore encoded as one-line Base64) and `PLAY_UPLOAD_PASSWORD` (the keystore password). Stream the keystore to `gh`; set the password using its interactive masked prompt:
+
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\keys\play-upload.jks")) | gh secret set PLAY_UPLOAD_KEYSTORE_BASE64 --env play-closed-beta
+   gh secret set PLAY_UPLOAD_PASSWORD --env play-closed-beta
+   ```
+
+6. Add the service account's JSON key as environment secret `PLAY_SERVICE_ACCOUNT_JSON`, streamed from its downloaded file:
+
+   ```powershell
+   Get-Content -Raw .\play-service-account.json | gh secret set PLAY_SERVICE_ACCOUNT_JSON --env play-closed-beta
+   ```
+
+   Store that JSON file securely and remove the local copy when setup is complete.
+7. Set these **environment variables**. Set `PLAY_VERSION_CODE_BASE` so its sum with the next GitHub Actions run number is greater than every version code already used on any Play track. For an existing app whose highest code is `2`, set the base to `2`; a first workflow run numbered `1` then publishes code `3`. Set `PLAY_CLOSED_TRACK` explicitly to `alpha` for the Alpha track:
+
+   ```powershell
+   gh variable set PLAY_VERSION_CODE_BASE --env play-closed-beta --body 2
+   gh variable set PLAY_CLOSED_TRACK --env play-closed-beta --body alpha
+   ```
+
+8. Protect release tags matching `v*` with a repository ruleset: restrict tag creation to trusted release maintainers, and prevent updates and deletion. Only a trusted publisher should create and publish releases for verified commits on `main`.
+
+### Publish a closed-testing release
+
+CI on `main` provides a **Rilascia app** link for its verified commit. Create and publish a GitHub Release from that commit using a tag matching `vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-beta.N` (for example, `v1.2.0-beta.1`). The tag must still point to the current `main` commit when signing, deploying, and retrying, and must have a successful push run of CI. Publish the release; drafts do not trigger deployment. The workflow builds an upload-key-signed AAB, checks package identity and artifact integrity, and publishes it as a completed release to `PLAY_CLOSED_TRACK` with Italian release notes. Enter 1–500 Unicode characters in the release description; the workflow trims surrounding whitespace and rejects an empty or overlength description. Do not edit the release notes after signing; changed notes require a deliberate new release with a new tag.
+
+The workflow retains its signed bundle for 30 days and reuses it on retries. If a run fails, rerun that same workflow run so it keeps the version code and bundle. A retry after Play accepted the release checks the existing bundle and completed track release, avoiding a duplicate upload. A paused Play release is not resumed by retry; handle it deliberately with a new release. Do not create a second release with the same tag to retry.
+
+### Manual fallback
+
+For an intentional manual upload, use the local upload key and Play Console. Raise `ApplicationVersion` before each upload. Keep the upload key path and password out of the repository and shell history. Set them in the environment, then publish:
 
 ```powershell
 Remove-Item -Recurse -Force src\Centesimo.App\bin\Release, src\Centesimo.App\obj\Release -ErrorAction SilentlyContinue
@@ -93,13 +151,7 @@ $env:PLAY_UPLOAD_PASSWORD = Read-Host "Upload key password"
 dotnet publish src/Centesimo.App/Centesimo.App.csproj -c Release -f net10.0-android -p:PlayRelease=true
 ```
 
-The signed bundle is `src/Centesimo.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab` (the `.aab` without `-Signed` is unsigned). Before uploading, check that it carries the upload key, not `CN=Android Debug`, with `keytool -printcert -jarfile <bundle>`. Tag the commit of every uploaded build as `v<ApplicationDisplayVersion>-build<ApplicationVersion>` (for example `v1.1-build2`). The privacy policy is published with GitHub Pages at <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>, and the Play Console answers are drafted in [docs/play-console.md](docs/play-console.md).
-
-Before every upload:
-
-- Test the Release build end to end on a phone: trimming can break EF Core at runtime.
-- Keep the target SDK at the level Play requires (36 today), and check 16 KB memory page support for the native libraries in the Play Console App Bundle explorer.
-- When dependencies or the .NET SDK change, re-check `THIRD_PARTY_NOTICES.md` against the bundled packages (`project.assets.json`).
+The signed bundle is `src/Centesimo.App/bin/Release/net10.0-android/publish/it.christiancapoccetti.centesimo-Signed.aab`; the `.aab` without `-Signed` is unsigned. Check the signer with `keytool -printcert -jarfile <bundle>` before uploading. Before a manual upload, test the Release build end to end on a phone, check Play's current target SDK and 16 KB memory page requirements, and re-check `THIRD_PARTY_NOTICES.md` against bundled packages after dependency or .NET SDK changes. The privacy policy is published at <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>, and Play Console listing and policy answers are in [docs/play-console.md](docs/play-console.md).
 
 ## Voice, photo and PDF entry with OpenAI
 

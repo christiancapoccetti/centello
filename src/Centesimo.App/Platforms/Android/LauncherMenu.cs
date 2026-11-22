@@ -23,8 +23,8 @@ internal static class LauncherMenu
     private static ShortcutInfoCompat Info(Context context, WidgetArt art, LauncherShortcut shortcut, int rank)
     {
         var builder = new ShortcutInfoCompat.Builder(context, shortcut.Id);
-        builder.SetShortLabel(shortcut.ShortLabel);
-        builder.SetLongLabel(shortcut.LongLabel);
+        builder.SetShortLabel(LauncherLabels.Prefix + shortcut.ShortLabel);
+        builder.SetLongLabel(LauncherLabels.Prefix + shortcut.LongLabel);
         builder.SetRank(rank);
         builder.SetIntent(EntryLinks.Intent(context, shortcut.Entry));
         builder.SetIcon(IconCompat.CreateWithAdaptiveBitmap(art.ShortcutIcon(shortcut.Art)));

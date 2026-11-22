@@ -8,7 +8,7 @@ using Centesimo.Application;
 
 namespace Centesimo.App;
 
-[BroadcastReceiver(Label = "Scorciatoie", Exported = false)]
+[BroadcastReceiver(Label = LauncherLabels.Prefix + "Scorciatoie", Exported = false)]
 [IntentFilter([AppWidgetManager.ActionAppwidgetUpdate])]
 [MetaData(AppWidgetManager.MetaDataAppwidgetProvider, Resource = "@xml/widget_shortcuts_info")]
 public sealed class ShortcutsWidget : CentesimoWidgetProvider

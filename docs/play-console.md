@@ -1,6 +1,6 @@
 # Google Play Console answers
 
-What to enter in Play Console for the first release on the internal testing track. The closed beta uses the name Centesimo; `<NAME>` in the listing texts stands for the final name, still to be chosen, since Centesimo and Quattrino both clash with existing finance apps or marks. Play Console labels change often; check each answer against the current form.
+What to enter in Play Console for the first release on the closed testing track. The closed beta uses the name Centesimo; `<NAME>` in the listing texts stands for the final name, still to be chosen, since Centesimo and Quattrino both clash with existing finance apps or marks. Play Console labels change often; check each answer against the current form. GitHub environment and workflow setup is documented in the README's “Build for Google Play” section.
 
 ## Account
 
@@ -64,10 +64,11 @@ Data counts as collected when it leaves the device. Only voice, photo and PDF en
 - **Deletion:** the developer holds no user data; expenses are deleted in the app or by uninstalling it.
 - Expenses never leave the device except through Android's own backup to the user's Google account, which is a system feature, not the app's collection.
 
-## First release (internal testing)
+## First release (closed testing)
 
-1. Raise `ApplicationVersion` and build the bundle as described in the README ("Build for Google Play").
-2. Create an internal testing release, upload the signed AAB, enable Play App Signing.
-3. Release notes (Italian): "Prima versione di prova."
-4. Add the testers' Google account emails and share the opt-in link.
-5. Tag the uploaded commit.
+The automated publisher requires an existing Play app and an existing closed testing track. Complete any initial app or track setup manually if Play Console requires it. Follow the README's “Build for Google Play” section to configure GitHub Actions; it explicitly sets `PLAY_CLOSED_TRACK` to the track's API identifier (for example, `alpha`).
+
+1. Add the testers' Google account emails to the closed test and share the opt-in link.
+2. Use the **Rilascia app** link from a successful CI run on `main` to create a GitHub Release for that verified commit. Use a protected `vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-beta.N` tag and publish the release. A draft does not trigger deployment. The tag must still point to the current `main` commit at signing, deployment, and retry.
+3. Enter 1–500 Unicode characters of Italian release notes in the release description, for example: "Prima versione di prova." The workflow publishes these notes to the selected closed track. Its version code is `PLAY_VERSION_CODE_BASE` plus the workflow run number and must exceed the largest code already used on any Play track. Changed notes after signing require a deliberate new release with a new tag.
+4. If the workflow fails, rerun the same workflow run to reuse its version code and signed bundle. The bundle is retained for 30 days, and a retry after a successful Play commit detects the existing release instead of uploading it again. A paused Play release is not resumed by retry; handle it deliberately with a new release.
