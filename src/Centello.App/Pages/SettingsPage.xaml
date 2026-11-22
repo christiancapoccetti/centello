@@ -36,7 +36,7 @@
                         <Button Text="Annulla" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" IsVisible="{Binding IsReplacing}" Clicked="OnCancelReplaceClicked" />
                     </FlexLayout>
                 </VerticalStackLayout>
-                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Cloud}" Text="Audio, foto, PDF e testo della spesa vengono inviati a OpenAI; Centello non salva né l'audio né le foto né i PDF e le spese restano sul telefono." />
+                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Cloud}" Text="Quando usi voce, foto o PDF, Centello invia a OpenAI il contenuto scelto, i nomi di categorie e tag attivi e la data di oggi. L'inserimento a mano funziona senza OpenAI." />
 
                 <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Info}" Title="{Binding VersionText}" />

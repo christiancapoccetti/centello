@@ -12,9 +12,11 @@ public interface IOpenAiApiKeyProvider
 public sealed class OpenAiSettings(IOpenAiApiKeyStore store) : IOpenAiApiKeyProvider
 {
     public const string ConsentMessage =
-        "Usando OpenAI, l'audio registrato, le foto e i PDF delle spese e il testo della spesa vengono inviati a OpenAI per la trascrizione e la lettura. " +
-        "Centello non salva né l'audio né le foto né i PDF: le tue spese restano solo sul dispositivo. " +
-        "La chiave è conservata in modo sicuro sul telefono, ma una chiave su un'app non ha le garanzie di un server: usala solo per uso personale.";
+        "Quando detti una spesa, Centello invia a OpenAI l'audio registrato e i nomi di categorie e tag attivi per la trascrizione. " +
+        "Per preparare la bozza, invia il testo trascritto oppure la foto o il PDF che hai scelto, insieme ai nomi delle categorie e dei tag attivi e alla data di oggi. " +
+        "Scontrini e fatture possono contenere importi, acquisti e dati personali. I PDF vengono inviati per intero. " +
+        "Le richieste usano la tua chiave API, salvata sul telefono. Centello tiene l'audio in memoria e può usare la cache del telefono per foto e PDF. " +
+        "Puoi inserire le spese a mano senza OpenAI e disattivare questi invii rimuovendo la chiave.";
 
     public Task<string> GetApiKey() => store.GetApiKey();
 

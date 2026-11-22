@@ -16,7 +16,7 @@ public sealed class DraftSource
         MaterialSymbols.PhotoCamera,
         sheetTitle: "Lettura della foto",
         readingLine: "Cerco importo, data e negozio…",
-        privacyNote: "Foto inviata a OpenAI, Centello non la salva",
+        privacyNote: "Foto inviata a OpenAI",
         missingKey: "Configura la chiave API OpenAI nelle impostazioni per leggere una spesa da una foto.",
         banner: _ => "Dalla foto · controlla e salva");
 
@@ -24,7 +24,7 @@ public sealed class DraftSource
         MaterialSymbols.PictureAsPdf,
         sheetTitle: "Lettura del PDF",
         readingLine: "Cerco importo, data e negozio…",
-        privacyNote: "PDF inviato a OpenAI, Centello non lo salva",
+        privacyNote: "PDF inviato a OpenAI",
         missingKey: "Configura la chiave API OpenAI nelle impostazioni per leggere una spesa da un PDF.",
         banner: _ => "Dal PDF · controlla e salva");
 

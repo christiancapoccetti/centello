@@ -28,7 +28,7 @@ public sealed class PhotoPicker
     // MediaPicker rotate and compress a picked gallery photo in place, so the camera is not offered there.
     public static bool CanCapture => OperatingSystem.IsAndroidVersionAtLeast(33);
 
-    public const string CameraRationale = "Centello usa la fotocamera solo per fotografare una spesa, come uno scontrino o una fattura. La foto viene inviata a OpenAI per leggerla e Centello non la salva.";
+    public const string CameraRationale = "Centello usa la fotocamera per fotografare una spesa, come uno scontrino o una fattura. Invia la foto a OpenAI per leggerla. La copia sul telefono è temporanea.";
 
     public async Task<Result<byte[]?>> Capture()
     {
