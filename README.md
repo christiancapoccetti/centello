@@ -142,12 +142,11 @@ The workflow retains its signed bundle for 3 days and reuses it on retries. If a
 
 ### Manual fallback
 
-For an intentional manual upload, use the local upload key and Play Console. Raise `ApplicationVersion` before each upload. Keep the upload key path and password out of the repository and shell history. Set them in the environment, then publish:
+For an intentional manual upload, use the local upload key and Play Console. Raise `ApplicationVersion` before each upload. Keep the keystore and its password file outside the repository. Supply a file readable only by your user, containing the password on its first line. Set the two paths and publish:
 
 ```powershell
-Remove-Item -Recurse -Force src\Centello.App\bin\Release, src\Centello.App\obj\Release -ErrorAction SilentlyContinue
 $env:PLAY_UPLOAD_KEYSTORE = "$HOME\keys\play-upload.jks"
-$env:PLAY_UPLOAD_PASSWORD = Read-Host "Upload key password"
+$env:PLAY_UPLOAD_PASSWORD_FILE = Read-Host "Path to the private upload password file"
 dotnet publish src/Centello.App/Centello.App.csproj -c Release -f net10.0-android -p:PlayRelease=true
 ```
 

@@ -28,22 +28,21 @@
     <OutputPath>bin/Dev/Release/</OutputPath>
   </PropertyGroup>
 
-  <!-- The Google Play build signs an AAB with the upload key. Path and password come from environment variables, so
-       neither is ever in the repository. A plain Release build stays an APK signed with this machine's debug key, for
-       installing on test phones. -->
+  <!-- Both signing inputs are paths. The password file also works with the AAB signer. -->
   <PropertyGroup Condition="'$(PlayRelease)' == 'true'">
-    <AndroidPackageFormat>aab</AndroidPackageFormat>
+    <AndroidPackageFormats>aab</AndroidPackageFormats>
     <AndroidKeyStore>true</AndroidKeyStore>
     <AndroidSigningKeyStore>$(PLAY_UPLOAD_KEYSTORE)</AndroidSigningKeyStore>
     <AndroidSigningKeyAlias>upload</AndroidSigningKeyAlias>
-    <AndroidSigningStorePass>env:PLAY_UPLOAD_PASSWORD</AndroidSigningStorePass>
-    <AndroidSigningKeyPass>env:PLAY_UPLOAD_PASSWORD</AndroidSigningKeyPass>
+    <AndroidSigningStorePass>file:$(PLAY_UPLOAD_PASSWORD_FILE)</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>file:$(PLAY_UPLOAD_PASSWORD_FILE)</AndroidSigningKeyPass>
   </PropertyGroup>
 
   <Target Name="RequirePlayUploadKey" BeforeTargets="PrepareForBuild" Condition="'$(PlayRelease)' == 'true'">
     <Error Condition="'$(DevBuild)' == 'true'" Text="DevBuild and PlayRelease cannot be combined." />
     <Error Condition="'$(Configuration)' != 'Release'" Text="PlayRelease builds only with -c Release." />
-    <Error Condition="'$(PLAY_UPLOAD_KEYSTORE)' == '' Or '$(PLAY_UPLOAD_PASSWORD)' == ''" Text="PlayRelease needs PLAY_UPLOAD_KEYSTORE (the path to the upload key) and PLAY_UPLOAD_PASSWORD." />
+    <Error Condition="'$(PLAY_UPLOAD_KEYSTORE)' == '' Or '$(PLAY_UPLOAD_PASSWORD_FILE)' == ''" Text="PlayRelease needs PLAY_UPLOAD_KEYSTORE and PLAY_UPLOAD_PASSWORD_FILE, both set to file paths." />
+    <Error Condition="!Exists('$(PLAY_UPLOAD_PASSWORD_FILE)')" Text="The upload password file was not found." />
     <Error Condition="!Exists('$(PLAY_UPLOAD_KEYSTORE)')" Text="The upload key was not found at PLAY_UPLOAD_KEYSTORE: $(PLAY_UPLOAD_KEYSTORE)" />
   </Target>
 

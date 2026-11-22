@@ -100,11 +100,12 @@ jobs:
           export PLAY_UPLOAD_KEYSTORE="$signing/upload.jks"
           printf '%s' "$PLAY_UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$PLAY_UPLOAD_KEYSTORE"
           unset PLAY_UPLOAD_KEYSTORE_BASE64
-          printf '%s' "$PLAY_UPLOAD_PASSWORD" > "$signing/password"
+          export PLAY_UPLOAD_PASSWORD_FILE="$signing/password"
+          printf '%s' "$PLAY_UPLOAD_PASSWORD" > "$PLAY_UPLOAD_PASSWORD_FILE"
+          unset PLAY_UPLOAD_PASSWORD
           dotnet publish src/Centello.App/Centello.App.csproj --no-restore -c Release -f net10.0-android \
-            -p:PlayRelease=true -p:AndroidPackageFormats=aab \
+            -p:PlayRelease=true \
             "-p:ApplicationVersion=$VERSION_CODE" "-p:ApplicationDisplayVersion=$VERSION" \
-            "-p:AndroidSigningKeyPass=file:$signing/password" "-p:AndroidSigningStorePass=file:$signing/password" \
             -o "$RUNNER_TEMP/publish"
           pwsh -NoProfile -File tests/android/check-variant.ps1 \
             -Manifest src/Centello.App/obj/Release/net10.0-android/android/AndroidManifest.xml -Variant Play
