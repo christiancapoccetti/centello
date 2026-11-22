@@ -55,8 +55,10 @@ public sealed class RecurringPaymentService(
             if (request.EndsOn < nextDueOn)
                 return Result.Failure(ApplicationErrors.InvalidEndDate);
 
+            var nextDueOnWasEdited = request.OriginalNextDueOn is { } originalNextDueOn
+                && originalNextDueOn != request.NextDueOn;
             payment.Update(request.CategoryId, new Money(request.AmountCents), request.Frequency,
-                nextDueOn, request.TagId, request.Note, request.EndsOn);
+                nextDueOn, request.TagId, request.Note, request.EndsOn, nextDueOnWasEdited);
             return Result.Success();
         }, cancellationToken);
     }

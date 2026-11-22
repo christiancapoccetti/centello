@@ -43,7 +43,7 @@ public sealed class RecurringPayment
     }
 
     public void Update(Guid categoryId, Money amount, RecurrenceFrequency frequency,
-        DateOnly nextDueOn, Guid? tagId, string note, DateOnly? endsOn)
+        DateOnly nextDueOn, Guid? tagId, string note, DateOnly? endsOn, bool nextDueOnWasEdited = false)
     {
         if (categoryId == Guid.Empty || amount.Cents == 0)
             throw new ArgumentException("Category and positive amount are required.");
@@ -51,7 +51,7 @@ public sealed class RecurringPayment
         if (endsOn < nextDueOn)
             throw new ArgumentException("End date cannot precede the next due date.", nameof(endsOn));
 
-        if (AnchorDay == 0 || Frequency != frequency || NextDueOn != nextDueOn)
+        if (AnchorDay == 0 || Frequency != frequency || NextDueOn != nextDueOn || nextDueOnWasEdited)
         {
             AnchorMonth = nextDueOn.Month;
             AnchorDay = nextDueOn.Day;

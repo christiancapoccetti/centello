@@ -116,6 +116,28 @@ public sealed class RecurringOccurrenceProcessor_should_expected_behavior
     }
 
     [Fact]
+    public async Task Reanchor_to_an_explicitly_edited_date_that_automation_already_reached()
+    {
+        using var database = new TestDatabase();
+        var payment = await SeedPayment(database.Context);
+        var editor = CreateService(database.Context);
+        using var automationContext = database.CreateContext();
+        var automation = CreateService(automationContext);
+
+        var displayed = (await editor.Get(payment.RecurringPaymentId)).Value!;
+        Assert.Equal(JanuaryDueOn, displayed.NextDueOn);
+        Assert.Equal(1, (await automation.ProcessDue(JanuaryDueOn)).Value);
+        var edited = await editor.Update(payment.RecurringPaymentId, new SaveRecurringPaymentRequest(
+            displayed.CategoryId, displayed.Amount.Cents, displayed.Frequency, FebruaryDueOn,
+            OriginalNextDueOn: displayed.NextDueOn));
+
+        Assert.True(edited.IsSuccess);
+        Assert.Equal(1, (await automation.ProcessDue(FebruaryDueOn)).Value);
+        Assert.Equal(new DateOnly(2026, 3, 28),
+            (await editor.Get(payment.RecurringPaymentId)).Value!.NextDueOn);
+    }
+
+    [Fact]
     public async Task Record_every_occurrence_once_when_two_passes_scan_the_same_payment()
     {
         using var database = new TestDatabase();
