@@ -13,7 +13,7 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var expenses = new FakeExpenseRepository();
         var payments = new FakeRecurringPaymentRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses, payments,
-            new FakeRecurringOccurrenceProcessor(expenses));
+            new FakeRecurringOccurrenceProcessor(payments, expenses));
         await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Monthly, new DateOnly(2026, 5, 1)));
 
         var firstRun = await service.ProcessDue(new DateOnly(2026, 7, 20));
@@ -31,8 +31,9 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var category = new Category(Guid.NewGuid(), "Bills", "receipt", "#123456");
         categories.Items.Add(category);
         var expenses = new FakeExpenseRepository();
+        var payments = new FakeRecurringPaymentRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
-            new FakeRecurringPaymentRepository(), new FakeRecurringOccurrenceProcessor(expenses));
+            payments, new FakeRecurringOccurrenceProcessor(payments, expenses));
         await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Monthly, new DateOnly(2026, 5, 1)));
 
         await service.ProcessDue(new DateOnly(2026, 7, 20));
@@ -49,7 +50,7 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var payments = new FakeRecurringPaymentRepository();
         var expenses = new FakeExpenseRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses, payments,
-            new FakeRecurringOccurrenceProcessor(expenses), () => new DateOnly(2026, 7, 1));
+            new FakeRecurringOccurrenceProcessor(payments, expenses), () => new DateOnly(2026, 7, 1));
         var created = await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Weekly, new DateOnly(2026, 7, 20)));
 
         var updated = await service.Update(created.Value.RecurringPaymentId, new(category.CategoryId, 2_000, RecurrenceFrequency.Yearly, new DateOnly(2026, 8, 1)));
@@ -70,7 +71,7 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var expenses = new FakeExpenseRepository();
         var payments = new FakeRecurringPaymentRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
-            payments, new FakeRecurringOccurrenceProcessor(expenses), () => new DateOnly(2026, 7, 1));
+            payments, new FakeRecurringOccurrenceProcessor(payments, expenses), () => new DateOnly(2026, 7, 1));
         var created = await service.Create(new(category.CategoryId, 1_000, RecurrenceFrequency.Monthly, new DateOnly(2026, 7, 20)));
         await service.Suspend(created.Value.RecurringPaymentId);
 
@@ -151,8 +152,9 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
             new DateOnly(2026, 9, 1)));
         repository.Items.Add(new(Guid.NewGuid(), categoryId, new Money(200), RecurrenceFrequency.Weekly,
             new DateOnly(2026, 8, 1)));
+        var expenses = new FakeExpenseRepository();
         var service = new RecurringPaymentService(new FakeCategoryRepository(), new FakeTagRepository(),
-            new FakeExpenseRepository(), repository, new FakeRecurringOccurrenceProcessor(new FakeExpenseRepository()));
+            expenses, repository, new FakeRecurringOccurrenceProcessor(repository, expenses));
 
         var result = await service.GetAll();
 
@@ -284,7 +286,7 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var payments = new FakeRecurringPaymentRepository();
         var expenses = new FakeExpenseRepository();
         var service = new RecurringPaymentService(new FakeCategoryRepository(), new FakeTagRepository(), expenses,
-            payments, new FakeRecurringOccurrenceProcessor(expenses));
+            payments, new FakeRecurringOccurrenceProcessor(payments, expenses));
 
         var missing = await service.PreviewEnd(Guid.NewGuid());
         payments.Failure = InfrastructureErrors.Unexpected;
@@ -309,8 +311,9 @@ public sealed partial class RecurringPaymentService_should_expected_behavior
         var category = new Category(Guid.NewGuid(), "Svago", "leisure", "lilac");
         categories.Items.Add(category);
         var expenses = new FakeExpenseRepository();
+        var payments = new FakeRecurringPaymentRepository();
         var service = new RecurringPaymentService(categories, new FakeTagRepository(), expenses,
-            new FakeRecurringPaymentRepository(), new FakeRecurringOccurrenceProcessor(expenses),
+            payments, new FakeRecurringOccurrenceProcessor(payments, expenses),
             today.HasValue ? () => today.Value : null);
         var created = await service.Create(new(category.CategoryId, 1_599, frequency, nextDueOn, EndsOn: endsOn));
         return (service, created.Value, expenses);

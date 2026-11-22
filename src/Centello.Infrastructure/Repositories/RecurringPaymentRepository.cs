@@ -32,15 +32,18 @@ public sealed class RecurringPaymentRepository(CentelloDbContext context)
                     && (!payment.EndsOn.HasValue || payment.NextDueOn <= payment.EndsOn.Value))
                 .ToListAsync(token), cancellationToken);
 
-    public Task<Result> Update(RecurringPayment payment,
-        CancellationToken cancellationToken = default) =>
-        SaveContext(async (db, token) =>
+    public async Task<Result> Update(Guid recurringPaymentId, Func<RecurringPayment, Result> update,
+        CancellationToken cancellationToken = default)
+    {
+        var saved = await SaveContextInTransaction(async (db, token) =>
         {
             var tracked = await db.RecurringPayments.SingleOrDefaultAsync(
-                item => item.RecurringPaymentId == payment.RecurringPaymentId, token);
-            if (tracked is null)
-                return;
+                payment => payment.RecurringPaymentId == recurringPaymentId, token);
+            return tracked is null
+                ? Result.Failure(ApplicationErrors.RecurringPaymentNotFound)
+                : update(tracked);
+        }, cancellationToken, shouldSave: result => result.IsSuccess);
 
-            db.Entry(tracked).CurrentValues.SetValues(payment);
-        }, cancellationToken);
+        return saved.IsSuccess ? saved.Value : Result.Failure(saved.Error);
+    }
 }

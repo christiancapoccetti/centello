@@ -239,7 +239,8 @@ public sealed class RecurringPaymentEditorViewModel : ObservableObject
             DateOnly.FromDateTime(ScheduleDate),
             Picker.TagId,
             Note,
-            endsOnDate ? DateOnly.FromDateTime(EndDate) : null);
+            endsOnDate ? DateOnly.FromDateTime(EndDate) : null,
+            _paymentId.HasValue ? DateOnly.FromDateTime(_original.ScheduleDate) : null);
         Result result = _paymentId.HasValue
             ? await _paymentService.Update(_paymentId.Value, request)
             : await _paymentService.Create(request);

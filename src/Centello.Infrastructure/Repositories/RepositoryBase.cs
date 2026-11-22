@@ -90,13 +90,17 @@ public abstract class RepositoryBase
 
     protected async Task<Result<TValue>> SaveContextInTransaction<TValue>(
         Func<CentelloDbContext, CancellationToken, Task<TValue>> mutation,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, Func<TValue, bool>? shouldSave = null)
     {
         try
         {
+            // SQLite reserves the writer before the mutation reads the tracked rows.
             await using var transaction = await Context.Database
                 .BeginTransactionAsync(cancellationToken);
             var value = await mutation(Context, cancellationToken);
+            if (shouldSave is not null && !shouldSave(value))
+                return Result<TValue>.Success(value);
+
             await Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return Result<TValue>.Success(value);

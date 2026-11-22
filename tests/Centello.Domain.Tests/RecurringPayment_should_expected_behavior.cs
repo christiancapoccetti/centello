@@ -16,6 +16,36 @@ public sealed class RecurringPayment_should_expected_behavior
         Assert.Equal(new DateOnly(2026, 3, 31), payment.NextDueOn);
     }
 
+    [Theory]
+    [InlineData(2026, 28)]
+    [InlineData(2028, 29)]
+    public void Preserve_month_end_anchor_when_only_the_note_changes(int year, int februaryLastDay)
+    {
+        var payment = Create(RecurrenceFrequency.Monthly, new DateOnly(year, 1, 31));
+        payment.MoveToNextOccurrence();
+        Assert.Equal(new DateOnly(year, 2, februaryLastDay), payment.NextDueOn);
+
+        payment.Update(payment.CategoryId, payment.Amount, payment.Frequency, payment.NextDueOn,
+            payment.TagId, "Nota aggiornata", payment.EndsOn);
+        payment.MoveToNextOccurrence();
+
+        Assert.Equal("Nota aggiornata", payment.Note);
+        Assert.Equal(new DateOnly(year, 3, 31), payment.NextDueOn);
+    }
+
+    [Fact]
+    public void Reset_the_month_end_anchor_when_the_due_date_changes()
+    {
+        var payment = Create(RecurrenceFrequency.Monthly, new DateOnly(2026, 1, 31));
+        payment.MoveToNextOccurrence();
+
+        payment.Update(payment.CategoryId, payment.Amount, payment.Frequency, new DateOnly(2026, 2, 24),
+            payment.TagId, payment.Note, payment.EndsOn);
+        payment.MoveToNextOccurrence();
+
+        Assert.Equal(new DateOnly(2026, 3, 24), payment.NextDueOn);
+    }
+
     [Fact]
     public void Preserve_leap_day_anchor_across_non_leap_years()
     {

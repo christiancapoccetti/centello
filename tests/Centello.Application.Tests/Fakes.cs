@@ -55,21 +55,42 @@ internal sealed class FakeRecurringPaymentRepository : IRecurringPaymentReposito
     public Task<Result<RecurringPayment?>> Get(Guid id, CancellationToken token = default) => Task.FromResult(Failure is null ? Result<RecurringPayment?>.Success(Items.SingleOrDefault(x => x.RecurringPaymentId == id)) : Result<RecurringPayment?>.Failure(Failure));
     public Task<Result<IReadOnlyList<RecurringPayment>>> GetAll(CancellationToken token = default) => Task.FromResult(Failure is null ? Result<IReadOnlyList<RecurringPayment>>.Success(Items.OrderBy(x => x.NextDueOn).ToList()) : Result<IReadOnlyList<RecurringPayment>>.Failure(Failure));
     public Task<Result<IReadOnlyList<RecurringPayment>>> GetDue(DateOnly throughDate, CancellationToken token = default) => Task.FromResult(Result<IReadOnlyList<RecurringPayment>>.Success(Items.Where(x => !x.IsSuspended && x.NextDueOn <= throughDate && (!x.EndsOn.HasValue || x.NextDueOn <= x.EndsOn.Value)).ToList()));
-    public Task<Result> Update(RecurringPayment value, CancellationToken token = default) => Task.FromResult(Result.Success());
+    public async Task<Result> Update(Guid recurringPaymentId, Func<RecurringPayment, Result> update,
+        CancellationToken token = default)
+    {
+        var found = await Get(recurringPaymentId, token);
+        if (found.IsFailure)
+            return Result.Failure(found.Error);
+
+        return found.Value is { } payment
+            ? update(payment)
+            : Result.Failure(ApplicationErrors.RecurringPaymentNotFound);
+    }
 }
 
-internal sealed class FakeRecurringOccurrenceProcessor(FakeExpenseRepository expenses)
-    : IRecurringOccurrenceProcessor
+internal sealed class FakeRecurringOccurrenceProcessor(FakeRecurringPaymentRepository payments,
+    FakeExpenseRepository expenses) : IRecurringOccurrenceProcessor
 {
     private readonly HashSet<(Guid, DateOnly)> _occurrences = [];
-    public Task<Result<bool>> Process(RecurringPayment payment, Expense expense,
-        RecurrenceOccurrence occurrence, CancellationToken token = default)
-    {
-        var added = _occurrences.Add((occurrence.RecurringPaymentId, occurrence.DueOn));
-        if (added)
-            expenses.Items.Add(expense);
 
-        return Task.FromResult(Result<bool>.Success(added));
+    public async Task<Result<RecurringOccurrenceOutcome>> Process(Guid recurringPaymentId,
+        DateOnly throughDate, CancellationToken token = default)
+    {
+        var found = await payments.Get(recurringPaymentId, token);
+        if (found.IsFailure)
+            return Result<RecurringOccurrenceOutcome>.Failure(found.Error);
+
+        if (found.Value is not { } payment || !payment.IsDueThrough(throughDate))
+            return Result<RecurringOccurrenceOutcome>.Success(RecurringOccurrenceOutcome.NotDue);
+
+        var added = _occurrences.Add((recurringPaymentId, payment.NextDueOn));
+        if (added)
+            expenses.Items.Add(payment.CreateExpense(Guid.CreateVersion7()));
+
+        payment.MoveToNextOccurrence();
+        return Result<RecurringOccurrenceOutcome>.Success(added
+            ? RecurringOccurrenceOutcome.Created
+            : RecurringOccurrenceOutcome.AlreadyRecorded);
     }
 }
 

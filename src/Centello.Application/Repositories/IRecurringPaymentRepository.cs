@@ -9,7 +9,8 @@ public interface IRecurringPaymentRepository
     Task<Result<IReadOnlyList<RecurringPayment>>> GetAll(CancellationToken cancellationToken = default);
     Task<Result<IReadOnlyList<RecurringPayment>>> GetDue(DateOnly throughDate,
         CancellationToken cancellationToken = default);
-    Task<Result> Update(RecurringPayment payment, CancellationToken cancellationToken = default);
+    Task<Result> Update(Guid recurringPaymentId, Func<RecurringPayment, Result> update,
+        CancellationToken cancellationToken = default);
 }
 
 

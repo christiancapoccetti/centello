@@ -86,14 +86,11 @@ public sealed class StoreChangeInterceptor_should_expected_behavior
             RecurrenceFrequency.Monthly, new DateOnly(2026, 1, 31));
         await store.Seed(category, payment);
         store.Listener.Clear();
-        payment.MoveToNextOccurrence();
-        var occurrence = new RecurrenceOccurrence(payment.RecurringPaymentId, new DateOnly(2026, 1, 31));
-        var expense = new Expense(Guid.NewGuid(), category.CategoryId, new Money(100), occurrence.DueOn);
         using var scope = store.Provider.CreateScope();
 
         var processed = await scope.ServiceProvider
             .GetRequiredService<IRecurringOccurrenceProcessor>()
-            .Process(payment, expense, occurrence);
+            .Process(payment.RecurringPaymentId, payment.NextDueOn);
 
         Assert.True(processed.IsSuccess);
         Assert.NotEmpty(store.Listener.ExpensesSeen);

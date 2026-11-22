@@ -16,7 +16,7 @@ public sealed class RecurringPaymentAutomation_should_expected_behavior
     {
         var provider = new FakeServiceProvider(
             new RecurringPaymentService(new FakeCategoryRepository(), new FakeTagRepository(), _expenses, _payments,
-                new FakeRecurringOccurrenceProcessor(_expenses)),
+                new FakeRecurringOccurrenceProcessor(_payments, _expenses)),
             new UpcomingRecurringPaymentService(_payments));
         _automation = new RecurringPaymentAutomation(new FakeScopeFactory(provider), _reminder);
     }

@@ -4,7 +4,7 @@ namespace Centello.Application;
 
 public sealed record SaveRecurringPaymentRequest(Guid CategoryId, long AmountCents,
     RecurrenceFrequency Frequency, DateOnly NextDueOn, Guid? TagId = null,
-    string Note = "", DateOnly? EndsOn = null);
+    string Note = "", DateOnly? EndsOn = null, DateOnly? OriginalNextDueOn = null);
 
 /// <summary>What ending a payment now leaves behind: the date of the last expense and the sentence that says so.</summary>
 public sealed record RecurringEndPreview(DateOnly LastExpenseOn, string Message);
@@ -42,20 +42,23 @@ public sealed class RecurringPaymentService(
     public async Task<Result> Update(Guid paymentId, SaveRecurringPaymentRequest request,
         CancellationToken cancellationToken = default)
     {
-        var found = await recurringPayments.Get(paymentId, cancellationToken);
-        if (found.IsFailure)
-            return Result.Failure(found.Error);
-
-        if (found.Value is null)
-            return Result.Failure(ApplicationErrors.RecurringPaymentNotFound);
-
         var validation = await Validate(request, cancellationToken);
         if (validation.IsFailure)
             return validation;
 
-        found.Value.Update(request.CategoryId, new Money(request.AmountCents), request.Frequency,
-            request.NextDueOn, request.TagId, request.Note, request.EndsOn);
-        return await recurringPayments.Update(found.Value, cancellationToken);
+        return await recurringPayments.Update(paymentId, payment =>
+        {
+            // Keep any advancement the automation committed while the editor was open.
+            var nextDueOn = request.OriginalNextDueOn == request.NextDueOn
+                ? payment.NextDueOn
+                : request.NextDueOn;
+            if (request.EndsOn < nextDueOn)
+                return Result.Failure(ApplicationErrors.InvalidEndDate);
+
+            payment.Update(request.CategoryId, new Money(request.AmountCents), request.Frequency,
+                nextDueOn, request.TagId, request.Note, request.EndsOn);
+            return Result.Success();
+        }, cancellationToken);
     }
 
     public Task<Result> Suspend(Guid paymentId, CancellationToken cancellationToken = default) =>
@@ -64,25 +67,20 @@ public sealed class RecurringPaymentService(
     public Task<Result> Resume(Guid paymentId, CancellationToken cancellationToken = default) =>
         Change(paymentId, payment => payment.Resume(_today()), cancellationToken);
 
-    public async Task<Result> End(Guid paymentId, DateOnly endsOn,
-        CancellationToken cancellationToken = default)
-    {
-        var found = await recurringPayments.Get(paymentId, cancellationToken);
-        if (found.IsFailure)
-            return Result.Failure(found.Error);
+    public Task<Result> End(Guid paymentId, DateOnly endsOn,
+        CancellationToken cancellationToken = default) =>
+        recurringPayments.Update(paymentId, payment =>
+        {
+            var today = _today();
+            var lastExpenseOn = payment.IsSuspended ? payment.UpcomingDueOn(today) : payment.NextDueOn;
+            if (endsOn < lastExpenseOn)
+                return Result.Failure(ApplicationErrors.InvalidEndDate);
 
-        if (found.Value is null)
-            return Result.Failure(ApplicationErrors.RecurringPaymentNotFound);
-
-        // Ending a paused payment resumes it first: the missed occurrences are skipped as on any resume, and the last
-        // expense must be created, which a payment that stays paused never does.
-        found.Value.Resume(_today());
-        if (endsOn < found.Value.NextDueOn)
-            return Result.Failure(ApplicationErrors.InvalidEndDate);
-
-        found.Value.End(endsOn);
-        return await recurringPayments.Update(found.Value, cancellationToken);
-    }
+            // A paused payment must skip missed dates and become active for its final expense.
+            payment.Resume(today);
+            payment.End(endsOn);
+            return Result.Success();
+        }, cancellationToken);
 
     /// <summary>What "Termina" does: it ends the payment on its next due date (<c>End(paymentId, LastExpenseOn)</c>),
     /// so the occurrence due on that date is the last expense the payment creates. A paused payment skips the
@@ -115,22 +113,17 @@ public sealed class RecurringPaymentService(
         var created = 0;
         foreach (var payment in dueResult.Value)
         {
-            while (!payment.IsSuspended
-                && payment.NextDueOn <= today
-                && payment.NextDueOn <= payment.EndsOn.GetValueOrDefault(DateOnly.MaxValue))
+            while (true)
             {
-                var dueOn = payment.NextDueOn;
-                var occurrence = new RecurrenceOccurrence(payment.RecurringPaymentId, dueOn);
-                var request = new SaveExpenseRequest(payment.CategoryId, payment.Amount.Cents,
-                    dueOn, payment.TagId, payment.Note);
-                var expense = request.ToExpense(Guid.CreateVersion7(), payment.RecurringPaymentId);
-                payment.MoveToNextOccurrence();
                 var processed = await occurrenceProcessor.Process(
-                    payment, expense, occurrence, cancellationToken);
+                    payment.RecurringPaymentId, today, cancellationToken);
                 if (processed.IsFailure)
                     return Result<int>.Failure(processed.Error);
 
-                if (processed.Value)
+                if (processed.Value == RecurringOccurrenceOutcome.NotDue)
+                    break;
+
+                if (processed.Value == RecurringOccurrenceOutcome.Created)
                     created++;
             }
         }
@@ -138,19 +131,13 @@ public sealed class RecurringPaymentService(
         return Result<int>.Success(created);
     }
 
-    private async Task<Result> Change(Guid paymentId, Action<RecurringPayment> change,
-        CancellationToken cancellationToken)
-    {
-        var found = await recurringPayments.Get(paymentId, cancellationToken);
-        if (found.IsFailure)
-            return Result.Failure(found.Error);
-
-        if (found.Value is null)
-            return Result.Failure(ApplicationErrors.RecurringPaymentNotFound);
-
-        change(found.Value);
-        return await recurringPayments.Update(found.Value, cancellationToken);
-    }
+    private Task<Result> Change(Guid paymentId, Action<RecurringPayment> change,
+        CancellationToken cancellationToken) =>
+        recurringPayments.Update(paymentId, payment =>
+        {
+            change(payment);
+            return Result.Success();
+        }, cancellationToken);
 
     private async Task<Result> Validate(SaveRecurringPaymentRequest request,
         CancellationToken cancellationToken)

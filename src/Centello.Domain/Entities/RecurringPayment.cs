@@ -39,8 +39,6 @@ public sealed class RecurringPayment
             throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be greater than zero.");
 
         RecurringPaymentId = recurringPaymentId;
-        AnchorMonth = nextDueOn.Month;
-        AnchorDay = nextDueOn.Day;
         Update(categoryId, amount, frequency, nextDueOn, tagId, note, endsOn);
     }
 
@@ -53,6 +51,12 @@ public sealed class RecurringPayment
         if (endsOn < nextDueOn)
             throw new ArgumentException("End date cannot precede the next due date.", nameof(endsOn));
 
+        if (AnchorDay == 0 || Frequency != frequency || NextDueOn != nextDueOn)
+        {
+            AnchorMonth = nextDueOn.Month;
+            AnchorDay = nextDueOn.Day;
+        }
+
         CategoryId = categoryId;
         Amount = amount;
         Frequency = frequency;
@@ -60,9 +64,13 @@ public sealed class RecurringPayment
         TagId = tagId;
         Note = note.Trim();
         EndsOn = endsOn;
-        AnchorMonth = nextDueOn.Month;
-        AnchorDay = nextDueOn.Day;
     }
+
+    public bool IsDueThrough(DateOnly throughDate) =>
+        !IsSuspended && !IsEnded && NextDueOn <= throughDate;
+
+    public Expense CreateExpense(Guid expenseId) =>
+        new(expenseId, CategoryId, Amount, NextDueOn, TagId, Note, recurringPaymentId: RecurringPaymentId);
 
     public void Suspend() => IsSuspended = true;
 

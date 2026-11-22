@@ -5,7 +5,8 @@ namespace Centello.Infrastructure.Tests;
 
 internal sealed class TestDatabase : IDisposable
 {
-    private readonly SqliteConnection _connection = new("Data Source=:memory:");
+    private readonly SqliteConnection _connection =
+        new($"Data Source={Guid.NewGuid():N};Mode=Memory;Cache=Shared;Pooling=False");
 
     public CentelloDbContext Context { get; }
 
@@ -18,6 +19,11 @@ internal sealed class TestDatabase : IDisposable
         Context = new CentelloDbContext(options);
         Context.Database.EnsureCreated();
     }
+
+    public CentelloDbContext CreateContext() =>
+        new(new DbContextOptionsBuilder<CentelloDbContext>()
+            .UseSqlite(_connection.ConnectionString)
+            .Options);
 
     public void Dispose()
     {
