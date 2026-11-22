@@ -12,21 +12,25 @@
              BackgroundColor="{t:Theme Ground}"
              SafeAreaEdges="None">
     <Grid SafeAreaEdges="None">
-        <!-- A tap on the right half goes on, one on the left half goes back. The buttons inside a card keep their own. -->
-        <ContentView x:Name="CardHost" SafeAreaEdges="None" SemanticProperties.Hint="Tocca a destra per la scheda successiva, a sinistra per la precedente">
+        <VerticalStackLayout ZIndex="1" VerticalOptions="Start" Padding="12,6,12,0" SafeAreaEdges="Container,Container,Container,None" InputTransparent="True" CascadeInputTransparent="False">
+            <r:StoryProgress x:Name="Progress" AutomationProperties.IsInAccessibleTree="False" />
+            <Grid HeightRequest="48" ColumnDefinitions="*,Auto,48">
+                <Label x:Name="TitleLabel" Margin="4,0,0,0" VerticalOptions="Center" FontFamily="{x:Static t:Fonts.SemiBold}" FontSize="14" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+                <HorizontalStackLayout x:Name="NavigationButtons" Grid.Column="1" IsVisible="False" Spacing="8" Margin="0,0,8,0">
+                    <Button x:Name="PreviousButton" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ChevronLeft}" IsEnabled="False" Clicked="OnPreviousClicked" SemanticProperties.Description="Scheda precedente" />
+                    <Button x:Name="NextButton" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ChevronRight}" IsEnabled="False" Clicked="OnNextClicked" SemanticProperties.Description="Scheda successiva" />
+                </HorizontalStackLayout>
+                <Button x:Name="CloseButton" Grid.Column="2" Margin="0,0,-4,0" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Close}" Clicked="OnCloseClicked" SemanticProperties.Description="Chiudi il riepilogo" />
+            </Grid>
+        </VerticalStackLayout>
+
+        <!-- Tap on either half to change cards in touch mode. The buttons inside a card keep their own actions. -->
+        <ContentView x:Name="CardHost" SafeAreaEdges="None">
             <ContentView.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnCardTapped" />
+                <TapGestureRecognizer x:Name="CardTap" Tapped="OnCardTapped" />
             </ContentView.GestureRecognizers>
         </ContentView>
 
         <c:InlineError Margin="24,72,24,0" VerticalOptions="Start" SafeAreaEdges="Container,Container,Container,None" Text="{Binding ErrorMessage}" />
-
-        <VerticalStackLayout VerticalOptions="Start" Padding="12,6,12,0" SafeAreaEdges="Container,Container,Container,None" InputTransparent="True" CascadeInputTransparent="False">
-            <r:StoryProgress x:Name="Progress" />
-            <Grid HeightRequest="48" ColumnDefinitions="*,48">
-                <Label x:Name="TitleLabel" Margin="4,0,0,0" VerticalOptions="Center" FontFamily="{x:Static t:Fonts.SemiBold}" FontSize="14" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
-                <Button x:Name="CloseButton" Grid.Column="1" Margin="0,0,-4,0" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Close}" Clicked="OnCloseClicked" SemanticProperties.Description="Chiudi" />
-            </Grid>
-        </VerticalStackLayout>
     </Grid>
 </ContentPage>

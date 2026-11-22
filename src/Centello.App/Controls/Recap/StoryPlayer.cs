@@ -33,7 +33,7 @@ public sealed class StoryPlayer
     /// <summary>The card in front has more of its time behind it, from 0 to 1.</summary>
     public event Action<double>? Progressed;
 
-    /// <summary>False with a screen reader on: the cards then change only by tap.</summary>
+    /// <summary>False with a screen reader on: the cards then move only through the navigation buttons.</summary>
     public bool IsAutomatic => !_screenReader.IsOn;
 
     public bool IsVisible { set => Set(ref _isVisible, value); }
@@ -74,7 +74,7 @@ public sealed class StoryPlayer
 
     private void Step()
     {
-        if (_story is not { } story)
+        if (!IsAutomatic || _story is not { } story)
             return;
 
         var now = Stopwatch.GetTimestamp();

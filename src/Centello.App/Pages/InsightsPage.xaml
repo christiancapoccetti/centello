@@ -53,7 +53,7 @@
                         </VerticalStackLayout>
                         <Label Grid.Row="1" Grid.Column="2" Margin="-8,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" VerticalOptions="Center" />
                         <BoxView Grid.Row="2" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
-                        <Button Grid.RowSpan="3" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" Clicked="OnRecapClicked" SemanticProperties.Description="{Binding Recap.Title}" SemanticProperties.Hint="{Binding Recap.Detail}" />
+                        <Button x:Name="RecapButton" Grid.RowSpan="3" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" Clicked="OnRecapClicked" SemanticProperties.Description="{Binding Recap.Title}" SemanticProperties.Hint="{Binding Recap.Detail}" />
                     </Grid>
 
                     <Label Text="{Binding Overview.Pace.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />

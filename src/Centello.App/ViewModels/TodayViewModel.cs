@@ -24,7 +24,7 @@ public sealed class TodayViewModel : ObservableObject
     private bool _isLoading;
     private string _errorMessage = "";
     private DraftCapture _capture = DraftCapture.Idle;
-    private bool _isCaptureAvailable;
+    private bool _hasCaptureKey;
 
     public TodayViewModel(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
@@ -33,8 +33,11 @@ public sealed class TodayViewModel : ObservableObject
         get => _overview;
         private set
         {
-            if (SetProperty(ref _overview, value))
-                OnPropertyChanged(nameof(HasOverview));
+            if (!SetProperty(ref _overview, value))
+                return;
+
+            OnPropertyChanged(nameof(HasOverview));
+            NotifyCaptureAvailability();
         }
     }
     public bool HasOverview => Overview is not null;
@@ -55,17 +58,26 @@ public sealed class TodayViewModel : ObservableObject
     }
     public bool HasError => ErrorMessage.HasValue();
     public DraftCapture Capture { get => _capture; set => SetProperty(ref _capture, value); }
-    public bool IsCaptureAvailable
+    public bool HasCaptureKey
     {
-        get => _isCaptureAvailable;
+        get => _hasCaptureKey;
         set
         {
-            if (SetProperty(ref _isCaptureAvailable, value))
-                OnPropertyChanged(nameof(IsCaptureUnavailable));
+            if (SetProperty(ref _hasCaptureKey, value))
+                NotifyCaptureAvailability();
         }
     }
-    public bool IsCaptureUnavailable => !IsCaptureAvailable;
+    public bool IsCaptureAvailable => HasCaptureKey && CanCapture;
+    public bool CanSetUpCapture => !HasCaptureKey && CanCapture;
     public bool CanTakePhoto { get; set; }
+
+    private bool CanCapture => Overview?.IsFirstRun != true;
+
+    private void NotifyCaptureAvailability()
+    {
+        OnPropertyChanged(nameof(IsCaptureAvailable));
+        OnPropertyChanged(nameof(CanSetUpCapture));
+    }
 
     public Task Load() => LoadPeriod(_selected);
 

@@ -6,18 +6,29 @@ namespace Centello.App.Pages;
 public partial class InsightsPage : ContentPage
 {
     private readonly InsightsViewModel _viewModel;
+    private readonly IScreenReader _screenReader;
+    private bool _restoreRecapFocus;
 
-    public InsightsPage(InsightsViewModel viewModel)
+    public InsightsPage(InsightsViewModel viewModel, IScreenReader screenReader)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _screenReader = screenReader;
         BindingContext = viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        var restoreRecapFocus = _restoreRecapFocus;
+        _restoreRecapFocus = false;
         await _viewModel.Load();
+        if (restoreRecapFocus && _screenReader.IsOn && _viewModel.HasRecap)
+            Dispatcher.Dispatch(() =>
+            {
+                if (Shell.Current.CurrentPage == this)
+                    RecapButton.SetSemanticFocus();
+            });
     }
 
     private async void OnPreviousTapped(object? sender, EventArgs e) => await _viewModel.ShowPrevious();
@@ -26,13 +37,23 @@ public partial class InsightsPage : ContentPage
 
     private async void OnPeriodToggled(object? sender, EventArgs e) => await _viewModel.TogglePeriod();
 
-    private async void OnAddExpenseClicked(object? sender, EventArgs e) =>
-        await Shell.Current.GoToAsync(ExpenseEditorPage.Route());
+    private async void OnAddExpenseClicked(object? sender, EventArgs e)
+    {
+        if (_viewModel.Overview is not { } overview)
+            return;
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var initialDate = overview.Period.Contains(today) ? today : overview.To;
+        await Shell.Current.GoToAsync(ExpenseEditorPage.Route(initialDate: initialDate));
+    }
 
     private async void OnRecapClicked(object? sender, EventArgs e)
     {
-        if (_viewModel.Recap is { } recap)
-            await Shell.Current.GoToAsync(RecapPage.Route(recap.Period));
+        if (_viewModel.Recap is not { } recap)
+            return;
+
+        _restoreRecapFocus = true;
+        await Shell.Current.GoToAsync(RecapPage.Route(recap.Period));
     }
 
     // An observation about one expense opens it. One about a category leads to its expenses: the history of the

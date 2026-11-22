@@ -34,7 +34,7 @@ public partial class TodayPage : ContentPage
         var load = _viewModel.Load();
         var availability = _settings.HasApiKey();
         await Task.WhenAll(load, availability);
-        _viewModel.IsCaptureAvailable = await availability;
+        _viewModel.HasCaptureKey = await availability;
     }
 
     protected override async void OnDisappearing()

@@ -64,11 +64,12 @@ public sealed class ExpenseEditorViewModel : ObservableObject
         _original = Snapshot();
     }
 
-    public Task Load(Guid? expenseId = null, Guid? categoryId = null) => Open(expenseId, categoryId, null);
+    public Task Load(Guid? expenseId = null, Guid? categoryId = null, DateOnly? initialDate = null) =>
+        Open(expenseId, categoryId, initialDate, null);
 
-    public Task Load(ExpenseDraft draft) => Open(null, null, draft);
+    public Task Load(ExpenseDraft draft) => Open(null, null, null, draft);
 
-    private async Task Open(Guid? expenseId, Guid? categoryId, ExpenseDraft? draft)
+    private async Task Open(Guid? expenseId, Guid? categoryId, DateOnly? initialDate, ExpenseDraft? draft)
     {
         _expenseId = expenseId;
         OnPropertyChanged(nameof(Title));
@@ -79,6 +80,9 @@ public sealed class ExpenseEditorViewModel : ObservableObject
             ErrorMessage = categories.Error.Message;
             return;
         }
+
+        if (!expenseId.HasValue && initialDate is { } date)
+            OccurredOn = date.ToDateTime(TimeOnly.MinValue);
 
         if (expenseId.HasValue)
             await LoadExpense(expenseId.Value);

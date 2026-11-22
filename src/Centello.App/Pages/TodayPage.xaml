@@ -114,10 +114,9 @@
                         <Label Text="Ancora nessuna spesa in questo periodo." Style="{StaticResource BodyMedium}" Margin="0,8,0,0" IsVisible="{Binding Overview.HasNoLatest}" />
                     </VerticalStackLayout>
 
-                    <!-- The first run: without a category there is nothing an expense could go to, so the home
-                         offers the common ones instead of an empty chart. -->
+                    <!-- On first run, offer the common categories alongside manual entry in the dock. -->
                     <VerticalStackLayout IsVisible="{Binding Overview.IsFirstRun}">
-                        <Label Text="Crea le tue categorie per iniziare" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
+                        <Label Text="Categorie suggerite" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
                         <Label Text="Le più comuni sono già scelte. Togli quelle che non ti servono: potrai cambiarle quando vuoi." Style="{StaticResource Lead}" Margin="0,4,0,0" />
                         <FlexLayout Margin="0,4,-8,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding Suggestions}">
                             <BindableLayout.ItemTemplate>
@@ -143,13 +142,6 @@
         </ScrollView>
 
         <Border Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}" local:SnackbarAnchor.IsAnchor="True">
-            <Border.Triggers>
-                <!-- Until a category exists there is nothing to add an expense to. -->
-                <DataTrigger TargetType="Border" Binding="{Binding Overview.IsFirstRun}" Value="True">
-                    <Setter Property="Opacity" Value="0.38" />
-                    <Setter Property="InputTransparent" Value="True" />
-                </DataTrigger>
-            </Border.Triggers>
             <Grid ColumnDefinitions="*,1,64,1,64">
                 <!-- The plus is a span of the words, so with a large font they wrap together inside what the two icon
                      segments leave, and never reach them. -->
@@ -172,7 +164,7 @@
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>
-                <Button Grid.Column="2" Grid.ColumnSpan="3" IsVisible="{Binding IsCaptureUnavailable}" BackgroundColor="Transparent" Text="" Clicked="OnInactiveCaptureClicked" SemanticProperties.Description="Voce e foto non configurate" />
+                <Button Grid.Column="2" Grid.ColumnSpan="3" IsVisible="{Binding CanSetUpCapture}" BackgroundColor="Transparent" Text="" Clicked="OnInactiveCaptureClicked" SemanticProperties.Description="Voce e foto non configurate" />
             </Grid>
         </Border>
 

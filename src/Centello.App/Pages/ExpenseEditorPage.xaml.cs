@@ -1,3 +1,4 @@
+using System.Globalization;
 using Centello.App.Controls;
 using Centello.App.ViewModels;
 using Centello.Application;
@@ -14,10 +15,12 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
     private readonly ISnackbar _snackbar;
     private const string ExpenseIdKey = "expenseId";
     private const string CategoryIdKey = "categoryId";
+    private const string DateKey = "date";
     private const string FromKey = "from";
     private const string Outside = "outside";
     private Guid? _expenseId;
     private Guid? _categoryId;
+    private DateOnly? _initialDate;
     private bool _fromOutside;
     private ExpenseDraft? _draft;
     private bool _isLoaded;
@@ -33,10 +36,10 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
         viewModel.Rejected += OnRejected;
     }
 
-    /// <summary>The route that opens a stored expense, or the empty form of a new one, optionally with a category
-    /// already chosen. An editor opened from outside the app sends the person back to the home screen when it
-    /// closes.</summary>
-    public static string Route(Guid? expenseId = null, Guid? categoryId = null, bool fromOutside = false)
+    /// <summary>Opens a stored expense, or a new one with an optional starting category and date. An editor opened
+    /// from outside the app sends the person back to the home screen when it closes.</summary>
+    public static string Route(Guid? expenseId = null, Guid? categoryId = null, bool fromOutside = false,
+        DateOnly? initialDate = null)
     {
         List<string> query = [];
         if (expenseId.HasValue)
@@ -44,6 +47,9 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
 
         if (categoryId.HasValue)
             query.Add($"{CategoryIdKey}={categoryId}");
+
+        if (initialDate is { } date)
+            query.Add($"{DateKey}={date.ToString("O", CultureInfo.InvariantCulture)}");
 
         if (fromOutside)
             query.Add($"{FromKey}={Outside}");
@@ -73,6 +79,10 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
 
         _expenseId = GuidOf(query, ExpenseIdKey);
         _categoryId = GuidOf(query, CategoryIdKey);
+        _initialDate = query.TryGetValue(DateKey, out var dateValue)
+            && DateOnly.TryParseExact(dateValue?.ToString(), "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                ? date
+                : null;
         _fromOutside = query.TryGetValue(FromKey, out var from) && from?.ToString() == Outside;
         _draft = query.TryGetValue(DraftParameter, out var draft) ? draft as ExpenseDraft : null;
     }
@@ -94,7 +104,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
         }
 
         _isLoaded = true;
-        await (_draft is { } draft ? _viewModel.Load(draft) : _viewModel.Load(_expenseId, _categoryId));
+        await (_draft is { } draft ? _viewModel.Load(draft) : _viewModel.Load(_expenseId, _categoryId, _initialDate));
         // A new expense starts from its amount. A stored expense or a draft from the voice or a photo is there to be read first.
         if (!_viewModel.IsEditMode && _viewModel.Amount.IsEmpty())
             AmountInput.FocusInput();

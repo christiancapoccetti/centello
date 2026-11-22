@@ -4,10 +4,16 @@ namespace Centello.App;
 public interface IScreenReader
 {
     bool IsOn { get; }
+    event EventHandler? Changed;
 }
 
 /// <summary>For platforms without a screen reader to ask.</summary>
 public sealed class NoScreenReader : IScreenReader
 {
     public bool IsOn => false;
+    public event EventHandler? Changed
+    {
+        add { }
+        remove { }
+    }
 }

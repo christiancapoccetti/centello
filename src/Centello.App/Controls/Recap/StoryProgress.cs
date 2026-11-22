@@ -3,7 +3,7 @@ using Centello.App.Theming;
 namespace Centello.App.Controls.Recap;
 
 /// <summary>One segment per card at the top of the story: the cards seen are full, the one on screen fills with the
-/// time spent on it, the rest wait at 28%. It speaks as "Scheda 3 di 11".</summary>
+/// time spent on it, the rest wait at 28%.</summary>
 public sealed class StoryProgress : Grid
 {
     private const double SegmentHeight = 3;
@@ -38,7 +38,6 @@ public sealed class StoryProgress : Grid
         }
 
         Fill(fill);
-        SemanticProperties.SetDescription(this, $"Scheda {index + 1} di {count}");
     }
 
     /// <summary>How much of the segment on screen is full, from 0 to 1.</summary>
