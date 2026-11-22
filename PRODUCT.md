@@ -26,7 +26,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 ## Operating Context
 
 - Single-handed phone use, often outdoors or in a shop, right after paying.
-- Bottom navigation with four tabs: `Oggi`, `Insight`, `Categorie`, `Impostazioni`.
+- Four tabs: `Oggi`, `Insight`, `Categorie`, `Impostazioni`. Navigation sits at the bottom in portrait and in a left rail on phones in landscape.
 - Voice entry: hold the microphone for up to 20 seconds; typing a phrase was removed on purpose. The draft always opens in the expense editor, and nothing is saved without explicit confirmation.
 - Photo and PDF entry: the camera segment of the home dock opens a menu to take a photo (Android 13 and later), choose one from the gallery or choose a PDF (up to 5 MB). Like voice, it opens a pre-filled draft in the expense editor, never saves on its own, and stores neither the photo nor the PDF.
 - Recurring payments create due expenses when the app opens and send Android notifications for upcoming ones.
