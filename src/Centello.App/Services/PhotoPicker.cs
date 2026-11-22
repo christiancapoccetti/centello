@@ -40,19 +40,26 @@ public sealed class PhotoPicker
 
     public Task<Result<byte[]?>> Pick() => Take(PickFirst);
 
-    public Task<Result<byte[]?>> PickPdf() => Take(() => FilePicker.Default.PickAsync(PdfOptions));
+    public Task<Result<byte[]?>> PickPdf() => Take(() => FilePicker.Default.PickAsync(PdfOptions), readPdf: true);
 
     private static async Task<FileResult?> PickFirst() =>
         (await MediaPicker.Default.PickPhotosAsync(Options)).FirstOrDefault();
 
-    private static async Task<Result<byte[]?>> Take(Func<Task<FileResult?>> open)
+    private static async Task<Result<byte[]?>> Take(Func<Task<FileResult?>> open, bool readPdf = false)
     {
         // Android can kill the app while the camera app is in front, so a previous photo may still be in the cache.
         DeleteLeftovers();
         try
         {
             var file = await open();
-            return Result<byte[]?>.Success(file is null ? null : await ReadAll(file));
+            if (file is null)
+                return Result<byte[]?>.Success(null);
+
+            if (!readPdf)
+                return Result<byte[]?>.Success(await ReadAll(file));
+
+            await using var stream = await file.OpenReadAsync();
+            return await PdfFileReader.Read(stream);
         }
         catch (OperationCanceledException)
         {

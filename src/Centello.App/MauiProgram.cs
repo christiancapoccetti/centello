@@ -1,7 +1,6 @@
 using Centello.App.Theming;
 using Centello.Application;
 using Centello.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Storage;
 
@@ -29,11 +28,7 @@ public static class MauiProgram
             .AddUi();
 
         var app = builder.Build();
-        using var scope = app.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<CentelloDbContext>();
-        // SQLite may retain a migration lock after an interrupted launch.
-        if (dbContext.Database.GetPendingMigrations().Any())
-            dbContext.Database.Migrate();
+        app.Services.GetRequiredService<SqliteDatabaseStartup>().Run().GetAwaiter().GetResult();
 
         return app;
     }

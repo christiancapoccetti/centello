@@ -1,4 +1,5 @@
 using Android.Content;
+using Centello.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centello.App;
@@ -14,7 +15,8 @@ internal static class ReceiverWork
         {
             try
             {
-                if (IPlatformApplication.Current?.Services is not { } services)
+                if (IPlatformApplication.Current?.Services is not { } services
+                    || !services.GetRequiredService<SqliteDatabaseStartup>().IsReady)
                     return;
 
                 await work(services);

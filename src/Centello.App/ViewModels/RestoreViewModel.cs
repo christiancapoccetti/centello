@@ -89,15 +89,26 @@ public sealed class RestoreViewModel(IServiceScopeFactory scopeFactory) : Observ
     public string ChooseText => ShowFile ? "Scegli un altro file" : "Scegli file di backup";
     public string ProgressText => Stage is RestoreStage.Analysing ? "Lettura del file in corso…" : "Ripristino in corso…";
 
-    public async Task Analyse(string fileName, Stream backup)
+    public async Task Analyse(string fileName, Stream backup, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+            return;
+
+        DiscardPreview();
         ErrorMessage = "";
         FileName = fileName;
-        Preview = null;
         Stage = RestoreStage.Analysing;
         try
         {
-            var result = await Task.Run(() => Run(service => service.Analyse(backup)));
+            var result = await Task.Run(() => Run(service => service.Analyse(backup, cancellationToken)));
+            if (cancellationToken.IsCancellationRequested)
+            {
+                if (result.IsSuccess)
+                    Discard(result.Value);
+
+                return;
+            }
+
             if (result.IsFailure)
             {
                 Reject(result.Error.Message);
@@ -109,7 +120,8 @@ public sealed class RestoreViewModel(IServiceScopeFactory scopeFactory) : Observ
         }
         catch
         {
-            Reject(PortabilityErrors.Unreadable.Message);
+            if (!cancellationToken.IsCancellationRequested)
+                Reject(PortabilityErrors.Unreadable.Message);
         }
     }
 
@@ -117,7 +129,7 @@ public sealed class RestoreViewModel(IServiceScopeFactory scopeFactory) : Observ
     public void FailToOpen() =>
         ErrorMessage = "Non è stato possibile aprire il file selezionato. Scegli un file creato con “Crea file di backup”.";
 
-    public async Task Restore()
+    public async Task Restore(CancellationToken navigation)
     {
         if (Preview is not { } preview || Stage is not RestoreStage.Preview)
             return;
@@ -141,6 +153,36 @@ public sealed class RestoreViewModel(IServiceScopeFactory scopeFactory) : Observ
             ErrorMessage = PortabilityErrors.RestoreFailed.Message;
             Stage = RestoreStage.Preview;
         }
+        finally
+        {
+            if (navigation.IsCancellationRequested)
+                Abandon();
+        }
+    }
+
+    public void Abandon()
+    {
+        if (Stage is RestoreStage.Restoring)
+            return;
+
+        DiscardPreview();
+        FileName = "";
+        ErrorMessage = "";
+        Stage = RestoreStage.Choose;
+    }
+
+    private void DiscardPreview()
+    {
+        if (Preview is { } preview && Stage is not RestoreStage.Done)
+            Discard(preview);
+
+        Preview = null;
+    }
+
+    private void Discard(RestorePreview preview)
+    {
+        using var scope = scopeFactory.CreateScope();
+        scope.ServiceProvider.GetRequiredService<IDataBackup>().Discard(preview);
     }
 
     // SQLite finishes its work on the calling thread: run on the UI thread, the restore would freeze the screen and

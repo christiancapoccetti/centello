@@ -12,4 +12,6 @@ public interface IDataBackup
 
     /// <summary>Replaces every table of the phone with the copy <see cref="Analyse"/> prepared. All or nothing.</summary>
     Task<Result> Restore(RestorePreview preview, CancellationToken cancellationToken = default);
+
+    void Discard(RestorePreview preview);
 }

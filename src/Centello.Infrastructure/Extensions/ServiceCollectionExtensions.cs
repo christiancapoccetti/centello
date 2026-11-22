@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<CentelloDbContext>((provider, options) => options
             .UseSqlite($"Data Source={databasePath}")
             .AddInterceptors(provider.GetRequiredService<StoreChangeInterceptor>()));
+        services.AddSingleton<SqliteDatabaseStartup>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IExpenseRepository, ExpenseRepository>();

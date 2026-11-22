@@ -41,35 +41,37 @@ public partial class BackupPage : ContentPage
         }
 
         var file = result.Value;
-        if (!_downloads.CanSave)
+        var name = Path.GetFileName(file.FilePath);
+        var shareDirectory = "";
+        var shared = false;
+        try
         {
+            if (_downloads.CanSave && (await _downloads.Save(file)).IsSuccess)
+            {
+                _snackbar.Show($"Salvato in Download: {name}");
+                return;
+            }
+
+            shareDirectory = ExportCache.NewShareDirectory();
+            var sharePath = Path.Combine(shareDirectory, name);
+            Directory.CreateDirectory(shareDirectory);
+            File.Move(file.FilePath, sharePath);
             await Share.Default.RequestAsync(new ShareFileRequest
             {
                 Title = title,
-                File = new ShareFile(file.FilePath, file.ContentType)
+                File = new ShareFile(sharePath, file.ContentType)
             });
-            return;
+            shared = true;
         }
-
-        var saved = await _downloads.Save(file);
-        if (saved.IsFailure)
+        catch (Exception)
         {
-            _snackbar.Show(saved.Error.Message);
-            return;
+            _snackbar.Show("Non è stato possibile salvare o condividere il file.");
         }
-
-        _snackbar.Show($"Salvato in Download: {Path.GetFileName(file.FilePath)}");
-        DeleteCacheCopy(file);
-    }
-
-    private static void DeleteCacheCopy(ExportedFile file)
-    {
-        try
+        finally
         {
-            File.Delete(file.FilePath);
-        }
-        catch (IOException)
-        {
+            ExportCache.Delete(Path.GetDirectoryName(file.FilePath)!);
+            if (!shared && shareDirectory.Length != 0)
+                ExportCache.Delete(shareDirectory);
         }
     }
 }

@@ -57,10 +57,10 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
 
     public async Task<Result<RestorePreview>> Analyse(Stream backup, CancellationToken cancellationToken = default)
     {
-        ClearStaging();
         var path = Path.Combine(_staging, $"{Guid.NewGuid():N}.db3");
         try
         {
+            ClearStaging();
             var result = await Check(backup, path, cancellationToken);
             if (result.IsFailure)
                 DeleteStaged(path);
@@ -94,6 +94,12 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
     public Task<Result> Restore(RestorePreview preview, CancellationToken cancellationToken = default) =>
         automation.Exclusive(() => Install(preview.StagedPath, cancellationToken));
 
+    public void Discard(RestorePreview preview)
+    {
+        if (IsStaged(preview.StagedPath))
+            DeleteStaged(preview.StagedPath);
+    }
+
     private async Task<Result<RestorePreview>> Check(Stream backup, string path, CancellationToken cancellationToken)
     {
         if (!await CopyWithLimit(backup, path, cancellationToken) || !await HasSqliteHeader(path, cancellationToken))
@@ -104,17 +110,26 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
             return Result<RestorePreview>.Failure(mark.Error);
 
         await using var staged = StagedContext(path);
-        var applied = await staged.Database.GetAppliedMigrationsAsync(cancellationToken);
-        if (!applied.Any())
+        var applied = (await staged.Database.GetAppliedMigrationsAsync(cancellationToken)).ToArray();
+        if (applied.Length == 0)
             return Result<RestorePreview>.Failure(PortabilityErrors.NotABackup);
 
-        if (applied.Except(staged.Database.GetMigrations()).Any())
+        var known = staged.Database.GetMigrations().ToArray();
+        if (applied.Except(known).Any())
             return Result<RestorePreview>.Failure(PortabilityErrors.NewerVersion);
 
-        // An older backup reaches the current schema here, on the copy, before the phone is involved.
-        await staged.Database.MigrateAsync(cancellationToken);
-        if (!await Seal(staged, cancellationToken))
+        if (!applied.SequenceEqual(known.Take(applied.Length))
+            || !await Prepare(path, applied, cancellationToken))
             return Result<RestorePreview>.Failure(PortabilityErrors.Damaged);
+
+        if (applied.Length < known.Length)
+            await staged.Database.MigrateAsync(cancellationToken);
+
+        await using (var connection = Open(path, SqliteOpenMode.ReadWrite))
+        {
+            await connection.OpenAsync(cancellationToken);
+            await Execute(connection, "PRAGMA journal_mode = DELETE", cancellationToken);
+        }
 
         var contents = await Summarize(staged, cancellationToken);
         var phone = await Summarize(context, cancellationToken);
@@ -139,30 +154,29 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
         if (marker is not (MarkTable or LegacyMarkTable))
             return Result<DateTimeOffset>.Failure(PortabilityErrors.NotABackup);
 
-        var stamp = await Scalar(connection, $"SELECT CreatedAt FROM {marker} LIMIT 1", cancellationToken);
+        var stamp = await Scalar(connection, $"SELECT MAX(CreatedAt) FROM {marker} HAVING COUNT(*) = 1",
+            cancellationToken);
         if (!DateTimeOffset.TryParseExact(stamp as string, "O", CultureInfo.InvariantCulture, DateTimeStyles.None,
                 out var createdAt))
             return Result<DateTimeOffset>.Failure(PortabilityErrors.NotABackup);
-
-        // A lock copied from the exporting device cannot have an owner in this private staging database.
-        if (await Count(connection, "type = 'table' AND name = '__EFMigrationsLock'", cancellationToken) > 0)
-            await Execute(connection, "DELETE FROM __EFMigrationsLock WHERE Id = 1", cancellationToken);
 
         await Execute(connection, $"DROP TABLE {marker}", cancellationToken);
         return Result<DateTimeOffset>.Success(createdAt);
     }
 
-    /// <summary>Leaves the migrated copy a standalone file, so it opens read-only and is deleted whole, and tells
-    /// whether its rows still agree with its foreign keys.</summary>
-    private static async Task<bool> Seal(CentelloDbContext staged, CancellationToken cancellationToken)
+    private static async Task<bool> Prepare(string path, string[] applied, CancellationToken cancellationToken)
     {
-        await staged.Database.CloseConnectionAsync();
-        await using var connection = NonPooled(staged.Database.GetConnectionString()!);
+        await using var connection = Open(path, SqliteOpenMode.ReadWrite);
         await connection.OpenAsync(cancellationToken);
-        if (await Scalar(connection, "PRAGMA foreign_key_check", cancellationToken) is not null)
+        if (!await SqliteRestoreValidation.HasExpectedSchema(connection, applied[^1], null, cancellationToken)
+            || !await SqliteRestoreValidation.HasExpectedHistory(connection, applied, null, cancellationToken)
+            || !await SqliteRestoreValidation.HasValidRows(connection, null, cancellationToken))
             return false;
 
-        await Execute(connection, "PRAGMA journal_mode = DELETE", cancellationToken);
+        // A lock copied from the exporting device cannot have an owner in this private staging database.
+        if (await Count(connection, "type = 'table' AND name = '__EFMigrationsLock'", cancellationToken) > 0)
+            await Execute(connection, "DELETE FROM __EFMigrationsLock", cancellationToken);
+
         return true;
     }
 
@@ -190,8 +204,20 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
         try
         {
             await using var source = Open(stagedPath, SqliteOpenMode.ReadOnly);
-            await using var live = Open(LivePath(), SqliteOpenMode.ReadWrite);
             await source.OpenAsync(cancellationToken);
+            await using var snapshot = source.BeginTransaction(deferred: true);
+            var known = context.Database.GetMigrations().ToArray();
+            if (!await SqliteRestoreValidation.HasExpectedSchema(source, known[^1], snapshot, cancellationToken)
+                || !await SqliteRestoreValidation.HasExpectedHistory(source, known, snapshot, cancellationToken)
+                || !await SqliteRestoreValidation.HasEmptyMigrationLock(source, snapshot, cancellationToken)
+                || !await SqliteRestoreValidation.HasValidRows(source, snapshot, cancellationToken))
+                return Result.Failure(PortabilityErrors.RestoreFailed);
+
+            var livePath = LivePath();
+            await using var gate = SqliteDatabaseStartup.OpenMigrationGate(livePath);
+            await gate.OpenAsync(cancellationToken);
+            await using var reservation = gate.BeginTransaction(deferred: false);
+            await using var live = Open(livePath, SqliteOpenMode.ReadWrite);
             await live.OpenAsync(cancellationToken);
             // A query still finishing on another connection holds a shared lock: wait for it instead of failing.
             await Execute(live, "PRAGMA busy_timeout = 10000", cancellationToken);
@@ -256,8 +282,10 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private bool IsStaged(string path) => Path.GetFullPath(path)
-        .StartsWith(Path.GetFullPath(_staging) + Path.DirectorySeparatorChar, StringComparison.Ordinal);
+    private bool IsStaged(string path) =>
+        Path.GetDirectoryName(Path.GetFullPath(path)) == Path.GetFullPath(_staging)
+        && Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "N", out _)
+        && Path.GetExtension(path) == ".db3";
 
     // At most one staged copy: the ones an abandoned restore left behind go here.
     private void ClearStaging()
@@ -298,6 +326,7 @@ public sealed class SqliteDataBackup(CentelloDbContext context, RecurringPayment
         DeleteQuietly(path);
         DeleteQuietly(path + "-wal");
         DeleteQuietly(path + "-shm");
+        DeleteQuietly(path + "-journal");
     }
 
     private static void DeleteQuietly(string path)

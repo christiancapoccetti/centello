@@ -462,6 +462,56 @@ public sealed class SqliteDataBackup_should_expected_behavior : IDisposable
         Assert.Empty(Directory.GetFiles(Staging));
     }
 
+    [Theory]
+    [InlineData("DROP INDEX IX_Categories_Name")]
+    [InlineData("ALTER TABLE Expenses ADD COLUMN Unexpected TEXT")]
+    [InlineData("CREATE TABLE Unexpected (Value TEXT)")]
+    [InlineData("DELETE FROM __EFMigrationsHistory WHERE MigrationId = '20260720111928_InitialCreate'")]
+    [InlineData("UPDATE Categories SET MonthlyBudget = -1")]
+    [InlineData("UPDATE Expenses SET Amount = 1.5")]
+    [InlineData("UPDATE Expenses SET OccurredOn = '2026-02-30'")]
+    [InlineData("UPDATE RecurringPayments SET Frequency = 99")]
+    [InlineData("UPDATE RecurringPayments SET AnchorDay = 0")]
+    public async Task Refuse_a_backup_with_incompatible_schema_or_records(string change)
+    {
+        var copy = CopyOf(await CreateBackupFile());
+        Run(copy, change);
+        var idsBefore = ExpenseIds();
+
+        var result = await Analyse(copy);
+
+        Assert.Equal(PortabilityErrors.Damaged, result.Error);
+        Assert.Empty(Directory.GetFiles(Staging));
+        Assert.Equal(idsBefore, ExpenseIds());
+    }
+
+    [Fact]
+    public async Task Refuse_a_staged_copy_that_no_longer_has_valid_records()
+    {
+        var file = await CreateBackupFile();
+        await AddExpenses(1);
+        var preview = await AnalyseToPreview(file);
+        var idsBefore = ExpenseIds();
+        Run(preview.StagedPath, "UPDATE Expenses SET Amount = 0");
+
+        var restored = await Backup().Restore(preview);
+
+        Assert.Equal(PortabilityErrors.RestoreFailed, restored.Error);
+        Assert.Equal(idsBefore, ExpenseIds());
+    }
+
+    [Fact]
+    public async Task Delete_the_staged_copy_when_the_preview_is_abandoned()
+    {
+        var file = await CreateBackupFile();
+        var preview = await AnalyseToPreview(file);
+
+        Backup().Discard(preview);
+
+        Assert.Empty(Directory.GetFiles(Staging));
+        Assert.True(File.Exists(file));
+    }
+
     [Fact]
     public async Task Leave_nothing_staged_when_cancelled()
     {
@@ -577,6 +627,24 @@ public sealed class SqliteDataBackup_should_expected_behavior : IDisposable
             .AsNoTracking()
             .CountAsync(expense => expense.RecurringPaymentId == payment.RecurringPaymentId);
         Assert.True(created >= 2);
+    }
+
+    [Fact]
+    public async Task Leave_live_data_unchanged_while_a_migration_holds_the_gate()
+    {
+        var file = await CreateBackupFile();
+        await AddExpenses(1);
+        var preview = await AnalyseToPreview(file);
+        var idsBefore = ExpenseIds();
+        await using var gate = new SqliteConnection($"Data Source={_database.FilePath}.migration-gate;Pooling=False");
+        await gate.OpenAsync();
+        await using var reservation = gate.BeginTransaction(deferred: false);
+
+        var restored = await Backup().Restore(preview);
+
+        Assert.Equal(PortabilityErrors.RestoreFailed, restored.Error);
+        Assert.Equal(idsBefore, ExpenseIds());
+        Assert.True(File.Exists(preview.StagedPath));
     }
 
     [Fact]

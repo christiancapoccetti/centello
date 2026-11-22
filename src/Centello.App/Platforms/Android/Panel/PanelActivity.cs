@@ -7,6 +7,7 @@ using AndroidX.Activity;
 using AndroidX.AppCompat.App;
 using AndroidX.Core.View;
 using Centello.Application;
+using Centello.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centello.App;
@@ -39,6 +40,14 @@ public sealed class PanelActivity : AppCompatActivity
         base.OnCreate(savedInstanceState);
         if (IPlatformApplication.Current?.Services is not { } services)
         {
+            Finish();
+            return;
+        }
+
+        if (!services.GetRequiredService<SqliteDatabaseStartup>().IsReady)
+        {
+            StartActivity(new Intent(this, typeof(MainActivity))
+                .AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop));
             Finish();
             return;
         }
