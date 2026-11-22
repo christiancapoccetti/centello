@@ -1,6 +1,6 @@
 # Google Play Console answers
 
-What to enter in Play Console for the first release on the internal testing track. The closed beta uses the name Centesimo; `<NAME>` in the listing texts stands for the final name, still to be chosen, since Centesimo and Quattrino both clash with existing finance apps or marks. Play Console labels change often; check each answer against the current form.
+Use these answers for the Centello listing on Google Play. Keep updates on the existing app (it.christiancapoccetti.centesimo). Check each answer against the current form.
 
 ## Account
 
@@ -11,8 +11,8 @@ What to enter in Play Console for the first release on the internal testing trac
 
 - Default language: Italian (it-IT). App, not game. Free.
 - Category: Finance.
-- Privacy policy: <https://christiancapoccetti.github.io/centesimo/privacy-policy.html>
-- Website (optional): <https://github.com/christiancapoccetti/centesimo>
+- Privacy policy: <https://christiancapoccetti.github.io/centello/privacy-policy.html>
+- Website (optional): <https://github.com/christiancapoccetti/centello>
 
 ## Store listing (Italian)
 
@@ -22,7 +22,7 @@ What to enter in Play Console for the first release on the internal testing trac
 
 **Full description:**
 
-> <NAME> ti aiuta a tenere sotto controllo le spese senza fatica: segni una spesa in pochi secondi e vedi subito come va il mese.
+> Centello ti aiuta a tenere sotto controllo le spese senza fatica: segni una spesa in pochi secondi e vedi subito come va il mese.
 >
 > **Inserisci come preferisci**
 > • A mano, con importo, categoria, tag e nota.
@@ -42,7 +42,7 @@ What to enter in Play Console for the first release on the internal testing trac
 > • Backup in un file ed esportazione CSV quando vuoi.
 > • Voce, foto e PDF usano OpenAI con la tua chiave API, solo quando li usi. Senza chiave l'inserimento a mano funziona sempre.
 
-**Graphics:** the 512 px icon, a 1024×500 feature graphic and at least two phone screenshots with placeholder data. All of them wait for the new name and logo.
+**Graphics:** the 512 px icon, a 1024×500 feature graphic and at least two phone screenshots with placeholder data. Use the Centello icon in docs/brand/icona-512.png.
 
 ## App content
 
@@ -64,10 +64,10 @@ Data counts as collected when it leaves the device. Only voice, photo and PDF en
 - **Deletion:** the developer holds no user data; expenses are deleted in the app or by uninstalling it.
 - Expenses never leave the device except through Android's own backup to the user's Google account, which is a system feature, not the app's collection.
 
-## First release (internal testing)
+## Test an update
 
 1. Raise `ApplicationVersion` and build the bundle as described in the README ("Build for Google Play").
-2. Create an internal testing release, upload the signed AAB, enable Play App Signing.
-3. Release notes (Italian): "Prima versione di prova."
+2. Create an internal testing release for the existing app and upload the signed AAB.
+3. For the rename, use the Italian release note "Nuovo nome: Centello. Le spese già registrate restano sul dispositivo."
 4. Add the testers' Google account emails and share the opt-in link.
 5. Tag the uploaded commit.

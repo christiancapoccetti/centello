@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centello.App.Theming"
+             xmlns:c="clr-namespace:Centello.App.Controls"
+             xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
+             x:Class="Centello.App.Pages.RestorePage"
+             Title="Ripristina backup"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             Style="{StaticResource EdgeToEdgePage}">
+    <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,*">
+        <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
+            <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" IsEnabled="{Binding CanLeave}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
+            <Label Grid.Column="1" Margin="4,0,0,0" Text="Ripristina backup" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <ScrollView Grid.Row="1" Style="{StaticResource ListScroll}">
+            <VerticalStackLayout Padding="0,0,0,24">
+                <Label Text="Il ripristino sostituisce tutti i dati di questo telefono con quelli del file." Style="{StaticResource Lead}" Margin="24,1,24,0" />
+
+                <Grid Margin="24,20,24,0" ColumnDefinitions="Auto,*" ColumnSpacing="10" IsVisible="{Binding ShowFile}">
+                    <Label Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.Description}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="{Binding FileName}" Style="{StaticResource LabelLarge}" FontSize="14" LineBreakMode="MiddleTruncation" MaxLines="1" />
+                        <Label Text="{Binding BackupDate}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <VerticalStackLayout Margin="24,20,24,0" IsVisible="{Binding CanChoose}">
+                    <c:InlineError Margin="0,0,0,12" Text="{Binding ErrorMessage}" />
+                    <Button Text="{Binding ChooseText}" Style="{StaticResource FilledButton}" Clicked="OnChooseClicked">
+                        <Button.ImageSource>
+                            <FontImageSource Glyph="{x:Static app:MaterialSymbols.UploadFile}" FontFamily="{x:Static t:Fonts.Icons}" Size="20" Color="{t:Theme Ground}" />
+                        </Button.ImageSource>
+                    </Button>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Margin="24,16,24,0" IsVisible="{Binding ShowComparison}">
+                    <Grid ColumnDefinitions="*,84,96" Padding="0,0,0,6">
+                        <Label Grid.Column="1" Text="Nel file" Style="{StaticResource Caption}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="2" Text="Sul telefono" Style="{StaticResource Caption}" HorizontalTextAlignment="End" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Hairline}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,84,96" RowDefinitions="*,1" MinimumHeightRequest="49">
+                                    <Label Text="{Binding Label}" FontSize="16" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding InBackup}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding OnPhone}" FontSize="16" TextColor="{t:Theme Mute}" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                                    <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <Grid Margin="24,16,24,0" ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding ShowWarning}">
+                    <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Warning}" VerticalOptions="Start" />
+                    <Label Grid.Column="1" Text="{Binding Warning}" FontSize="14" LineHeight="1.4" />
+                </Grid>
+
+                <VerticalStackLayout Margin="24,20,24,0" Spacing="8" IsVisible="{Binding IsPreviewReady}">
+                    <Button Text="Sostituisci i dati del telefono" Style="{StaticResource DangerOutlinedButton}" Clicked="OnRestoreClicked" />
+                    <Button Text="Scegli un altro file" Style="{StaticResource OutlinedButton}" Clicked="OnChooseClicked" />
+                    <c:InlineError Margin="0,4,0,0" Text="{Binding ErrorMessage}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Margin="24,24,24,0" IsVisible="{Binding ShowProgress}">
+                    <c:IndeterminateBar />
+                    <Label Text="{Binding ProgressText}" Style="{StaticResource Caption}" Margin="4,6,4,0" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsDone}">
+                    <Border Style="{StaticResource InfoCard}" Margin="24,16,24,0" BackgroundColor="{t:Theme PositiveContainer}">
+                        <VerticalStackLayout>
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.CheckCircle}" TextColor="{t:Theme OnPositiveContainer}" />
+                                <Label Text="Fatto" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" TextColor="{t:Theme OnPositiveContainer}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding DoneMessage}" Margin="0,8,0,0" FontSize="14" TextColor="{t:Theme OnPositiveContainer}" LineHeight="1.5" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Button Text="Vai a Oggi" Style="{StaticResource OutlinedButton}" Margin="24,20,24,0" Clicked="OnTodayClicked" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

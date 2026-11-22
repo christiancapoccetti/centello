@@ -92,7 +92,7 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
 .sheet .gest{height:24px;display:grid;place-items:center;margin:4px -24px 0}
 .sheet .gest::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--fg)}
 
-/* Long press on the app icon: the launcher draws the menu; only the icons and labels are Centesimo's. */
+/* Long press on the app icon: the launcher draws the menu; only the icons and labels are Centello's. */
 .lp{position:relative;width:412px;height:472px;border-radius:28px;overflow:hidden;background:var(--wall);padding:28px 16px 0}
 .lp .cells{grid-auto-rows:104px}
 .lp .dim{position:absolute;inset:0;background:rgba(0,0,0,.28)}
@@ -131,7 +131,7 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
 <div class="head">
   <div>
     <h1>Aggiungi 4×2 e scorciatoie dell'app</h1>
-    <p class="intro">Due porte in più per segnare una spesa senza passare da Oggi: un Aggiungi grande, con anche la fotocamera, e le scorciatoie che compaiono tenendo premuta l'icona di Centesimo. Misure reali di un Pixel, dati inventati. Segue il tema del sistema: prova il chiaro.</p>
+    <p class="intro">Due porte in più per segnare una spesa senza passare da Oggi: un Aggiungi grande, con anche la fotocamera, e le scorciatoie che compaiono tenendo premuta l'icona di Centello. Misure reali di un Pixel, dati inventati. Segue il tema del sistema: prova il chiaro.</p>
   </div>
   <div class="theme" role="group" aria-label="Tema">
     <button type="button" data-theme="dark" aria-pressed="true">Scuro</button>
@@ -202,7 +202,7 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
           <h3>Lettura della foto</h3>
           <p class="lead">Cerco importo, data e negozio…</p>
           <div class="thumb"><i><span class="ms" aria-hidden="true">receipt_long</span></i><span class="track"><b></b></span></div>
-          <p class="privacy">Foto inviata a OpenAI, Centesimo non la salva</p>
+          <p class="privacy">Foto inviata a OpenAI, Centello non la salva</p>
           <div class="actions"><span class="tbtn">Annulla</span></div>
           <div class="gest"></div>
         </div>
@@ -211,7 +211,7 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
   </div>
   <div class="notes">
     <p><b>Galleria e PDF restano in Oggi.</b> Dal widget si scatta e basta: è il caso dello scontrino appena ricevuto. Per uno screenshot o un PDF si apre l'app.</p>
-    <p><b>Sotto Android 13</b> Centesimo non può usare la fotocamera (lo stesso limite di Oggi): lì "Da foto" apre la galleria.</p>
+    <p><b>Sotto Android 13</b> Centello non può usare la fotocamera (lo stesso limite di Oggi): lì "Da foto" apre la galleria.</p>
     <p><b>Senza chiave OpenAI</b> voce e foto mostrano lo stesso foglio "Chiave mancante" del microfono, con "Apri impostazioni". La prima volta compare la richiesta di permesso della fotocamera, con lo stesso testo di Oggi.</p>
     <p><b>Dopo il salvataggio</b> si torna alla Home del telefono, come per gli altri widget.</p>
   </div>
@@ -219,7 +219,7 @@ figcaption p em{font-style:normal;color:var(--page-fg);font-weight:600}
 
 <section>
   <h2>2 · Scorciatoie dell'app</h2>
-  <p>Tenendo premuta l'icona di Centesimo il launcher mostra un piccolo menu. La maggior parte dei launcher ne mostra al massimo quattro. Le due varianti cambiano solo il terzo posto: <em>la foto o una seconda categoria</em>.</p>
+  <p>Tenendo premuta l'icona di Centello il launcher mostra un piccolo menu. La maggior parte dei launcher ne mostra al massimo quattro. Le due varianti cambiano solo il terzo posto: <em>la foto o una seconda categoria</em>.</p>
   <div class="grid">
     <figure>
       <figcaption>
@@ -265,7 +265,7 @@ const way=(g,t,s)=>`<div class="row"><span class="si way"><span class="ms" aria-
 const cat=(c,g,t)=>`<div class="row"><span class="si cat" style="background:var(--${c})"><span class="ms" aria-hidden="true">${g}</span></span>${t}</div>`;
 const sys=`<div class="sys"><span><span class="ms" aria-label="Informazioni app">info</span></span><span><span class="ms" aria-label="Widget">widgets</span></span></div>`;
 const app='<div class="app"><i></i>App</div>';
-const lp=(rows)=>`<div class="cells">${app.repeat(12)}<div class="me">${logo}Centesimo</div>${app.repeat(3)}</div><div class="dim"></div><div class="menu">${rows}${sys}</div>`;
+const lp=(rows)=>`<div class="cells">${app.repeat(12)}<div class="me">${logo}Centello</div>${app.repeat(3)}</div><div class="dim"></div><div class="menu">${rows}${sys}</div>`;
 document.getElementById('lpA').innerHTML=lp(
   cat('butter','local_cafe','Spesa in Caffè')+way('photo_camera','Spesa da foto')+way('mic','Spesa a voce')+way('add','Nuova spesa'));
 document.getElementById('lpB').innerHTML=lp(

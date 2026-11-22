@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centello.App.Theming"
+             xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
+             x:Class="Centello.App.Controls.PeriodSwitcher"
+             x:Name="Root">
+    <Grid MinimumHeightRequest="48" ColumnDefinitions="*,48,48">
+        <!-- The cue is the last span of the title: with a large font the title wraps and the cue goes with the year,
+             and the arrows keep their own two columns. -->
+        <Label x:Name="Title" FontFamily="{x:Static t:Fonts.Bold}" VerticalTextAlignment="Center" HorizontalOptions="Start" MaxLines="2" LineBreakMode="TailTruncation">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTitleTapped" />
+            </Label.GestureRecognizers>
+            <Label.FormattedText>
+                <FormattedString>
+                    <Span x:Name="PeriodName" />
+                    <Span Text=" " />
+                    <Span x:Name="Year" FontFamily="{x:Static t:Fonts.Regular}" TextColor="{t:Theme Mute}" />
+                    <Span x:Name="Cue" FontFamily="{x:Static t:Fonts.Icons}" FontSize="20" FontAutoScalingEnabled="False" TextColor="{t:Theme Mute}" />
+                </FormattedString>
+            </Label.FormattedText>
+        </Label>
+        <Button x:Name="Previous" Grid.Column="1" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ChevronLeft}" Clicked="OnPreviousClicked" />
+        <Button x:Name="Next" Grid.Column="2" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ChevronRight}" IsEnabled="{Binding HasNext, Source={x:Reference Root}}" Clicked="OnNextClicked" />
+    </Grid>
+</ContentView>

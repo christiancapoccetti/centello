@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:t="clr-namespace:Centello.App.Theming"
+             xmlns:c="clr-namespace:Centello.App.Controls"
+             xmlns:local="clr-namespace:Centello.App"
+             xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
+             x:Class="Centello.App.Pages.CategoriesPage"
+             Title="Categorie"
+             SafeAreaEdges="All">
+    <Grid RowDefinitions="56,Auto,*">
+        <Label Margin="24,0" Text="Categorie" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
+
+        <c:Segmented Grid.Row="1" Margin="24,4,24,8" Items="Attive,Archiviate" SelectedIndex="{Binding SegmentIndex}" />
+
+        <c:InlineError Grid.Row="2" Margin="24,8" VerticalOptions="Start" Text="{Binding ErrorMessage}" />
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Rows}" SelectionMode="None" IsVisible="{Binding HasRows}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="24,0" MinimumHeightRequest="58" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
+                        <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                        <VerticalStackLayout Grid.Column="1" Padding="0,6" VerticalOptions="Center">
+                            <!-- The name takes what the mark leaves of the width, so a long one ends in an ellipsis before the arrow. -->
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Label Margin="0,0,6,0" Style="{StaticResource IconGlyph}" FontSize="16" Text="{x:Static app:MaterialSymbols.Error}" TextColor="{t:Theme Alert}" VerticalOptions="Center" IsVisible="{Binding IsOverBudget}" />
+                                <Label Grid.Column="1" Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" />
+                            </Grid>
+                            <Label Text="{Binding Detail}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" MaxLines="2" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Margin="0,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" />
+                        <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
+                        <Button Grid.RowSpan="2" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <!-- The last 88 keep the last row clear of the button that floats over the list. -->
+            <CollectionView.Footer>
+                <BoxView HeightRequest="88" Color="Transparent" />
+            </CollectionView.Footer>
+        </CollectionView>
+
+        <VerticalStackLayout Grid.Row="2" Padding="32,56,32,24" IsVisible="{Binding HasNoActive}">
+            <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.Category}" TextColor="{t:Theme Mute}" />
+            <Label Text="Nessuna categoria" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+            <Label Text="Crea la prima categoria per iniziare a registrare le spese." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="2" Padding="32,56,32,24" IsVisible="{Binding HasNoArchived}">
+            <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.Archive}" TextColor="{t:Theme Mute}" />
+            <Label Text="Nessuna categoria archiviata" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+            <Label Text="Quando archivi una categoria la trovi qui, con le sue spese." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <Button Grid.Row="2" Text="Nuova categoria" Style="{StaticResource ExtendedFab}" Margin="0,0,16,16" HorizontalOptions="End" VerticalOptions="End" IsVisible="{Binding IsActiveView}" Clicked="OnNewCategoryClicked" local:SnackbarAnchor.IsAnchor="True" />
+    </Grid>
+</ContentPage>

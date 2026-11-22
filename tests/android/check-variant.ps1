@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 [xml]$document = Get-Content -Raw -LiteralPath $Manifest
 $android = 'http://schemas.android.com/apk/res/android'
 $package = 'it.christiancapoccetti.centesimo'
-$label = 'Centesimo'
+$label = 'Centello'
 $prefix = ''
 if ($Variant -eq 'Dev') {
     $package += '.dev'
