@@ -14,6 +14,8 @@ public partial class AmountField : ContentView
     public static readonly BindableProperty IsReadOnlyProperty = BindableProperty.Create(nameof(IsReadOnly), typeof(bool),
         typeof(AmountField), false, propertyChanged: (field, _, _) => ((AmountField)field).ApplyRule());
 
+    public static readonly BindableProperty IsCompactProperty = BindableProperty.Create(nameof(IsCompact), typeof(bool), typeof(AmountField), false);
+
     public AmountField()
     {
         InitializeComponent();
@@ -24,6 +26,7 @@ public partial class AmountField : ContentView
 
     public string Text { get => (string)GetValue(TextProperty); set => SetValue(TextProperty, value); }
     public string ErrorText { get => (string)GetValue(ErrorTextProperty); set => SetValue(ErrorTextProperty, value); }
+    public bool IsCompact { get => (bool)GetValue(IsCompactProperty); set => SetValue(IsCompactProperty, value); }
     public bool IsReadOnly { get => (bool)GetValue(IsReadOnlyProperty); set => SetValue(IsReadOnlyProperty, value); }
 
     /// <summary>Puts the cursor in the amount and opens the keypad, as soon as the entry is on screen.</summary>

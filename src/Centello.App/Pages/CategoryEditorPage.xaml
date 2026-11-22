@@ -5,102 +5,140 @@
              xmlns:c="clr-namespace:Centello.App.Controls"
              xmlns:local="clr-namespace:Centello.App"
              xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
+             x:Name="RootPage"
              x:Class="Centello.App.Pages.CategoryEditorPage"
              Title="{Binding Title}"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              SafeAreaEdges="All">
-    <Grid RowDefinitions="56,*,Auto">
+    <Grid RowDefinitions="56,*">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <c:PhoneLandscapeTrigger Page="{x:Reference RootPage}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Property="Grid.RowDefinitions" Value="48,*" />
+                        <Setter TargetName="Form" Property="c:PhoneLandscapeForm.IsSplit" Value="True" />
+                        <Setter TargetName="HeaderRule" Property="BoxView.IsVisible" Value="True" />
+                        <Setter TargetName="FooterActions" Property="VerticalStackLayout.Padding" Value="24,4" />
+                        <Setter TargetName="SaveButton" Property="Button.MinimumHeightRequest" Value="48" />
+                        <Setter TargetName="RestoreButton" Property="Button.MinimumHeightRequest" Value="48" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Portrait">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="True" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
         <Grid Padding="4,0" ColumnDefinitions="48,*,48" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Close}" Clicked="OnCloseClicked" SemanticProperties.Description="Chiudi" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Title}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
             <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.MoreVert}" IsVisible="{Binding CanArchive}" Clicked="OnMenuClicked" SemanticProperties.Description="Altre azioni" />
         </Grid>
 
-        <ScrollView x:Name="Form" Grid.Row="1">
-            <VerticalStackLayout Padding="0,0,0,24">
-                <Border Style="{StaticResource InfoCard}" Margin="24,4,24,0" IsVisible="{Binding IsArchived}">
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                        <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.Archive}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
-                        <Label Grid.Column="1" Text="Archiviata. Le sue spese restano nella cronologia; ripristinala per usarla di nuovo." LineHeight="1.45" />
+        <BoxView x:Name="HeaderRule" Style="{StaticResource Hairline}" VerticalOptions="End" InputTransparent="True" IsVisible="False" />
+
+        <c:PhoneLandscapeForm x:Name="Form" Grid.Row="1">
+            <c:PhoneLandscapeForm.Primary>
+                <VerticalStackLayout>
+                    <Border Style="{StaticResource InfoCard}" Margin="24,4,24,0" IsVisible="{Binding IsArchived}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Label Style="{StaticResource IconGlyph}" FontSize="22" Text="{x:Static app:MaterialSymbols.Archive}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
+                            <Label Grid.Column="1" Text="Archiviata. Le sue spese restano nella cronologia; ripristinala per usarla di nuovo." LineHeight="1.45" />
+                        </Grid>
+                    </Border>
+
+                    <!-- The tile as every list will draw it, with the name as it is typed. -->
+                    <Grid Margin="24,12,24,0" ColumnDefinitions="56,*" ColumnSpacing="16">
+                        <c:CategoryTile IconKey="{Binding SelectedIcon}" ColorKey="{Binding ColorKey}" Size="56" AutomationProperties.IsInAccessibleTree="False" />
+                        <Label Grid.Column="1" Text="{Binding PreviewName}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="22" VerticalOptions="Center" LineBreakMode="TailTruncation" AutomationProperties.IsInAccessibleTree="False">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding HasName}" Value="False">
+                                    <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
+                                    <Setter Property="TextColor" Value="{t:Theme Mute}" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
                     </Grid>
-                </Border>
 
-                <!-- The tile as every list will draw it, with the name as it is typed. -->
-                <Grid Margin="24,12,24,0" ColumnDefinitions="56,*" ColumnSpacing="16">
-                    <c:CategoryTile IconKey="{Binding SelectedIcon}" ColorKey="{Binding ColorKey}" Size="56" AutomationProperties.IsInAccessibleTree="False" />
-                    <Label Grid.Column="1" Text="{Binding PreviewName}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="22" VerticalOptions="Center" LineBreakMode="TailTruncation" AutomationProperties.IsInAccessibleTree="False">
-                        <Label.Triggers>
-                            <DataTrigger TargetType="Label" Binding="{Binding HasName}" Value="False">
-                                <Setter Property="FontFamily" Value="{x:Static t:Fonts.SemiBold}" />
-                                <Setter Property="TextColor" Value="{t:Theme Mute}" />
-                            </DataTrigger>
-                        </Label.Triggers>
-                    </Label>
-                </Grid>
-
-                <c:TextField Margin="24,20,24,0" Label="Nome" Placeholder="Per esempio Ristoranti" MaxLength="40" Text="{Binding Name}" ErrorText="{Binding NameError}" IsReadOnly="{Binding IsReadOnly}" />
-
-                <VerticalStackLayout IsVisible="{Binding CanEdit}">
-                    <Label Text="Colore" Style="{StaticResource FieldLabel}" />
-                    <!-- Like the icon picker, it is wider than its pictures by the room of a ring on each side. -->
-                    <c:CategoryColorPicker Margin="19,4,19,0" SelectedKey="{Binding ColorKey}" />
-                    <Label Text="Consigliato il colore usato da meno categorie." Style="{StaticResource Caption}" Margin="24,6,24,0" IsVisible="{Binding IsNew}" />
-
-                    <Label Text="Icona" Style="{StaticResource FieldLabel}" />
-                    <!-- The picker is wider than its pictures by the room of a ring on each side. -->
-                    <c:CategoryIconPicker Margin="19,4,19,0" SelectedKey="{Binding SelectedIcon}" ColorKey="{Binding ColorKey}" />
+                    <c:TextField Margin="24,20,24,0" Label="Nome" Placeholder="Per esempio Ristoranti" MaxLength="40" Text="{Binding Name}" ErrorText="{Binding NameError}" IsReadOnly="{Binding IsReadOnly}" />
                 </VerticalStackLayout>
+            </c:PhoneLandscapeForm.Primary>
+            <c:PhoneLandscapeForm.PrimaryTail>
+                <VerticalStackLayout>
+                    <c:TextField Margin="24,14,24,0" Label="Budget mensile" Placeholder="Nessun budget" Suffix="€" Keyboard="Numeric" MaxLength="12" HelperText="Lascia vuoto se non vuoi un budget" Text="{Binding Budget}" ErrorText="{Binding BudgetError}" IsReadOnly="{Binding IsReadOnly}" />
+                </VerticalStackLayout>
+            </c:PhoneLandscapeForm.PrimaryTail>
+            <c:PhoneLandscapeForm.Secondary>
+                <VerticalStackLayout>
+                    <VerticalStackLayout IsVisible="{Binding CanEdit}">
+                        <Label Text="Colore" Style="{StaticResource FieldLabel}" />
+                        <!-- Like the icon picker, it is wider than its pictures by the room of a ring on each side. -->
+                        <c:CategoryColorPicker Margin="19,4,19,0" SelectedKey="{Binding ColorKey}" />
+                        <Label Text="Consigliato il colore usato da meno categorie." Style="{StaticResource Caption}" Margin="24,6,24,0" IsVisible="{Binding IsNew}" />
 
-                <c:TextField Margin="24,14,24,0" Label="Budget mensile" Placeholder="Nessun budget" Suffix="€" Keyboard="Numeric" MaxLength="12" HelperText="Lascia vuoto se non vuoi un budget" Text="{Binding Budget}" ErrorText="{Binding BudgetError}" IsReadOnly="{Binding IsReadOnly}" />
-
-                <Label Text="Tag" Style="{StaticResource FieldLabel}" />
-                <FlexLayout Margin="24,0,16,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding TagChips}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <!-- The gap between chips is padding: FlexLayout counts an item margin twice. -->
-                            <ContentView Padding="0,0,8,0">
-                                <c:Chip Text="{Binding Text}" Glyph="{Binding Glyph}" TrailingGlyph="{Binding TrailingGlyph}" Description="{Binding Description}" Tapped="OnTagChipTapped" />
-                            </ContentView>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
-                <Label Text="Nessun tag" Style="{StaticResource Hint}" Margin="24,12,24,0" IsVisible="{Binding HasNoTags}" />
-
-                <Grid Margin="24,8,24,0" ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsAddingTag}">
-                    <c:TextField x:Name="TagField" Label="Nuovo tag" Placeholder="Per esempio Pizza" MaxLength="30" Text="{Binding NewTagName}" ErrorText="{Binding TagError}" Completed="OnAddTagConfirmed" />
-                    <!-- The box of the field starts 8 under the top of its row. -->
-                    <Button Grid.Column="1" Text="Aggiungi" Style="{StaticResource OutlinedButton}" Margin="0,8,0,0" HeightRequest="56" CornerRadius="28" VerticalOptions="Start" Clicked="OnAddTagConfirmed" />
-                </Grid>
-
-                <Grid Margin="24,4,16,0" ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding HasArchivedTags}">
-                    <Label Text="Archiviati:" Style="{StaticResource Caption}" HeightRequest="48" VerticalTextAlignment="Center" VerticalOptions="Start" />
-                    <FlexLayout Grid.Column="1" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding ArchivedTagChips}">
+                        <Label Text="Icona" Style="{StaticResource FieldLabel}" />
+                        <!-- The picker is wider than its pictures by the room of a ring on each side. -->
+                        <c:CategoryIconPicker Margin="19,4,19,0" SelectedKey="{Binding SelectedIcon}" ColorKey="{Binding ColorKey}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </c:PhoneLandscapeForm.Secondary>
+            <c:PhoneLandscapeForm.SecondaryTail>
+                <VerticalStackLayout>
+                    <Label Text="Tag" Style="{StaticResource FieldLabel}" />
+                    <FlexLayout Margin="24,0,16,0" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding TagChips}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
+                                <!-- The gap between chips is padding: FlexLayout counts an item margin twice. -->
                                 <ContentView Padding="0,0,8,0">
-                                    <c:Chip Text="{Binding Text}" TrailingGlyph="{Binding TrailingGlyph}" Description="{Binding Description}" Tapped="OnTagChipTapped" />
+                                    <c:Chip Text="{Binding Text}" Glyph="{Binding Glyph}" TrailingGlyph="{Binding TrailingGlyph}" Description="{Binding Description}" Tapped="OnTagChipTapped" />
                                 </ContentView>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </FlexLayout>
+                    <Label Text="Nessun tag" Style="{StaticResource Hint}" Margin="24,12,24,0" IsVisible="{Binding HasNoTags}" />
+
+                    <Grid Margin="24,8,24,0" ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsAddingTag}">
+                        <c:TextField x:Name="TagField" Label="Nuovo tag" Placeholder="Per esempio Pizza" MaxLength="30" Text="{Binding NewTagName}" ErrorText="{Binding TagError}" Completed="OnAddTagConfirmed" />
+                        <!-- The box of the field starts 8 under the top of its row. -->
+                        <Button Grid.Column="1" Text="Aggiungi" Style="{StaticResource OutlinedButton}" Margin="0,8,0,0" HeightRequest="56" CornerRadius="28" VerticalOptions="Start" Clicked="OnAddTagConfirmed" />
+                    </Grid>
+
+                    <Grid Margin="24,4,16,0" ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding HasArchivedTags}">
+                        <Label Text="Archiviati:" Style="{StaticResource Caption}" HeightRequest="48" VerticalTextAlignment="Center" VerticalOptions="Start" />
+                        <FlexLayout Grid.Column="1" Wrap="Wrap" AlignItems="Center" BindableLayout.ItemsSource="{Binding ArchivedTagChips}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <ContentView Padding="0,0,8,0">
+                                        <c:Chip Text="{Binding Text}" TrailingGlyph="{Binding TrailingGlyph}" Description="{Binding Description}" Tapped="OnTagChipTapped" />
+                                    </ContentView>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </Grid>
+
+                    <Label Text="I tag si salvano insieme alla categoria." Style="{StaticResource Caption}" Margin="24,12,24,0" IsVisible="{Binding SavesTagsWithCategory}" />
+                </VerticalStackLayout>
+            </c:PhoneLandscapeForm.SecondaryTail>
+            <c:PhoneLandscapeForm.Footer>
+                <Grid RowDefinitions="1,Auto" local:SnackbarAnchor.IsAnchor="True">
+                    <BoxView Style="{StaticResource Hairline}" />
+                    <VerticalStackLayout x:Name="FooterActions" Grid.Row="1" Padding="24,12" Spacing="8">
+                        <c:InlineError Text="{Binding ErrorMessage}" />
+                        <Button x:Name="SaveButton" Text="Salva" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryActionButton}" IsVisible="{Binding CanEdit}" />
+                        <Button x:Name="RestoreButton" Text="Ripristina" Style="{StaticResource PrimaryActionButton}" IsVisible="{Binding IsArchived}" Clicked="OnRestoreClicked" />
+                    </VerticalStackLayout>
                 </Grid>
-
-                <Label Text="I tag si salvano insieme alla categoria." Style="{StaticResource Caption}" Margin="24,12,24,0" IsVisible="{Binding SavesTagsWithCategory}" />
-            </VerticalStackLayout>
-        </ScrollView>
-
-        <Grid Grid.Row="2" RowDefinitions="1,Auto" local:SnackbarAnchor.IsAnchor="True">
-            <BoxView Style="{StaticResource Hairline}" />
-            <VerticalStackLayout Grid.Row="1" Padding="24,12" Spacing="8">
-                <c:InlineError Text="{Binding ErrorMessage}" />
-                <Button Text="Salva" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryActionButton}" IsVisible="{Binding CanEdit}" />
-                <Button Text="Ripristina" Style="{StaticResource PrimaryActionButton}" IsVisible="{Binding IsArchived}" Clicked="OnRestoreClicked" />
-            </VerticalStackLayout>
-        </Grid>
+            </c:PhoneLandscapeForm.Footer>
+        </c:PhoneLandscapeForm>
 
         <!-- The overflow menu. The layer under it takes the tap that closes it. -->
-        <Grid x:Name="MenuLayer" Grid.RowSpan="3" IsVisible="False" BackgroundColor="Transparent">
+        <Grid x:Name="MenuLayer" Grid.RowSpan="2" IsVisible="False" BackgroundColor="Transparent">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnMenuDismissed" />
             </Grid.GestureRecognizers>

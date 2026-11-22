@@ -167,7 +167,7 @@ public partial class ExpenseEditorPage : ContentPage, IQueryAttributable, IHolds
 
     private async void OnSaved(object? sender, EventArgs e) => await Leave("Spesa salvata");
 
-    private async void OnRejected(object? sender, EventArgs e) => await InlineError.ShowFirst(Form);
+    private async void OnRejected(object? sender, EventArgs e) => await Form.ShowFirstError();
 
     private async Task Leave(string message)
     {

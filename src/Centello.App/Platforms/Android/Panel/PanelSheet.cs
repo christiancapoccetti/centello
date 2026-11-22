@@ -7,10 +7,12 @@ using Android.Views;
 using Android.Views.Animations;
 using Android.Widget;
 using AndroidX.Core.View;
+using Centello.App.Controls;
 using Centello.App.Theming;
 using Centello.Application;
 using Microsoft.Maui.Platform;
 using Color = Android.Graphics.Color;
+using ScrollView = Android.Widget.ScrollView;
 using Orientation = Android.Widget.Orientation;
 using View = Android.Views.View;
 
@@ -19,6 +21,7 @@ namespace Centello.App;
 internal sealed class PanelSheet
 {
     private const int SheetCorner = 28;
+    private const int LandscapeWidth = 380;
     private const int Gutter = 24;
     private const int Target = 48;
     private const int MicSize = 88;
@@ -32,6 +35,7 @@ internal sealed class PanelSheet
     private readonly IFontManager _fonts;
     private readonly FrameLayout _root;
     private readonly View _scrim;
+    private readonly ScrollView _viewport;
     private readonly LinearLayout _sheet;
     private readonly TextView _title;
     private readonly TextView _lead;
@@ -53,6 +57,8 @@ internal sealed class PanelSheet
     private readonly TextView _cancel;
     private readonly TextView _primary;
     private bool _isDark;
+    private bool _landscape;
+    private AndroidX.Core.Graphics.Insets? _insets;
     private PanelFace _face = new PanelFace.Hidden();
 
     public PanelSheet(Context context, IFontManager fonts, bool isDark)
@@ -137,10 +143,13 @@ internal sealed class PanelSheet
 
         _root = new FrameLayout(context);
         _root.AddView(_scrim, new FrameLayout.LayoutParams(Match, Match));
-        _root.AddView(_sheet, new FrameLayout.LayoutParams(Match, Wrap, GravityFlags.Bottom));
-        ViewCompat.SetOnApplyWindowInsetsListener(_root, new SheetInsets(_sheet, Dp(4)));
+        _viewport = new ScrollView(context) { VerticalScrollBarEnabled = false };
+        _viewport.AddView(_sheet, new FrameLayout.LayoutParams(Match, Wrap));
+        _root.AddView(_viewport, new FrameLayout.LayoutParams(Match, Wrap, GravityFlags.Bottom));
+        ViewCompat.SetOnApplyWindowInsetsListener(_root, new SheetInsets(this));
         _root.ViewDetachedFromWindow += (_, _) => _sweep.Cancel();
 
+        Resize(context.Resources!.Configuration!);
         Render();
     }
 
@@ -154,6 +163,32 @@ internal sealed class PanelSheet
     {
         _face = face;
         Render();
+    }
+
+    public void Resize(Configuration config)
+    {
+        _landscape = PhoneLandscapeSize.Matches(config.ScreenWidthDp, config.ScreenHeightDp);
+        Position();
+    }
+
+    private void Position()
+    {
+        var insetLeft = _insets?.Left ?? 0;
+        var insetRight = _insets?.Right ?? 0;
+        var insetTop = _insets?.Top ?? 0;
+        var insetBottom = _insets?.Bottom ?? 0;
+        var gap = _landscape ? Dp(12) : 0;
+        var width = _landscape ? Dp(LandscapeWidth) : Match;
+        var gravity = _landscape ? GravityFlags.Bottom | GravityFlags.Right : GravityFlags.Bottom;
+
+        _viewport.LayoutParameters = new FrameLayout.LayoutParams(width, Wrap, gravity)
+        {
+            LeftMargin = insetLeft,
+            RightMargin = insetRight + gap,
+            TopMargin = insetTop + gap,
+            BottomMargin = _landscape ? insetBottom : 0
+        };
+        _sheet.SetPadding(Dp(Gutter), Dp(_landscape ? 16 : Gutter), Dp(Gutter), Dp(4) + (_landscape ? 0 : insetBottom));
     }
 
     public void Recolor(bool isDark)
@@ -170,7 +205,7 @@ internal sealed class PanelSheet
     {
         var visibility = _face is PanelFace.Hidden ? ViewStates.Gone : ViewStates.Visible;
         _scrim.Visibility = visibility;
-        _sheet.Visibility = visibility;
+        _viewport.Visibility = visibility;
         var isReading = _face is PanelFace.Reading;
         if (isReading)
             StartSweeping();
@@ -209,7 +244,13 @@ internal sealed class PanelSheet
         _mic.ContentDescription = recording.MicLabel;
         _mic.Enabled = recording.Mic == MicStage.Listening;
         _primary.Visibility = ViewStates.Gone;
-        SetTopMargin(_actions, 18);
+        var micSize = Dp(_landscape ? 64 : MicSize);
+        if (_mic.LayoutParameters!.Width != micSize)
+            _mic.LayoutParameters = new LinearLayout.LayoutParams(micSize, micSize);
+
+        SetTopMargin(_timeRow, _landscape ? 10 : 22);
+        SetTopMargin(_talk, _landscape ? 12 : 26);
+        SetTopMargin(_actions, _landscape ? 8 : 18);
     }
 
     private void ShowReading(PanelFace.Reading reading)
@@ -223,7 +264,7 @@ internal sealed class PanelSheet
         _privacy.Text = reading.PrivacyNote;
         _privacy.Visibility = ViewStates.Visible;
         _primary.Visibility = ViewStates.Gone;
-        SetTopMargin(_actions, 14);
+        SetTopMargin(_actions, _landscape ? 8 : 14);
     }
 
     private void ShowMessage(PanelFace.Message message)
@@ -238,7 +279,7 @@ internal sealed class PanelSheet
         _primary.Text = action;
         _primary.ContentDescription = action;
         _primary.Visibility = ViewStates.Visible;
-        SetTopMargin(_actions, 28);
+        SetTopMargin(_actions, _landscape ? 12 : 28);
     }
 
     private void StartSweeping()
@@ -333,16 +374,20 @@ internal sealed class PanelSheet
     private void SetTopMargin(View view, int dp)
     {
         var margins = (LinearLayout.LayoutParams)view.LayoutParameters!;
-        margins.TopMargin = Dp(dp);
+        var pixels = Dp(dp);
+        if (margins.TopMargin == pixels)
+            return;
+
+        margins.TopMargin = pixels;
         view.LayoutParameters = margins;
     }
 
-    private sealed class SheetInsets(View sheet, int restingBottom) : Java.Lang.Object, IOnApplyWindowInsetsListener
+    private sealed class SheetInsets(PanelSheet owner) : Java.Lang.Object, IOnApplyWindowInsetsListener
     {
         public WindowInsetsCompat OnApplyWindowInsets(View? view, WindowInsetsCompat? insets)
         {
-            var bars = insets!.GetInsets(WindowInsetsCompat.Type.SystemBars());
-            sheet.SetPadding(sheet.PaddingLeft, sheet.PaddingTop, sheet.PaddingRight, restingBottom + bars!.Bottom);
+            owner._insets = insets!.GetInsets(WindowInsetsCompat.Type.SystemBars() | WindowInsetsCompat.Type.DisplayCutout());
+            owner.Position();
             return insets!;
         }
     }

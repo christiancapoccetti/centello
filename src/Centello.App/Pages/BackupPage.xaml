@@ -4,30 +4,59 @@
              xmlns:t="clr-namespace:Centello.App.Theming"
              xmlns:c="clr-namespace:Centello.App.Controls"
              xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
+             x:Name="RootPage"
              x:Class="Centello.App.Pages.BackupPage"
              Title="Backup ed export"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              Style="{StaticResource EdgeToEdgePage}">
     <Grid Style="{StaticResource EdgeToEdgeRoot}" RowDefinitions="56,*">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <c:PhoneLandscapeTrigger Page="{x:Reference RootPage}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Property="Grid.RowDefinitions" Value="48,*" />
+                        <Setter TargetName="Form" Property="c:PhoneLandscapeForm.IsSplit" Value="True" />
+                        <Setter TargetName="HeaderRule" Property="BoxView.IsVisible" Value="True" />
+                        <Setter TargetName="SecondaryHeading" Property="Label.Margin" Value="24,8,24,2" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Portrait">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="True" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
         <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
             <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
             <Label Grid.Column="1" Margin="4,0,0,0" Text="Backup ed export" Style="{StaticResource TitleLarge}" VerticalOptions="Center" LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
         </Grid>
 
-        <ScrollView Grid.Row="1" Style="{StaticResource ListScroll}">
-            <VerticalStackLayout Padding="0,0,0,24">
-                <Label Text="Account Google" Style="{StaticResource SectionTitle}" Margin="24,8,24,2" SemanticProperties.HeadingLevel="Level2" />
-                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Cloud}" Title="Backup automatico" Detail="Gestito da Android" />
-                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Info}" Text="Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centello su un telefono nuovo." />
+        <BoxView x:Name="HeaderRule" Style="{StaticResource Hairline}" VerticalOptions="End" InputTransparent="True" IsVisible="False" />
 
-                <Label Text="File di backup" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
-                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Save}" Title="Crea file di backup" Detail="Spese, categorie, tag e pagamenti regolari" Kind="Action" Tapped="OnCreateBackupTapped" />
-                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Restore}" Title="Ripristina da file" Detail="Sostituisce i dati di questo telefono" Kind="Navigation" Tapped="OnRestoreTapped" />
+        <c:PhoneLandscapeForm x:Name="Form" Grid.Row="1" SafeAreaEdges="None,None,None,Container">
+            <c:PhoneLandscapeForm.Primary>
+                <VerticalStackLayout>
+                    <Label Text="Account Google" Style="{StaticResource SectionTitle}" Margin="24,8,24,2" SemanticProperties.HeadingLevel="Level2" />
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Cloud}" Title="Backup automatico" Detail="Gestito da Android" />
+                    <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Info}" Text="Se sul telefono è attivo il backup Google, Android salva da solo una copia dei dati sul tuo account e la ripristina quando installi Centello su un telefono nuovo." />
+                </VerticalStackLayout>
+            </c:PhoneLandscapeForm.Primary>
+            <c:PhoneLandscapeForm.Secondary>
+                <VerticalStackLayout>
+                    <Label x:Name="SecondaryHeading" Text="File di backup" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Save}" Title="Crea file di backup" Detail="Spese, categorie, tag e pagamenti regolari" Kind="Action" Tapped="OnCreateBackupTapped" />
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Restore}" Title="Ripristina da file" Detail="Sostituisce i dati di questo telefono" Kind="Navigation" Tapped="OnRestoreTapped" />
 
-                <Label Text="Foglio di calcolo" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
-                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.TableView}" Title="Esporta spese in CSV" Detail="Tutte le spese, per Excel o Fogli" Kind="Action" Tapped="OnExportCsvTapped" />
-            </VerticalStackLayout>
-        </ScrollView>
+                    <Label Text="Foglio di calcolo" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.TableView}" Title="Esporta spese in CSV" Detail="Tutte le spese, per Excel o Fogli" Kind="Action" Tapped="OnExportCsvTapped" />
+                </VerticalStackLayout>
+            </c:PhoneLandscapeForm.Secondary>
+        </c:PhoneLandscapeForm>
     </Grid>
 </ContentPage>

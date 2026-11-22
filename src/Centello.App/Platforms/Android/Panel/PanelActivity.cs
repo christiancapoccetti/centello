@@ -91,6 +91,7 @@ public sealed class PanelActivity : AppCompatActivity
     public override void OnConfigurationChanged(Configuration newConfig)
     {
         base.OnConfigurationChanged(newConfig);
+        _sheet?.Resize(newConfig);
         _sheet?.Recolor(IsDark(newConfig));
         ApplySystemBars(IsDark(newConfig));
     }

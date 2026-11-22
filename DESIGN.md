@@ -269,7 +269,7 @@ Centello reads like a piece of Italian industrial graphics (the Olivetti and Pin
 
 The system is dense but quiet. One condensed extra-bold numeral (the month's total) is the loudest thing on any screen; everything else is Archivo at body sizes in ink or mute grey, with tabular figures so every amount lines up. Colour is reserved: the category palette belongs to categories alone, and a single coral marks the act of adding an expense. Dark is the reference scheme; light is a paper twin with the same roles, and both follow the system setting.
 
-This is a native Android app (.NET MAUI) locked to portrait. All measures below are dp (sizes in sp for text); the frontmatter writes them as px for tool compatibility. It replaced an earlier green Material 3 look: tonal Material cards, progress bars over lists of category cards and Material colour roles are not part of this world.
+This is a native Android app (.NET MAUI) that supports portrait and phone landscape. All measures below are dp (sizes in sp for text); the frontmatter writes them as px for tool compatibility. It replaced an earlier green Material 3 look: tonal Material cards, progress bars over lists of category cards and Material colour roles are not part of this world.
 
 **Key Characteristics:**
 - Graphite ground (dark reference) or warm paper (light), no shadows anywhere.
@@ -346,7 +346,9 @@ Slots, stored by key in `Categories.Color`: coral (Corallo), peri (Pervinca), bu
 
 ## Layout
 
-A single portrait column with a 24dp side gutter on every page. The home is a fixed 56dp top row (the period switcher: month in bold, year in regular mute, previous and next arrows as 48dp buttons), a scrolling middle, and a bottom dock holding the split pill with 24dp side and 12dp vertical margins, above the four-tab navigation bar (`Oggi`, `Insight`, `Categorie`, `Impostazioni`).
+In portrait, pages use a single column with a 24dp side gutter. The home is a fixed 56dp top row (the period switcher: month in bold, year in regular mute, previous and next arrows as 48dp buttons), a scrolling middle, and a bottom dock holding the split pill with 24dp side and 12dp vertical margins, above the four-tab navigation bar (`Oggi`, `Insight`, `Categorie`, `Impostazioni`).
+
+In phone landscape, the four root tabs use a left navigation rail. Browsing pages and editors use the available width for panes, and the recap story and launcher entry panel adapt to the shorter viewport.
 
 Lists are rows, not cards: an expense row is 58dp at least (36dp tile, 14dp gap, title over caption, amount right-aligned) with a 1dp hairline under it; a settings row is at least 64dp with the same 36/14 rhythm. Empty states are centred stacks with 32dp sides and 56dp of top room under a 40sp mute glyph. Form field labels start 24dp below what is above them.
 
@@ -440,7 +442,7 @@ Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action th
 - **Amount field:** no box; the condensed 60sp numeral over a 2dp underline.
 
 ### Navigation
-Shell tab bar on the ground with no navigation bar above pages; selected tab and title in ink, unselected in mute. The period switcher (month, year, arrows) is the top of the home and Insight.
+In portrait, the Shell tab bar sits on the ground with no navigation bar above pages. In phone landscape, a left rail replaces the tab bar. Selected tabs and titles use ink; unselected tabs use mute. The period switcher (month, year, arrows) is the top of the home and Insight.
 
 ### Settings rows
 `SettingsRow` has a `Kind`: **Info** (not tappable, no arrow), **Action** (tappable, runs in place, no arrow) and **Navigation** (tappable, trailing arrow, "Apri" as the accessibility hint). "Backup ed export" in `Dati` is a Navigation row to a pushed page of three titled sections ("Account Google", "File di backup", "Foglio di calcolo") that mixes all three kinds, with a note under the Info row. A finished save answers with a snackbar ("Salvato in Download: <name>"), not a page.
@@ -508,5 +510,4 @@ The category's colour in the editor, under a "Colore" field label between the na
 - **Don't** use Archivo Condensed ExtraBold for headings, or any face outside Archivo and Material Symbols Rounded.
 - **Don't** add uppercase labels, letter-spacing, or kickers above titles.
 - **Don't** round chart bars, line segments or category tiles, or draw data graphics with antialiased gaps.
-- **Don't** design for landscape; the app is locked to portrait.
 - **Don't** redraw or recolour the logo: the mark (a warm-white C ring with a coral segment, `docs/brand/`) is supplied by the owner.

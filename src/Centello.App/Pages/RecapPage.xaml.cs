@@ -1,3 +1,4 @@
+using Centello.App.Controls;
 using Centello.App.Controls.Recap;
 using Centello.App.Theming;
 using Centello.App.ViewModels;
@@ -21,6 +22,8 @@ public partial class RecapPage : ContentPage, IQueryAttributable
     private bool _isShowing;
     private bool _focusPending;
     private double _builtWidth;
+    private double _builtHeight;
+    private bool _builtLandscape;
 
     public RecapPage(RecapViewModel viewModel, IStoryBars bars, StoryTouches touches, IScreenReader screenReader)
     {
@@ -71,7 +74,7 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         }
 
         _isShowing = true;
-        UpdateNavigation();
+        UpdateNavigation(PhoneLandscape.IsActive(this));
         _player.IsActive = true;
         _player.IsVisible = true;
         await _viewModel.Load();
@@ -131,15 +134,16 @@ public partial class RecapPage : ContentPage, IQueryAttributable
 
     private void OnScreenReaderChanged(object? sender, EventArgs e)
     {
-        UpdateNavigation();
+        UpdateNavigation(PhoneLandscape.IsActive(this));
         _player.Refresh();
         ShowAndFocus();
     }
 
-    private void UpdateNavigation()
+    private void UpdateNavigation(bool landscape)
     {
-        NavigationButtons.IsVisible = !_player.IsAutomatic;
-        if (NavigationButtons.IsVisible)
+        var usesScreenReader = !_player.IsAutomatic;
+        NavigationButtons.IsVisible = landscape || usesScreenReader;
+        if (usesScreenReader)
             CardHost.GestureRecognizers.Remove(CardTap);
         else if (!CardHost.GestureRecognizers.Contains(CardTap))
             CardHost.GestureRecognizers.Add(CardTap);
@@ -147,7 +151,9 @@ public partial class RecapPage : ContentPage, IQueryAttributable
 
     private void Rebuild()
     {
-        if (Math.Abs(Width - _builtWidth) > 0.5)
+        var landscape = PhoneLandscape.IsActive(this);
+        if (_builtLandscape != landscape || Math.Abs(Width - _builtWidth) > 0.5 ||
+            (landscape && Math.Abs(Height - _builtHeight) > 0.5))
             Show();
     }
 
@@ -163,9 +169,12 @@ public partial class RecapPage : ContentPage, IQueryAttributable
             return;
 
         _builtWidth = Width;
+        _builtHeight = Height;
+        _builtLandscape = PhoneLandscape.IsActive(this);
+        UpdateNavigation(_builtLandscape);
         var card = story.Current;
         var ink = StoryInk.Of(card.Top, IsDark);
-        CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, OpenExpense, Exit, Restart));
+        CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, Height, _builtLandscape, OpenExpense, Exit, Restart));
         var index = story.Index;
         Progress.Show(index, story.Count, ink, _player.Fill);
         TitleLabel.TextColor = ink.Ink;

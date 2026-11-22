@@ -6,16 +6,47 @@
              xmlns:local="clr-namespace:Centello.App"
              xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
              x:Class="Centello.App.Pages.CategoriesPage"
+             x:Name="RootPage"
              Title="Categorie"
              SafeAreaEdges="All">
-    <Grid RowDefinitions="56,Auto,*">
-        <Label Margin="24,0" Text="Categorie" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
+    <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,Auto">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <c:PhoneLandscapeTrigger Page="{x:Reference RootPage}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="CreateCategory" Property="Grid.Row" Value="0" />
+                        <Setter TargetName="CreateCategory" Property="Grid.Column" Value="1" />
+                        <Setter TargetName="CreateCategory" Property="Grid.ColumnSpan" Value="1" />
+                        <Setter TargetName="CreateCategory" Property="Button.Margin" Value="8,4,16,4" />
+                        <Setter TargetName="CreateCategory" Property="Button.VerticalOptions" Value="Center" />
+                        <Setter TargetName="CreateCategory" Property="local:SnackbarAnchor.IsAnchor" Value="False" />
+                        <Setter TargetName="CategoryGrid" Property="GridItemsLayout.Span" Value="2" />
+                        <Setter TargetName="CategoryFooter" Property="BoxView.HeightRequest" Value="16" />
+                        <Setter TargetName="EmptyActive" Property="Layout.Padding" Value="16,8,16,24" />
+                        <Setter TargetName="EmptyArchived" Property="Layout.Padding" Value="16,8,16,24" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Portrait">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="True" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
 
-        <c:Segmented Grid.Row="1" Margin="24,4,24,8" Items="Attive,Archiviate" SelectedIndex="{Binding SegmentIndex}" />
+        <Label MinimumHeightRequest="56" Margin="24,0" Text="Categorie" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
 
-        <c:InlineError Grid.Row="2" Margin="24,8" VerticalOptions="Start" Text="{Binding ErrorMessage}" />
+        <c:Segmented Grid.Row="1" Grid.ColumnSpan="2" Margin="24,4,24,8" Items="Attive,Archiviate" SelectedIndex="{Binding SegmentIndex}" />
 
-        <CollectionView Grid.Row="2" ItemsSource="{Binding Rows}" SelectionMode="None" IsVisible="{Binding HasRows}">
+        <c:InlineError Grid.Row="2" Grid.ColumnSpan="2" Margin="24,8" VerticalOptions="Start" Text="{Binding ErrorMessage}" />
+
+        <CollectionView x:Name="CategoryList" Grid.Row="2" Grid.ColumnSpan="2" ItemsSource="{Binding Rows}" SelectionMode="None" IsVisible="{Binding HasRows}">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout x:Name="CategoryGrid" Orientation="Vertical" Span="1" />
+            </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid Margin="24,0" MinimumHeightRequest="58" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
@@ -36,22 +67,26 @@
             </CollectionView.ItemTemplate>
             <!-- The last 88 keep the last row clear of the button that floats over the list. -->
             <CollectionView.Footer>
-                <BoxView HeightRequest="88" Color="Transparent" />
+                <BoxView x:Name="CategoryFooter" HeightRequest="88" Color="Transparent" />
             </CollectionView.Footer>
         </CollectionView>
 
-        <VerticalStackLayout Grid.Row="2" Padding="32,56,32,24" IsVisible="{Binding HasNoActive}">
-            <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.Category}" TextColor="{t:Theme Mute}" />
-            <Label Text="Nessuna categoria" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
-            <Label Text="Crea la prima categoria per iniziare a registrare le spese." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
-        </VerticalStackLayout>
+        <ScrollView Grid.Row="2" Grid.ColumnSpan="2" IsVisible="{Binding HasNoActive}">
+            <VerticalStackLayout x:Name="EmptyActive" Padding="32,56,32,24">
+                <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.Category}" TextColor="{t:Theme Mute}" />
+                <Label Text="Nessuna categoria" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+                <Label Text="Crea la prima categoria per iniziare a registrare le spese." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
 
-        <VerticalStackLayout Grid.Row="2" Padding="32,56,32,24" IsVisible="{Binding HasNoArchived}">
-            <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.Archive}" TextColor="{t:Theme Mute}" />
-            <Label Text="Nessuna categoria archiviata" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
-            <Label Text="Quando archivi una categoria la trovi qui, con le sue spese." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
-        </VerticalStackLayout>
+        <ScrollView Grid.Row="2" Grid.ColumnSpan="2" IsVisible="{Binding HasNoArchived}">
+            <VerticalStackLayout x:Name="EmptyArchived" Padding="32,56,32,24">
+                <Label Style="{StaticResource IconGlyph}" FontSize="40" Text="{x:Static app:MaterialSymbols.Archive}" TextColor="{t:Theme Mute}" />
+                <Label Text="Nessuna categoria archiviata" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" HorizontalTextAlignment="Center" />
+                <Label Text="Quando archivi una categoria la trovi qui, con le sue spese." Style="{StaticResource Lead}" Margin="0,4,0,0" MaximumWidthRequest="260" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
 
-        <Button Grid.Row="2" Text="Nuova categoria" Style="{StaticResource ExtendedFab}" Margin="0,0,16,16" HorizontalOptions="End" VerticalOptions="End" IsVisible="{Binding IsActiveView}" Clicked="OnNewCategoryClicked" local:SnackbarAnchor.IsAnchor="True" />
+        <Button x:Name="CreateCategory" Grid.Row="2" Grid.ColumnSpan="2" Text="Nuova categoria" Style="{StaticResource ExtendedFab}" Margin="0,0,16,16" HorizontalOptions="End" VerticalOptions="End" IsVisible="{Binding IsActiveView}" Clicked="OnNewCategoryClicked" local:SnackbarAnchor.IsAnchor="True" />
     </Grid>
 </ContentPage>

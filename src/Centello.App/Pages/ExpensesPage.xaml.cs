@@ -15,6 +15,7 @@ public partial class ExpensesPage : ContentPage, IQueryAttributable
         InitializeComponent();
         _viewModel = viewModel;
         BindingContext = viewModel;
+        BrowseLayout.FindTrigger(PageLayout).IsActiveChanged += (_, _) => ShowSelectedChip();
     }
 
     /// <summary>The route that opens the history on a month, listing one category or all of them.</summary>

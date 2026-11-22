@@ -1,3 +1,4 @@
+using Centello.App.Controls;
 using Centello.App.ViewModels;
 using Centello.Application;
 
@@ -7,6 +8,8 @@ public partial class InsightsPage : ContentPage
 {
     private readonly InsightsViewModel _viewModel;
     private readonly IScreenReader _screenReader;
+    private readonly PhoneLandscapeTrigger _landscapeTrigger;
+    private readonly BrowseScrollAnchor _scrollAnchor;
     private bool _restoreRecapFocus;
 
     public InsightsPage(InsightsViewModel viewModel, IScreenReader screenReader)
@@ -15,6 +18,33 @@ public partial class InsightsPage : ContentPage
         _viewModel = viewModel;
         _screenReader = screenReader;
         BindingContext = viewModel;
+        _scrollAnchor = new BrowseScrollAnchor(InsightsSummary, InsightsReports);
+        _landscapeTrigger = BrowseLayout.FindTrigger(PageLayout);
+        _landscapeTrigger.IsActiveChanged += OnLandscapeChanged;
+    }
+
+    private void OnLandscapeChanged(object? sender, EventArgs e)
+    {
+        _scrollAnchor.CaptureBeforeReflow();
+        ArrangePanes();
+        _scrollAnchor.RestoreAfterLayout();
+    }
+
+    private void ArrangePanes()
+    {
+        if (_landscapeTrigger.IsActive)
+        {
+            PageLayout.Children.Remove(PeriodSelector);
+            SummaryBody.Children.Insert(0, PeriodSelector);
+            Spending.Children.Remove(Reports);
+            InsightsReports.Content = Reports;
+            return;
+        }
+
+        SummaryBody.Children.Remove(PeriodSelector);
+        PageLayout.Children.Insert(1, PeriodSelector);
+        InsightsReports.Content = null;
+        Spending.Children.Add(Reports);
     }
 
     protected override async void OnAppearing()

@@ -22,8 +22,20 @@
                               FontFamily="{x:Static t:Fonts.CondensedExtraBold}"
                               FontSize="60"
                               FontAutoScalingEnabled="False"
-                              SemanticProperties.Description="Importo in euro" />
-                <Label x:Name="Euro" Text="€" FontFamily="{x:Static t:Fonts.CondensedExtraBold}" FontSize="34" FontAutoScalingEnabled="False" VerticalOptions="End" AutomationProperties.IsInAccessibleTree="False" />
+                              SemanticProperties.Description="Importo in euro">
+                    <c:PlainEntry.Triggers>
+                        <DataTrigger TargetType="c:PlainEntry" Binding="{Binding IsCompact, Source={x:Reference Root}}" Value="True">
+                            <Setter Property="FontSize" Value="38" />
+                        </DataTrigger>
+                    </c:PlainEntry.Triggers>
+                </c:PlainEntry>
+                <Label x:Name="Euro" Text="€" FontFamily="{x:Static t:Fonts.CondensedExtraBold}" FontSize="34" FontAutoScalingEnabled="False" VerticalOptions="End" AutomationProperties.IsInAccessibleTree="False">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding IsCompact, Source={x:Reference Root}}" Value="True">
+                            <Setter Property="FontSize" Value="24" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
             </HorizontalStackLayout>
         </Grid>
         <BoxView x:Name="Underline" HeightRequest="2" />

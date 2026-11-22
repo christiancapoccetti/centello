@@ -1,6 +1,7 @@
-﻿using Android.App;
+using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Android.Content.Res;
 using Android.OS;
 using Android.Views;
 using Centello.Application;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centello.App;
 
 // Android launchers and scheduled intents keep the Java component names from the published manifest.
-[Activity(Name = "crc64d73031b65ce57f40.MainActivity", Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ScreenOrientation = ScreenOrientation.Portrait, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+[Activity(Name = "crc64d73031b65ce57f40.MainActivity", Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 public class MainActivity : MauiAppCompatActivity
 {
     private static Microsoft.Maui.Controls.Application? App => Microsoft.Maui.Controls.Application.Current;
@@ -26,6 +27,12 @@ public class MainActivity : MauiAppCompatActivity
 
         app.RequestedThemeChanged += OnRequestedThemeChanged;
         app.ModalPushed += OnModalPushed;
+    }
+
+    public override void OnConfigurationChanged(Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        ApplySystemBars();
     }
 
     protected override void OnNewIntent(Intent? intent)

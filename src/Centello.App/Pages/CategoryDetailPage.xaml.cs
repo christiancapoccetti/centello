@@ -1,3 +1,4 @@
+using Centello.App.Controls;
 using Centello.App.ViewModels;
 using Centello.Application;
 
@@ -8,6 +9,7 @@ namespace Centello.App.Pages;
 public partial class CategoryDetailPage : ContentPage, IQueryAttributable
 {
     private readonly CategoryDetailViewModel _viewModel;
+    private readonly PhoneLandscapeTrigger _landscapeTrigger;
     private bool _isInitialized;
 
     public CategoryDetailPage(CategoryDetailViewModel viewModel)
@@ -15,6 +17,22 @@ public partial class CategoryDetailPage : ContentPage, IQueryAttributable
         InitializeComponent();
         _viewModel = viewModel;
         BindingContext = viewModel;
+        _landscapeTrigger = BrowseLayout.FindTrigger(PageLayout);
+        _landscapeTrigger.IsActiveChanged += OnLandscapeChanged;
+    }
+
+    // The same expense collection stays mounted while its summary moves beside it.
+    private void OnLandscapeChanged(object? sender, EventArgs e)
+    {
+        if (_landscapeTrigger.IsActive)
+        {
+            MovementHeader.Children.Remove(Summary);
+            CategorySummary.Content = Summary;
+            return;
+        }
+
+        CategorySummary.Content = null;
+        MovementHeader.Children.Insert(0, Summary);
     }
 
     /// <summary>The route that opens a category on a month or on a year.</summary>
