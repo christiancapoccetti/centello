@@ -1,6 +1,6 @@
 # Google Play Console answers
 
-What to enter in Play Console for the first release on the internal testing track. `<NAME>` stands for the app name, which is still to be chosen: Centesimo and Quattrino both clash with existing finance apps or marks. Play Console labels change often; check each answer against the current form.
+What to enter in Play Console for the first release on the internal testing track. The closed beta uses the name Centesimo; `<NAME>` in the listing texts stands for the final name, still to be chosen, since Centesimo and Quattrino both clash with existing finance apps or marks. Play Console labels change often; check each answer against the current form.
 
 ## Account
 
