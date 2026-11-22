@@ -28,6 +28,8 @@ public partial class TodayPage : ContentPage
         _photos = photos;
         _snackbar = snackbar;
         viewModel.CanTakePhoto = PhotoPicker.CanCapture;
+        // The scroll anchor can be a generated row in the section that changes parents.
+        Activity.BindingContext = viewModel;
         BindingContext = viewModel;
         _scrollAnchor = new BrowseScrollAnchor(TodayOverview, TodayActivity);
         _landscapeTrigger = BrowseLayout.FindTrigger(PageLayout);

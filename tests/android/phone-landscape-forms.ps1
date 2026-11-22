@@ -89,30 +89,65 @@ function Get-Window {
     return [xml] ((Invoke-Device -Arguments @('shell', 'cat', $dumpPath)) -join [Environment]::NewLine)
 }
 
+function Get-DisplayRotation {
+    $defaultDisplay = $false
+    foreach ($line in (Invoke-Device -Arguments @('shell', 'dumpsys', 'window', 'displays'))) {
+        if ($line -match '^\s*Display:\s+mDisplayId=(\d+)\b') {
+            $defaultDisplay = $Matches[1] -eq '0'
+            continue
+        }
+
+        if ($defaultDisplay -and $line -match '^\s*mRotation=([0-3]|ROTATION_(?:0|90|180|270))\b') {
+            switch ($Matches[1]) {
+                'ROTATION_0' { return 0 }
+                'ROTATION_90' { return 1 }
+                'ROTATION_180' { return 2 }
+                'ROTATION_270' { return 3 }
+                default { return [int] $Matches[1] }
+            }
+        }
+    }
+
+    return -1
+}
+
 function Wait-Draft {
     param(
         [string] $Text,
-        [bool] $ExpectLandscape
+        [int] $Rotation
     )
 
     for ($attempt = 0; $attempt -lt 8; $attempt++) {
+        $actualRotation = Get-DisplayRotation
+        if ($actualRotation -ne $Rotation) {
+            Start-Sleep -Milliseconds 250
+            continue
+        }
+
         $window = Get-Window
         $input = $window.SelectNodes('//node[@focused="true" and @class="android.widget.EditText"]') |
-            Where-Object { $_.text -ceq $Text }
+            Where-Object {
+                $label = $_.'content-desc'
+                $_.text -ceq $Text -or ($label -and $_.text -ceq "$label, $Text")
+            }
         $save = $window.SelectNodes('//node') | Where-Object {
             $_.text -ceq $SaveText -or $_.'content-desc' -ceq $SaveText
         }
         $landscape = $window.SelectNodes('//node[@text="Categoria"]') | Where-Object {
             $_.bounds -match '^\[(\d+),' -and [int] $Matches[1] -gt 200
         }
-        if ($input -and $save -and (!$ExpectLandscape -or $landscape)) {
+        $ime = (Invoke-Device -Arguments @('shell', 'dumpsys', 'input_method')) -join [Environment]::NewLine
+        $keyboardShown = $ime -match '\bm(?:IsInputViewShown|InputShown)=true\b'
+        $fullscreen = $ime -match '\bm(?:IsFullscreen|InFullscreenMode)=true\b'
+        $inline = $ime -match '\bm(?:IsFullscreen|InFullscreenMode)=false\b' -and !$fullscreen
+        if ($input -and $save -and $keyboardShown -and $inline -and ($Rotation -eq 0 -or $landscape)) {
             return
         }
 
         Start-Sleep -Milliseconds 250
     }
 
-    throw "Expected the focused draft '$Text' and visible '$SaveText' after rotation."
+    throw "Expected the focused draft '$Text' and visible '$SaveText' with the keyboard shown inline at display rotation $Rotation (reported $actualRotation)."
 }
 
 if ($DraftText -notmatch '^[a-zA-Z]{3,}$') {
@@ -124,16 +159,16 @@ $initialAutoRotate = (Invoke-Device -Arguments @('shell', 'settings', 'get', 'sy
 $draftWithMarker = $DraftText.Insert(1, 'X')
 $markerInserted = $false
 try {
-    Wait-Draft -Text $DraftText -ExpectLandscape $false
+    Wait-Draft -Text $DraftText -Rotation 0
     Invoke-Device -Arguments @('shell', 'settings', 'put', 'system', 'accelerometer_rotation', '0') | Out-Null
     Invoke-Device -Arguments @('shell', 'input', 'keyevent', 'KEYCODE_MOVE_HOME', 'KEYCODE_DPAD_RIGHT') | Out-Null
 
     foreach ($rotation in '1', '3', '0') {
         Invoke-Device -Arguments @('shell', 'settings', 'put', 'system', 'user_rotation', $rotation) | Out-Null
-        Wait-Draft -Text $DraftText -ExpectLandscape ($rotation -ne '0')
+        Wait-Draft -Text $DraftText -Rotation $rotation
         Invoke-Device -Arguments @('shell', 'input', 'text', 'X') | Out-Null
         $markerInserted = $true
-        Wait-Draft -Text $draftWithMarker -ExpectLandscape ($rotation -ne '0')
+        Wait-Draft -Text $draftWithMarker -Rotation $rotation
         Invoke-Device -Arguments @('shell', 'input', 'keyevent', 'KEYCODE_DEL') | Out-Null
         $markerInserted = $false
     }

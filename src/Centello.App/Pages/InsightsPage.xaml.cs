@@ -17,6 +17,8 @@ public partial class InsightsPage : ContentPage
         InitializeComponent();
         _viewModel = viewModel;
         _screenReader = screenReader;
+        // The scroll anchor can be a generated row in the section that changes parents.
+        Reports.BindingContext = viewModel;
         BindingContext = viewModel;
         _scrollAnchor = new BrowseScrollAnchor(InsightsSummary, InsightsReports);
         _landscapeTrigger = BrowseLayout.FindTrigger(PageLayout);

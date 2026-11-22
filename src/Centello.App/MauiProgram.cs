@@ -1,3 +1,4 @@
+using Centello.App.Controls;
 using Centello.App.Theming;
 using Centello.Application;
 using Centello.Infrastructure;
@@ -16,7 +17,9 @@ public static class MauiProgram
 #if ANDROID
         TabularFigures.Register();
         PlainEntryAppearance.Register();
-        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Shell, CentelloShellRenderer>());
+        builder.ConfigureMauiHandlers(handlers => handlers
+            .AddHandler<Shell, CentelloShellRenderer>()
+            .AddHandler<PlainEntry, PlainEntryHandler>());
 #endif
 
         // Updates must open the database already present on installations of the published app.
