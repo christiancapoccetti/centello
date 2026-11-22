@@ -1,12 +1,12 @@
 ---
-title: Quattrino privacy policy
+title: Centesimo privacy policy
 ---
 
-# Quattrino privacy policy
+# Centesimo privacy policy
 
 Last updated: 21 November 2026
 
-Quattrino is an Android app for tracking personal expenses, developed by Christian Capoccetti as a personal project. This policy explains what data the app uses, where it goes and what choices you have.
+Centesimo is an Android app for tracking personal expenses, developed by Christian Capoccetti as a personal project. This policy explains what data the app uses, where it goes and what choices you have.
 
 ## In short
 
@@ -36,7 +36,7 @@ Data is sent only when you use voice, a photo or a PDF, after you have entered y
 
 Your other expenses and the database are never sent. Data is encrypted in transit (HTTPS).
 
-Because the request uses your own key, it falls under your relationship with OpenAI and its terms and [privacy policy](https://openai.com/policies/). OpenAI may keep data received through its API for a limited time to monitor abuse. Quattrino does not save it.
+Because the request uses your own key, it falls under your relationship with OpenAI and its terms and [privacy policy](https://openai.com/policies/). OpenAI may keep data received through its API for a limited time to monitor abuse. Centesimo does not save it.
 
 Manual entry always works, without a key and without a connection.
 
@@ -63,7 +63,7 @@ The developer does not receive your data, so there is no data held by the develo
 
 ## Children
 
-Quattrino is not intended for children under 14.
+Centesimo is not intended for children under 14.
 
 ## Changes
 

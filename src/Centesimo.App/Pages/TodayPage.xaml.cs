@@ -9,7 +9,7 @@ public partial class TodayPage : ContentPage
     private readonly ExpenseDraftService _drafts;
     private readonly OpenAiSettings _settings;
     private readonly PhotoPicker _photos;
-    private const string MicrophoneRationale = "Quattrino usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.";
+    private const string MicrophoneRationale = "Centesimo usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.";
 
     private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;

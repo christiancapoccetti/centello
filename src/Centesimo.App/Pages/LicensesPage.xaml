@@ -19,11 +19,11 @@
             <VerticalStackLayout Padding="0,0,0,24">
                 <VerticalStackLayout Margin="24,8,24,12">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                        <Image WidthRequest="40" HeightRequest="40" Margin="-6,0,0,0" VerticalOptions="Center" Source="{AppThemeBinding Light=segno_su_chiaro.png, Dark=segno_su_scuro.png}" SemanticProperties.Description="Segno di Quattrino" />
-                        <Label Grid.Column="1" Text="Quattrino" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
+                        <Image WidthRequest="40" HeightRequest="40" Margin="-6,0,0,0" VerticalOptions="Center" Source="{AppThemeBinding Light=segno_su_chiaro.png, Dark=segno_su_scuro.png}" SemanticProperties.Description="Segno di Centesimo" />
+                        <Label Grid.Column="1" Text="Centesimo" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
                     </Grid>
                     <Label Text="Codice sorgente pubblico con licenza PolyForm Noncommercial 1.0.0: puoi leggerlo, usarlo, modificarlo e condividerlo solo per scopi non commerciali. L'uso commerciale non è consentito." FontSize="15" LineHeight="1.5" Margin="0,8,0,0" />
-                    <Label Text="Il nome Quattrino e il logo non sono concessi in licenza. Il programma è fornito così com'è, SENZA ALCUNA GARANZIA." FontSize="15" LineHeight="1.5" Margin="0,8,0,0" />
+                    <Label Text="Il nome Centesimo e il logo non sono concessi in licenza. Il programma è fornito così com'è, SENZA ALCUNA GARANZIA." FontSize="15" LineHeight="1.5" Margin="0,8,0,0" />
                     <Label Text="Copyright © 2026 Christian Capoccetti" Style="{StaticResource Caption}" FontSize="14" Margin="0,8,0,0" />
                     <!-- The link is what the person reads and the button over it is what they touch. -->
                     <Grid MinimumHeightRequest="48" HorizontalOptions="Start" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">

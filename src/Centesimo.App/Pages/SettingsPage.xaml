@@ -35,11 +35,11 @@
                         <Button Text="Annulla" Style="{StaticResource TextActionButton}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="16" IsVisible="{Binding IsReplacing}" Clicked="OnCancelReplaceClicked" />
                     </FlexLayout>
                 </VerticalStackLayout>
-                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Cloud}" Text="Audio, foto, PDF e testo della spesa vengono inviati a OpenAI; Quattrino non salva né l'audio né le foto né i PDF e le spese restano sul telefono." />
+                <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Cloud}" Text="Audio, foto, PDF e testo della spesa vengono inviati a OpenAI; Centesimo non salva né l'audio né le foto né i PDF e le spese restano sul telefono." />
 
                 <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Info}" Title="{Binding VersionText}" />
-                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Description}" Title="Licenze" Detail="Quattrino e componenti open source" Kind="Navigation" Tapped="OnLicensesTapped" />
+                <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Description}" Title="Licenze" Detail="Centesimo e componenti open source" Kind="Navigation" Tapped="OnLicensesTapped" />
                 <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Visibility}" Title="Informativa sulla privacy" Detail="Si apre nel browser" Kind="Action" Tapped="OnPrivacyPolicyTapped" />
             </VerticalStackLayout>
         </ScrollView>

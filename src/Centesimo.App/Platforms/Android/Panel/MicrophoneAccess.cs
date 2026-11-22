@@ -4,7 +4,7 @@ namespace Centesimo.App;
 
 internal sealed class MicrophoneAccess(IConfirmation confirmation) : IMicrophoneAccess
 {
-    private const string Rationale = "Quattrino usa il microfono solo mentre il pannello è aperto. " +
+    private const string Rationale = "Centesimo usa il microfono solo mentre il pannello è aperto. " +
         "L'audio registrato viene inviato a OpenAI per la trascrizione.";
 
     public async Task<bool> Ensure()

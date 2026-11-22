@@ -108,7 +108,7 @@ public sealed class PanelFaces_should_expected_behavior
                 "Lettura della foto",
                 "Cerco importo, data e negozio…",
                 MaterialSymbols.ReceiptLong,
-                "Foto inviata a OpenAI, Quattrino non la salva"),
+                "Foto inviata a OpenAI, Centesimo non la salva"),
             face);
     }
 
@@ -122,7 +122,7 @@ public sealed class PanelFaces_should_expected_behavior
                 "Lettura del PDF",
                 "Cerco importo, data e negozio…",
                 MaterialSymbols.ReceiptLong,
-                "PDF inviato a OpenAI, Quattrino non lo salva"),
+                "PDF inviato a OpenAI, Centesimo non lo salva"),
             face);
     }
 
