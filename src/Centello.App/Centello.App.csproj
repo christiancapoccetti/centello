@@ -46,6 +46,10 @@
     <Error Condition="!Exists('$(PLAY_UPLOAD_KEYSTORE)')" Text="The upload key was not found at PLAY_UPLOAD_KEYSTORE: $(PLAY_UPLOAD_KEYSTORE)" />
   </Target>
 
+  <ItemGroup Condition="'$(FirebaseAndroidConfigFile)' != ''">
+    <AndroidAsset Include="$(FirebaseAndroidConfigFile)" Link="Assets/firebase-android.json" />
+  </ItemGroup>
+
   <ItemGroup>
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#141516" BaseSize="128,128" />
     <MauiFont Include="Resources\Fonts\*" />
@@ -63,6 +67,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Centello.Application\Centello.Application.csproj" />
+    <ProjectReference Include="..\Centello.FirebaseAi.Android\Centello.FirebaseAi.Android.csproj" />
     <ProjectReference Include="..\Centello.Infrastructure\Centello.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

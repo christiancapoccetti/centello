@@ -3,6 +3,7 @@
     <Project Path="src/Centello.App/Centello.App.csproj" />
     <Project Path="src/Centello.Application/Centello.Application.csproj" />
     <Project Path="src/Centello.Domain/Centello.Domain.csproj" />
+    <Project Path="src/Centello.FirebaseAi.Android/Centello.FirebaseAi.Android.csproj" />
     <Project Path="src/Centello.Infrastructure/Centello.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
