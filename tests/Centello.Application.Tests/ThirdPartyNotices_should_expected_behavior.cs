@@ -83,17 +83,24 @@ public sealed class ThirdPartyNotices_should_expected_behavior
 
         Assert.Equal(
             [".NET runtime, .NET for Android, .NET MAUI, Entity Framework Core and Microsoft.Data.Sqlite", "SQLite", "SQLitePCLRaw",
-                "AndroidX and Material Components for Android", "Glide", "Glide DiskLruCache", "Glide GIF decoder",
-                "Gson, Tink, Guava ListenableFuture and Error Prone annotations", "Protobuf Lite (shaded in Tink Android)",
-                "Kotlin standard library, kotlinx.coroutines, kotlinx.serialization and JetBrains annotations",
+                "AndroidX, including DataStore, and Material Components for Android", "Glide", "Glide DiskLruCache", "Glide GIF decoder",
+                "Gson, Tink, Guava ListenableFuture and Error Prone annotations", "Protobuf Lite (shaded in Tink Android and AndroidX DataStore)",
+                "Kotlin standard library, kotlinx.coroutines, kotlinx.io, kotlinx.serialization and JetBrains annotations",
                 "ThreeTenBP (code in the Kotlin standard library)", "Boost math functions (code in the Kotlin standard library)",
-                "JSpecify and JSR 305 annotations", "Archivo fonts (Regular, SemiBold, Bold, Condensed ExtraBold)",
+                "JSpecify and JSR 305 annotations",
+                "Firebase AI Logic (18.2.0), Firebase App Check (20.1.0), Firebase Common, Components and Annotations",
+                "Google Play services Base and Basement (18.9.0), Tasks (18.4.0), and Firebase Auth Interop (18.0.0)",
+                "Google Play Integrity (1.4.0, Play variant)", "Google Play Core Common (2.0.4, Play variant)",
+                "Ktor (3.2.4)", "OkHttp (4.12.0) and Okio (3.12.0)", "javax.inject (1)",
+                "SLF4J API and NOP provider (2.0.17)", "Reactive Streams (1.0.4)", "Archivo fonts (Regular, SemiBold, Bold, Condensed ExtraBold)",
                 "Material Symbols Rounded icon font (static subset)"],
             components.Select(component => component.Name));
         Assert.Equal(
             ["MIT License", "Pubblico dominio", "Apache License 2.0", "Apache License 2.0", "BSD 2-Clause License", "Apache License 2.0",
                 "MIT License", "Apache License 2.0", "BSD-3-Clause (Protobuf Lite)", "Apache License 2.0", "BSD-3-Clause (ThreeTenBP)",
-                "Boost Software License 1.0", "Apache License 2.0", "SIL Open Font License 1.1", "Apache License 2.0"],
+                "Boost Software License 1.0", "Apache License 2.0", "Apache License 2.0", "Android Software Development Kit License",
+                "Play Integrity API Terms of Service", "Play Core Software Development Kit Terms of Service", "Apache License 2.0",
+                "Apache License 2.0", "Apache License 2.0", "MIT License", "MIT No Attribution", "SIL Open Font License 1.1", "Apache License 2.0"],
             components.Select(component => component.License));
         Assert.Contains("Permission is hereby granted, free of charge", components[0].Text);
         Assert.DoesNotContain("\nPermission is hereby granted", components[1].Text);
@@ -105,7 +112,7 @@ public sealed class ThirdPartyNotices_should_expected_behavior
     public void Keep_the_distinct_bsd_3_clause_notices_with_their_components()
     {
         var components = ReadAppNotices();
-        var protobuf = Assert.Single(components, component => component.Name == "Protobuf Lite (shaded in Tink Android)");
+        var protobuf = Assert.Single(components, component => component.Name == "Protobuf Lite (shaded in Tink Android and AndroidX DataStore)");
         var threeTen = Assert.Single(components, component => component.Name == "ThreeTenBP (code in the Kotlin standard library)");
 
         Assert.Contains("Copyright 2008 Google Inc.", protobuf.Text);
