@@ -32,13 +32,17 @@ public sealed class RecurringPaymentRepository(CentelloDbContext context)
                     && (!payment.EndsOn.HasValue || payment.NextDueOn <= payment.EndsOn.Value))
                 .ToListAsync(token), cancellationToken);
 
-    public Task<Result<bool>> HasRecordedOccurrenceOn(DateOnly dueOn,
+    public Task<Result<IReadOnlyList<RecordedPaymentLabel>>> GetRecordedPaymentLabels(DateOnly dueOn,
         CancellationToken cancellationToken = default) =>
-        UseContext((db, token) => db.RecurrenceOccurrences
-            .AsNoTracking()
-            .AnyAsync(occurrence => occurrence.DueOn == dueOn
-                && db.RecurringPayments.Any(payment => payment.RecurringPaymentId == occurrence.RecurringPaymentId
-                    && !payment.IsSuspended), token), cancellationToken);
+        UseContext<IReadOnlyList<RecordedPaymentLabel>>(async (db, token) =>
+        {
+            var labels = from occurrence in db.RecurrenceOccurrences.AsNoTracking()
+                         join payment in db.RecurringPayments on occurrence.RecurringPaymentId equals payment.RecurringPaymentId
+                         join category in db.Categories on payment.CategoryId equals category.CategoryId
+                         where occurrence.DueOn == dueOn && !payment.IsSuspended
+                         select new RecordedPaymentLabel(payment.Note, category.Name);
+            return await labels.ToListAsync(token);
+        }, cancellationToken);
 
     public async Task<Result> Update(Guid recurringPaymentId, Func<RecurringPayment, Result> update,
         CancellationToken cancellationToken = default)

@@ -56,9 +56,15 @@ internal sealed class FakeRecurringPaymentRepository : IRecurringPaymentReposito
     public Task<Result<RecurringPayment?>> Get(Guid id, CancellationToken token = default) => Task.FromResult(Failure is null ? Result<RecurringPayment?>.Success(Items.SingleOrDefault(x => x.RecurringPaymentId == id)) : Result<RecurringPayment?>.Failure(Failure));
     public Task<Result<IReadOnlyList<RecurringPayment>>> GetAll(CancellationToken token = default) => Task.FromResult(Failure is null ? Result<IReadOnlyList<RecurringPayment>>.Success(Items.OrderBy(x => x.NextDueOn).ToList()) : Result<IReadOnlyList<RecurringPayment>>.Failure(Failure));
     public Task<Result<IReadOnlyList<RecurringPayment>>> GetDue(DateOnly throughDate, CancellationToken token = default) => Task.FromResult(Result<IReadOnlyList<RecurringPayment>>.Success(Items.Where(x => !x.IsSuspended && x.NextDueOn <= throughDate && (!x.EndsOn.HasValue || x.NextDueOn <= x.EndsOn.Value)).ToList()));
-    public Task<Result<bool>> HasRecordedOccurrenceOn(DateOnly dueOn, CancellationToken token = default) =>
-        Task.FromResult(Result<bool>.Success(RecordedOccurrences.Any(occurrence => occurrence.DueOn == dueOn
-            && Items.Any(payment => payment.RecurringPaymentId == occurrence.RecurringPaymentId && !payment.IsSuspended))));
+    public Task<Result<IReadOnlyList<RecordedPaymentLabel>>> GetRecordedPaymentLabels(DateOnly dueOn,
+        CancellationToken token = default)
+    {
+        var labels = from occurrence in RecordedOccurrences
+                     join payment in Items on occurrence.RecurringPaymentId equals payment.RecurringPaymentId
+                     where occurrence.DueOn == dueOn && !payment.IsSuspended
+                     select new RecordedPaymentLabel(payment.Note, "Categoria");
+        return Task.FromResult(Result<IReadOnlyList<RecordedPaymentLabel>>.Success(labels.ToList()));
+    }
 
     public async Task<Result> Update(Guid recurringPaymentId, Func<RecurringPayment, Result> update,
         CancellationToken token = default)

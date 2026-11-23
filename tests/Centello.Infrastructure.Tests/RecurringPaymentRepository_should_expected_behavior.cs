@@ -27,32 +27,35 @@ public sealed class RecurringPaymentRepository_should_expected_behavior
         Assert.Equal(ongoing.RecurringPaymentId, Assert.Single(result.Value).RecurringPaymentId);
     }
 
-    [Fact]
-    public async Task Find_an_occurrence_after_advancing_the_payment_but_ignore_paused_payments_and_other_days()
+    [Theory]
+    [InlineData("Luce", "Luce")]
+    [InlineData("", "Bollette")]
+    public async Task Return_the_recorded_payment_label_but_ignore_paused_payments_and_other_days(
+        string note, string expectedName)
     {
         using var database = new TestDatabase();
         var repository = new RecurringPaymentRepository(database.Context);
         var categoryId = Guid.NewGuid();
         var dueOn = new DateOnly(2026, 8, 31);
         await new CategoryRepository(database.Context).Add(
-            new Category(categoryId, "Bills", "receipt", "#123456"), []);
+            new Category(categoryId, "Bollette", "receipt", "#123456"), []);
         var payment = new RecurringPayment(Guid.NewGuid(), categoryId, new Money(100),
-            RecurrenceFrequency.Monthly, dueOn);
+            RecurrenceFrequency.Monthly, dueOn, note: note);
         await repository.Add(payment);
-        Assert.False((await repository.HasRecordedOccurrenceOn(dueOn)).Value);
+        Assert.Empty((await repository.GetRecordedPaymentLabels(dueOn)).Value);
 
         var processed = await new RecurringOccurrenceProcessor(database.Context)
             .Process(payment.RecurringPaymentId, dueOn);
         Assert.Equal(RecurringOccurrenceOutcome.Created, processed.Value);
-        Assert.True((await repository.HasRecordedOccurrenceOn(dueOn)).Value);
-        Assert.False((await repository.HasRecordedOccurrenceOn(dueOn.AddDays(1))).Value);
+        Assert.Equal(expectedName, Assert.Single((await repository.GetRecordedPaymentLabels(dueOn)).Value).Name);
+        Assert.Empty((await repository.GetRecordedPaymentLabels(dueOn.AddDays(1))).Value);
 
         await repository.Update(payment.RecurringPaymentId, current =>
         {
             current.Suspend();
             return Result.Success();
         });
-        Assert.False((await repository.HasRecordedOccurrenceOn(dueOn)).Value);
+        Assert.Empty((await repository.GetRecordedPaymentLabels(dueOn)).Value);
     }
 
     [Fact]

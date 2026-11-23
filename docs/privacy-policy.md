@@ -47,7 +47,7 @@ OpenAI processes the requests under the terms that apply to your API account. Ce
 
 - **Microphone.** Centello uses it to record an expense you dictate.
 - **Camera.** Centello uses it when you choose to take a photo of an expense. Android's pickers give Centello access to the photo or PDF you select.
-- **Notifications.** Centello posts local recap and recurring payment reminders. Open Centello to view expense and payment details. You can control recap reminders in **Impostazioni** and notification display through Android settings, including what appears on your lock screen.
+- **Notifications.** Centello posts local recap and recurring payment notifications. For one recorded payment, the notification shows its note or, if the note is empty, its category name. For multiple payments, it shows the count. Tap the notification to open **Oggi**. You can control recap reminders in **Impostazioni** and notification display in Android settings.
 - **Internet and network state.** Centello uses these to reach OpenAI for the optional entry features. If you open this policy from the app, your browser loads it separately.
 - **Run at startup.** Centello uses Android's startup signal to reschedule local reminders after a restart.
 

@@ -25,9 +25,10 @@ public sealed class AndroidRecurringPaymentReminder : IRecurringPaymentReminder
 
         var now = DateTime.Now;
         var next = schedule.NextDueAt;
-        if (schedule.NotifyAt is { } notifyAt && notifyAt.Date == now.Date
+        if (schedule.Notice is { } notice && notice.NotifyAt.Date == now.Date
             && notifications is not null && CanPost(notifications))
         {
+            var notifyAt = notice.NotifyAt;
             var dayKey = notifyAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             var lastPostedDay = preferences.GetString(LastPostedDayKey, "") ?? "";
             if (lastPostedDay != dayKey)
@@ -36,7 +37,7 @@ public sealed class AndroidRecurringPaymentReminder : IRecurringPaymentReminder
                     next = notifyAt;
                 else
                 {
-                    Post(context, notifications, dayKey);
+                    Post(context, notifications, dayKey, notice);
                     if (lastPostedDay.Length > 0)
                         notifications.Cancel(lastPostedDay, NotificationId);
 
@@ -57,14 +58,14 @@ public sealed class AndroidRecurringPaymentReminder : IRecurringPaymentReminder
         && (!OperatingSystem.IsAndroidVersionAtLeast(26)
             || manager.GetNotificationChannel(ChannelId)?.Importance != NotificationImportance.None);
 
-    private static void Post(Context context, NotificationManager manager, string dayKey)
+    private static void Post(Context context, NotificationManager manager, string dayKey, RecurringPaymentNotice notice)
     {
         var builder = OperatingSystem.IsAndroidVersionAtLeast(26)
             ? new Notification.Builder(context, EnsureChannel(manager))
             : new Notification.Builder(context);
         manager.Notify(dayKey, NotificationId, builder
-            .SetContentTitle("Promemoria Centello")
-            .SetContentText("Apri Centello per vedere i pagamenti di oggi.")
+            .SetContentTitle(notice.Title)
+            .SetContentText(notice.Text)
             .SetSmallIcon(Resource.Drawable.ic_stat_centello)
             .SetContentIntent(EntryLinks.Pending(context, new AppEntry.Screen.Today()))
             .SetVisibility(NotificationVisibility.Secret)

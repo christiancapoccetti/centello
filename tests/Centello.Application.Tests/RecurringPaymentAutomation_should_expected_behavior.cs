@@ -34,7 +34,7 @@ public sealed class RecurringPaymentAutomation_should_expected_behavior
 
         Assert.Equal(2, _expenses.Items.Count);
         var resynced = Assert.Single(_reminder.Resynced);
-        Assert.Equal(Today.ToDateTime(new TimeOnly(9, 0)), resynced.NotifyAt);
+        Assert.Equal(Today.ToDateTime(new TimeOnly(9, 0)), resynced.Notice?.NotifyAt);
         Assert.Equal(Today.AddDays(7).ToDateTime(new TimeOnly(9, 0)), resynced.NextDueAt);
     }
 

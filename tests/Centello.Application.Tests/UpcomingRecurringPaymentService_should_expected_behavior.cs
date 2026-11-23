@@ -18,7 +18,7 @@ public sealed class UpcomingRecurringPaymentService_should_expected_behavior
 
         var result = await new UpcomingRecurringPaymentService(repository).GetSchedule(Today);
 
-        Assert.Null(result.Value.NotifyAt);
+        Assert.Null(result.Value.Notice);
         Assert.Equal(Today.AddDays(30).ToDateTime(new TimeOnly(9, 0)), result.Value.NextDueAt);
     }
 
@@ -26,7 +26,7 @@ public sealed class UpcomingRecurringPaymentService_should_expected_behavior
     public async Task Keep_todays_reminder_when_processing_advanced_past_the_last_occurrence()
     {
         var repository = new FakeRecurringPaymentRepository();
-        var payment = Payment(Today);
+        var payment = Payment(Today, "Netflix");
         payment.End(Today);
         payment.MoveToNextOccurrence();
         repository.Items.Add(payment);
@@ -36,12 +36,32 @@ public sealed class UpcomingRecurringPaymentService_should_expected_behavior
         var first = await service.GetSchedule(Today);
         var resync = await service.GetSchedule(Today);
 
-        Assert.Equal(Today.ToDateTime(new TimeOnly(9, 0)), first.Value.NotifyAt);
+        var notice = Assert.IsType<RecurringPaymentNotice>(first.Value.Notice);
+        Assert.Equal(Today.ToDateTime(new TimeOnly(9, 0)), notice.NotifyAt);
+        Assert.Equal("Pagamento ricorrente registrato", notice.Title);
+        Assert.Equal("Netflix", notice.Text);
         Assert.Null(first.Value.NextDueAt);
         Assert.Equal(first.Value, resync.Value);
-        Assert.Null((await service.GetSchedule(Today.AddDays(1))).Value.NotifyAt);
+        Assert.Null((await service.GetSchedule(Today.AddDays(1))).Value.Notice);
     }
 
-    private static RecurringPayment Payment(DateOnly nextDueOn) =>
-        new(Guid.NewGuid(), Guid.NewGuid(), new Money(1_200), RecurrenceFrequency.Monthly, nextDueOn);
+    [Fact]
+    public async Task Count_each_recorded_payment_even_when_they_have_the_same_name()
+    {
+        var repository = new FakeRecurringPaymentRepository();
+        foreach (var payment in new[] { Payment(Today, "Netflix"), Payment(Today, "Netflix") })
+        {
+            repository.Items.Add(payment);
+            repository.RecordedOccurrences.Add(new RecurrenceOccurrence(payment.RecurringPaymentId, Today));
+        }
+
+        var result = await new UpcomingRecurringPaymentService(repository).GetSchedule(Today);
+
+        var notice = Assert.IsType<RecurringPaymentNotice>(result.Value.Notice);
+        Assert.Equal("Pagamenti ricorrenti registrati", notice.Title);
+        Assert.Equal("2 pagamenti registrati oggi.", notice.Text);
+    }
+
+    private static RecurringPayment Payment(DateOnly nextDueOn, string name = "") =>
+        new(Guid.NewGuid(), Guid.NewGuid(), new Money(1_200), RecurrenceFrequency.Monthly, nextDueOn, note: name);
 }
