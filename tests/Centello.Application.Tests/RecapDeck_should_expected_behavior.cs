@@ -9,16 +9,17 @@ public sealed class RecapDeck_should_expected_behavior
     private static readonly Type[] MonthKinds =
     [
         typeof(RecapCard.Cover), typeof(RecapCard.Total), typeof(RecapCard.Rank), typeof(RecapCard.RecordDay),
-        typeof(RecapCard.Categories), typeof(RecapCard.Changes), typeof(RecapCard.NewHabit), typeof(RecapCard.SmallExpenses),
-        typeof(RecapCard.Consistency), typeof(RecapCard.YearSoFar), typeof(RecapCard.Summary)
+        typeof(RecapCard.Changes), typeof(RecapCard.NewHabit), typeof(RecapCard.SmallExpenses),
+        typeof(RecapCard.Consistency), typeof(RecapCard.YearSoFar), typeof(RecapCard.SpendingMap), typeof(RecapCard.Summary)
     ];
 
     private static readonly Type[] YearKinds =
     [
         typeof(RecapCard.Cover), typeof(RecapCard.Total), typeof(RecapCard.Months), typeof(RecapCard.RecordDay),
-        typeof(RecapCard.Weekday), typeof(RecapCard.Categories), typeof(RecapCard.Changes), typeof(RecapCard.TagOfYear),
+        typeof(RecapCard.Weekday), typeof(RecapCard.Changes), typeof(RecapCard.TagOfYear),
         typeof(RecapCard.CostliestTag), typeof(RecapCard.SteadyTag), typeof(RecapCard.NewHabits),
-        typeof(RecapCard.SmallExpenses), typeof(RecapCard.Automatic), typeof(RecapCard.Consistency), typeof(RecapCard.Summary)
+        typeof(RecapCard.SmallExpenses), typeof(RecapCard.Automatic), typeof(RecapCard.Consistency),
+        typeof(RecapCard.SpendingMap), typeof(RecapCard.Summary)
     ];
 
     [Fact]
@@ -38,16 +39,19 @@ public sealed class RecapDeck_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_draw_every_kind_of_card_in_one_of_the_two_decks()
+    public async Task Should_draw_every_kind_of_card_across_closed_periods()
     {
         var month = await RecapWorld.MockupNovember().Deck(Period.Month(2026, 11));
         var year = await RecapWorld.Mockup2026().Deck(Period.Year(2026));
+        var manual = RecapWorld.MockupNovember();
+        manual.Expenses.Items.RemoveAll(expense => expense.IsAutomatic);
+        var manualMonth = await manual.Deck(Period.Month(2026, 11));
 
         var kinds = typeof(RecapCard).GetNestedTypes().Where(kind => kind.IsSubclassOf(typeof(RecapCard)));
 
         Assert.Equal(
             kinds.Select(kind => kind.Name).Order(),
-            month.Cards.Concat(year.Cards).Select(card => card.GetType().Name).Distinct().Order());
+            month.Cards.Concat(year.Cards).Concat(manualMonth.Cards).Select(card => card.GetType().Name).Distinct().Order());
     }
 
 
@@ -69,15 +73,16 @@ public sealed class RecapDeck_should_expected_behavior
         Assert.Equal(new RecapPhrase("", "Sabato 14 novembre", ", in 3 spese"), record.Detail);
         Assert.Equal(["Spesa", "Ristoranti", "Trasporti"], record.Expenses.Select(expense => expense.Category.Name));
 
-        var categories = deck.Single<RecapCard.Categories>();
-        Assert.Equal(new RecapPhrase("Dove sono andati i ", $"1.284,60{Nbsp}€"), categories.Lead);
+        var map = deck.Single<RecapCard.SpendingMap>();
+        Assert.Equal(128_460, map.TotalCents);
         Assert.Equal(
-            ["Casa", "Spesa", "Ristoranti", "Trasporti", "Svago", "Bar", "Altre 3 categorie"],
-            categories.Shares.Select(share => share.Category.Name));
-        Assert.Equal(("25%", $"320,00{Nbsp}€"), (categories.Shares[0].Share, categories.Shares[0].Amount));
-        Assert.Equal(("14%", $"182,50{Nbsp}€"), (categories.Shares[2].Share, categories.Shares[2].Amount));
-        Assert.Equal(("5%", $"58,20{Nbsp}€"), (categories.Shares[5].Share, categories.Shares[5].Amount));
-        Assert.Equal(("14%", $"174,00{Nbsp}€"), (categories.Shares[6].Share, categories.Shares[6].Amount));
+            ["Casa", "Spesa", "Ristoranti", "Trasporti", "Svago", "Bar"],
+            map.Categories.Take(6).Select(category => category.Category.Name));
+        Assert.Equal(9, map.Categories.Count);
+        Assert.Equal(32_000, map.Categories[0].TotalCents);
+        Assert.Equal(18_250, map.Categories[2].TotalCents);
+        Assert.Equal(5_820, map.Categories[5].TotalCents);
+        Assert.Equal(17_400, map.Categories.Skip(6).Sum(category => category.TotalCents));
 
         var changes = deck.Single<RecapCard.Changes>();
         Assert.Equal(
@@ -111,9 +116,9 @@ public sealed class RecapDeck_should_expected_behavior
         Assert.Equal(
             [
                 ("Totale", $"1.284,60{Nbsp}€"), ("Nell'anno", "2° più leggero"),
-                ("Il giorno più caro", $"sab 14 · 186,40{Nbsp}€"), ("Prima categoria", "Casa · 25%"),
+                ("Il giorno più caro", $"sab 14 · 186,40{Nbsp}€"),
                 ("Cresciuta di più", $"Ristoranti +64{Nbsp}€"), ("Nuova abitudine", "Piscina"),
-                ("Costanza", "26 giorni su 30")
+                ("Costanza", "26 giorni su 30"), ("Prima categoria", "Casa · 25%")
             ],
             deck.Single<RecapCard.Summary>().Rows.Select(row => (row.Label, row.Value)));
     }

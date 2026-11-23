@@ -93,6 +93,24 @@ public sealed class RecapStory_should_expected_behavior
     private static TimeSpan Seconds(double value) => TimeSpan.FromSeconds(value);
 
     [Fact]
+    public async Task Should_wait_on_the_spending_map_until_the_person_taps_in_either_direction()
+    {
+        var story = new RecapStory(await RecapWorld.MockupNovember().Deck(Period.Month(2026, 11)));
+        while (story.Index < story.Count - 2)
+            Assert.True(story.Advance(RecapStory.CardDuration));
+
+        Assert.True(story.WaitsForInput);
+        Assert.False(story.Advance(TimeSpan.FromMinutes(1)));
+        Assert.IsType<RecapCard.SpendingMap>(story.Current);
+        Assert.True(story.Previous());
+        Assert.False(story.WaitsForInput);
+        Assert.True(story.Next());
+        Assert.True(story.WaitsForInput);
+        Assert.True(story.Next());
+        Assert.IsType<RecapCard.Summary>(story.Current);
+    }
+
+    [Fact]
     public void Should_give_each_card_seven_seconds() =>
         Assert.Equal(Seconds(7), RecapStory.CardDuration);
 

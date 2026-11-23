@@ -53,6 +53,13 @@ public sealed record RecapDeck
             .Select(card => card(scope))
             .OfType<RecapCard>()
             .ToList();
+        var categories = middle.FindIndex(card => card is RecapCard.Categories);
+        if (categories >= 0 && RecapCard.SpendingMap.Of(scope, middle[categories].Row) is { } map)
+        {
+            middle.RemoveAt(categories);
+            middle.Add(map);
+        }
+
         return new RecapDeck(scope.Span, RecapCard.Cover.Of(scope), middle, RecapCard.Summary.Of(scope, middle));
     }
 

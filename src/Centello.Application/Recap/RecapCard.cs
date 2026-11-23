@@ -35,6 +35,7 @@ public interface IRecapCardVisitor<out T>
     T RecordDay(RecapCard.RecordDay card);
     T Weekday(RecapCard.Weekday card);
     T Categories(RecapCard.Categories card);
+    T SpendingMap(RecapCard.SpendingMap card);
     T Changes(RecapCard.Changes card);
     T NewHabit(RecapCard.NewHabit card);
     T TagOfYear(RecapCard.TagOfYear card);
