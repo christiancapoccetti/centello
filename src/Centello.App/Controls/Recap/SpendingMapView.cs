@@ -5,6 +5,8 @@ namespace Centello.App.Controls.Recap;
 
 internal sealed class SpendingMapView : Grid
 {
+    private readonly View[] _tapSurfaces;
+
     public SpendingMapView(RecapCard.SpendingMap map, bool landscape, StoryInk ink, Action share)
     {
         BackgroundColor = ink.Ground;
@@ -16,7 +18,7 @@ internal sealed class SpendingMapView : Grid
         var shareButton = StoryBlocks.Pill("Condividi", true, ink, share);
         if (landscape)
         {
-            ShowComplete(art, ink, shareButton);
+            _tapSurfaces = [ShowComplete(art, ink, shareButton)];
             return;
         }
 
@@ -46,21 +48,34 @@ internal sealed class SpendingMapView : Grid
                 StoryBlocks.Caption("Ruota il telefono per leggere la mappa completa.", ink, 14)
             }
         };
+        _tapSurfaces = [stack, chart];
         this.Add(new ScrollView { Content = stack, VerticalOptions = LayoutOptions.Center });
         this.Add(shareButton, 0, 1);
     }
 
-    private void ShowComplete(SpendingMapArt art, StoryInk ink, Button shareButton)
+    public void EnableTapNavigation(EventHandler<TappedEventArgs> onTapped)
+    {
+        // Android scroll views handle touches before they reach the story host.
+        foreach (var surface in _tapSurfaces)
+        {
+            var tap = new TapGestureRecognizer();
+            tap.Tapped += onTapped;
+            surface.GestureRecognizers.Add(tap);
+        }
+    }
+
+    private GraphicsView ShowComplete(SpendingMapArt art, StoryInk ink, Button shareButton)
     {
         var chart = new GraphicsView { Drawable = art };
         SemanticProperties.SetDescription(chart, art.Describe());
-        var viewer = new ScrollView { Content = chart, Orientation = ScrollOrientation.Both };
+        var viewer = new ScrollView { Content = chart };
         var zoomed = false;
         var zoom = StoryBlocks.Pill("Ingrandisci", false, ink);
         zoom.Clicked += (_, _) =>
         {
             zoomed = !zoomed;
-            zoom.Text = zoomed ? "Mostra tutto" : "Ingrandisci";
+            zoom.Text = zoomed ? "Adatta alla larghezza" : "Ingrandisci";
+            viewer.Orientation = zoomed ? ScrollOrientation.Both : ScrollOrientation.Vertical;
             Resize();
         };
         var buttons = new HorizontalStackLayout
@@ -72,13 +87,15 @@ internal sealed class SpendingMapView : Grid
         viewer.SizeChanged += (_, _) => Resize();
         this.Add(viewer);
         this.Add(buttons, 0, 1);
+        return chart;
 
         void Resize()
         {
-            if (viewer.Width <= 0 || viewer.Height <= 0)
+            if (viewer.Width <= 0)
                 return;
 
-            var fit = Math.Min(viewer.Width / art.DesignSize.Width, viewer.Height / art.DesignSize.Height);
+            // Keep the labels readable when the story controls leave a short landscape viewport.
+            var fit = viewer.Width / art.DesignSize.Width;
             var scale = zoomed ? Math.Max(1, fit * 2) : fit;
             chart.WidthRequest = art.DesignSize.Width * scale;
             chart.HeightRequest = art.DesignSize.Height * scale;

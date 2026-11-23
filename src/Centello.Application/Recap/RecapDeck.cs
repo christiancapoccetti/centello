@@ -53,10 +53,11 @@ public sealed record RecapDeck
             .Select(card => card(scope))
             .OfType<RecapCard>()
             .ToList();
-        var categories = middle.FindIndex(card => card is RecapCard.Categories);
-        if (categories >= 0 && RecapCard.SpendingMap.Of(scope, middle[categories].Row) is { } map)
+        var categories = middle.OfType<RecapCard.Categories>().SingleOrDefault();
+        if (RecapCard.SpendingMap.Of(scope, categories?.Row) is { } map)
         {
-            middle.RemoveAt(categories);
+            if (categories is not null && map.Row is not null)
+                middle.Remove(categories);
             middle.Add(map);
         }
 

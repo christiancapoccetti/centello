@@ -44,9 +44,6 @@ public abstract partial record RecapCard
 
         internal static SpendingMap? Of(RecapScope scope, RecapSummaryRow? categoryRow)
         {
-            if (!scope.HasAutomatic || scope.Variable.Count == 0)
-                return null;
-
             var categories = scope.Spending.Current
                 .GroupBy(expense => expense.CategoryId)
                 .Select(group => new RecapFlowCategory(scope.Catalog.Category(group.Key), TagsOf(group, scope.Catalog)))
@@ -54,19 +51,22 @@ public abstract partial record RecapCard
                 .ThenBy(category => category.Category.Name, StringComparer.Ordinal)
                 .ThenBy(category => category.Category.CategoryId)
                 .ToList();
-            if (categories.Count < RecapRules.MinCategories)
+            if (categories.Count == 0)
                 return null;
 
             var focus = categories
                 .SelectMany(category => category.Tags
-                    .Where(tag => tag.TagId.HasValue)
                     .Select(tag => (Category: category, Tag: tag)))
-                .OrderByDescending(item => item.Tag.TotalCents)
-                .FirstOrDefault();
-            if (focus.Tag is null || focus.Tag.TotalCents < scope.Spending.Spent * RecapRules.MinMapFocusShare)
-                return null;
+                .OrderByDescending(item => item.Tag.TagId.HasValue)
+                .ThenByDescending(item => item.Tag.TotalCents)
+                .First();
 
-            return new SpendingMap(scope.Span, categories, focus.Category, focus.Tag) { Row = categoryRow };
+            var replacesCategories = scope.HasAutomatic && scope.Variable.Count > 0 && focus.Tag.TagId.HasValue &&
+                focus.Tag.TotalCents >= scope.Spending.Spent * RecapRules.MinMapFocusShare;
+            return new SpendingMap(scope.Span, categories, focus.Category, focus.Tag)
+            {
+                Row = replacesCategories ? categoryRow : null
+            };
         }
 
         private string SpokenShare(long cents) => Share(cents) switch

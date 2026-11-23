@@ -45,7 +45,7 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
     [Theory]
     [InlineData(false, true)]
     [InlineData(true, false)]
-    public async Task Should_keep_the_category_card_when_origins_or_named_tags_cannot_be_compared(bool automatic, bool named)
+    public async Task Should_show_the_map_with_only_variable_spending_or_no_named_tags(bool automatic, bool named)
     {
         var world = new RecapWorld();
         var home = world.Category("Casa", "peri");
@@ -56,11 +56,12 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
         var deck = await world.Deck(November);
 
         Assert.Single(deck.Cards.OfType<RecapCard.Categories>());
-        Assert.DoesNotContain(deck.Cards, card => card is RecapCard.SpendingMap);
+        var map = Assert.IsType<RecapCard.SpendingMap>(deck.Cards[^2]);
+        Assert.Equal(named, map.FocusTag.TagId.HasValue);
     }
 
     [Fact]
-    public async Task Should_omit_the_map_when_all_expenses_are_automatic_or_in_one_category()
+    public async Task Should_include_the_map_when_all_expenses_are_automatic_or_in_one_category()
     {
         var world = new RecapWorld();
         var home = world.Category("Casa", "peri");
@@ -70,13 +71,14 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
 
         world.Spend(home, 25, Day);
         var oneCategory = await world.Deck(November);
-        Assert.DoesNotContain(oneCategory.Cards, card => card is RecapCard.SpendingMap or RecapCard.Categories);
+        Assert.Single(Assert.IsType<RecapCard.SpendingMap>(oneCategory.Cards[^2]).Categories);
 
         world.Expenses.Items.RemoveAll(expense => !expense.IsAutomatic);
         world.Spend(world.Category("Spesa", "mint"), 200, Day, automatic: true);
         var onlyAutomatic = await world.Deck(November);
         Assert.Single(onlyAutomatic.Cards.OfType<RecapCard.Categories>());
-        Assert.DoesNotContain(onlyAutomatic.Cards, card => card is RecapCard.SpendingMap);
+        var map = Assert.IsType<RecapCard.SpendingMap>(onlyAutomatic.Cards[^2]);
+        Assert.All(map.Categories.SelectMany(category => category.Tags), tag => Assert.Equal(0, tag.VariableCents));
     }
 
     [Fact]
@@ -107,7 +109,7 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_require_one_percent_of_actual_period_spending_before_highlighting_a_tag()
+    public async Task Should_show_the_map_above_and_below_one_percent()
     {
         var world = new RecapWorld();
         var home = world.Category("Casa", "peri");
@@ -118,7 +120,8 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
         var untaggedCent = world.Spend(home, 1, Day);
 
         var below = await world.Deck(November);
-        Assert.DoesNotContain(below.Cards, card => card is RecapCard.SpendingMap);
+        var belowMap = Assert.IsType<RecapCard.SpendingMap>(below.Cards[^2]);
+        Assert.Equal("<1%", belowMap.Share(belowMap.FocusTag.TotalCents));
         Assert.Single(below.Cards.OfType<RecapCard.Categories>());
 
         world.Expenses.Items.Remove(untaggedCent);
@@ -129,6 +132,18 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
         Assert.Equal(10_000, map.TotalCents);
         Assert.Equal(100, map.FocusTag.TotalCents);
         Assert.Equal("1%", map.Share(map.FocusTag.TotalCents));
+    }
+
+    [Fact]
+    public async Task Should_show_the_map_for_a_variable_only_2025_without_tags()
+    {
+        var world = new RecapWorld();
+        world.SpendInYear(world.Category("Alimentari", "mint"), 2025, 1_944_900, 60);
+
+        var deck = await world.Deck(Period.Year(2025));
+
+        var map = Assert.IsType<RecapCard.SpendingMap>(deck.Cards[^2]);
+        Assert.Equal(new RecapFlowTag(null, "Senza tag", 0, 1_944_900), map.FocusTag);
     }
 
     [Fact]

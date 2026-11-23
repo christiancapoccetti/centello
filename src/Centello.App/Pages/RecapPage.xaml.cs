@@ -147,7 +147,7 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         var usesScreenReader = !_player.IsAutomatic;
         var manualCard = _viewModel.Story?.WaitsForInput == true;
         NavigationButtons.IsVisible = landscape || usesScreenReader || manualCard;
-        if (usesScreenReader || manualCard)
+        if (usesScreenReader)
             CardHost.GestureRecognizers.Remove(CardTap);
         else if (!CardHost.GestureRecognizers.Contains(CardTap))
             CardHost.GestureRecognizers.Add(CardTap);
@@ -179,6 +179,8 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         var card = story.Current;
         var ink = StoryInk.Of(card.Top, IsDark);
         CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, Height, _builtLandscape, OpenExpense, Exit, Restart, ShareMap));
+        if (_player.IsAutomatic && CardHost.Content is SpendingMapView map)
+            map.EnableTapNavigation(OnCardTapped);
         var index = story.Index;
         Progress.Show(index, story.Count, ink, _player.Fill);
         TitleLabel.TextColor = ink.Ink;
