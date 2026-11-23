@@ -107,6 +107,31 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
     }
 
     [Fact]
+    public async Task Should_require_one_percent_of_actual_period_spending_before_highlighting_a_tag()
+    {
+        var world = new RecapWorld();
+        var home = world.Category("Casa", "peri");
+        var food = world.Category("Spesa", "mint");
+        var rent = world.Tag(home, "Affitto");
+        world.SpendInMonth(food, 2026, 11, 9_900, 10);
+        world.Spend(home, 99, Day, rent, automatic: true);
+        var untaggedCent = world.Spend(home, 1, Day);
+
+        var below = await world.Deck(November);
+        Assert.DoesNotContain(below.Cards, card => card is RecapCard.SpendingMap);
+        Assert.Single(below.Cards.OfType<RecapCard.Categories>());
+
+        world.Expenses.Items.Remove(untaggedCent);
+        world.Spend(home, 1, Day, rent);
+        var exact = await world.Deck(November);
+        var map = Assert.IsType<RecapCard.SpendingMap>(exact.Cards[^2]);
+
+        Assert.Equal(10_000, map.TotalCents);
+        Assert.Equal(100, map.FocusTag.TotalCents);
+        Assert.Equal("1%", map.Share(map.FocusTag.TotalCents));
+    }
+
+    [Fact]
     public async Task Should_label_and_cut_the_current_year_at_the_last_complete_day()
     {
         var world = new RecapWorld(new DateOnly(2026, 12, 30));
@@ -114,15 +139,15 @@ public sealed class RecapCardSpendingMap_should_expected_behavior
         var food = world.Category("Spesa", "mint");
         var rent = world.Tag(home, "Affitto");
         world.SpendInYear(food, 2026, 10_000, 45);
-        world.Spend(home, 3, new DateOnly(2026, 12, 29), rent, automatic: true);
+        world.Spend(home, 500, new DateOnly(2026, 12, 29), rent, automatic: true);
         world.Spend(home, 800_000, new DateOnly(2026, 12, 30), rent);
 
         var deck = await world.Deck(Period.Year(2026));
         var map = Assert.IsType<RecapCard.SpendingMap>(deck.Cards[^2]);
 
-        Assert.Equal(10_003, map.TotalCents);
+        Assert.Equal(10_500, map.TotalCents);
         Assert.Contains("29 dicembre", map.PeriodLabel);
         Assert.Contains("2026", map.PeriodLabel);
-        Assert.Contains("meno dell’1%", map.Headline);
+        Assert.Contains("5%", map.Headline);
     }
 }

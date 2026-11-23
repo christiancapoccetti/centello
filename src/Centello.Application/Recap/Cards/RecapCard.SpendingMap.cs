@@ -63,7 +63,7 @@ public abstract partial record RecapCard
                     .Select(tag => (Category: category, Tag: tag)))
                 .OrderByDescending(item => item.Tag.TotalCents)
                 .FirstOrDefault();
-            if (focus.Tag is null)
+            if (focus.Tag is null || focus.Tag.TotalCents < scope.Spending.Spent * RecapRules.MinMapFocusShare)
                 return null;
 
             return new SpendingMap(scope.Span, categories, focus.Category, focus.Tag) { Row = categoryRow };

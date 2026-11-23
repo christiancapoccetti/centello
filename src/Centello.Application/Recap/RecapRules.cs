@@ -12,6 +12,7 @@ internal sealed record RecapRules(int MinExpenses, int MinDays, int MinMonths, l
 
     public const int MinRecordDays = 3;
     public const int MinCategories = 2;
+    public const decimal MinMapFocusShare = 0.01m;
 
     /// <summary>The most categories named on the stack; past them the rest fold into one block.</summary>
     public const int MaxNamedCategories = 6;
