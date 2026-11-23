@@ -84,6 +84,7 @@ jobs:
       - name: Sign and verify the Play bundle
         if: steps.previous.outputs.id == ''
         env:
+          FIREBASE_ANDROID_PLAY_CONFIG_BASE64: ${{ secrets.FIREBASE_ANDROID_PLAY_CONFIG_BASE64 }}
           PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
           PLAY_UPLOAD_PASSWORD: ${{ secrets.PLAY_UPLOAD_PASSWORD }}
           VERSION: ${{ steps.form.outputs.version }}
@@ -93,6 +94,9 @@ jobs:
           umask 077
           signing=$(mktemp -d)
           trap 'rm -rf -- "$signing"' EXIT
+          export FirebaseAndroidConfigFile="$signing/firebase.json"
+          node .github/scripts/stage-firebase-config.mjs play "$FirebaseAndroidConfigFile"
+          unset FIREBASE_ANDROID_PLAY_CONFIG_BASE64
           export PLAY_UPLOAD_KEYSTORE="$signing/upload.jks"
           printf '%s' "$PLAY_UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$PLAY_UPLOAD_KEYSTORE"
           unset PLAY_UPLOAD_KEYSTORE_BASE64

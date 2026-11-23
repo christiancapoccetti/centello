@@ -11,6 +11,9 @@
 *.sln.docstates
 *.env
 *.mmbackup
+# Local Firebase downloads and sanitized build inputs
+google-services*.json
+firebase.android.*.json
 tmp/
 src/Centello.App/Resources/Raw/*.bin
 
