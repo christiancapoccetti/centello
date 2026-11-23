@@ -5,7 +5,7 @@ namespace Centello.Application;
 /// photo or a result that arrives after Cancel is dropped.</summary>
 public sealed class PhotoReading(
     ExpenseDraftService drafts,
-    OpenAiSettings settings,
+    DraftConsent consent,
     IPhotoCapture photo) : IPanelCapture
 {
     private CancellationTokenSource? _reading;
@@ -14,20 +14,14 @@ public sealed class PhotoReading(
     public PanelState State { get; private set; } = new PanelState.Starting();
     public event EventHandler<PanelState>? Changed;
 
-    /// <summary>Starting: no key -> NeedsApiKey, without touching the camera; camera refused -> Failed(CameraDenied);
-    /// otherwise TakingPhoto, then nothing -> Closed, an error -> Failed, a photo -> Reading -> DraftReady or Failed.</summary>
     public async Task Begin()
     {
         if (State is not PanelState.Starting)
             return;
 
-        var hasKey = await settings.HasApiKey();
-        if (State is not PanelState.Starting)
-            return;
-
-        if (!hasKey)
+        if (!consent.IsEnabled)
         {
-            Move(new PanelState.NeedsApiKey());
+            Move(new PanelState.NeedsConsent());
             return;
         }
 

@@ -5,7 +5,7 @@ namespace Centello.Application;
 /// a second tap while preparing does nothing, and Cancel after DraftReady keeps the draft for the editor.</summary>
 public sealed class Dictation(
     ExpenseDraftService drafts,
-    OpenAiSettings settings,
+    DraftConsent consent,
     IMicrophoneAccess microphone,
     TimeProvider clock) : IPanelCapture
 {
@@ -19,13 +19,14 @@ public sealed class Dictation(
 
     public Task Restore() => Begin();
 
-    /// <summary>Starting: no key -> NeedsApiKey; microphone refused -> Failed(MicrophoneDenied); otherwise records at
-    /// once -> Listening(0), or Failed when the network or the recorder says no.</summary>
     public async Task Begin()
     {
-        if (!await settings.HasApiKey())
+        if (State is not PanelState.Starting)
+            return;
+
+        if (!consent.IsEnabled)
         {
-            Move(new PanelState.NeedsApiKey());
+            Move(new PanelState.NeedsConsent());
             return;
         }
 

@@ -10,21 +10,23 @@ public partial class TodayPage : ContentPage
     private readonly PhoneLandscapeTrigger _landscapeTrigger;
     private readonly BrowseScrollAnchor _scrollAnchor;
     private readonly ExpenseDraftService _drafts;
-    private readonly OpenAiSettings _settings;
+    private readonly DraftConsent _draftConsent;
     private readonly PhotoPicker _photos;
-    private const string MicrophoneRationale = "Centello usa il microfono solo mentre tieni premuto il pulsante. L'audio registrato viene inviato a OpenAI per la trascrizione.";
+    private const string MicrophoneRationale = "Centello usa il microfono solo mentre tieni premuto il pulsante. L’audio registrato viene inviato a Google per preparare la bozza.";
 
     private readonly ISnackbar _snackbar;
     private Task<Result>? _speechStart;
+    private CancellationTokenSource? _reading;
     private int _speechSession;
+    private bool _speechReleased;
     private long _speechPressedAt;
 
-    public TodayPage(TodayViewModel viewModel, ExpenseDraftService drafts, OpenAiSettings settings, PhotoPicker photos, ISnackbar snackbar)
+    public TodayPage(TodayViewModel viewModel, ExpenseDraftService drafts, DraftConsent draftConsent, PhotoPicker photos, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _drafts = drafts;
-        _settings = settings;
+        _draftConsent = draftConsent;
         _photos = photos;
         _snackbar = snackbar;
         viewModel.CanTakePhoto = PhotoPicker.CanCapture;
@@ -59,27 +61,24 @@ public partial class TodayPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        var load = _viewModel.Load();
-        var availability = _settings.HasApiKey();
-        await Task.WhenAll(load, availability);
-        _viewModel.HasCaptureKey = await availability;
+        _viewModel.HasDraftConsent = _draftConsent.IsEnabled;
+        await _viewModel.Load();
     }
 
     protected override async void OnDisappearing()
     {
         base.OnDisappearing();
-        if (!_drafts.IsListening)
-            return;
-
-        await _drafts.CancelListening();
-        _viewModel.Capture = _viewModel.Capture.Close();
+        CancelReading();
+        await CancelSpeech();
     }
 
     protected override bool OnBackButtonPressed()
     {
-        if (_viewModel.Capture.IsIdle)
+        if (_viewModel.Capture.IsIdle && _speechStart is null)
             return base.OnBackButtonPressed();
 
+        _ = CancelSpeech();
+        CancelReading();
         _viewModel.Capture = _viewModel.Capture.Close();
         return true;
     }
@@ -133,11 +132,12 @@ public partial class TodayPage : ContentPage
 
     private void OnSpeechPressed(object? sender, EventArgs e)
     {
-        if (!_viewModel.IsCaptureAvailable || !_viewModel.Capture.IsIdle)
+        if (!_viewModel.IsCaptureAvailable || !_viewModel.Capture.IsIdle || _speechStart is not null)
             return;
 
         var session = ++_speechSession;
         _speechPressedAt = Environment.TickCount64;
+        _speechReleased = false;
         _speechStart = StartSpeech(session);
     }
 
@@ -146,6 +146,9 @@ public partial class TodayPage : ContentPage
         try
         {
             var permission = await RequestPermission<Permissions.Microphone>("Microfono", MicrophoneRationale);
+            if (session != _speechSession)
+                return Result.Failure(DraftErrors.Canceled);
+
             if (permission != PermissionStatus.Granted)
                 return Result.Failure(SpeechErrors.MicrophoneDenied);
 
@@ -179,8 +182,11 @@ public partial class TodayPage : ContentPage
             : status;
     }
 
-    private void OnCameraClicked(object? sender, EventArgs e) =>
-        _viewModel.Capture = _viewModel.Capture.ChoosePhoto();
+    private void OnCameraClicked(object? sender, EventArgs e)
+    {
+        if (_speechStart is null)
+            _viewModel.Capture = _viewModel.Capture.ChoosePhoto();
+    }
 
     private void OnPhotoMenuDismissed(object? sender, TappedEventArgs e) =>
         _viewModel.Capture = _viewModel.Capture.Close();
@@ -208,47 +214,64 @@ public partial class TodayPage : ContentPage
         if (!_viewModel.Capture.IsChoosingPhoto)
             return;
 
-        _viewModel.Capture = _viewModel.Capture.Pick(source);
+        var picking = _viewModel.Capture.Pick(source);
+        _viewModel.Capture = picking;
+        var location = Shell.Current.CurrentState.Location;
+        Result<byte[]?> picked;
         try
         {
-            var picked = await take();
-            if (picked.IsFailure)
-            {
-                _viewModel.Capture = _viewModel.Capture.Read(source).Fail(picked.Error);
-                return;
-            }
-
-            if (picked.Value is not { } bytes)
-            {
-                _viewModel.Capture = _viewModel.Capture.Close();
-                return;
-            }
-
-            _viewModel.Capture = _viewModel.Capture.Read(source);
-            await Show(await _drafts.PrepareFromDocument(bytes));
+            picked = await take();
         }
         catch
         {
-            _viewModel.Capture = _viewModel.Capture.Read(source).Fail(PhotoErrors.ProcessingFailed);
+            picked = Result<byte[]?>.Failure(PhotoErrors.ProcessingFailed);
         }
+
+        if (!ReferenceEquals(_viewModel.Capture, picking))
+            return;
+
+        if (Shell.Current.CurrentState.Location != location)
+        {
+            _viewModel.Capture = picking.Close();
+            return;
+        }
+
+        if (picked.IsFailure)
+        {
+            _viewModel.Capture = picking.Read(source).Fail(picked.Error);
+            return;
+        }
+
+        if (picked.Value is not { } bytes)
+        {
+            _viewModel.Capture = picking.Close();
+            return;
+        }
+
+        _viewModel.Capture = picking.Read(source);
+        await ReadDraft(token => _drafts.PrepareFromDocument(bytes, token), PhotoErrors.ProcessingFailed);
     }
 
     private async void OnSpeechReleased(object? sender, EventArgs e)
     {
         var start = _speechStart;
-        if (start is null)
+        if (start is null || _speechReleased)
             return;
 
-        _speechStart = null;
-        if (SpeechRecordingLimits.IsTap(TimeSpan.FromMilliseconds(Environment.TickCount64 - _speechPressedAt)))
-        {
-            await ExplainHold(start);
-            return;
-        }
-
+        _speechReleased = true;
+        var session = _speechSession;
         try
         {
+            if (SpeechRecordingLimits.IsTap(TimeSpan.FromMilliseconds(Environment.TickCount64 - _speechPressedAt)))
+            {
+                await ExplainHold(start, session);
+                return;
+            }
+
             var startResult = await start;
+            if (session != _speechSession)
+                return;
+
             _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Voice);
             if (startResult.IsFailure)
             {
@@ -256,30 +279,87 @@ public partial class TodayPage : ContentPage
                 return;
             }
 
-            await Show(await _drafts.PrepareFromSpeech(WhenFull.Refuse), _drafts.LastTranscription);
+            await ReadDraft(token => _drafts.PrepareFromSpeech(WhenFull.Refuse, token), SpeechErrors.ProcessingFailed);
         }
         catch
         {
-            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Voice).Fail(SpeechErrors.ProcessingFailed);
+            if (session == _speechSession)
+                _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Voice).Fail(SpeechErrors.ProcessingFailed);
+        }
+        finally
+        {
+            if (session == _speechSession)
+                _speechStart = null;
         }
     }
 
-    private async Task Show(Result<ExpenseDraft> draft, string heard = "")
+    private async Task ReadDraft(Func<CancellationToken, Task<Result<ExpenseDraft>>> prepare, Error failure)
     {
-        if (draft.IsFailure)
-        {
-            _viewModel.Capture = _viewModel.Capture.Fail(draft.Error, heard);
+        var capture = _viewModel.Capture;
+        if (!capture.IsReading)
             return;
-        }
 
+        using var reading = new CancellationTokenSource();
+        _reading = reading;
+        try
+        {
+            var draft = await prepare(reading.Token);
+            if (reading.IsCancellationRequested || !ReferenceEquals(_viewModel.Capture, capture))
+                return;
+
+            if (draft.IsFailure)
+            {
+                _viewModel.Capture = _viewModel.Capture.Fail(draft.Error);
+                return;
+            }
+
+            _viewModel.Capture = _viewModel.Capture.Finish();
+            await ExpenseEditorPage.OpenDraft(draft.Value);
+        }
+        catch
+        {
+            if (reading.IsCancellationRequested)
+                return;
+
+            if (ReferenceEquals(_viewModel.Capture, capture))
+                _viewModel.Capture = capture.Fail(failure);
+            else if (_viewModel.Capture.IsIdle)
+                _snackbar.Show(failure.Message);
+        }
+        finally
+        {
+            if (ReferenceEquals(_reading, reading))
+                _reading = null;
+        }
+    }
+
+    private async Task CancelSpeech()
+    {
+        ++_speechSession;
+        _speechStart = null;
+        if (!_viewModel.Capture.IsListening)
+            return;
+
+        _viewModel.Capture = _viewModel.Capture.Close();
+        await _drafts.CancelListening();
+    }
+
+    private void CancelReading()
+    {
+        if (!_viewModel.Capture.IsReading)
+            return;
+
+        _reading?.Cancel();
         _viewModel.Capture = _viewModel.Capture.Finish();
-        await ExpenseEditorPage.OpenDraft(draft.Value);
     }
 
     // A tap is not a dictation: whatever started to record is dropped and the gesture is explained instead.
-    private async Task ExplainHold(Task<Result> start)
+    private async Task ExplainHold(Task<Result> start, int session)
     {
         var started = await start;
+        if (session != _speechSession)
+            return;
+
         if (started.IsSuccess)
             await _drafts.CancelListening();
 
@@ -287,14 +367,17 @@ public partial class TodayPage : ContentPage
         _snackbar.Show("Tieni premuto il microfono per dettare una spesa");
     }
 
-    private void OnCloseCaptureClicked(object? sender, EventArgs e) =>
+    private void OnCloseCaptureClicked(object? sender, EventArgs e)
+    {
+        CancelReading();
         _viewModel.Capture = _viewModel.Capture.Close();
+    }
 
     private async void OnInactiveCaptureClicked(object? sender, EventArgs e)
     {
         var openSettings = await DisplayAlertAsync(
-            "Voce e foto con OpenAI",
-            "Configura la chiave API OpenAI nelle impostazioni per dettare le spese o leggere una spesa da una foto o da un PDF.",
+            "Bozze assistite",
+            DraftErrors.ConsentRequired.Message,
             "Apri impostazioni",
             "Annulla");
         if (openSettings)

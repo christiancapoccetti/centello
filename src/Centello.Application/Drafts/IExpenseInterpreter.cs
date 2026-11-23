@@ -3,7 +3,7 @@ namespace Centello.Application;
 public interface IExpenseInterpreter
 {
     Task<Result<ExpenseDraft>> Interpret(
-        string phrase,
+        RecordedAudio audio,
         IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default);

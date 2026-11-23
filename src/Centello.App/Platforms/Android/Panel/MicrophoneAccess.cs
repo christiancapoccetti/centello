@@ -5,7 +5,7 @@ namespace Centello.App;
 internal sealed class MicrophoneAccess(IConfirmation confirmation) : IMicrophoneAccess
 {
     private const string Rationale = "Centello usa il microfono solo mentre il pannello è aperto. " +
-        "L'audio registrato viene inviato a OpenAI per la trascrizione.";
+        "L’audio registrato viene inviato a Google per preparare la bozza.";
 
     public async Task<bool> Ensure()
     {

@@ -2,17 +2,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centello.Application.Tests;
 
-internal sealed class FakeApiKeyStore : IOpenAiApiKeyStore
+internal sealed class FakeDraftConsentStore : IDraftConsentStore
 {
-    public string Key { get; set; } = "";
-    public Task<StoredOpenAiApiKey?> GetApiKey() => Task.FromResult<StoredOpenAiApiKey?>(
-        new StoredOpenAiApiKey(Key, OpenAiSettings.CurrentConsentVersion));
-    public Task SetApiKey(StoredOpenAiApiKey apiKey)
-    {
-        Key = apiKey.Value;
-        return Task.CompletedTask;
-    }
-    public void ClearApiKey() => Key = "";
+    public int AcceptedVersion { get; set; } = DraftConsent.CurrentVersion;
+}
+
+internal sealed class FakePdfPageCounter : IPdfPageCounter
+{
+    public int Pages { get; set; } = 1;
+
+    public Task<Result<int>> Count(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+        Task.FromResult(Result<int>.Success(Pages));
 }
 
 internal sealed class FakeInternetAccess : IInternetAccess
@@ -53,46 +53,24 @@ internal sealed class FakeSpeechRecorder : ISpeechRecorder
     }
 }
 
-internal sealed class FakeSpeechTranscriber : ISpeechTranscriber
-{
-    public Result<string> Result { get; set; } = Result<string>.Success("");
-    public RecordedAudio? Audio { get; private set; }
-    public IReadOnlyCollection<string> Keywords { get; private set; } = [];
-    public int CallCount { get; private set; }
-    public Task? Gate { get; set; }
-
-    public async Task<Result<string>> Transcribe(
-        RecordedAudio audio,
-        IReadOnlyCollection<string> keywords,
-        CancellationToken cancellationToken = default)
-    {
-        CallCount++;
-        Audio = audio;
-        Keywords = keywords;
-        if (Gate is not null)
-            await Gate;
-
-        return Result;
-    }
-}
-
 internal sealed class FakeExpenseInterpreter : IExpenseInterpreter
 {
     public ExpenseDraft Draft { get; set; } = new(null, null, null, null, "", DraftSource.Voice, "");
     public Error? Failure { get; set; }
-    public string Phrase { get; private set; } = "";
+    public RecordedAudio? Audio { get; private set; }
+    public Task? Gate { get; set; }
     public ExpenseDocument? Document { get; private set; }
     public IReadOnlyCollection<DraftCategory> Categories { get; private set; } = [];
     public int CallCount { get; private set; }
     public Action? OnInterpret { get; set; }
 
     public Task<Result<ExpenseDraft>> Interpret(
-        string phrase,
+        RecordedAudio audio,
         IReadOnlyCollection<DraftCategory> categories,
         DateOnly today,
         CancellationToken cancellationToken = default)
     {
-        Phrase = phrase;
+        Audio = audio;
         return Interpreted(categories);
     }
 
@@ -106,14 +84,17 @@ internal sealed class FakeExpenseInterpreter : IExpenseInterpreter
         return Interpreted(categories);
     }
 
-    private Task<Result<ExpenseDraft>> Interpreted(IReadOnlyCollection<DraftCategory> categories)
+    private async Task<Result<ExpenseDraft>> Interpreted(IReadOnlyCollection<DraftCategory> categories)
     {
         CallCount++;
         OnInterpret?.Invoke();
         Categories = categories;
-        return Task.FromResult(Failure is null
+        if (Gate is not null)
+            await Gate;
+
+        return Failure is null
             ? Result<ExpenseDraft>.Success(Draft)
-            : Result<ExpenseDraft>.Failure(Failure));
+            : Result<ExpenseDraft>.Failure(Failure);
     }
 }
 

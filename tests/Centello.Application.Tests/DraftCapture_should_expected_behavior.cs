@@ -11,7 +11,7 @@ public sealed class DraftCapture_should_expected_behavior
     private static DraftCapture PickingPdf => Choosing.Pick(DraftSource.Pdf);
     private static DraftCapture ReadingPdf => PickingPdf.Read(DraftSource.Pdf);
     private static DraftCapture ReadingPhoto => Picking.Read(DraftSource.Photo);
-    private static DraftCapture Failed => ReadingVoice.Fail(Failure, "cento euro");
+    private static DraftCapture Failed => ReadingVoice.Fail(Failure);
 
     [Fact]
     public void Start_idle_with_nothing_to_show()
@@ -24,7 +24,6 @@ public sealed class DraftCapture_should_expected_behavior
         Assert.False(capture.IsListening);
         Assert.False(capture.IsChoosingPhoto);
         Assert.False(capture.HasError);
-        Assert.False(capture.HasHeard);
         Assert.Equal("", capture.ErrorMessage);
     }
 
@@ -84,7 +83,7 @@ public sealed class DraftCapture_should_expected_behavior
     }
 
     [Fact]
-    public void Keep_the_error_and_what_was_heard_until_closed()
+    public void Keep_the_error_until_closed()
     {
         var capture = Failed;
 
@@ -92,18 +91,7 @@ public sealed class DraftCapture_should_expected_behavior
         Assert.True(capture.IsSheetVisible);
         Assert.False(capture.IsReading);
         Assert.Equal("Non riuscito.", capture.ErrorMessage);
-        Assert.Equal("cento euro", capture.Heard);
-        Assert.True(capture.HasHeard);
         Assert.Same(DraftSource.Voice, capture.Source);
-    }
-
-    [Fact]
-    public void Show_no_heard_phrase_when_the_failure_names_none()
-    {
-        var capture = ReadingPhoto.Fail(Failure);
-
-        Assert.Equal("", capture.Heard);
-        Assert.False(capture.HasHeard);
     }
 
     [Fact]
@@ -120,7 +108,6 @@ public sealed class DraftCapture_should_expected_behavior
 
         Assert.Equal(DraftCapture.Idle, capture);
         Assert.Equal("", capture.ErrorMessage);
-        Assert.Equal("", capture.Heard);
     }
 
     [Fact]
@@ -201,7 +188,7 @@ public sealed class DraftCapture_should_expected_behavior
     {
         var failed = Failed;
 
-        Assert.Same(failed, failed.Fail(Failure, "altro"));
+        Assert.Same(failed, failed.Fail(Failure));
         Assert.Same(failed, failed.Finish());
         Assert.Same(failed, failed.Read(DraftSource.Voice));
     }

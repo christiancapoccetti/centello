@@ -46,12 +46,12 @@ public sealed class PanelFaces_should_expected_behavior
     [Fact]
     public void Ask_for_the_key_in_the_settings_on_the_voice_panel()
     {
-        var face = PanelFaces.Of(DraftSource.Voice, new PanelState.NeedsApiKey());
+        var face = PanelFaces.Of(DraftSource.Voice, new PanelState.NeedsConsent());
 
         Assert.Equal(
             new PanelFace.Message(
                 "Inserimento vocale",
-                "Configura la chiave API OpenAI nelle impostazioni per usare i comandi vocali.",
+                DraftErrors.ConsentRequired.Message,
                 PanelAction.OpenSettings),
             face);
     }
@@ -59,12 +59,12 @@ public sealed class PanelFaces_should_expected_behavior
     [Fact]
     public void Ask_for_the_key_in_the_settings_on_the_photo_panel()
     {
-        var face = PanelFaces.Of(DraftSource.Photo, new PanelState.NeedsApiKey());
+        var face = PanelFaces.Of(DraftSource.Photo, new PanelState.NeedsConsent());
 
         Assert.Equal(
             new PanelFace.Message(
                 "Lettura della foto",
-                "Configura la chiave API OpenAI nelle impostazioni per leggere una spesa da una foto.",
+                DraftErrors.ConsentRequired.Message,
                 PanelAction.OpenSettings),
             face);
     }
@@ -72,12 +72,12 @@ public sealed class PanelFaces_should_expected_behavior
     [Fact]
     public void Ask_for_the_key_in_the_settings_on_the_pdf_panel()
     {
-        var face = PanelFaces.Of(DraftSource.Pdf, new PanelState.NeedsApiKey());
+        var face = PanelFaces.Of(DraftSource.Pdf, new PanelState.NeedsConsent());
 
         Assert.Equal(
             new PanelFace.Message(
                 "Lettura del PDF",
-                "Configura la chiave API OpenAI nelle impostazioni per leggere una spesa da un PDF.",
+                DraftErrors.ConsentRequired.Message,
                 PanelAction.OpenSettings),
             face);
     }
@@ -108,7 +108,7 @@ public sealed class PanelFaces_should_expected_behavior
                 "Lettura della foto",
                 "Cerco importo, data e negozio…",
                 MaterialSymbols.ReceiptLong,
-                "Foto inviata a OpenAI"),
+                "Foto inviata a Google per preparare la bozza"),
             face);
     }
 
@@ -122,7 +122,7 @@ public sealed class PanelFaces_should_expected_behavior
                 "Lettura del PDF",
                 "Cerco importo, data e negozio…",
                 MaterialSymbols.ReceiptLong,
-                "PDF inviato a OpenAI"),
+                "PDF inviato a Google per preparare la bozza"),
             face);
     }
 

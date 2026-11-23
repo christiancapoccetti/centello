@@ -28,7 +28,7 @@ public sealed class DraftSource_should_expected_behavior
         Assert.Equal(MaterialSymbols.Mic, DraftSource.Voice.Glyph);
         Assert.Equal("Inserimento vocale", DraftSource.Voice.SheetTitle);
         Assert.Equal("", DraftSource.Voice.ReadingLine);
-        Assert.Equal("Audio e testo inviati a OpenAI", DraftSource.Voice.PrivacyNote);
+        Assert.Equal("Audio inviato a Google per preparare la bozza", DraftSource.Voice.PrivacyNote);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class DraftSource_should_expected_behavior
         Assert.Equal(MaterialSymbols.PhotoCamera, DraftSource.Photo.Glyph);
         Assert.Equal("Lettura della foto", DraftSource.Photo.SheetTitle);
         Assert.Equal("Cerco importo, data e negozio…", DraftSource.Photo.ReadingLine);
-        Assert.Equal("Foto inviata a OpenAI", DraftSource.Photo.PrivacyNote);
+        Assert.Equal("Foto inviata a Google per preparare la bozza", DraftSource.Photo.PrivacyNote);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class DraftSource_should_expected_behavior
         Assert.Equal(MaterialSymbols.PictureAsPdf, DraftSource.Pdf.Glyph);
         Assert.Equal("Lettura del PDF", DraftSource.Pdf.SheetTitle);
         Assert.Equal(DraftSource.Photo.ReadingLine, DraftSource.Pdf.ReadingLine);
-        Assert.Equal("PDF inviato a OpenAI", DraftSource.Pdf.PrivacyNote);
+        Assert.Equal("PDF inviato a Google per preparare la bozza", DraftSource.Pdf.PrivacyNote);
     }
 
     [Fact]

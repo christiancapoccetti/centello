@@ -17,8 +17,8 @@ public sealed class ExpenseInterpretationCatalog_should_expected_behavior
     {
         var catalog = new ExpenseInterpretationCatalog([Car, Home]);
 
-        Assert.Equal(["c1", "c2"], catalog.CategoryKeys);
-        Assert.Equal(["t1", "t2", "t3"], catalog.TagKeys);
+        Assert.Equal(["c1", "c2"], catalog.Categories.Select(category => category.Key));
+        Assert.Equal(["t1", "t2", "t3"], catalog.Categories.SelectMany(category => category.Tags).Select(tag => tag.Key));
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public sealed class ExpenseInterpretationCatalog_should_expected_behavior
         var second = new DraftCategory(Guid.NewGuid(), "Casa", [new DraftTag(Guid.NewGuid(), "Altro")]);
         var catalog = new ExpenseInterpretationCatalog([first, second]);
 
-        Assert.Equal(["t1", "t2"], catalog.TagKeys);
+        Assert.Equal(["t1", "t2"], catalog.Categories.SelectMany(category => category.Tags).Select(tag => tag.Key));
         Assert.Equal(first.Tags.Single().TagId, catalog.FindCategory("c1")!.FindTag("t1")!.Tag.TagId);
         Assert.Equal(second.Tags.Single().TagId, catalog.FindCategory("c2")!.FindTag("t2")!.Tag.TagId);
     }
@@ -82,23 +82,13 @@ public sealed class ExpenseInterpretationCatalog_should_expected_behavior
     }
 
     [Fact]
-    public void List_distinct_names_as_transcription_keywords()
-    {
-        var other = new DraftCategory(Guid.NewGuid(), "Svago", [new DraftTag(Guid.NewGuid(), "ALTRO")]);
-        var catalog = new ExpenseInterpretationCatalog([Car, Home, other]);
-
-        Assert.Equal(["Auto", "Carburante", "Tagliando", "Casa", "Altro", "Svago"], catalog.Keywords);
-    }
-
-    [Fact]
     public void Be_empty_without_categories()
     {
         var catalog = new ExpenseInterpretationCatalog([]);
 
-        Assert.Empty(catalog.CategoryKeys);
-        Assert.Empty(catalog.TagKeys);
+        Assert.Empty(catalog.Categories.Select(category => category.Key));
+        Assert.Empty(catalog.Categories.SelectMany(category => category.Tags).Select(tag => tag.Key));
         Assert.Empty(catalog.PromptLines);
-        Assert.Empty(catalog.Keywords);
         Assert.Null(catalog.FindCategory("c1"));
     }
 }
