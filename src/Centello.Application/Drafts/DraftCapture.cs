@@ -10,22 +10,20 @@ namespace Centello.Application;
 /// </summary>
 public sealed record DraftCapture
 {
-    public static DraftCapture Idle { get; } = new(Phase.Idle, null, "", "");
+    public static DraftCapture Idle { get; } = new(Phase.Idle, null, "");
 
     private readonly Phase _phase;
 
-    private DraftCapture(Phase phase, DraftSource? source, string errorMessage, string heard)
+    private DraftCapture(Phase phase, DraftSource? source, string errorMessage)
     {
         _phase = phase;
         Source = source;
         ErrorMessage = errorMessage;
-        Heard = heard;
     }
 
     /// <summary>The source the menu, the toast or the sheet speaks for. Null only while idle.</summary>
     public DraftSource? Source { get; }
     public string ErrorMessage { get; }
-    public string Heard { get; }
 
     public bool IsIdle => _phase == Phase.Idle;
     public bool IsChoosingPhoto => _phase == Phase.Choosing;
@@ -34,22 +32,21 @@ public sealed record DraftCapture
     public bool HasError => _phase == Phase.Failed;
     public bool IsSheetVisible => IsReading || HasError;
     public bool HasReadingLine => IsReading && Source is { ReadingLine: var line } && line.HasValue();
-    public bool HasHeard => Heard.HasValue();
 
-    public DraftCapture ChoosePhoto() => IsIdle ? new(Phase.Choosing, DraftSource.Photo, "", "") : this;
+    public DraftCapture ChoosePhoto() => IsIdle ? new(Phase.Choosing, DraftSource.Photo, "") : this;
 
-    public DraftCapture Pick(DraftSource source) => IsChoosingPhoto ? new(Phase.Picking, source, "", "") : this;
+    public DraftCapture Pick(DraftSource source) => IsChoosingPhoto ? new(Phase.Picking, source, "") : this;
 
-    public DraftCapture Listen() => IsIdle ? new(Phase.Listening, DraftSource.Voice, "", "") : this;
+    public DraftCapture Listen() => IsIdle ? new(Phase.Listening, DraftSource.Voice, "") : this;
 
     public DraftCapture Read(DraftSource source)
     {
         var canRead = IsIdle || (_phase is Phase.Listening or Phase.Picking && Source == source);
-        return canRead ? new(Phase.Reading, source, "", "") : this;
+        return canRead ? new(Phase.Reading, source, "") : this;
     }
 
-    public DraftCapture Fail(Error error, string heard = "") =>
-        IsReading ? new(Phase.Failed, Source, error.Message, heard) : this;
+    public DraftCapture Fail(Error error) =>
+        IsReading ? new(Phase.Failed, Source, error.Message) : this;
 
     public DraftCapture Finish() => IsReading ? Idle : this;
 

@@ -1,6 +1,6 @@
 # Centello
 
-Centello is a simple Android expense tracker built with .NET MAUI, designed and developed by Christian Capoccetti. The product research, the design, the architecture and the structure of the code are the author's own work; AI coding assistants were used as tools to write and review the implementation under the author's direction. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice, photo and PDF entry sends what you speak, photograph or pick to OpenAI (see below).
+Centello is a simple Android expense tracker built with .NET MAUI, designed and developed by Christian Capoccetti. The product research, the design, the architecture and the structure of the code are the author's own work; AI coding assistants were used as tools to write and review the implementation under the author's direction. Its goal is to make expense entry quick while keeping the expense database on the device; the optional voice, photo and PDF entry sends the content you choose to Google through Firebase AI Logic.
 
 ## Features
 
@@ -12,14 +12,14 @@ Centello is a simple Android expense tracker built with .NET MAUI, designed and 
 - Recap (`Il tuo novembre`, `Il tuo 2026`): Wrapped-style full-screen story cards for every closed month and year, computed on the device and opened from the month or year row of `Insight` (a year is reviewable from 30 December). Cards advance automatically. Hold to pause or tap to move. With a screen reader, use the previous and next buttons at your own pace. Enable `Riepilogo del mese` in `Impostazioni` to get a local notification on the first day of the month (1 January for the yearly recap). Centello schedules it for 09:00 local time, and Android can delay delivery. The notification opens the recap and omits amounts.
 - Every monthly or annual recap with spending includes a map. It shows where your spending went by type, category and tag, even if all expenses were of one type or in one category. Untagged expenses appear under `Senza tag`. The story pauses on the map. Tap the left half to go back or the right half to continue. Rotate to landscape to scroll through the full map. Select `Ingrandisci` to zoom in and scroll in both directions. Use `Condividi` to preview a PNG of the spending map card (`Storia`) or the full map (`Mappa completa`). Each preview starts with percentages only. Select `Con importi` to include amounts, then save the previewed image or share it through Android.
 - Weekly, monthly or yearly recurring payments with optional end date. Due expenses are created when the app opens. A paused payment skips the occurrences missed while paused when it is resumed. When Android allows notifications, Centello schedules a reminder for 09:00 local time on the due date. Android can delay delivery.
-- Voice, photo and PDF entry: create an expense draft from a spoken Italian phrase (`Inserimento vocale`), from a photo of a receipt or from a PDF using OpenAI with your own API key, with explicit confirmation in the expense editor.
+- Voice, photo and PDF entry: create an expense draft from a spoken Italian phrase (`Inserimento vocale`), from a photo of a receipt or from a PDF using Firebase AI Logic after opt-in, with explicit confirmation in the expense editor.
 - Home screen widgets: `Aggiungi` (add an expense by hand, by voice or from a photo, in four sizes), `Scorciatoie` (your four most used categories plus `Altra`), `Il mese` (total, remaining budget, comparison and category line) and `Il ritmo` (the same with Oggi's daily chart). A widget opens the app on the right screen, and the microphone and camera of `Aggiungi` open a panel over the launcher. The same entries are in the long-press menu of the app icon. Widgets follow the launcher's light and dark scheme and refresh after every saved change, a restored backup included.
-- Settings are grouped as `Dati` (recurring payments, `Backup ed export`), `Notifiche` (`Riepilogo del mese`), `Voce e foto` and `Informazioni` (version, `Licenze`, `Informativa sulla privacy`).
+- Settings are grouped as `Dati` (recurring payments, `Backup ed export`), `Notifiche` (`Riepilogo del mese`), `Voce, foto e PDF` and `Informazioni` (version, `Licenze`, `Informativa sulla privacy`).
 - Backup and export (`Backup ed export`): create a backup file (`centello-yyyy-MM-dd.backup`) and export every expense to CSV (`;` separated, UTF-8 with BOM, for Excel or Sheets). Both are saved in the Download folder (on Android 9 and older the share sheet is used instead). `Ripristina backup` picks a backup file, compares what the file and the phone hold, and replaces the phone's data in one transaction after confirmation.
 - Dark and light theme following the Android setting, with portrait and phone landscape layouts.
-- Application data is stored locally in SQLite. Centello does not require an account and has no backend or sync. Android Auto Backup can copy the database to your Google account. You can also share a backup or CSV yourself. Optional voice, photo, and PDF entry sends the selected input and category context directly to OpenAI after you enable it.
+- Application data is stored locally in SQLite. Centello does not require an account and has no backend or sync. Android Auto Backup can copy the database to your Google account. You can also share a backup or CSV yourself. Optional voice, photo, and PDF entry sends the selected input and category context to Google through Firebase AI Logic after you enable it.
 
-Android Auto Backup saves the database (and only the database) to your own Google account, so a new phone with the same account gets the expenses back. The OpenAI key, the reminder settings and the preferences are not backed up: enter the key again on the new phone, and the reminders are rebuilt at first launch. Storing receipt photos, localization, and configurable budget alerts are not part of the current version. The roadmap is tracked in [GitHub issues](https://github.com/christiancapoccetti/centello/issues).
+Android Auto Backup saves the database (and only the database) to your own Google account, so a new phone with the same account gets the expenses back. Consent and reminder preferences stay on the device. On a new phone, enable assisted drafts again if you want them. Centello rebuilds reminders at first launch. Storing receipt photos, localization, and configurable budget alerts are not part of the current version. The roadmap is tracked in [GitHub issues](https://github.com/christiancapoccetti/centello/issues).
 
 ## Home screen widgets
 
@@ -133,7 +133,8 @@ Google Play receives a signed Android App Bundle (AAB); Play App Signing re-sign
    gh variable set PLAY_CLOSED_TRACK --env play-closed-beta --body alpha
    ```
 
-8. Protect release tags matching `v*` with a repository ruleset: restrict tag creation to trusted release maintainers, and prevent updates and deletion. Only a trusted publisher should create and publish releases for verified commits on `main`.
+8. Add `FIREBASE_ANDROID_PLAY_CONFIG_BASE64` as a secret in `play-closed-beta`. Use the one-line Base64 encoding of the Play project’s Android `google-services.json`. See the [Firebase operator checklist](docs/play-console.md#firebase-operator-checklist).
+9. Protect release tags matching `v*` with a repository ruleset: restrict tag creation to trusted release maintainers, and prevent updates and deletion. Only a trusted publisher should create and publish releases for verified commits on `main`.
 
 ### Publish a closed-testing release
 
@@ -143,30 +144,55 @@ The workflow retains its signed bundle for 3 days and reuses it on retries. If a
 
 ### Manual fallback
 
-For an intentional manual upload, use the local upload key and Play Console. Raise `ApplicationVersion` before each upload. Keep the keystore and its password file outside the repository. Supply a file readable only by your user, containing the password on its first line. Set the two paths and build the signed bundle.
+For an intentional manual upload, use the local upload key and Play Console. Raise `ApplicationVersion` before each upload. Keep the keystore and its password file outside the repository. Supply a file readable only by your user, containing the password on its first line. Set the two paths, then stage the Play Firebase configuration and build the signed bundle.
 
 ```powershell
 $env:PLAY_UPLOAD_KEYSTORE = "$HOME\keys\play-upload.jks"
 $env:PLAY_UPLOAD_PASSWORD_FILE = Read-Host "Path to the private upload password file"
-dotnet build src/Centello.App/Centello.App.csproj -c Release -t:SignAndroidPackage -p:PlayRelease=true
+$playConfig = Read-Host "Path to Play google-services.json"
+$env:FIREBASE_ANDROID_PLAY_CONFIG_BASE64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($playConfig))
+$stage = Join-Path ([IO.Path]::GetTempPath()) ("centello-firebase-" + [guid]::NewGuid() + ".json")
+try {
+    node .github/scripts/stage-firebase-config.mjs play $stage
+    if ($LASTEXITCODE -ne 0) { throw "Firebase configuration staging failed" }
+    Remove-Item Env:FIREBASE_ANDROID_PLAY_CONFIG_BASE64
+    dotnet build src/Centello.App/Centello.App.csproj -c Release -t:SignAndroidPackage -p:PlayRelease=true "-p:FirebaseAndroidConfigFile=$stage"
+} finally {
+    Remove-Item Env:FIREBASE_ANDROID_PLAY_CONFIG_BASE64 -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $stage -ErrorAction SilentlyContinue
+}
 ```
 
 The signed bundle is `src/Centello.App/bin/Release/net10.0-android/it.christiancapoccetti.centesimo-Signed.aab`; the `.aab` without `-Signed` is unsigned. Check the signer with `keytool -printcert -jarfile <bundle>` before uploading. Before a manual upload, test the Release build end to end on a phone, check Play's current target SDK and 16 KB memory page requirements, and re-check `THIRD_PARTY_NOTICES.md` against bundled packages after dependency or .NET SDK changes. The privacy policy is published at <https://christiancapoccetti.github.io/centello/privacy-policy.html>, and Play Console listing and policy answers are in [docs/play-console.md](docs/play-console.md).
 
-## Voice, photo and PDF entry with OpenAI
+## Assisted expense drafts
 
-Voice entry turns a phrase such as "ieri 12 euro di pizza" into an expense draft; photo and PDF entry do the same from a receipt photo or a PDF. It is optional and uses your own OpenAI API key.
+In **Impostazioni → Voce, foto e PDF**, turn on **Bozze assistite**, review the disclosure and select **Acconsento**. Turn off the same switch to stop new assisted requests. If you update from a version that used OpenAI, enable assisted drafts again. Manual entry works offline and without Firebase configuration.
 
-- **Setup:** enter the key in Settings, under "Voce e foto". A consent dialog must be accepted before the key is saved; the key can be removed at any time.
-- **Key handling:** the key is stored in Android SecureStorage and sent only to the OpenAI API. It lives on the client, so it is not a server-held secret: use it for personal use only.
-- **Flow:** hold the microphone button (up to 20 seconds). Audio is transcribed with `gpt-transcribe`, and the text is then interpreted by `gpt-6-luna` with a strict JSON schema that only admits your own category and tag keys, and the result is validated deterministically.
-- **Photo and PDF flow:** the camera segment of the home dock opens a menu: "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria" and "Scegli un PDF" (up to 5 MB). A photo is scaled to 1600 px and re-encoded as JPEG without EXIF or GPS data. The photo or PDF goes to `gpt-6-luna` in a single call, with the same strict schema as voice. If the document cannot be read, the editor opens empty with today's date.
-- **What is sent to OpenAI:** the recorded audio (kept in memory, not stored by the app), the phrase text, the photo or PDF you chose, the names of your active categories and tags, and today's date. Existing expenses and the database are never sent. OpenAI may keep API inputs for abuse monitoring, so Centello can only promise that it does not save them itself.
-- **Nothing is stored by Centello:** the copy of a photo or PDF placed in the app cache is deleted before and after each pick, and your own files are never modified or deleted. No storage permission is needed; only the camera permission is declared.
-- **What stays local.** Centello stores expenses, budgets, and the SQLite database on the device. Android Auto Backup can copy the database to your Google account and excludes the OpenAI key. You can also export or share copies of your data.
-- **Entry panel:** the microphone of the `Aggiungi` widget (or the `Spesa a voce` shortcut) opens a panel that listens at once. A second tap sends the phrase and it is sent on its own at 20 seconds; `Annulla`, a tap outside, Back or leaving cancels. The camera (or `Spesa da foto`) opens the camera at once and then reads the photo over the launcher. Oggi's hold-to-talk is unchanged.
-- **Confirmation:** the draft opens in the expense editor (with a "Dalla foto · controlla e salva" or "Dal PDF · controlla e salva" banner for documents) and nothing is saved until you save it; saving still requires a category.
-- **Availability:** the microphone and camera segments are disabled until a key is configured (both lead to Settings), and reports an error without an Internet connection. Manual entry always works.
+- **Voice.** Hold the microphone on **Oggi** and release it to send. Recordings are limited to 20 seconds. In the launcher panel, tap again to send, or the panel sends at 20 seconds. Select **Annulla**, press Back, or leave the panel to cancel.
+- **Photo or PDF.** On **Oggi**, tap the camera and select **Scatta una foto** (Android 13 and later), **Scegli dalla galleria**, or **Scegli un PDF**. Centello re-encodes photos as JPEG at up to 1,600 pixels on the longest side and strips photo metadata. PDFs are limited to 5 MiB and 1,000 pages. Centello also checks the encoded request size before sending.
+- **Review.** Check the proposed amount, date, category and tag in the editor. Only **Salva spesa** creates a record, and saving requires a category.
+- **Data sent.** Each request contains the recorded audio, the prepared photo or the full PDF, plus active category and tag names and today's date. Centello validates the structured result locally. See the [privacy policy](docs/privacy-policy.md).
+
+### Configure live assisted drafts on a development device
+
+Use the Firebase development project for `it.christiancapoccetti.centesimo.dev` and set up App Check's debug provider. CI uses synthetic configuration to exercise packaging. A local build without configuration still supports manual entry.
+
+Encode the development project's Android `google-services.json` as one-line Base64 in `FIREBASE_ANDROID_DEV_CONFIG_BASE64`. Stage it to a new temporary path and pass the path as `-p:FirebaseAndroidConfigFile=<path>` to the Debug build or to the Release development build with `-p:DevBuild=true`.
+
+```sh
+(
+    set -e
+    config_dir="$(mktemp -d)"
+    trap 'rm -f "$config_dir/firebase.json"; rmdir "$config_dir"' EXIT
+    node .github/scripts/stage-firebase-config.mjs dev "$config_dir/firebase.json"
+    unset FIREBASE_ANDROID_DEV_CONFIG_BASE64
+    dotnet build src/Centello.App/Centello.App.csproj -t:Run -f net10.0-android "-p:FirebaseAndroidConfigFile=$config_dir/firebase.json"
+)
+unset FIREBASE_ANDROID_DEV_CONFIG_BASE64
+```
+
+Register only the development installation’s debug token and keep it private. Use synthetic inputs on development builds. See the [Firebase operator checklist](docs/play-console.md#firebase-operator-checklist).
 
 ## License
 

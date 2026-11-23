@@ -25,8 +25,17 @@ jobs:
 
       - name: Restore and build
         run: |
+          set -euo pipefail
           dotnet restore Centello.slnx
-          dotnet build Centello.slnx -c Debug --no-restore
+          config=$(mktemp -d)
+          trap 'rm -rf -- "$config"' EXIT
+          node .github/scripts/stage-firebase-config.mjs dev "$config/firebase.json" --synthetic
+          dotnet build Centello.slnx -c Debug --no-restore "-p:FirebaseAndroidConfigFile=$config/firebase.json"
+          app=src/Centello.App/bin/Debug/net10.0-android/it.christiancapoccetti.centesimo.dev-Signed.apk
+          if ! unzip -p "$app" assets/firebase-android.json | cmp -s "$config/firebase.json" -; then
+            echo "::error::The development APK must contain the staged Firebase options."
+            exit 1
+          fi
 
       - name: Check development package identity
         shell: pwsh
@@ -73,6 +82,8 @@ jobs:
           keytool -genkeypair -storetype JKS -keystore "$PLAY_UPLOAD_KEYSTORE" \
             -storepass:file "$PLAY_UPLOAD_PASSWORD_FILE" -keypass:file "$PLAY_UPLOAD_PASSWORD_FILE" \
             -alias upload -keyalg RSA -keysize 2048 -validity 365 -dname 'CN=Centello CI'
+          export FirebaseAndroidConfigFile="$signing/firebase.json"
+          node .github/scripts/stage-firebase-config.mjs play "$FirebaseAndroidConfigFile" --synthetic
           bash .github/scripts/build-play-bundle.sh "$signing/app.aab" 3 1.2.0
 
       - name: Offer release of the verified main commit

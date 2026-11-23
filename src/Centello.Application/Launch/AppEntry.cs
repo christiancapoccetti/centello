@@ -95,7 +95,6 @@ public abstract record AppEntry
         /// <summary>The editor of a new expense, filled with the draft a panel handed to the app.</summary>
         public sealed record Draft : Screen;
 
-        /// <summary>Impostazioni, where the OpenAI key is set.</summary>
         public sealed record Settings : Screen;
 
         /// <summary>The story of a month or a year, opened over Insight on that period.</summary>

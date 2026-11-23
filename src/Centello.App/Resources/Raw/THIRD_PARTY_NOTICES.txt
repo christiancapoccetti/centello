@@ -1,6 +1,6 @@
 CENTELLO — THIRD-PARTY NOTICES
 
-This application includes open-source components. Their licenses apply to the respective components. The full text of every license named below is at the end of this file.
+This application includes third-party components. The notices identify the terms for each component and point to the publisher’s terms where applicable.
 
 .NET runtime, .NET for Android, .NET MAUI, Entity Framework Core and Microsoft.Data.Sqlite
 Copyright (c) .NET Foundation and Contributors.
@@ -17,7 +17,7 @@ Copyright 2014-2026 SourceGear, LLC.
 License: Apache License 2.0.
 https://github.com/ericsink/SQLitePCL.raw
 
-AndroidX and Material Components for Android
+AndroidX, including DataStore, and Material Components for Android
 Copyright (c) The Android Open Source Project and respective contributors.
 License: Apache License 2.0.
 https://developer.android.com/jetpack/androidx
@@ -43,11 +43,11 @@ Copyright Google LLC and The Guava Authors.
 License: Apache License 2.0.
 https://github.com/google
 
-Protobuf Lite (shaded in Tink Android)
+Protobuf Lite (shaded in Tink Android and AndroidX DataStore)
 License: BSD-3-Clause (Protobuf Lite).
 https://github.com/protocolbuffers/protobuf/blob/v28.2/LICENSE
 
-Kotlin standard library, kotlinx.coroutines, kotlinx.serialization and JetBrains annotations
+Kotlin standard library, kotlinx.coroutines, kotlinx.io, kotlinx.serialization and JetBrains annotations
 Copyright JetBrains s.r.o. and Kotlin Programming Language contributors.
 License: Apache License 2.0.
 https://github.com/JetBrains/kotlin
@@ -66,6 +66,60 @@ JSpecify and JSR 305 annotations
 Copyright The JSpecify Authors and the FindBugs project authors.
 License: Apache License 2.0.
 https://jspecify.dev
+
+Firebase AI Logic (18.2.0), Firebase App Check (20.1.0), Firebase Common, Components and Annotations
+Includes Firebase AI On-Device and App Check interoperability libraries and the variant’s App Check provider.
+Copyright Google LLC and Firebase contributors.
+License: Apache License 2.0.
+https://github.com/firebase/firebase-android-sdk
+
+Google Play services Base and Basement (18.9.0), Tasks (18.4.0), and Firebase Auth Interop (18.0.0)
+Copyright Google LLC.
+License: Android Software Development Kit License.
+https://developer.android.com/studio/terms
+Google includes dependency notices in third_party_licenses.txt in each published AAR.
+https://maven.google.com/
+
+Google Play Integrity (1.4.0, Play variant)
+Copyright Google LLC.
+License: Play Integrity API Terms of Service.
+https://developer.android.com/google/play/integrity/terms
+Google includes dependency notices in third_party_licenses.txt in the published AAR.
+https://dl.google.com/dl/android/maven2/com/google/android/play/integrity/1.4.0/integrity-1.4.0.aar
+
+Google Play Core Common (2.0.4, Play variant)
+Copyright Google LLC.
+License: Play Core Software Development Kit Terms of Service.
+https://developer.android.com/guide/playcore/license
+Google includes dependency notices and the SDK terms in the published AAR.
+https://dl.google.com/dl/android/maven2/com/google/android/play/core-common/2.0.4/core-common-2.0.4.aar
+
+Ktor (3.2.4)
+Copyright JetBrains s.r.o. and Ktor contributors.
+License: Apache License 2.0.
+https://github.com/ktorio/ktor
+
+OkHttp (4.12.0) and Okio (3.12.0)
+Copyright Square, Inc. and contributors.
+License: Apache License 2.0.
+https://square.github.io/okhttp/
+OkHttp includes the Public Suffix List as publicsuffixes.gz under Mozilla Public License 2.0.
+https://publicsuffix.org/list/public_suffix_list.dat
+https://www.mozilla.org/MPL/2.0/
+
+javax.inject (1)
+Copyright 2009 The JSR-330 Expert Group.
+License: Apache License 2.0.
+https://javax-inject.github.io/javax-inject/
+
+SLF4J API and NOP provider (2.0.17)
+Copyright (c) 2004-2022 QOS.ch Sarl (Switzerland). All rights reserved.
+License: MIT License.
+https://www.slf4j.org/license.html
+
+Reactive Streams (1.0.4)
+License: MIT No Attribution.
+https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.4/LICENSE
 
 Archivo fonts (Regular, SemiBold, Bold, Condensed ExtraBold)
 Copyright 2020 The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo)
@@ -524,3 +578,21 @@ INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
+
+
+-----------------------------------------------------------
+MIT No Attribution
+-----------------------------------------------------------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software"), to deal in the Software
+without restriction, including without limitation the rights to use, copy, modify,
+merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

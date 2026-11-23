@@ -21,8 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<UpcomingRecurringPaymentService>();
         services.AddScoped<ExpenseExportService>();
         services.AddSingleton<RecurringPaymentAutomation>();
-        services.AddSingleton<OpenAiSettings>();
-        services.AddSingleton<IOpenAiApiKeyProvider>(provider => provider.GetRequiredService<OpenAiSettings>());
+        services.AddSingleton<DraftConsent>();
         services.AddSingleton<ExpenseDraftService>();
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<Dictation>();

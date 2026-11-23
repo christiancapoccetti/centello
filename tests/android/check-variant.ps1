@@ -32,6 +32,9 @@ if ($fileProvider.Count -ne 1 -or $fileProvider[0].GetAttribute('authorities', $
     throw "Expected the file provider for '$package'"
 }
 foreach ($provider in $app.provider) {
+    if ($provider.GetAttribute('name', $android) -ceq 'com.google.firebase.provider.FirebaseInitProvider') {
+        throw "Firebase must initialize on demand in the $Variant variant"
+    }
     foreach ($authority in $provider.GetAttribute('authorities', $android).Split(';')) {
         if (!$authority.StartsWith("$package.", [StringComparison]::Ordinal) -or
             ($Variant -eq 'Play' -and $authority.StartsWith("$package.dev.", [StringComparison]::Ordinal))) {

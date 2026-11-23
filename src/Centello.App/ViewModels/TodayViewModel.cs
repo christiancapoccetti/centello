@@ -24,7 +24,7 @@ public sealed class TodayViewModel : ObservableObject
     private bool _isLoading;
     private string _errorMessage = "";
     private DraftCapture _capture = DraftCapture.Idle;
-    private bool _hasCaptureKey;
+    private bool _hasDraftConsent;
 
     public TodayViewModel(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
@@ -58,17 +58,17 @@ public sealed class TodayViewModel : ObservableObject
     }
     public bool HasError => ErrorMessage.HasValue();
     public DraftCapture Capture { get => _capture; set => SetProperty(ref _capture, value); }
-    public bool HasCaptureKey
+    public bool HasDraftConsent
     {
-        get => _hasCaptureKey;
+        get => _hasDraftConsent;
         set
         {
-            if (SetProperty(ref _hasCaptureKey, value))
+            if (SetProperty(ref _hasDraftConsent, value))
                 NotifyCaptureAvailability();
         }
     }
-    public bool IsCaptureAvailable => HasCaptureKey && CanCapture;
-    public bool CanSetUpCapture => !HasCaptureKey && CanCapture;
+    public bool IsCaptureAvailable => HasDraftConsent && CanCapture;
+    public bool CanSetUpCapture => !HasDraftConsent && CanCapture;
     public bool CanTakePhoto { get; set; }
 
     private bool CanCapture => Overview?.IsFirstRun != true;

@@ -4,17 +4,17 @@ namespace Centello.Application;
 
 public sealed class ExpenseDraftService(
     ISpeechRecorder recorder,
-    ISpeechTranscriber transcriber,
     IExpenseInterpreter interpreter,
     IInternetAccess internet,
+    DraftConsent consent,
+    IPdfPageCounter pdfPages,
     IServiceScopeFactory scopeFactory)
 {
-    public bool IsListening => recorder.IsListening;
-    public string LastTranscription { get; private set; } = "";
-
     public async Task<Result> StartListening(CancellationToken cancellationToken = default)
     {
-        LastTranscription = "";
+        if (!consent.IsEnabled)
+            return Result.Failure(DraftErrors.ConsentRequired);
+
         if (!internet.IsAvailable)
             return Result.Failure(DraftErrors.NoInternet);
 
@@ -32,6 +32,9 @@ public sealed class ExpenseDraftService(
         if (audio.Value.IsFull && whenFull == WhenFull.Refuse)
             return Result<ExpenseDraft>.Failure(SpeechErrors.TooLong);
 
+        if (!consent.IsEnabled)
+            return Result<ExpenseDraft>.Failure(DraftErrors.ConsentRequired);
+
         if (!internet.IsAvailable)
             return Result<ExpenseDraft>.Failure(DraftErrors.NoInternet);
 
@@ -39,33 +42,36 @@ public sealed class ExpenseDraftService(
         if (categories.IsFailure)
             return Result<ExpenseDraft>.Failure(categories.Error);
 
-        var keywords = new ExpenseInterpretationCatalog(categories.Value).Keywords;
-        var transcription = await transcriber.Transcribe(audio.Value, keywords, cancellationToken);
-        if (transcription.IsFailure)
-            return Result<ExpenseDraft>.Failure(transcription.Error);
-
-        LastTranscription = transcription.Value;
-        return await interpreter.Interpret(
-            transcription.Value,
-            categories.Value,
-            Today(),
-            cancellationToken);
+        return await interpreter.Interpret(audio.Value, categories.Value, Today(), cancellationToken);
     }
 
-    public async Task<Result<ExpenseDraft>> PrepareFromDocument(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
+    public async Task<Result<ExpenseDraft>> PrepareFromDocument(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
     {
-        var photo = ExpenseDocument.Read(image);
-        if (photo.IsFailure)
-            return Result<ExpenseDraft>.Failure(photo.Error);
+        var document = ExpenseDocument.Read(bytes);
+        if (document.IsFailure)
+            return Result<ExpenseDraft>.Failure(document.Error);
+
+        if (!consent.IsEnabled)
+            return Result<ExpenseDraft>.Failure(DraftErrors.ConsentRequired);
 
         if (!internet.IsAvailable)
             return Result<ExpenseDraft>.Failure(DraftErrors.NoInternet);
+
+        if (document.Value.IsPdf)
+        {
+            var pageCount = await pdfPages.Count(document.Value.Bytes, cancellationToken);
+            if (pageCount.IsFailure)
+                return Result<ExpenseDraft>.Failure(pageCount.Error);
+
+            if (pageCount.Value > DocumentLimits.MaximumPdfPages)
+                return Result<ExpenseDraft>.Failure(DraftErrors.PdfTooManyPages);
+        }
 
         var categories = await LoadCategories(cancellationToken);
         if (categories.IsFailure)
             return Result<ExpenseDraft>.Failure(categories.Error);
 
-        return await interpreter.Interpret(photo.Value, categories.Value, Today(), cancellationToken);
+        return await interpreter.Interpret(document.Value, categories.Value, Today(), cancellationToken);
     }
 
     private async Task<Result<IReadOnlyList<DraftCategory>>> LoadCategories(CancellationToken cancellationToken)

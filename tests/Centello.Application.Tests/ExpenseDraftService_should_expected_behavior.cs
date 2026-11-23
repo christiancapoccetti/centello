@@ -8,14 +8,14 @@ public sealed class ExpenseDraftService_should_expected_behavior
     private static readonly RecordedAudio Full = new(new byte[SpeechRecordingLimits.MaximumAudioBytes]);
     private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02];
     private static readonly Error RecordingFailure = new("Test.Recording", "Registrazione non riuscita.");
-    private static readonly Error TranscriptionFailure = new("Test.Transcription", "Trascrizione non riuscita.");
     private static readonly Error InterpretationFailure = new("Test.Interpretation", "Interpretazione non riuscita.");
 
+    private readonly FakeDraftConsentStore _consentStore = new();
     private readonly FakeCategoryRepository _categories = new();
     private readonly FakeTagRepository _tags = new();
+    private readonly FakePdfPageCounter _pdfPages = new();
     private readonly FakeInternetAccess _internet = new();
     private readonly FakeSpeechRecorder _recorder = new();
-    private readonly FakeSpeechTranscriber _transcriber = new();
     private readonly FakeExpenseInterpreter _interpreter = new();
     private readonly CountingScopeFactory _scopes;
     private readonly ExpenseDraftService _service;
@@ -33,9 +33,10 @@ public sealed class ExpenseDraftService_should_expected_behavior
             new TagService(_categories, _tags)));
         _service = new ExpenseDraftService(
             _recorder,
-            _transcriber,
             _interpreter,
             _internet,
+            new DraftConsent(_consentStore),
+            _pdfPages,
             _scopes);
     }
 
@@ -57,7 +58,6 @@ public sealed class ExpenseDraftService_should_expected_behavior
         Assert.True(result.IsFailure);
         Assert.Equal(SpeechErrors.TooLong, result.Error);
         Assert.Equal("Il comando vocale è troppo lungo. Riprova con una frase più breve.", result.Error.Message);
-        Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);
     }
 
@@ -65,13 +65,12 @@ public sealed class ExpenseDraftService_should_expected_behavior
     public async Task Send_a_full_recording_when_asked_to()
     {
         _recorder.Audio = Full;
-        _transcriber.Result = Result<string>.Success("cento euro carburante");
         _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", DraftSource.Voice, "cento euro carburante");
 
         var result = await _service.PrepareFromSpeech(WhenFull.Send);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(Full, _transcriber.Audio);
+        Assert.Equal(Full, _interpreter.Audio);
         Assert.Same(_interpreter.Draft, result.Value);
     }
 
@@ -83,30 +82,26 @@ public sealed class ExpenseDraftService_should_expected_behavior
         var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(1, _transcriber.CallCount);
+        Assert.Equal(1, _interpreter.CallCount);
     }
 
     [Fact]
-    public async Task Transcribe_the_recording_with_the_user_vocabulary_and_interpret_it()
+    public async Task Send_the_recording_and_active_catalog_to_the_interpreter()
     {
         _recorder.Audio = Audio;
-        _transcriber.Result = Result<string>.Success("Ho speso 100 euro di carburante");
         _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", DraftSource.Voice, "Ho speso 100 euro di carburante");
 
         var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(Audio, _transcriber.Audio);
-        Assert.Equal(["Auto", "Carburante", "Cibo"], _transcriber.Keywords);
-        Assert.Equal("Ho speso 100 euro di carburante", _interpreter.Phrase);
+        Assert.Equal(Audio, _interpreter.Audio);
         Assert.Equal(["Auto", "Cibo"], _interpreter.Categories.Select(category => category.Name));
-        Assert.Equal("Ho speso 100 euro di carburante", _service.LastTranscription);
         Assert.Same(_interpreter.Draft, result.Value);
         Assert.Equal(1, _scopes.CreatedCount);
     }
 
     [Fact]
-    public async Task Stop_without_transcribing_when_the_recording_failed()
+    public async Task Stop_without_interpreting_when_the_recording_failed()
     {
         _recorder.StopResult = Result<RecordedAudio>.Failure(RecordingFailure);
 
@@ -114,40 +109,11 @@ public sealed class ExpenseDraftService_should_expected_behavior
 
         Assert.True(result.IsFailure);
         Assert.Equal(RecordingFailure, result.Error);
-        Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);
     }
 
     [Fact]
-    public async Task Skip_the_interpretation_when_the_transcription_failed()
-    {
-        _recorder.Audio = Audio;
-        _transcriber.Result = Result<string>.Failure(TranscriptionFailure);
-
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(TranscriptionFailure, result.Error);
-        Assert.Equal("", _service.LastTranscription);
-        Assert.Equal(0, _interpreter.CallCount);
-    }
-
-    [Fact]
-    public async Task Keep_the_transcription_when_the_interpretation_failed()
-    {
-        _recorder.Audio = Audio;
-        _transcriber.Result = Result<string>.Success("cento euro carburante");
-        _interpreter.Failure = InterpretationFailure;
-
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(InterpretationFailure, result.Error);
-        Assert.Equal("cento euro carburante", _service.LastTranscription);
-    }
-
-    [Fact]
-    public async Task Fail_before_transcribing_when_the_categories_cannot_be_loaded()
+    public async Task Fail_before_interpreting_when_the_categories_cannot_be_loaded()
     {
         var failure = new Error("Test.Categories", "Categorie non disponibili.");
         _recorder.Audio = Audio;
@@ -157,7 +123,6 @@ public sealed class ExpenseDraftService_should_expected_behavior
 
         Assert.True(result.IsFailure);
         Assert.Equal(failure, result.Error);
-        Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);
     }
 
@@ -174,7 +139,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Stop_the_recording_but_not_call_openai_when_the_connection_was_lost()
+    public async Task Stop_the_recording_but_not_call_the_interpreter_when_the_connection_was_lost()
     {
         _recorder.Audio = Audio;
         _internet.IsAvailable = false;
@@ -184,22 +149,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         Assert.True(result.IsFailure);
         Assert.Equal(DraftErrors.NoInternet, result.Error);
         Assert.Equal(1, _recorder.StopCount);
-        Assert.Equal(0, _transcriber.CallCount);
         Assert.Equal(0, _interpreter.CallCount);
-    }
-
-    [Fact]
-    public async Task Forget_the_previous_transcription_when_a_new_recording_starts()
-    {
-        _recorder.Audio = Audio;
-        _transcriber.Result = Result<string>.Success("vecchia frase");
-        _interpreter.Failure = InterpretationFailure;
-        await _service.PrepareFromSpeech(WhenFull.Refuse);
-
-        await _service.StartListening();
-
-        Assert.Equal("", _service.LastTranscription);
-        Assert.Equal(1, _recorder.StartCount);
     }
 
     [Fact]
@@ -214,7 +164,6 @@ public sealed class ExpenseDraftService_should_expected_behavior
         Assert.Equal(Jpeg, _interpreter.Document!.Bytes.ToArray());
         Assert.Equal(["Auto", "Cibo"], _interpreter.Categories.Select(category => category.Name));
         Assert.Equal(1, _scopes.CreatedCount);
-        Assert.Equal("", _service.LastTranscription);
     }
 
     [Fact]
@@ -231,7 +180,18 @@ public sealed class ExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Refuse_a_pdf_over_the_pdf_limit_without_calling_openai()
+    public async Task Refuse_a_pdf_with_too_many_pages_before_calling_the_interpreter()
+    {
+        _pdfPages.Pages = DocumentLimits.MaximumPdfPages + 1;
+
+        var result = await _service.PrepareFromDocument("%PDF-1.7"u8.ToArray());
+
+        Assert.Equal(DraftErrors.PdfTooManyPages, result.Error);
+        Assert.Equal(0, _interpreter.CallCount);
+    }
+
+    [Fact]
+    public async Task Refuse_a_pdf_over_the_pdf_limit_without_calling_the_interpreter()
     {
         var oversized = new byte[DocumentLimits.MaximumPdfBytes + 1];
         "%PDF-"u8.CopyTo(oversized);
@@ -243,7 +203,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Not_call_openai_for_a_file_that_is_neither_an_image_nor_a_pdf()
+    public async Task Not_call_the_interpreter_for_a_file_that_is_neither_an_image_nor_a_pdf()
     {
         var result = await _service.PrepareFromDocument("plain text"u8.ToArray());
 
@@ -254,7 +214,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Not_call_openai_without_internet_for_a_photo()
+    public async Task Not_call_the_interpreter_without_internet_for_a_photo()
     {
         _internet.IsAvailable = false;
 

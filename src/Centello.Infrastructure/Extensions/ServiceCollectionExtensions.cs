@@ -25,11 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRecurringPaymentRepository, RecurringPaymentRepository>();
         services.AddScoped<IRecurringOccurrenceProcessor, RecurringOccurrenceProcessor>();
         services.AddScoped<IDataBackup, SqliteDataBackup>();
-        services.AddSingleton(provider => new OpenAiClient(
-            new HttpClient(),
-            provider.GetRequiredService<IOpenAiApiKeyProvider>()));
-        services.AddSingleton<ISpeechTranscriber, OpenAiSpeechTranscriber>();
-        services.AddSingleton<IExpenseInterpreter, OpenAiExpenseInterpreter>();
+        services.AddSingleton<IExpenseInterpreter, FirebaseExpenseInterpreter>();
         return services;
     }
 }

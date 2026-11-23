@@ -29,10 +29,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<AppEntryRouter>();
         services.AddSingleton<INotificationPermission, MauiNotificationPermission>();
         services.AddSingleton<IReminderOffer, NotificationReminderOffer>();
-        services.AddSingleton<IOpenAiApiKeyStore, SecureStorageOpenAiApiKeyStore>();
+        services.AddSingleton<IDraftConsentStore, PreferencesDraftConsentStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
         services.AddSingleton<PhotoPicker>();
 #if ANDROID
+        services.AddSingleton<IFirebaseGeneration, FirebaseGeneration>();
+        services.AddSingleton<IPdfPageCounter, AndroidPdfPageCounter>();
         services.AddSingleton<ISpeechRecorder, AndroidAudioRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, AndroidRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
@@ -43,6 +45,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<HomeScreen>();
         services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreen>());
 #else
+        services.AddSingleton<IFirebaseGeneration, UnavailableFirebaseGeneration>();
+        services.AddSingleton<IPdfPageCounter, UnavailablePdfPageCounter>();
         services.AddSingleton<ISpeechRecorder, UnavailableSpeechRecorder>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
         services.AddSingleton<IConfirmation, AlertConfirmation>();

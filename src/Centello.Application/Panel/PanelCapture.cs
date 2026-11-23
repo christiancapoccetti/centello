@@ -11,7 +11,7 @@ public abstract record PanelState
     public bool KeepsPanelWhenStopped => this is TakingPhoto;
 
     public sealed record Starting : PanelState;
-    public sealed record NeedsApiKey : PanelState;
+    public sealed record NeedsConsent : PanelState;
     public sealed record Listening(TimeSpan Heard) : PanelState;
     public sealed record Preparing(TimeSpan Heard) : PanelState;
     public sealed record TakingPhoto : PanelState;

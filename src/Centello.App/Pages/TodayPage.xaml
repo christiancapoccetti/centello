@@ -237,7 +237,6 @@
                     <Label Text="{Binding Capture.Source.SheetTitle}" Style="{StaticResource TitleLarge}" HorizontalTextAlignment="Center" />
                     <c:IndeterminateBar IsVisible="{Binding Capture.IsReading}" />
                     <Label Text="{Binding Capture.Source.ReadingLine}" IsVisible="{Binding Capture.HasReadingLine}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
-                    <Label Text="{Binding Capture.Heard, StringFormat='Ho sentito: “{0}”'}" IsVisible="{Binding Capture.HasHeard}" Style="{StaticResource BodyMedium}" HorizontalTextAlignment="Center" />
                     <Label Text="{Binding Capture.ErrorMessage}" IsVisible="{Binding Capture.HasError}" TextColor="{t:Theme Alert}" HorizontalTextAlignment="Center" />
                     <HorizontalStackLayout HorizontalOptions="Center" Spacing="6">
                         <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Cloud}" TextColor="{t:Theme Mute}" />

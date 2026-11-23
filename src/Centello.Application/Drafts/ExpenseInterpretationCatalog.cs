@@ -27,23 +27,13 @@ public sealed class ExpenseInterpretationCatalog
         }
 
         Categories = items;
-        CategoryKeys = [.. items.Select(category => category.Key)];
-        TagKeys = [.. items.SelectMany(category => category.Tags).Select(tag => tag.Key)];
         PromptLines = [.. items.SelectMany(ToPromptLines)];
-        Keywords = [.. items
-            .SelectMany(category => category.Tags.Select(tag => tag.Tag.Name).Prepend(category.Category.Name))
-            .Distinct(StringComparer.OrdinalIgnoreCase)];
     }
 
     public IReadOnlyList<CatalogCategory> Categories { get; }
-    public IReadOnlyList<string> CategoryKeys { get; }
-    public IReadOnlyList<string> TagKeys { get; }
 
     /// <summary>One line per category (<c>c1: Auto</c>) followed by one indented line per tag (<c>  t1: Carburante</c>).</summary>
     public IReadOnlyList<string> PromptLines { get; }
-
-    /// <summary>Distinct category and tag names, as hints for a transcription provider.</summary>
-    public IReadOnlyList<string> Keywords { get; }
 
     public CatalogCategory? FindCategory(string? key) => Categories.FirstOrDefault(category => category.Key == key);
 

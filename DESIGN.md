@@ -391,7 +391,7 @@ Confident ink pills, no elevation.
 - **Disabled.** A disabled primary button drops to 38% opacity.
 
 ### Split pill (signature)
-The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, and two 64dp icon segments on the right, each behind a 1dp outline divider: the coral microphone and the coral camera (26sp). Hold the microphone to dictate; while listening, a small outlined raised toast ("Registra… rilascia per inviare") floats 36dp above it. Tapping the camera opens a menu above it (the menu surface below, 48dp rows with a 22sp glyph and a SemiBold 16sp label): "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria", "Scegli un PDF". On first run, the plus opens the manual expense editor, where the user can create a category. The microphone and camera require an active category. Once a category is available, tapping either segment without a saved OpenAI key opens Settings.
+The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, and two 64dp icon segments on the right, each behind a 1dp outline divider: the coral microphone and the coral camera (26sp). Hold the microphone to dictate; while listening, a small outlined raised toast ("Registra… rilascia per inviare") floats 36dp above it. Tapping the camera opens a menu above it (the menu surface below, 48dp rows with a 22sp glyph and a SemiBold 16sp label): "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria", "Scegli un PDF". On first run, the plus opens the manual expense editor, where the user can create a category. The microphone and camera require an active category. Once a category is available, tapping either segment with assisted drafts off offers to open Settings. The **Bozze assistite** switch opens a disclosure before enabling assisted drafts.
 
 ### Home screen widgets (signature)
 Four widgets that are the Home on the launcher, in the same flat graphite and the same Archivo.
@@ -432,7 +432,7 @@ Raised fill, outline stroke, coral plus, Bold 16sp ink, 56dp pill: the action th
 - **Surface card:** ground fill, 1dp hairline stroke, 16dp radius, 18dp padding: errors and notes.
 - **Info card:** raised fill, no stroke, 12dp radius, 16dp padding.
 - **Menu surface:** raised fill, outline stroke, 4dp radius, 8dp vertical padding, 220dp minimum width.
-- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim. The reading sheet is shared by voice, photo and PDF ("Inserimento vocale", "Lettura della foto", "Lettura del PDF"): title, a progress bar and one privacy line (for example "Foto inviata a OpenAI, Centello non la salva").
+- **Bottom sheet:** ground fill, 28dp top corners, 24dp sides, over the scrim. The reading sheet is shared by voice, photo and PDF ("Inserimento vocale", "Lettura della foto", "Lettura del PDF"): title, a progress bar and one privacy line (for example "Foto inviata a Google per preparare la bozza").
 
 ### Inputs / Fields
 - **Style:** outlined box, 4dp radius, 56dp, transparent fill, 16sp text, 16dp sides; the SemiBold 12sp label sits on the top edge with a ground-coloured backing.

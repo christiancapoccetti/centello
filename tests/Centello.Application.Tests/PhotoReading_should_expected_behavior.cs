@@ -7,7 +7,7 @@ public sealed class PhotoReading_should_expected_behavior
 {
     private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 0x01, 0x02];
 
-    private readonly FakeApiKeyStore _keys = new() { Key = "sk-test" };
+    private readonly FakeDraftConsentStore _consentStore = new();
     private readonly FakePhotoCapture _camera = new();
     private readonly FakeExpenseInterpreter _interpreter = new();
     private readonly List<PanelState> _changes = [];
@@ -27,13 +27,13 @@ public sealed class PhotoReading_should_expected_behavior
     }
 
     [Fact]
-    public async Task Ask_for_the_api_key_without_touching_the_camera()
+    public async Task Ask_for_the_consent_without_touching_the_camera()
     {
-        _keys.Key = "";
+        _consentStore.AcceptedVersion = 0;
 
         await _reading.Begin();
 
-        Assert.Equal(new PanelState.NeedsApiKey(), _reading.State);
+        Assert.Equal(new PanelState.NeedsConsent(), _reading.State);
         Assert.Equal(0, _camera.AccessCount);
         Assert.Equal(0, _camera.TakeCount);
     }
@@ -271,11 +271,12 @@ public sealed class PhotoReading_should_expected_behavior
             new TagService(categories, new FakeTagRepository())));
         var drafts = new ExpenseDraftService(
             new FakeSpeechRecorder(),
-            new FakeSpeechTranscriber(),
             interpreter,
             new FakeInternetAccess(),
+            new DraftConsent(_consentStore),
+            new FakePdfPageCounter(),
             scopes);
-        var reading = new PhotoReading(drafts, new OpenAiSettings(_keys), _camera);
+        var reading = new PhotoReading(drafts, new DraftConsent(_consentStore), _camera);
         reading.Changed += (_, state) => _changes.Add(state);
         return reading;
     }
@@ -317,7 +318,7 @@ public sealed class PhotoReading_should_expected_behavior
         public CancellationToken Token { get; private set; }
 
         public Task<Result<ExpenseDraft>> Interpret(
-            string phrase,
+            RecordedAudio audio,
             IReadOnlyCollection<DraftCategory> categories,
             DateOnly today,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();

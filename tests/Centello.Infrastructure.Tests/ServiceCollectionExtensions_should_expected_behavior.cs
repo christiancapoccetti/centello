@@ -10,7 +10,9 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         var services = new ServiceCollection();
         services.AddApplicationServices();
         services.AddInfrastructure(Path.Combine(Path.GetTempPath(), "centello-di-test.db3"));
-        services.AddSingleton<IOpenAiApiKeyStore, InMemoryOpenAiApiKeyStore>();
+        services.AddSingleton<IDraftConsentStore, InMemoryDraftConsentStore>();
+        services.AddSingleton<IFirebaseGeneration, StubFirebaseGeneration>();
+        services.AddSingleton<IPdfPageCounter, StubPdfPageCounter>();
         services.AddSingleton<ISpeechRecorder, SilentSpeechRecorder>();
         services.AddSingleton<IInternetAccess, AlwaysOnlineInternetAccess>();
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
@@ -18,20 +20,11 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     }
 
     [Fact]
-    public void Register_the_openai_interpreter_and_transcriber()
+    public void Register_the_firebase_interpreter()
     {
         using var provider = BuildProvider();
 
-        Assert.IsType<OpenAiExpenseInterpreter>(provider.GetRequiredService<IExpenseInterpreter>());
-        Assert.IsType<OpenAiSpeechTranscriber>(provider.GetRequiredService<ISpeechTranscriber>());
-    }
-
-    [Fact]
-    public void Read_the_api_key_from_the_openai_settings()
-    {
-        using var provider = BuildProvider();
-
-        Assert.Same(provider.GetRequiredService<OpenAiSettings>(), provider.GetRequiredService<IOpenAiApiKeyProvider>());
+        Assert.IsType<FirebaseExpenseInterpreter>(provider.GetRequiredService<IExpenseInterpreter>());
     }
 
     [Fact]
@@ -105,14 +98,6 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
             provider.GetRequiredService<RecurringPaymentAutomation>());
     }
 
-    [Fact]
-    public void Share_one_openai_client_between_transcriber_and_interpreter()
-    {
-        using var provider = BuildProvider();
-
-        Assert.Same(provider.GetRequiredService<OpenAiClient>(), provider.GetRequiredService<OpenAiClient>());
-    }
-
     private sealed class AlwaysOnlineInternetAccess : IInternetAccess
     {
         public bool IsAvailable => true;
@@ -127,12 +112,20 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         public Task Cancel() => Task.CompletedTask;
     }
 
-    private sealed class InMemoryOpenAiApiKeyStore : IOpenAiApiKeyStore
+    private sealed class InMemoryDraftConsentStore : IDraftConsentStore
     {
-        public Task<StoredOpenAiApiKey?> GetApiKey() => Task.FromResult<StoredOpenAiApiKey?>(null);
-        public Task SetApiKey(StoredOpenAiApiKey apiKey) => Task.CompletedTask;
-        public void ClearApiKey()
-        {
-        }
+        public int AcceptedVersion { get; set; }
+    }
+
+    private sealed class StubFirebaseGeneration : IFirebaseGeneration
+    {
+        public Task<Result<FirebaseGenerationResponse>> Generate(
+            string prompt, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException();
+    }
+    private sealed class StubPdfPageCounter : IPdfPageCounter
+    {
+        public Task<Result<int>> Count(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException();
     }
 }

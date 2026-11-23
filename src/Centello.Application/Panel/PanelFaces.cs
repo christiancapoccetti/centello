@@ -20,7 +20,6 @@ public abstract record PanelFace
         string MicLabel,
         MicStage Mic) : PanelFace;
 
-    /// <summary>A photo on its way to OpenAI: the receipt on an indeterminate line, and the privacy note.</summary>
     public sealed record Reading(string Title, string Lead, string Glyph, string PrivacyNote) : PanelFace;
 
     /// <summary>A sentence and one way on. Annulla is always there.</summary>
@@ -42,16 +41,12 @@ public static class PanelFaces
     private const string SendingLabel = "Invio in corso";
     private static readonly TimeSpan Limit = TimeSpan.FromSeconds(SpeechRecordingLimits.MaximumDurationSeconds);
 
-    /// <summary>Starting, Listening and Preparing of the voice panel -> Recording; NeedsApiKey -> Message(MissingKey,
-    /// OpenSettings); Failed -> Message(error, Retry); Reading -> Reading from the source's title, reading line and
-    /// privacy note. Everything the person does not see is Hidden: the photo before the shot, the camera in front, and
-    /// DraftReady and Closed, where the panel is leaving.</summary>
     public static PanelFace Of(DraftSource source, PanelState state) => state switch
     {
         PanelState.Starting when source == DraftSource.Voice => Recording(TimeSpan.Zero, MicStage.Waiting),
         PanelState.Listening listening => Recording(listening.Heard, MicStage.Listening),
         PanelState.Preparing preparing => Recording(preparing.Heard, MicStage.Sending),
-        PanelState.NeedsApiKey => new PanelFace.Message(source.SheetTitle, source.MissingKey, PanelAction.OpenSettings),
+        PanelState.NeedsConsent => new PanelFace.Message(source.SheetTitle, DraftErrors.ConsentRequired.Message, PanelAction.OpenSettings),
         PanelState.Failed failed => new PanelFace.Message(source.SheetTitle, failed.Error.Message, PanelAction.Retry),
         PanelState.Reading => new PanelFace.Reading(
             source.SheetTitle,
