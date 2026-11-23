@@ -38,24 +38,34 @@ public partial class App : Microsoft.Maui.Controls.Application
 
     private ContentPage StartupPage(Window window)
     {
-        const string opening = "Apertura dei dati in corso…";
-        var status = new Label { Text = opening, FontSize = 20 };
-        var retry = new Button { Text = "Riprova", IsVisible = false };
-        var page = new ContentPage
+        var splash = new Grid
         {
-            Title = "Centello",
-            Content = new VerticalStackLayout
+            BackgroundColor = Color.FromArgb("#141516"),
+            Children =
             {
-                Padding = 24,
-                Spacing = 16,
-                VerticalOptions = LayoutOptions.Center,
-                Children =
+                new Image
                 {
-                    status,
-                    retry
+                    Source = "segno_su_scuro.png",
+                    WidthRequest = 128,
+                    HeightRequest = 128,
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center
                 }
             }
         };
+        var retry = new Button { Text = "Riprova" };
+        var error = new VerticalStackLayout
+        {
+            Padding = 24,
+            Spacing = 16,
+            VerticalOptions = LayoutOptions.Center,
+            Children =
+            {
+                new Label { Text = "Centello non è riuscito ad aprire i dati del telefono.", FontSize = 20 },
+                retry
+            }
+        };
+        var page = new ContentPage { Title = "Centello", Content = splash };
         page.Loaded += OnLoaded;
         retry.Clicked += async (_, _) => await Open();
         return page;
@@ -71,16 +81,14 @@ public partial class App : Microsoft.Maui.Controls.Application
             if (!ReferenceEquals(window.Page, page))
                 return;
 
-            retry.IsVisible = false;
-            status.Text = opening;
+            page.Content = splash;
             var ready = await _databaseStartup.Run();
             if (!ReferenceEquals(window.Page, page))
                 return;
 
             if (!ready)
             {
-                status.Text = "Centello non è riuscito ad aprire i dati del telefono.";
-                retry.IsVisible = true;
+                page.Content = error;
                 return;
             }
 
