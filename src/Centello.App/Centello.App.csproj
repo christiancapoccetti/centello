@@ -47,7 +47,7 @@
   </Target>
 
   <ItemGroup Condition="'$(FirebaseAndroidConfigFile)' != ''">
-    <AndroidAsset Include="$(FirebaseAndroidConfigFile)" Link="Assets/firebase-android.json" />
+    <AndroidAsset Include="$(FirebaseAndroidConfigFile)" LogicalName="firebase-android.json" Link="firebase-android.json" />
   </ItemGroup>
 
   <ItemGroup>
