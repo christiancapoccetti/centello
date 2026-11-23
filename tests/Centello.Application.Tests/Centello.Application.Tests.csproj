@@ -18,6 +18,7 @@
     <Using Include="Xunit" />
     <Compile Include="..\..\src\Centello.App\Controls\BrowseScrollOffset.cs" Link="BrowseScrollOffset.cs" />
     <Compile Include="..\..\src\Centello.App\Controls\PhoneLandscapeSize.cs" Link="PhoneLandscapeSize.cs" />
+    <Compile Include="..\..\src\Centello.App\Controls\Recap\SpendingMapPanels.cs" Link="SpendingMapPanels.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,7 +8,7 @@ namespace Centello.App.Controls.Recap;
 /// content into the safe area and below the story's top bar, so the page only has to put the view on screen. Buttons
 /// inside a card keep their own taps; everything else lets the page's tap through.</summary>
 internal sealed class RecapCardViews(bool isDark, double width, double height, bool landscape, Action<Guid> openExpense, Action<RecapExitTarget> exit,
-    Action restart) : IRecapCardVisitor<View>
+    Action restart, Action<RecapCard.SpendingMap, bool> shareMap) : IRecapCardVisitor<View>
 {
     /// <summary>The story's top bar: 6 above the segments, 3 for them, the 48 high title row.</summary>
     public const double TopBar = 57;
@@ -18,6 +18,9 @@ internal sealed class RecapCardViews(bool isDark, double width, double height, b
     private const double LandscapeGap = 24;
 
     private double Content => width - 2 * Gutter;
+
+    public View SpendingMap(RecapCard.SpendingMap card) =>
+        new SpendingMapView(card, landscape, Ink(RecapSurface.Ground), () => shareMap(card, landscape));
 
     public View Cover(RecapCard.Cover card)
     {

@@ -47,7 +47,7 @@ public sealed class StoryPlayer
     }
 
     /// <summary>How full the segment of the card in front is: with a screen reader nothing counts, so it is full.</summary>
-    public double Fill => IsAutomatic && _story is { } story ? story.Progress : 1;
+    public double Fill => IsAutomatic && _story is { WaitsForInput: false } story ? story.Progress : 1;
 
     private void Set(ref bool field, bool value)
     {
@@ -58,7 +58,7 @@ public sealed class StoryPlayer
     /// <summary>Starts or stops the clock to match the state: call it after the story moved without the clock.</summary>
     public void Refresh()
     {
-        var shouldRun = _story is { IsDone: false } && _isVisible && _isActive && !_isHeld && IsAutomatic;
+        var shouldRun = _story is { IsDone: false, WaitsForInput: false } && _isVisible && _isActive && !_isHeld && IsAutomatic;
         if (shouldRun == _timer.IsRunning)
             return;
 
@@ -85,7 +85,7 @@ public sealed class StoryPlayer
         else
             Progressed?.Invoke(story.Progress);
 
-        if (story.IsDone)
+        if (story.IsDone || story.WaitsForInput)
             Refresh();
     }
 }

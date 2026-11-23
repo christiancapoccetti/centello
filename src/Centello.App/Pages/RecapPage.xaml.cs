@@ -16,22 +16,25 @@ public partial class RecapPage : ContentPage, IQueryAttributable
     private readonly StoryTouches _touches;
     private readonly StoryPlayer _player;
     private readonly IScreenReader _screenReader;
+    private readonly IDownloads _downloads;
     private readonly RecapPress _press = new();
     private Window? _window;
     private bool _isInitialized;
     private bool _isShowing;
     private bool _focusPending;
+    private bool _openingPreview;
     private double _builtWidth;
     private double _builtHeight;
     private bool _builtLandscape;
 
-    public RecapPage(RecapViewModel viewModel, IStoryBars bars, StoryTouches touches, IScreenReader screenReader)
+    public RecapPage(RecapViewModel viewModel, IStoryBars bars, StoryTouches touches, IScreenReader screenReader, IDownloads downloads)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _bars = bars;
         _touches = touches;
         _screenReader = screenReader;
+        _downloads = downloads;
         _player = new StoryPlayer(Dispatcher.CreateTimer(), screenReader);
         _player.CardChanged += Show;
         _player.Progressed += Progress.Fill;
@@ -142,8 +145,9 @@ public partial class RecapPage : ContentPage, IQueryAttributable
     private void UpdateNavigation(bool landscape)
     {
         var usesScreenReader = !_player.IsAutomatic;
-        NavigationButtons.IsVisible = landscape || usesScreenReader;
-        if (usesScreenReader)
+        var manualCard = _viewModel.Story?.WaitsForInput == true;
+        NavigationButtons.IsVisible = landscape || usesScreenReader || manualCard;
+        if (usesScreenReader || manualCard)
             CardHost.GestureRecognizers.Remove(CardTap);
         else if (!CardHost.GestureRecognizers.Contains(CardTap))
             CardHost.GestureRecognizers.Add(CardTap);
@@ -174,7 +178,7 @@ public partial class RecapPage : ContentPage, IQueryAttributable
         UpdateNavigation(_builtLandscape);
         var card = story.Current;
         var ink = StoryInk.Of(card.Top, IsDark);
-        CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, Height, _builtLandscape, OpenExpense, Exit, Restart));
+        CardHost.Content = card.Accept(new RecapCardViews(IsDark, Width, Height, _builtLandscape, OpenExpense, Exit, Restart, ShareMap));
         var index = story.Index;
         Progress.Show(index, story.Count, ink, _player.Fill);
         TitleLabel.TextColor = ink.Ink;
@@ -247,6 +251,22 @@ public partial class RecapPage : ContentPage, IQueryAttributable
     }
 
     private async void OpenExpense(Guid expenseId) => await Shell.Current.GoToAsync(ExpenseEditorPage.Route(expenseId));
+
+    private async void ShareMap(RecapCard.SpendingMap card, bool complete)
+    {
+        if (_openingPreview || !_isShowing)
+            return;
+
+        _openingPreview = true;
+        try
+        {
+            await Navigation.PushModalAsync(new SpendingMapSharePage(card, complete, IsDark, _downloads));
+        }
+        finally
+        {
+            _openingPreview = false;
+        }
+    }
 
     private async void OnCloseClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("..");
 }

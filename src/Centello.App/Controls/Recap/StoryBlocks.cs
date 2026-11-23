@@ -227,7 +227,7 @@ internal static class StoryBlocks
     }
 
     /// <summary>The ink pill, or its outlined twin: what the summary offers to do next.</summary>
-    public static Button Pill(string text, bool isFilled, StoryInk ink, Action pressed)
+    public static Button Pill(string text, bool isFilled, StoryInk ink, Action? pressed = null)
     {
         var button = new Button
         {
@@ -242,7 +242,8 @@ internal static class StoryBlocks
             BorderColor = isFilled ? Colors.Transparent : ink.Mute,
             BorderWidth = isFilled ? 0 : 1
         };
-        button.Clicked += (_, _) => pressed();
+        if (pressed is not null)
+            button.Clicked += (_, _) => pressed();
         return button;
     }
 
