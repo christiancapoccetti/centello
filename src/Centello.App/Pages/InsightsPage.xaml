@@ -9,6 +9,20 @@
              x:Name="RootPage"
              Title="Insight"
              SafeAreaEdges="All">
+    <ContentPage.Resources>
+        <DataTemplate x:Key="CategoryShareRow" x:DataType="vm:InsightCategoryRow">
+            <Grid RowDefinitions="Auto,6" RowSpacing="5" ColumnDefinitions="24,*,Auto,Auto" ColumnSpacing="8" MinimumHeightRequest="48" Padding="0,7,0,6">
+                <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="24" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.Column="1" Text="{Binding Name}" Style="{StaticResource TitleMedium}" VerticalOptions="Center" LineBreakMode="WordWrap" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource Caption}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.Column="3" Text="{Binding Share}" Style="{StaticResource LabelLarge}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                <c:InsightShareBar Grid.Row="1" Grid.ColumnSpan="4" Fraction="{Binding ShareFraction}" Marker="{Binding ComparedShare}" ColorKey="{Binding ColorKey}" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.RowSpan="2" Grid.ColumnSpan="4" IsVisible="{Binding IsResidual}" InputTransparent="True" SemanticProperties.Description="{Binding ShareDescription}" />
+                <Button Grid.RowSpan="2" Grid.ColumnSpan="4" BackgroundColor="Transparent" Text="" IsVisible="{Binding CanOpen}" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding ShareDescription}" SemanticProperties.Hint="Apri la categoria" />
+            </Grid>
+        </DataTemplate>
+    </ContentPage.Resources>
+
     <Grid x:Name="PageLayout" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,0">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
@@ -86,51 +100,15 @@
                             <Label IsVisible="{Binding HasPriorShares}" Text="{Binding ComparedShareLabel}" Style="{StaticResource Caption}" />
                         </FlexLayout>
 
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding LeadingCategories}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="vm:InsightCategoryRow">
-                                    <Grid RowDefinitions="Auto,6" RowSpacing="5" ColumnDefinitions="24,*,Auto,Auto" ColumnSpacing="8" MinimumHeightRequest="48" Padding="0,7,0,6">
-                                        <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="24" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                                        <Label Grid.Column="1" Text="{Binding Name}" Style="{StaticResource TitleMedium}" VerticalOptions="Center" LineBreakMode="WordWrap" AutomationProperties.IsInAccessibleTree="False" />
-                                        <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource Caption}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                                        <Label Grid.Column="3" Text="{Binding Share}" Style="{StaticResource LabelLarge}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                                        <c:InsightShareBar Grid.Row="1" Grid.ColumnSpan="4" Fraction="{Binding ShareFraction}" Marker="{Binding ComparedShare}" ColorKey="{Binding ColorKey}" AutomationProperties.IsInAccessibleTree="False" />
-                                        <Label Grid.RowSpan="2" Grid.ColumnSpan="4" IsVisible="{Binding IsResidual}" InputTransparent="True" SemanticProperties.Description="{Binding ShareDescription}" />
-                                        <Button Grid.RowSpan="2" Grid.ColumnSpan="4" BackgroundColor="Transparent" Text="" IsVisible="{Binding CanOpen}" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding ShareDescription}" SemanticProperties.Hint="Apri la categoria" />
-                                    </Grid>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding LeadingCategories}" BindableLayout.ItemTemplate="{StaticResource CategoryShareRow}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding MoreCategories}" BindableLayout.ItemTemplate="{StaticResource CategoryShareRow}" />
 
-                        <Grid Margin="0,8,0,0" ColumnDefinitions="*,24" MinimumHeightRequest="48" RowDefinitions="1,*">
+                        <Grid IsVisible="{Binding HasMoreCategories}" Margin="0,8,0,0" ColumnDefinitions="*,24" MinimumHeightRequest="48" RowDefinitions="1,*">
                             <BoxView Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
                             <Label Grid.Row="1" Text="{Binding DisclosureTitle}" Style="{StaticResource TitleMedium}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding DisclosureGlyph}" Style="{StaticResource IconGlyph}" TextColor="{t:Theme Mute}" AutomationProperties.IsInAccessibleTree="False" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding DisclosureGlyph}" Style="{StaticResource IconGlyph}" TextColor="{t:Theme Mute}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
                             <Button Grid.Row="1" Grid.ColumnSpan="2" BackgroundColor="Transparent" Text="" Clicked="OnDisclosureClicked" SemanticProperties.Description="{Binding DisclosureTitle}" />
                         </Grid>
-                        <VerticalStackLayout IsVisible="{Binding CategoriesExpanded}">
-                            <Grid ColumnDefinitions="1.4*,*,*,0.8*" ColumnSpacing="6" Padding="0,4">
-                                <Label Text="Categoria" Style="{StaticResource BodySmall}" />
-                                <Label Grid.Column="1" Text="{Binding ComparedPeriod}" Style="{StaticResource BodySmall}" HorizontalTextAlignment="End" />
-                                <Label Grid.Column="2" Text="{Binding CurrentPeriod}" Style="{StaticResource BodySmall}" HorizontalTextAlignment="End" />
-                                <Label Grid.Column="3" Text="Var." Style="{StaticResource BodySmall}" HorizontalTextAlignment="End" />
-                            </Grid>
-                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Categories}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:InsightCategoryRow">
-                                        <Grid RowDefinitions="1,*" ColumnDefinitions="1.4*,*,*,0.8*" ColumnSpacing="6" MinimumHeightRequest="48">
-                                            <BoxView Grid.ColumnSpan="4" Style="{StaticResource Hairline}" />
-                                            <Label Grid.Row="1" Text="{Binding Name}" Style="{StaticResource BodySmall}" VerticalOptions="Center" LineBreakMode="WordWrap" AutomationProperties.IsInAccessibleTree="False" />
-                                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding ComparedAmount}" Style="{StaticResource BodySmall}" HorizontalTextAlignment="End" VerticalOptions="Center" LineBreakMode="CharacterWrap" AutomationProperties.IsInAccessibleTree="False" />
-                                            <Label Grid.Row="1" Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource BodySmall}" HorizontalTextAlignment="End" VerticalOptions="Center" LineBreakMode="CharacterWrap" AutomationProperties.IsInAccessibleTree="False" />
-                                            <Label Grid.Row="1" Grid.Column="3" Text="{Binding Change}" Style="{StaticResource BodySmall}" HorizontalTextAlignment="End" VerticalOptions="Center" LineBreakMode="CharacterWrap" AutomationProperties.IsInAccessibleTree="False" />
-                                            <Label Grid.Row="1" Grid.ColumnSpan="4" IsVisible="{Binding IsResidual}" InputTransparent="True" SemanticProperties.Description="{Binding TableDescription}" />
-                                            <Button Grid.Row="1" Grid.ColumnSpan="4" BackgroundColor="Transparent" Text="" IsVisible="{Binding CanOpen}" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding TableDescription}" SemanticProperties.Hint="Apri la categoria" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </VerticalStackLayout>
-                        </VerticalStackLayout>
                     </VerticalStackLayout>
 
                     <VerticalStackLayout x:Name="Reports" IsVisible="{Binding HasReports}" Padding="24,18,24,24">

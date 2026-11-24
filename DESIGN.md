@@ -481,9 +481,9 @@ The previous period is a 2dp dashed ink step line (4dp dash, 3dp gap) on the sam
 
 Insight opens with a compact date range and total. **Dove sono finiti i soldi?** follows with a headline based on the spending in the selected period. Up to three leading categories show their spending and share. The bar uses the category colour. An ink marker shows the share for the comparable period when that period has spending.
 
-**Vedi tutte le categorie** expands a table with the amounts for both periods and the signed euro difference. The table includes categories with spending only in the previous period. Category rows with a detail page open that page for the selected period.
+The composition shows up to three category share rows. **Mostra un’altra categoria** or **Mostra altre N categorie** appends the remaining rows in spending order, each with its amount, share bar and previous-period marker when available. **Mostra solo le prime 3** collapses the list. Tapping a named category opens its detail for the selected period.
 
-The lower section switches between **Andamento**, which opens by default for the selected period, and **Per categoria**. **Per categoria** shows signed euro changes on horizontal bars with a shared zero marker, ordered by decreasing absolute euro difference; equal magnitudes keep their prior category order. Increases extend right and decreases extend left. The leading composition above retains its existing order.
+The lower section switches independently between **Andamento**, which opens by default for the selected period, and **Per categoria**. **Per categoria** shows signed euro changes on horizontal bars with a shared zero marker, ordered by decreasing absolute euro difference. Equal magnitudes keep their prior category order. Increases extend right and decreases extend left.
 
 ### Recap story (signature)
 The full-screen story of a closed month or year ("Il tuo novembre", "Il tuo 2026"), pushed over Insight with no tab bar. It is the one place the palette leaves its tiles: a card about a category fills the whole screen with that category's ink under tile-ink text. Coral never paints a card (coral means "add an expense"), so a coral category's card stays on the graphite ground and keeps its ink in tile and bars.

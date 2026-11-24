@@ -4,8 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centello.App.ViewModels;
 
-public sealed record InsightCategoryRow(InsightCategory Category, string ComparedPeriod, string CurrentPeriod,
-    double DeltaFraction, double DeltaZero)
+public sealed record InsightCategoryRow(InsightCategory Category, double DeltaFraction, double DeltaZero)
 {
     public Guid? CategoryId => Category.CategoryId;
     public bool CanOpen => CategoryId is not null;
@@ -14,22 +13,18 @@ public sealed record InsightCategoryRow(InsightCategory Category, string Compare
     public string IconKey => Category.Icon;
     public string ColorKey => Category.Color;
     public string Amount => InsightTexts.Money(Category.SpentCents);
-    public string ComparedAmount => Category.ComparedSpentCents is { } cents ? InsightTexts.Money(cents) : "—";
     public string Share => Category.Share is { } share ? InsightTexts.Share(share) : "—";
     public double ShareFraction => Category.Share.GetValueOrDefault();
     public double? ComparedShare => Category.ComparedShare;
-    public string Change => InsightTexts.Variation(Category.SpentCents, Category.ComparedSpentCents);
     public string Delta => Category.DeltaCents is { } cents ? InsightTexts.Delta(cents) : "";
     public string ShareDescription => ComparedShare is { } prior
         ? $"{Name}, {Amount}, {Share} a confronto con {InsightTexts.Share(prior)} nel periodo precedente"
         : $"{Name}, {Amount}, quota {Share}";
-    public string TableDescription => Category.ComparedSpentCents is null
-        ? $"{Name}, {CurrentPeriod} {Amount}. Confronto non disponibile."
-        : $"{Name}, {ComparedPeriod} {ComparedAmount}, {CurrentPeriod} {Amount}, variazione {Change}";
 }
 
 public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : ObservableObject
 {
+    private const int LeadingCategoryCount = 3;
     // Null follows the month that contains today, so a page left open moves on when the month changes.
     private Period? _selected;
     private InsightsOverview? _overview;
@@ -37,6 +32,7 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
     private string _errorMessage = "";
     private int _chartIndex;
     private bool _categoriesExpanded;
+    private IReadOnlyList<InsightCategoryRow> _moreCategories = [];
 
     public InsightsOverview? Overview => _overview;
     public bool HasReports => Overview is not null && !IsEmpty;
@@ -48,14 +44,13 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
     public string Range => Overview is { } overview ? InsightTexts.DateRange(overview.From, overview.To) + " · " : "";
     public InsightRecap? Recap => Overview?.Recap;
     public bool HasRecap => Recap is not null;
-    public string CurrentPeriod => Overview is { } overview ? PeriodName(overview.Period) : "";
-    public string ComparedPeriod => Overview is { } overview ? PeriodName(overview.Period.Previous()) : "";
     public bool HasPriorShares => Overview?.ComparedSpentCents is > 0;
     public string CurrentShareLabel => Overview is { } overview ? $"Quota {ItalianFormat.InPeriod(overview.Period)}" : "";
     public string ComparedShareLabel => Overview is { } overview ? $"Quota {ItalianFormat.InPeriod(overview.Period.Previous())}" : "";
     public bool HasLeadingCategories => LeadingCategories.Count > 0;
     public IReadOnlyList<InsightCategoryRow> LeadingCategories { get; private set; } = [];
-    public IReadOnlyList<InsightCategoryRow> Categories { get; private set; } = [];
+    public bool HasMoreCategories => _moreCategories.Count > 0;
+    public IReadOnlyList<InsightCategoryRow> MoreCategories => _categoriesExpanded ? _moreCategories : [];
     public IReadOnlyList<InsightCategoryRow> Deltas { get; private set; } = [];
     public bool HasUnchangedCategories => HasPriorShares && Deltas.Count == 0;
     public string DeltaDetail { get; private set; } = "";
@@ -82,14 +77,22 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
 
     public bool ShowTrend => ChartIndex == 0;
     public bool ShowDeltas => ChartIndex == 1;
-    public bool CategoriesExpanded => _categoriesExpanded;
-    public string DisclosureGlyph => CategoriesExpanded ? MaterialSymbols.ExpandLess : MaterialSymbols.ExpandMore;
-    public string DisclosureTitle => CategoriesExpanded ? "Nascondi il confronto per categoria" : "Vedi tutte le categorie";
+    public string DisclosureGlyph => _categoriesExpanded ? MaterialSymbols.ExpandLess : MaterialSymbols.ExpandMore;
+    public string DisclosureTitle => _moreCategories.Count switch
+    {
+        0 => "",
+        _ when _categoriesExpanded => $"Mostra solo le prime {LeadingCategoryCount}",
+        1 => "Mostra un’altra categoria",
+        var count => $"Mostra altre {count} categorie"
+    };
 
     public void ToggleCategories()
     {
+        if (!HasMoreCategories)
+            return;
+
         _categoriesExpanded = !_categoriesExpanded;
-        OnPropertyChanged(nameof(CategoriesExpanded));
+        OnPropertyChanged(nameof(MoreCategories));
         OnPropertyChanged(nameof(DisclosureGlyph));
         OnPropertyChanged(nameof(DisclosureTitle));
     }
@@ -156,24 +159,22 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
         var upper = (double)bounds.Max();
         var zero = lower + upper > 0 ? Math.Clamp(lower / (lower + upper), 0.3, 0.7) : 0.5;
         var scale = Math.Max(1, Math.Max(lower / zero, upper / (1 - zero)));
-        var comparedPeriod = ComparedPeriod;
-        var currentPeriod = CurrentPeriod;
         InsightCategoryRow ToRow(InsightCategory row) =>
-            new(row, comparedPeriod, currentPeriod, row.DeltaCents.GetValueOrDefault() / scale, zero);
+            new(row, row.DeltaCents.GetValueOrDefault() / scale, zero);
 
-        Categories = overview.Categories.Select(ToRow).ToArray();
-        LeadingCategories = overview.Composition.Leading.Select(ToRow).ToArray();
-        Deltas = Categories
+        var categories = overview.Categories.Select(ToRow).ToArray();
+        LeadingCategories = categories.Take(LeadingCategoryCount).ToArray();
+        _moreCategories = categories.Skip(LeadingCategoryCount).ToArray();
+        if (!HasMoreCategories)
+            _categoriesExpanded = false;
+
+        Deltas = categories
             .Where(row => row.Category.DeltaCents is not null and not 0)
             .OrderByDescending(row => Math.Abs(row.Category.DeltaCents!.Value))
             .ToArray();
         DeltaDetail = DescribeDeltas(Deltas);
         OnPropertyChanged("");
     }
-
-    private static string PeriodName(Period period) => period.Kind == PeriodKind.Month
-        ? ItalianFormat.MonthTitle(period.Start.Month)
-        : period.Start.Year.ToString();
 
     private static string DescribeDeltas(IReadOnlyList<InsightCategoryRow> rows)
     {

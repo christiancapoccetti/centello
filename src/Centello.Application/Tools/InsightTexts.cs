@@ -26,13 +26,6 @@ public static class InsightTexts
 
     public static string Share(double fraction) => Percent((decimal)fraction);
 
-    public static string Variation(long spent, long? prior) => prior switch
-    {
-        null => "—",
-        0 => "Nuovo",
-        _ => Signed(spent - prior.Value) + Percent((decimal)(spent - prior.Value) / prior.Value)
-    };
-
     public static string Delta(long cents) => $"{Signed(cents)}{Money(Math.Abs(cents))}";
 
     public static string Money(long cents) => $"{ItalianFormat.Budget(cents)} €";

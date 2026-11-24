@@ -17,7 +17,7 @@ public sealed class InsightsService_should_expected_behavior
         Assert.Equal(0, result.Value.SpentCents);
         Assert.Null(result.Value.ComparedSpentCents);
         Assert.Empty(result.Value.Categories);
-        Assert.Empty(result.Value.Composition.Leading);
+        Assert.Equal("Nessuna spesa nel periodo selezionato.", result.Value.Composition.Statement.Lead);
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public sealed class InsightsService_should_expected_behavior
         Assert.Null(row.Share);
         Assert.Equal(1d, row.ComparedShare);
         Assert.Equal(-1_000L, row.DeltaCents);
-        Assert.Empty(result.Value.Composition.Leading);
+        Assert.Equal("Nessuna spesa nel periodo selezionato.", result.Value.Composition.Statement.Lead);
     }
 
     [Fact]
@@ -323,7 +323,8 @@ public sealed class InsightsService_should_expected_behavior
         Assert.Equal(85_501, overview.SpentCents);
         Assert.Equal(80_000, overview.ComparedSpentCents);
         Assert.Equal((new DateOnly(2026, 10, 1), prior), (overview.ComparedFrom, overview.ComparedTo));
-        Assert.Equal([food.CategoryId, fuel.CategoryId, bills.CategoryId], overview.Composition.Leading.Select(row => row.CategoryId));
+        Assert.Equal<Guid?>([food.CategoryId, fuel.CategoryId, bills.CategoryId, null, restaurants.CategoryId],
+            overview.Categories.Select(row => row.CategoryId));
         Assert.Equal($"2{Nbsp}€ su 3", overview.Composition.Statement.Emphasis);
         Assert.Equal("Negli stessi giorni di ottobre, la quota era la metà.", overview.Composition.Context);
         Assert.Equal(0.655, overview.Categories[0].Share!.Value, 3);
@@ -355,7 +356,7 @@ public sealed class InsightsService_should_expected_behavior
 
         var overview = (await CreateService(today, [fuel, food], expenses).Get()).Value;
 
-        Assert.Equal([food.CategoryId, fuel.CategoryId], overview.Composition.Leading.Select(row => row.CategoryId));
+        Assert.Equal<Guid?>([food.CategoryId, fuel.CategoryId], overview.Categories.Select(row => row.CategoryId));
         Assert.Equal("Le voci con la spesa più alta hanno lo stesso importo.", overview.Composition.Statement.Lead);
         Assert.Equal("", overview.Composition.Context);
         Assert.Equal(0d, overview.Categories[0].ComparedShare);
@@ -372,7 +373,7 @@ public sealed class InsightsService_should_expected_behavior
 
         var overview = (await CreateService(today, expenses: expenses).Get()).Value;
 
-        var row = Assert.Single(overview.Composition.Leading);
+        var row = Assert.Single(overview.Categories);
         Assert.Null(row.CategoryId);
         Assert.Equal("100%", overview.Composition.Statement.Emphasis);
         Assert.Contains("categorie archiviate o non disponibili", overview.Composition.Statement.Tail);

@@ -15,7 +15,7 @@ public sealed record InsightCategory(Guid? CategoryId, string Name, string Icon,
     public long? DeltaCents => SpentCents - ComparedSpentCents;
 }
 
-public sealed record InsightComposition(BudgetSummary Statement, string Context, IReadOnlyList<InsightCategory> Leading);
+public sealed record InsightComposition(BudgetSummary Statement, string Context);
 
 public sealed record InsightsOverview(Period Period, HomeNavigation Navigation, DateOnly From, DateOnly To,
     DateOnly ComparedFrom, DateOnly ComparedTo, bool IsToDate, long SpentCents, long? ComparedSpentCents,

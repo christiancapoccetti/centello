@@ -28,27 +28,27 @@ internal static class InsightCategories
     {
         var leading = rows
             .Where(row => row.SpentCents > 0)
-            .Take(3)
+            .Take(2)
             .ToArray();
 
         if (leading.Length == 0)
-            return new InsightComposition(new BudgetSummary("Nessuna spesa nel periodo selezionato.", "", ""), "", leading);
+            return new InsightComposition(new BudgetSummary("Nessuna spesa nel periodo selezionato.", "", ""), "");
 
         var first = leading[0];
         if (leading.Length > 1 && first.SpentCents == leading[1].SpentCents)
-            return new InsightComposition(new BudgetSummary("Le voci con la spesa più alta hanno lo stesso importo.", "", ""), "", leading);
+            return new InsightComposition(new BudgetSummary("Le voci con la spesa più alta hanno lo stesso importo.", "", ""), "");
 
         if (first.CategoryId is null)
         {
             var statement = new BudgetSummary("", InsightTexts.Share(first.Share!.Value),
                 " della spesa è in categorie archiviate o non disponibili.");
-            return new InsightComposition(statement, "", leading);
+            return new InsightComposition(statement, "");
         }
 
         var context = first.ComparedShare is { } share
             ? $"{RowLabels.Sentence(InsightTexts.InComparedPeriod(period, isToDate))}, la quota era {ArticleOfShare(share)}."
             : "";
-        return new InsightComposition(Statement(first.Name, first.Share!.Value), context, leading);
+        return new InsightComposition(Statement(first.Name, first.Share!.Value), context);
     }
 
     private static BudgetSummary Statement(string name, double share) => share switch

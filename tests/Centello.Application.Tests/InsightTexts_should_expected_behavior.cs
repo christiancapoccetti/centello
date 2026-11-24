@@ -87,16 +87,10 @@ public sealed class InsightTexts_should_expected_behavior
         Assert.Equal(expected, InsightTexts.Share(fraction));
 
     [Fact]
-    public void Should_show_exact_signed_euros_and_variations()
+    public void Should_show_exact_signed_euros()
     {
         Assert.Equal($"+160,01{Nbsp}€", InsightTexts.Delta(16_001));
         Assert.Equal($"−25{Nbsp}€", InsightTexts.Delta(-2_500));
-        Assert.Equal("+40%", InsightTexts.Variation(56_000, 40_000));
-        Assert.Equal("−15,6%", InsightTexts.Variation(13_500, 16_000));
-        Assert.Equal("−100%", InsightTexts.Variation(0, 6_800));
-        Assert.Equal("0%", InsightTexts.Variation(6_800, 6_800));
-        Assert.Equal("Nuovo", InsightTexts.Variation(6_800, 0));
-        Assert.Equal("—", InsightTexts.Variation(6_800, null));
     }
 
     [Fact]
