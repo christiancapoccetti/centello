@@ -23,7 +23,8 @@ public sealed class HomeScreen : IStoreChangeListener
         new(typeof(AddWidget), AddWidget.Render),
         new(typeof(ShortcutsWidget), ShortcutsWidget.Render),
         new(typeof(MonthWidget), MonthWidget.Render),
-        new(typeof(RhythmWidget), RhythmWidget.Render)
+        new(typeof(RhythmWidget), RhythmWidget.Render),
+        new(typeof(CategoryBudgetWidget), CategoryBudgetWidget.Render)
     ];
 
     private readonly IServiceScopeFactory _scopes;
@@ -117,8 +118,11 @@ public sealed class HomeScreen : IStoreChangeListener
     {
         try
         {
-            var size = WidgetSize.Of(manager.GetAppWidgetOptions(id), manager.GetAppWidgetInfo(id));
-            manager.UpdateAppWidget(id, spec.Render(new WidgetFrame(context, art, data, size)));
+            var options = manager.GetAppWidgetOptions(id);
+            var info = manager.GetAppWidgetInfo(id);
+            var size = WidgetSize.Of(options, info);
+            var landscapeSize = WidgetSize.Of(options, info, landscape: true);
+            manager.UpdateAppWidget(id, spec.Render(new WidgetFrame(context, art, data, size, landscapeSize)));
         }
         catch (Exception exception)
         {
@@ -132,22 +136,24 @@ internal sealed record WidgetSpec(Type Provider, Func<WidgetFrame, RemoteViews> 
     public ComponentName Component(Context context) => new(context, Java.Lang.Class.FromType(Provider));
 }
 
-internal sealed record WidgetFrame(Context Context, WidgetArt Art, HomeScreenData Data, WidgetSize Size)
+internal sealed record WidgetFrame(Context Context, WidgetArt Art, HomeScreenData Data, WidgetSize Size, WidgetSize LandscapeSize)
 {
     private const int SidePaddingDp = 16;
 
     public float ContentWidthDp => Size.WidthDp - 2 * SidePaddingDp;
 }
 
-/// <summary>The size the launcher gives one widget, in dp. Portrait reads the minimum width and the maximum height.</summary>
+/// <summary>The size the launcher gives one widget, in dp. Portrait is narrow and tall; landscape is wide and short.</summary>
 internal readonly record struct WidgetSize(int WidthDp, int HeightDp)
 {
-    public static WidgetSize Of(Bundle? options, AppWidgetProviderInfo? info)
+    public static WidgetSize Of(Bundle? options, AppWidgetProviderInfo? info, bool landscape = false)
     {
         var density = Android.App.Application.Context.Resources!.DisplayMetrics!.Density;
+        var width = landscape ? AppWidgetManager.OptionAppwidgetMaxWidth : AppWidgetManager.OptionAppwidgetMinWidth;
+        var height = landscape ? AppWidgetManager.OptionAppwidgetMinHeight : AppWidgetManager.OptionAppwidgetMaxHeight;
         return new WidgetSize(
-            Known(options?.GetInt(AppWidgetManager.OptionAppwidgetMinWidth), info?.MinWidth, density),
-            Known(options?.GetInt(AppWidgetManager.OptionAppwidgetMaxHeight), info?.MinHeight, density));
+            Known(options?.GetInt(width), info?.MinWidth, density),
+            Known(options?.GetInt(height), info?.MinHeight, density));
     }
 
     // Some launchers report zero: the size the provider declared is then the best answer.

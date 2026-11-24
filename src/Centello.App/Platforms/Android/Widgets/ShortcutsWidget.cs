@@ -55,7 +55,7 @@ public sealed class ShortcutsWidget : CentelloWidgetProvider
 
         public void Show(RemoteViews views, WidgetFrame frame, CategoryShortcut shortcut, float nameWidthDp)
         {
-            Tile.Show(views, frame.Art.Tile(shortcut, TileDp));
+            Tile.Show(views, frame.Art.Tile(shortcut.IconKey, shortcut.ColorKey, TileDp));
             views.SetImageViewBitmap(Name, frame.Art.Text(shortcut.Name, NameStyle, nameWidthDp));
             views.SetContentDescription(Container, $"{shortcut.Name}, aggiungi spesa");
             views.SetOnClickPendingIntent(Container,

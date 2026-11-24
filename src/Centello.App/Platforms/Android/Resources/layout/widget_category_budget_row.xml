@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="38dp"
+    android:orientation="horizontal">
+    <FrameLayout
+        android:id="@+id/budget_tile"
+        android:layout_width="24dp"
+        android:layout_height="24dp">
+        <ImageView
+            android:id="@+id/budget_tile_day"
+            style="@style/Widget.Centello.Day"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <ImageView
+            android:id="@+id/budget_tile_night"
+            style="@style/Widget.Centello.Night"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="17dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <ImageView
+                android:id="@+id/budget_name"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:tint="@color/theme_ink" />
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+            <ImageView
+                android:id="@+id/budget_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="6dp"
+                android:scaleType="centerInside"
+                android:tint="@color/theme_ink" />
+            <LinearLayout
+                android:id="@+id/budget_alert"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+                <ImageView
+                    android:id="@+id/budget_alert_glyph"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:tint="@color/theme_alert" />
+                <ImageView
+                    android:id="@+id/budget_alert_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="3dp"
+                    android:scaleType="centerInside"
+                    android:tint="@color/theme_alert" />
+            </LinearLayout>
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/budget_detail"
+            android:layout_width="wrap_content"
+            android:layout_height="14dp"
+            android:scaleType="centerInside"
+            android:tint="@color/theme_mute"
+            android:visibility="gone" />
+        <FrameLayout
+            android:id="@+id/budget_progress"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="2dp"
+            android:visibility="gone">
+            <ImageView
+                android:id="@+id/budget_progress_day"
+                style="@style/Widget.Centello.Day"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY" />
+            <ImageView
+                android:id="@+id/budget_progress_night"
+                style="@style/Widget.Centello.Night"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY" />
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

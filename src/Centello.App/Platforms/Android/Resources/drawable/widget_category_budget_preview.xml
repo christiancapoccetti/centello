@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/widget_surface" />
+    <item>
+        <vector
+            android:width="180dp"
+            android:height="110dp"
+            android:viewportWidth="180"
+            android:viewportHeight="110">
+            <path android:fillColor="@color/theme_ink" android:pathData="M12,14h80v8h-80z M46,36h50v6h-50z M132,36h36v6h-36z M46,74h42v6h-42z" />
+            <path android:fillColor="@color/theme_outline" android:pathData="M12,34h24v24h-24z M12,72h24v24h-24z M46,60h122v2h-122z M46,98h122v2h-122z" />
+            <path android:fillColor="@color/theme_mute" android:pathData="M46,48h74v4h-74z M46,86h82v4h-82z M46,60h75v2h-75z" />
+            <path android:fillColor="@color/theme_alert" android:pathData="M132,74h36v6h-36z M46,98h122v2h-122z" />
+        </vector>
+    </item>
+</layer-list>
