@@ -65,12 +65,9 @@ public sealed class AndroidAudioRecorder : ISpeechRecorder, IDisposable
 
     public async Task Cancel()
     {
-        var session = await TakeSession(CancellationToken.None, true);
-        if (session is null)
-            return;
-
-        await session.CancelAndWait();
-        session.Dispose();
+        using var session = await TakeSession(CancellationToken.None, true);
+        if (session is not null)
+            await session.CancelAndWait();
     }
 
     private async Task<RecordingSession?> TakeSession(CancellationToken cancellationToken, bool cancelImmediately)

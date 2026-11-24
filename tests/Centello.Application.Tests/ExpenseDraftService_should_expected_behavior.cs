@@ -41,48 +41,16 @@ public sealed class ExpenseDraftService_should_expected_behavior
     }
 
     [Fact]
-    public void Treat_a_recording_of_the_maximum_length_as_full()
-    {
-        Assert.True(Full.IsFull);
-        Assert.False(new RecordedAudio(new byte[SpeechRecordingLimits.MaximumAudioBytes - 1]).IsFull);
-        Assert.False(Audio.IsFull);
-    }
-
-    [Fact]
-    public async Task Refuse_a_full_recording_when_asked_to()
-    {
-        _recorder.Audio = Full;
-
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(SpeechErrors.TooLong, result.Error);
-        Assert.Equal("Il comando vocale è troppo lungo. Riprova con una frase più breve.", result.Error.Message);
-        Assert.Equal(0, _interpreter.CallCount);
-    }
-
-    [Fact]
-    public async Task Send_a_full_recording_when_asked_to()
+    public async Task Send_a_full_recording()
     {
         _recorder.Audio = Full;
         _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", DraftSource.Voice, "cento euro carburante");
 
-        var result = await _service.PrepareFromSpeech(WhenFull.Send);
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsSuccess);
         Assert.Equal(Full, _interpreter.Audio);
         Assert.Same(_interpreter.Draft, result.Value);
-    }
-
-    [Fact]
-    public async Task Send_a_recording_below_the_limit_whatever_the_choice()
-    {
-        _recorder.Audio = Audio;
-
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(1, _interpreter.CallCount);
     }
 
     [Fact]
@@ -91,7 +59,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _interpreter.Draft = new ExpenseDraft(10_000, _car.CategoryId, null, null, "", DraftSource.Voice, "Ho speso 100 euro di carburante");
 
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsSuccess);
         Assert.Equal(Audio, _interpreter.Audio);
@@ -105,7 +73,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
     {
         _recorder.StopResult = Result<RecordedAudio>.Failure(RecordingFailure);
 
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(RecordingFailure, result.Error);
@@ -119,7 +87,7 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _categories.Failure = failure;
 
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(failure, result.Error);
@@ -144,10 +112,22 @@ public sealed class ExpenseDraftService_should_expected_behavior
         _recorder.Audio = Audio;
         _internet.IsAvailable = false;
 
-        var result = await _service.PrepareFromSpeech(WhenFull.Refuse);
+        var result = await _service.PrepareFromSpeech();
 
         Assert.True(result.IsFailure);
         Assert.Equal(DraftErrors.NoInternet, result.Error);
+        Assert.Equal(1, _recorder.StopCount);
+        Assert.Equal(0, _interpreter.CallCount);
+    }
+
+    [Fact]
+    public async Task Stop_the_recording_before_observing_preparation_cancellation()
+    {
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _service.PrepareFromSpeech(canceled.Token));
+
         Assert.Equal(1, _recorder.StopCount);
         Assert.Equal(0, _interpreter.CallCount);
     }

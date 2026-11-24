@@ -23,14 +23,13 @@ public sealed class ExpenseDraftService(
 
     public Task CancelListening() => recorder.Cancel();
 
-    public async Task<Result<ExpenseDraft>> PrepareFromSpeech(WhenFull whenFull, CancellationToken cancellationToken = default)
+    public async Task<Result<ExpenseDraft>> PrepareFromSpeech(CancellationToken cancellationToken = default)
     {
-        var audio = await recorder.Stop(cancellationToken);
+        // Always release the microphone, even when the page leaves before preparation can start.
+        var audio = await recorder.Stop();
+        cancellationToken.ThrowIfCancellationRequested();
         if (audio.IsFailure)
             return Result<ExpenseDraft>.Failure(audio.Error);
-
-        if (audio.Value.IsFull && whenFull == WhenFull.Refuse)
-            return Result<ExpenseDraft>.Failure(SpeechErrors.TooLong);
 
         if (!consent.IsEnabled)
             return Result<ExpenseDraft>.Failure(DraftErrors.ConsentRequired);

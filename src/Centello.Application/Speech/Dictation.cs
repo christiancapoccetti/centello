@@ -1,7 +1,7 @@
 namespace Centello.Application;
 
-/// <summary>One dictation of the voice panel, from opening to a draft or to nothing. Every call comes from the panel's
-/// main thread and every await returns to it, so State has one writer. A call that does not fit the state is ignored:
+/// <summary>One dictation, from opening to a draft or to nothing. Every call comes from the main thread and every
+/// await returns to it, so State has one writer. A call that does not fit the state is ignored:
 /// a second tap while preparing does nothing, and Cancel after DraftReady keeps the draft for the editor.</summary>
 public sealed class Dictation(
     ExpenseDraftService drafts,
@@ -10,6 +10,7 @@ public sealed class Dictation(
     TimeProvider clock) : IPanelCapture
 {
     private static readonly TimeSpan Limit = TimeSpan.FromSeconds(SpeechRecordingLimits.MaximumDurationSeconds);
+    private CancellationTokenSource? _starting;
     private CancellationTokenSource? _preparing;
     private long _listeningSince;
 
@@ -21,7 +22,7 @@ public sealed class Dictation(
 
     public async Task Begin()
     {
-        if (State is not PanelState.Starting)
+        if (State is not PanelState.Starting || _starting is not null)
             return;
 
         if (!consent.IsEnabled)
@@ -30,20 +31,15 @@ public sealed class Dictation(
             return;
         }
 
-        var granted = await microphone.Ensure();
-        if (State is not PanelState.Starting)
-            return;
-
-        if (!granted)
-        {
-            Move(new PanelState.Failed(SpeechErrors.MicrophoneDenied));
-            return;
-        }
-
-        var started = await drafts.StartListening();
+        using var starting = new CancellationTokenSource();
+        _starting = starting;
+        var started = await Start(starting.Token);
+        _starting = null;
         if (State is not PanelState.Starting)
         {
-            await drafts.CancelListening();
+            if (started.IsSuccess)
+                await drafts.CancelListening();
+
             return;
         }
 
@@ -73,7 +69,7 @@ public sealed class Dictation(
         Move(new PanelState.Listening(heard));
     }
 
-    /// <summary>Listening -> Preparing -> DraftReady or Failed. A full recording is sent (WhenFull.Send).</summary>
+    /// <summary>Listening -> Preparing -> DraftReady or Failed, including a recording at the limit.</summary>
     public async Task Send()
     {
         if (State is not PanelState.Listening)
@@ -96,8 +92,9 @@ public sealed class Dictation(
         if (State is PanelState.DraftReady or PanelState.Closed)
             return;
 
-        var wasRecording = State is PanelState.Listening or PanelState.Starting;
+        var wasRecording = State is PanelState.Listening;
         Move(new PanelState.Closed());
+        _starting?.Cancel();
         _preparing?.Cancel();
         if (wasRecording)
             await drafts.CancelListening();
@@ -113,11 +110,31 @@ public sealed class Dictation(
         return Begin();
     }
 
+    private async Task<Result> Start(CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!await microphone.Ensure())
+                return Result.Failure(SpeechErrors.MicrophoneDenied);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            return await drafts.StartListening(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return Result.Failure(DraftErrors.Canceled);
+        }
+        catch
+        {
+            return Result.Failure(SpeechErrors.StartFailed);
+        }
+    }
+
     private async Task<Result<ExpenseDraft>> Prepare(CancellationToken cancellationToken)
     {
         try
         {
-            return await drafts.PrepareFromSpeech(WhenFull.Send, cancellationToken);
+            return await drafts.PrepareFromSpeech(cancellationToken);
         }
         catch (OperationCanceledException)
         {

@@ -42,6 +42,7 @@ internal sealed class FakeSpeechRecorder : ISpeechRecorder
 
     public Task<Result<RecordedAudio>> Stop(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         StopCount++;
         return Task.FromResult(StopResult ?? Result<RecordedAudio>.Success(Audio));
     }

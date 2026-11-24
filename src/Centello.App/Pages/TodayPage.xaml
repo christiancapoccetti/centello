@@ -187,7 +187,15 @@
                 </Label>
                 <Button BackgroundColor="Transparent" Text="" Clicked="OnAddExpenseClicked" SemanticProperties.Description="Aggiungi spesa" />
                 <BoxView Grid.Column="1" Color="{t:Theme Outline}" />
-                <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsCaptureAvailable}" Pressed="OnSpeechPressed" Released="OnSpeechReleased" SemanticProperties.Description="Tieni premuto per dettare" />
+                <Border Grid.Column="2" IsVisible="{Binding Capture.IsListening}" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="17" HeightRequest="17" BackgroundColor="{t:Theme Accent}" StrokeThickness="0" StrokeShape="RoundRectangle 2" />
+                <Button Grid.Column="2" Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsCaptureAvailable}" Clicked="OnSpeechClicked" SemanticProperties.Description="Avvia la registrazione">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding Capture.IsListening}" Value="True">
+                            <Setter Property="Text" Value="" />
+                            <Setter Property="SemanticProperties.Description" Value="Ferma la registrazione" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
                 <BoxView Grid.Column="3" Color="{t:Theme Outline}" />
                 <Button Grid.Column="4" Style="{StaticResource IconGlyphButton}" WidthRequest="-1" HeightRequest="-1" FontSize="26" Text="{x:Static app:MaterialSymbols.PhotoCamera}" TextColor="{t:Theme Accent}" IsEnabled="{Binding IsCaptureAvailable}" Clicked="OnCameraClicked" SemanticProperties.Description="Fotografa una spesa">
                     <Button.Triggers>
@@ -200,11 +208,8 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="2" IsVisible="{Binding Capture.IsListening}" InputTransparent="True" HorizontalOptions="Center" VerticalOptions="Start" TranslationY="-36" Padding="14,6" BackgroundColor="{t:Theme SurfaceRaised}" Stroke="{t:Theme Outline}" StrokeThickness="1" StrokeShape="RoundRectangle 18">
-            <HorizontalStackLayout Spacing="8">
-                <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.Mic}" TextColor="{t:Theme Accent}" />
-                <Label Text="Registra… rilascia per inviare" Style="{StaticResource LabelLarge}" VerticalTextAlignment="Center" />
-            </HorizontalStackLayout>
+        <Border Grid.Row="2" IsVisible="{Binding Capture.IsListening}" InputTransparent="True" AutomationProperties.ExcludedWithChildren="True" HorizontalOptions="Center" VerticalOptions="Start" TranslationY="-36" Padding="14,6" BackgroundColor="{t:Theme SurfaceRaised}" Stroke="{t:Theme Outline}" StrokeThickness="1" StrokeShape="RoundRectangle 18">
+            <Label Text="In registrazione · Tocca per fermare" Style="{StaticResource LabelLarge}" HorizontalTextAlignment="Center" />
         </Border>
 
         <Grid Grid.RowSpan="3" Grid.ColumnSpan="2" IsVisible="{Binding Capture.IsChoosingPhoto}" BackgroundColor="Transparent">

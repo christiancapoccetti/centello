@@ -87,6 +87,38 @@ public sealed class Dictation_should_expected_behavior
     }
 
     [Fact]
+    public async Task Wait_for_permission_before_listening_and_ignore_taps_while_waiting()
+    {
+        var permission = new TaskCompletionSource();
+        _microphone.Gate = permission.Task;
+
+        var begin = _dictation.Begin();
+        await _dictation.Begin();
+        await _dictation.Send();
+
+        Assert.Equal(1, _microphone.AskedCount);
+        Assert.Equal(0, _recorder.StartCount);
+        Assert.Equal(0, _recorder.StopCount);
+
+        permission.SetResult();
+        await begin;
+
+        Assert.Equal(new PanelState.Listening(TimeSpan.Zero), _dictation.State);
+        Assert.Equal(1, _recorder.StartCount);
+    }
+
+    [Fact]
+    public async Task Fail_when_the_permission_request_throws()
+    {
+        _microphone.Gate = Task.FromException(new InvalidOperationException());
+
+        await _dictation.Begin();
+
+        Assert.Equal(new PanelState.Failed(SpeechErrors.StartFailed), _dictation.State);
+        Assert.Equal(0, _recorder.StartCount);
+    }
+
+    [Fact]
     public async Task Fail_when_the_recorder_cannot_start()
     {
         _recorder.StartResult = Result.Failure(SpeechErrors.StartFailed);
@@ -235,12 +267,28 @@ public sealed class Dictation_should_expected_behavior
         await begin;
 
         Assert.Equal(new PanelState.Closed(), _dictation.State);
-        Assert.True(_recorder.CancelCount > 0);
+        Assert.Equal(1, _recorder.CancelCount);
         Assert.Equal(0, _recorder.StopCount);
     }
 
     [Fact]
-    public async Task Close_without_recording_when_canceled_during_the_consent_question()
+    public async Task Leave_the_recorder_alone_when_a_canceled_start_did_not_acquire_it()
+    {
+        var gate = new TaskCompletionSource();
+        _recorder.StartGate = gate.Task;
+        _recorder.StartResult = Result.Failure(SpeechErrors.StartFailed);
+
+        var begin = _dictation.Begin();
+        await _dictation.Cancel();
+        gate.SetResult();
+        await begin;
+
+        Assert.Equal(new PanelState.Closed(), _dictation.State);
+        Assert.Equal(0, _recorder.CancelCount);
+    }
+
+    [Fact]
+    public async Task Close_without_recording_when_canceled_during_the_permission_question()
     {
         var gate = new TaskCompletionSource();
         _microphone.Gate = gate.Task;
@@ -252,6 +300,7 @@ public sealed class Dictation_should_expected_behavior
 
         Assert.Equal(new PanelState.Closed(), _dictation.State);
         Assert.Equal(0, _recorder.StartCount);
+        Assert.Equal(0, _recorder.CancelCount);
     }
 
     [Fact]
