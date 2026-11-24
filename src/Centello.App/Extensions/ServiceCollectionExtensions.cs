@@ -40,7 +40,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IConfirmation, MaterialConfirmation>();
         services.AddSingleton<ISnackbar, MaterialSnackbar>();
         services.AddSingleton<IDownloads, MediaStoreDownloads>();
-        services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
         services.AddSingleton<IPhotoCapture, PanelPhotoCapture>();
         services.AddSingleton<HomeScreen>();
         services.AddSingleton<IStoreChangeListener>(provider => provider.GetRequiredService<HomeScreen>());
@@ -53,6 +52,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISnackbar, NoSnackbar>();
         services.AddSingleton<IDownloads, NoDownloads>();
 #endif
+        services.AddSingleton<IMicrophoneAccess, MicrophoneAccess>();
+        services.AddSingleton<Func<Dictation>>(provider => () => provider.GetRequiredService<Dictation>());
         services.AddRecapStory();
         services.AddRecapNotices();
         services.AddTransient<AppShell>();

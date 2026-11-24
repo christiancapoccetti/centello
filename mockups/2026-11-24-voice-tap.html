@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Centello · Inserimento vocale</title>
+<style>
+@font-face{font-family:Archivo;src:url(../src/Centello.App/Resources/Fonts/Archivo-Regular.ttf)}
+@font-face{font-family:Archivo;font-weight:700;src:url(../src/Centello.App/Resources/Fonts/Archivo-Bold.ttf)}
+@font-face{font-family:Icons;src:url(../src/Centello.App/Resources/Fonts/MaterialSymbolsRounded-Filled.ttf)}
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#0c0d0e;color:#f4f4f0;font:16px Archivo,sans-serif}main{display:flex;flex-wrap:wrap;gap:18px}section{width:min(378px,100%)}h2{font-size:17px;margin:0 0 12px}.screen{background:#141516;padding:22px 24px 14px;border:1px solid #3a3d41;border-radius:18px}.expense,.dock,nav{display:flex;align-items:center}.expense{gap:10px;border-bottom:1px solid #2a2c2f;padding-bottom:14px}.tile{background:#f5d06b;color:#141516;padding:8px}.icon,.tile{font:24px Icons}.amt{margin-left:auto;font-weight:bold}small{display:block;color:#a0a3a9;margin-top:3px}.status{height:56px;display:grid;place-items:center}.status span{background:#26282b;border:1px solid #3a3d41;border-radius:18px;padding:6px 14px;font-size:14px}.dock{height:60px;background:#26282b;border:1px solid #3a3d41;border-radius:30px;overflow:hidden}.add{flex:1;text-align:center;font-weight:bold}.add b,.dock .icon{color:#ff8a7a}.dock .icon{width:64px;height:100%;border-left:1px solid #3a3d41;display:grid;place-items:center}.stop{width:17px;height:17px;background:#ff8a7a;border-radius:2px}nav{margin-top:15px;border-top:1px solid #2a2c2f;padding-top:10px;justify-content:space-between;text-align:center;color:#a0a3a9;font-size:12px}nav .icon{display:block;margin-bottom:3px}nav span:first-child{color:#f4f4f0}
+@media(max-width:400px){body{padding:14px}.screen{padding-inline:14px}}
+</style><main></main><script>
+for(const recording of [false,true]){
+ let section=document.createElement('section');
+ section.innerHTML='<h2>'+(recording?'Durante la registrazione':'Prima del tocco')+'</h2><div class="screen"><div class="expense"><span class="tile">&#xe56c;</span><span>Pizza<small>Oggi · Ristoranti</small></span><span class="amt">12,00 €</span></div><div class="status">'+(recording?'<span>In registrazione · Tocca per fermare</span>':'')+'</div><div class="dock"><span class="add"><b>+</b> Aggiungi spesa</span><span class="icon">'+(recording?'<i class="stop"></i>':'&#xe029;')+'</span><span class="icon">&#xe412;</span></div><nav>'+['Oggi','Insight','Categorie','Impostazioni'].map((name,i)=>'<span><i class="icon">&#x'+['e8df','e26b','e574','e8b8'][i]+';</i>'+name+'</span>').join('')+'</nav></div>';
+ document.querySelector('main').append(section);
+}
+</script></html>
