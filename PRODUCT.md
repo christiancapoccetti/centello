@@ -14,12 +14,12 @@ The core situation is logging a purchase right after it happens: phone in hand, 
 
 Centello is a personal expense tracker. It exists to make recording an expense nearly effortless and to turn the recorded history into a clear picture of how spending changes over time.
 
-Success means expenses actually get logged, because entry is fast enough that skipping it is not tempting, and that a glance at Today or Insight answers "how am I doing this month compared with before?"
+Success means people log their expenses, check how much is left in each category on **Oggi**, and see how their spending changed in **Insight**.
 
 ## Positioning
 
 - **Fastest entry.** Logging an expense takes seconds. Today is the home screen, and voice entry ("Inserimento vocale") turns a spoken Italian phrase such as "ieri 12 euro di pizza" into a pre-filled draft constrained to the user's own categories and tags. A photo of a receipt or a PDF does the same.
-- **Spending awareness, not budget planning.** Centello shows trends, comparisons between periods and categories, and history-based insights. Category budgets exist but stay light; the app must not turn into a planning or alerting tool.
+- **Spending awareness.** Centello shows how spending compares across periods and categories. Optional category budgets show how much is left or how far spending exceeded the limit.
 
 ## Operating Context
 
@@ -33,7 +33,9 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Capabilities and Constraints
 
-- Categories with optional monthly budgets (create, edit, archive, restore); tags within a category; expenses with amount, date, category, optional tag and note; monthly history with edit and delete; monthly and yearly overviews; home screen widgets and launcher shortcuts to add an expense (by hand, voice or photo) and read the month from the launcher; recurring payments (weekly, monthly, yearly, optional end date); Insight for any month or year; a recap story of every closed month and year.
+- People can create, edit, archive, and restore categories with optional monthly budgets. Expenses record an amount, date, category, and optional tag and note. People can manage tags within a category and edit or delete expenses from monthly history. Recurring payments can repeat weekly, monthly, or yearly and can have an end date.
+- **Oggi** shows category spending and budget progress for the selected month or year. The yearly limit is twelve times the monthly budget. **Budget per categoria** shows the current month on the Android home screen. Other widgets and launcher shortcuts can show a month overview or start manual, voice, or photo entry.
+- **Insight** compares spending for a month or year with the previous comparable period. People see category share rows inline, with an option to reveal remaining rows when there are more than three. They can switch separately between cumulative spending and signed euro category changes. Closed months and years have a recap.
 - Local-first by construction: SQLite on the device, no account, no backend, no sync. Android Auto Backup copies only the database to the user's own Google account. People can save or share a backup file or CSV export. A backup can be restored after a preview. Assisted entry requires explicit opt-in and sends recorded audio, a photo, or a PDF to Google through Firebase AI Logic, plus active category and tag names and today's date. The editor lets the user review the draft before saving. Manual entry always works offline.
 - Stack: .NET 10 MAUI, Android only (min API 24), MVVM, Clean Architecture, Result Pattern.
 - User-facing text is Italian and currently hardcoded; amounts are in euros with Italian formatting (`486,20 €`).
@@ -46,7 +48,7 @@ Success means expenses actually get logged, because entry is fast enough that sk
 
 ## Evidence on Hand
 
-- Product docs: `README.md`, `DESIGN.md` (visual system) and `docs/mockups/centello-prototype.html` (approved prototype of every screen). The roadmap lives in GitHub issues.
+- The README covers app features, and DESIGN.md describes the visual system. The original prototype lives in `docs/mockups/centello-prototype.html`. The approved #33 designs cover [Today](mockups/2026-11-24-home-budget-a-grafici.html) and [Insight](mockups/2026-11-24-insight-scroll-c-senza-badge.html). The roadmap lives in GitHub issues.
 - Use verified sources for reviews, testimonials and download counts.
 
 ## Product Principles

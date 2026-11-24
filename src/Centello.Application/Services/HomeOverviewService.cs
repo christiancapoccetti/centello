@@ -10,15 +10,14 @@ public sealed record HomeOverview(
     BudgetSummary Budget,
     PeriodComparison? Comparison,
     CategoryLine Categories,
-    SpendChart Chart,
-    IReadOnlyList<LatestExpense> Latest,
+    SpendChart? Chart,               // annual overview only
+    IReadOnlyList<CategoryBudgetRow> BudgetRows,
     bool HasCategories)
 {
     /// <summary>True until the first category exists: there is nothing an expense could go to.</summary>
     public bool IsFirstRun => !HasCategories;
     public bool HasComparison => Comparison is not null;
-    public bool HasLatest => Latest.Count > 0;
-    public bool HasNoLatest => Latest.Count == 0;
+    public bool HasBudgetRows => BudgetRows.Count > 0;
 }
 
 /// <summary>Navigation targets computed with the clock, so the view model never reads the date.</summary>
@@ -83,11 +82,10 @@ public sealed record SpendChart(
     public bool HasHighlight => HighlightLabel.HasValue();
 }
 
-/// <summary>The title is the category. Detail is "Ieri · Netflix · automatica": the day, the note (or else the tag), then
-/// "automatica".</summary>
-public sealed record LatestExpense(Guid ExpenseId, string Title, string Detail, string Amount, string IconKey, string ColorKey)
+public sealed record CategoryBudgetRow(
+    Guid CategoryId, string Name, string IconKey, string ColorKey, long SpentCents, long? BudgetCents)
 {
-    public string Description => RowLabels.Description(Title, Detail, Amount);
+    public long? RemainingCents => BudgetCents - SpentCents;
 }
 
 /// <summary>The month of today as the home screen widgets read it: the figures of the home, worded for a small
@@ -100,16 +98,16 @@ public sealed record MonthGlance(
     PeriodComparison? Comparison,          // Il mese shows Short, Il ritmo shows Text
     IReadOnlyList<CategorySegment> Segments,
     string OverBudget,                     // "Ristoranti oltre il budget", the furthest over; "" when none is
-    SpendChart Chart,                      // the home's bars and pace, with the widget's labels
+    SpendChart Chart,                      // daily bars and pace for the widget
+    IReadOnlyList<CategoryBudgetRow> BudgetRows,
     string Description)                    // the whole summary for a screen reader
 {
     public bool HasOverBudget => OverBudget.HasValue();
 }
 
-public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepository tags,
-    IExpenseRepository expenses, Func<DateOnly>? today = null)
+public sealed class HomeOverviewService(ICategoryRepository categories, IExpenseRepository expenses,
+    Func<DateOnly>? today = null)
 {
-    private const int LatestCount = 5;
     private const string PaceLabelText = "media per restare nel budget";
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Today));
 
@@ -121,15 +119,10 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
         if (reading.IsFailure)
             return Result<HomeOverview>.Failure(reading.Error);
 
-        var tagResult = await tags.GetAll(cancellationToken);
-        if (tagResult.IsFailure)
-            return Result<HomeOverview>.Failure(tagResult.Error);
-
-        return Result<HomeOverview>.Success(Build(reading.Value, tagResult.Value));
+        return Result<HomeOverview>.Success(Build(reading.Value));
     }
 
-    /// <summary>The month of today, worded for a home screen widget. Same reads and figures as Get(null), without the
-    /// tags: a widget has no latest rows.</summary>
+    /// <summary>The month of today, worded for a home screen widget. Same reads and figures as Get(null).</summary>
     public async Task<Result<MonthGlance>> Glance(CancellationToken cancellationToken = default)
     {
         var day = _today();
@@ -167,18 +160,22 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
         public long? Budget { get; } = PeriodBudget.OfActive(Period, Categories);
     }
 
-    private static HomeOverview Build(Reading reading, IReadOnlyList<Tag> tags) =>
-        new(reading.Period, HomeNavigation.For(reading.Period, reading.Today), ItalianFormat.Amount(reading.Spent),
+    private static HomeOverview Build(Reading reading)
+    {
+        var budgetRows = CategoryBudgets(reading);
+        return new HomeOverview(reading.Period, HomeNavigation.For(reading.Period, reading.Today), ItalianFormat.Amount(reading.Spent),
             reading.Categories.Count == 0
                 ? NothingYet(reading.Period)
                 : Summarize(reading.Spent, reading.Budget, " di budget"),
-            Compare(reading.Period, reading.Window, reading.Expenses), Line(reading),
-            Chart(reading, HomeLabels(reading.Period, reading.Today)),
-            Latest(reading.InPeriod, reading.Categories, tags, reading.Today), reading.Categories.Count > 0);
+            Compare(reading.Period, reading.Window, reading.Expenses), Line(reading.Spent, budgetRows),
+            reading.Period.Kind == PeriodKind.Year ? Chart(reading, YearLabels(reading.Today)) : null,
+            budgetRows, reading.Categories.Count > 0);
+    }
 
     private static MonthGlance Glimpse(Reading reading)
     {
-        var line = Line(reading);
+        var budgetRows = CategoryBudgets(reading);
+        var line = Line(reading.Spent, budgetRows);
         var budget = reading.Categories.Count == 0 || reading.Spent == 0
             ? NothingYet(reading.Period)
             : Summarize(reading.Spent, reading.Budget, "");
@@ -197,7 +194,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
             .Select(sentence => $"{sentence}.");
         return new MonthGlance(ItalianFormat.PeriodName(reading.Period), reading.Period.Start.Year.ToString(),
             ItalianFormat.Amount(reading.Spent), budget, comparison, line.Segments, overBudget,
-            Chart(reading, GlanceLabels(reading.Period)), string.Join(" ", sentences));
+            Chart(reading, GlanceLabels(reading.Period)), budgetRows, string.Join(" ", sentences));
     }
 
     // The first run has no budget to speak of: the line under the total says there is nothing to count yet.
@@ -253,52 +250,56 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
         return new PeriodComparison(text, shortText, trend, $"Rispetto {basis}: {change}.");
     }
 
-    // Active categories with spending, largest first. Whatever is left of the total (archived or missing
-    // categories) becomes one grey segment, so the line always adds up to the headline total. The key lists the same
-    // categories with the over-budget ones first; OrderByDescending is stable, so ties keep the spending order.
-    private static CategoryLine Line(Reading reading)
+    private static IReadOnlyList<CategoryBudgetRow> CategoryBudgets(Reading reading)
     {
-        var (period, categories, periodExpenses, spent) = (reading.Period, reading.Categories, reading.InPeriod, reading.Spent);
+        var spentByCategory = reading.InPeriod
+            .GroupBy(expense => expense.CategoryId)
+            .ToDictionary(group => group.Key, group => group.Sum(expense => expense.Amount.Cents));
+
+        return reading.Categories
+            .Where(category => !category.IsArchived)
+            .Select(category =>
+            {
+                var spent = spentByCategory.GetValueOrDefault(category.CategoryId);
+                var budget = PeriodBudget.Of(reading.Period, category.MonthlyBudget);
+                return new CategoryBudgetRow(category.CategoryId, category.Name, CategoryIcons.Resolve(category.Icon).Key,
+                    CategoryPalette.Resolve(category.Color).Key, spent, budget);
+            })
+            .Where(row => row.BudgetCents.HasValue || row.SpentCents > 0)
+            .OrderByDescending(row => row.BudgetCents.HasValue)
+            .ThenByDescending(row => row.SpentCents)
+            .ThenBy(row => row.Name)
+            .ToList()
+            .AsReadOnly();
+    }
+
+    private static CategoryLine Line(long spent, IReadOnlyList<CategoryBudgetRow> budgetRows)
+    {
         if (spent == 0)
             return new CategoryLine([], [], "");
 
-        var spentByCategory = periodExpenses
-            .GroupBy(expense => expense.CategoryId)
-            .ToDictionary(group => group.Key, group => group.Sum(expense => expense.Amount.Cents));
-        var ranked = categories
-            .Where(category => !category.IsArchived && spentByCategory.ContainsKey(category.CategoryId))
-            .Select(category => new RankedCategory(category, spentByCategory[category.CategoryId],
-                PeriodBudget.Of(period, category.MonthlyBudget) ?? 0))
-            .OrderByDescending(item => item.Spent)
-            .ThenBy(item => item.Category.Name)
+        var ranked = budgetRows
+            .Where(row => row.SpentCents > 0)
+            .OrderByDescending(row => row.SpentCents)
+            .ThenBy(row => row.Name)
             .ToList();
-        var folded = spent - ranked.Sum(item => item.Spent);
+        var folded = spent - ranked.Sum(row => row.SpentCents);
         var segments = ranked
-            .Select(item => new CategorySegment(item.ColorKey, item.Spent))
+            .Select(row => new CategorySegment(row.ColorKey, row.SpentCents))
             .ToList();
         if (folded > 0)
             segments.Add(new CategorySegment(CategoryPalette.Fallback.Key, folded));
 
         var key = ranked
-            .OrderByDescending(item => item.Overshoot)
-            .Select(item => item.ToKeyItem())
+            .OrderBy(row => Math.Min(0, row.RemainingCents ?? 0))
+            .Select(row => new CategoryKeyItem(row.CategoryId, row.Name, row.ColorKey, row.RemainingCents < 0))
             .ToList();
 
         var description = ranked
-            .Select(item => $"{item.Category.Name} {ItalianFormat.Money(item.Spent)}")
+            .Select(row => $"{row.Name} {ItalianFormat.Money(row.SpentCents)}")
             .Concat(folded > 0 ? [$"Altre categorie {ItalianFormat.Money(folded)}"] : []);
         return new CategoryLine(segments, key,
             $"Spesa per categoria: {string.Join(", ", description)}.");
-    }
-
-    private sealed record RankedCategory(Category Category, long Spent, long Budget)
-    {
-        public string ColorKey => CategoryPalette.Resolve(Category.Color).Key;
-        public long Overshoot => Budget > 0 ? Math.Max(0, Spent - Budget) : 0;
-        public bool IsOverBudget => Overshoot > 0;
-
-        public CategoryKeyItem ToKeyItem() =>
-            new(Category.CategoryId, Category.Name, ColorKey, IsOverBudget);
     }
 
     // One bar per day (month) or per month (year). The scale also covers the pace line, which keeps it on the chart.
@@ -314,17 +315,10 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
             DescribeChart(reading.Period, buckets.Cents, buckets.Current, pace), labels.Pace(pace));
     }
 
-    private static ChartLabels HomeLabels(Period period, DateOnly today)
-    {
-        var isMonth = period.Kind == PeriodKind.Month;
-        return new ChartLabels(
-            pace => pace.HasValue ? PaceLabelText : "",
-            isMonth ? ItalianFormat.ShortDate(period.Start) : ItalianFormat.ShortMonth(1),
-            isMonth ? ItalianFormat.ShortDate(period.End) : ItalianFormat.ShortMonth(12),
-            cents => isMonth
-                ? $"oggi {ItalianFormat.Money(cents)}"
-                : $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(cents)}");
-    }
+    private static ChartLabels YearLabels(DateOnly today) => new(
+        pace => pace.HasValue ? PaceLabelText : "",
+        ItalianFormat.ShortMonth(1), ItalianFormat.ShortMonth(12),
+        cents => $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(cents)}");
 
     private static ChartLabels GlanceLabels(Period period) => new(
         pace => pace is { } perDay ? $"{ItalianFormat.WholeEuros((long)Math.Round(perDay, MidpointRounding.AwayFromZero))} € al giorno" : "",
@@ -360,28 +354,5 @@ public sealed class HomeOverviewService(ICategoryRepository categories, ITagRepo
             parts.Add($"Media per restare nel budget: {ItalianFormat.Money((long)Math.Round(pace.Value, MidpointRounding.AwayFromZero))} {(isMonth ? "al giorno" : "al mese")}.");
 
         return string.Join(" ", parts);
-    }
-
-    // Within a day the order follows ExpenseId, which sorts by creation time for expenses created since ids became
-    // version 7. Older and imported expenses carry random or hashed ids, so their order within a day is arbitrary.
-    private static IReadOnlyList<LatestExpense> Latest(IReadOnlyList<Expense> periodExpenses,
-        IReadOnlyList<Category> categories, IReadOnlyList<Tag> tags, DateOnly today)
-    {
-        var categoryById = categories.ToDictionary(category => category.CategoryId);
-        var tagById = tags.ToDictionary(tag => tag.TagId);
-        return periodExpenses
-            .OrderByDescending(expense => expense.OccurredOn)
-            .ThenByDescending(expense => expense.ExpenseId)
-            .Take(LatestCount)
-            .Select(expense => ToLatest(expense, categoryById.GetValueOrDefault(expense.CategoryId),
-                expense.TagId.HasValue ? tagById.GetValueOrDefault(expense.TagId.Value) : null, today))
-            .ToList();
-    }
-
-    private static LatestExpense ToLatest(Expense expense, Category? category, Tag? tag, DateOnly today)
-    {
-        var (title, detail) = RowLabels.OfExpense(ItalianFormat.RelativeDay(expense.OccurredOn, today), expense, category, tag);
-        return new LatestExpense(expense.ExpenseId, title, detail, ItalianFormat.Money(expense.Amount.Cents),
-            CategoryIcons.Resolve(category?.Icon).Key, CategoryPalette.Resolve(category?.Color).Key);
     }
 }

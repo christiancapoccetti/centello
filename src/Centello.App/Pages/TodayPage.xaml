@@ -67,35 +67,6 @@
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
-                    <Border Margin="0,6,0,0" Padding="6,0,10,0" MinimumHeightRequest="26" HorizontalOptions="Start" StrokeThickness="0" BackgroundColor="{t:Theme SurfaceRaised}" IsVisible="{Binding Overview.HasComparison}" SemanticProperties.Description="{Binding Overview.Comparison.Description}">
-                        <Border.Triggers>
-                            <DataTrigger TargetType="Border" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
-                                <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
-                            </DataTrigger>
-                        </Border.Triggers>
-                        <!-- A long comparison gives way with an ellipsis and the arrow keeps its place beside it. -->
-                        <FlexLayout Direction="Row" AlignItems="Center">
-                            <Label Style="{StaticResource IconGlyph}" FontSize="18" Text="{x:Static app:MaterialSymbols.East}" FlexLayout.Shrink="0">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
-                                        <Setter Property="Text" Value="{x:Static app:MaterialSymbols.SouthEast}" />
-                                        <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Higher}">
-                                        <Setter Property="Text" Value="{x:Static app:MaterialSymbols.NorthEast}" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                            <Label Text="{Binding Overview.Comparison.Text}" Style="{StaticResource LabelLarge}" Padding="4,0,0,0" LineBreakMode="TailTruncation" MaxLines="1" FlexLayout.Shrink="1" VerticalTextAlignment="Center">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding Overview.Comparison.Trend}" Value="{x:Static app:ComparisonTrend.Lower}">
-                                        <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                        </FlexLayout>
-                    </Border>
-
                     <c:CategoryLineView Margin="0,24,0,0" HeightRequest="14" Segments="{Binding Overview.Categories.Segments}" IsVisible="{Binding Overview.Categories.HasSegments}" SemanticProperties.Description="{Binding Overview.Categories.Description}" />
                     <!-- One line: the items that fit whole, in the order of the key. An item opens its category. Its
                          padding makes the touch target 41 high and the negative margins of the row give that room back.
@@ -123,24 +94,56 @@
                         </BindableLayout.ItemTemplate>
                     </c:OneLineLayout>
 
-                    <c:DailySpendChartView Chart="{Binding Overview.Chart}" IsVisible="{Binding Overview.HasCategories}" />
+                    <VerticalStackLayout Margin="0,12,0,0" IsVisible="{Binding HasSpendChart}">
+                        <Label Text="Spesa mensile" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+                        <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
+                    </VerticalStackLayout>
 
                     <VerticalStackLayout x:Name="Activity" IsVisible="{Binding HasOverview}">
-                        <VerticalStackLayout IsVisible="{Binding Overview.HasCategories}">
-                            <!-- The link is as high as the whole header, so the touch target is 47 high and its words sit on
-                                 the line of the title. -->
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Text="Ultime spese" Style="{StaticResource SectionTitle}" Margin="0,22,0,1" SemanticProperties.HeadingLevel="Level2" />
-                                <c:ActionLink Grid.Column="1" Text="Vedi tutte" Padding="10,24,0,3" Margin="0,0,-4,0" Tapped="OnAllExpensesTapped" />
-                            </Grid>
-                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Overview.Latest}">
+                        <c:ActionLink Text="Vedi ultime spese" HorizontalOptions="End" MinimumHeightRequest="48"
+                                      IsVisible="{Binding Overview.HasCategories}" Tapped="OnAllExpensesTapped" />
+
+                        <VerticalStackLayout IsVisible="{Binding Overview.HasBudgetRows}">
+                            <Label Text="Per categoria" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+                            <VerticalStackLayout Margin="0,4,0,0" BindableLayout.ItemsSource="{Binding BudgetItems}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate>
-                                        <c:ExpenseRow Opened="OnExpenseOpened" />
+                                        <Grid MinimumHeightRequest="68" ColumnDefinitions="36,*" ColumnSpacing="12" RowDefinitions="*,1">
+                                            <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36"
+                                                            VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                                            <VerticalStackLayout Grid.Column="1" Margin="0,8" Spacing="3" VerticalOptions="Center"
+                                                                 AutomationProperties.ExcludedWithChildren="True">
+                                                <c:TrailingValueLayout Spacing="8" MinContentWidth="96">
+                                                    <Label Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" />
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="4">
+                                                        <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.Error}"
+                                                               TextColor="{t:Theme Alert}" FontSize="14" VerticalOptions="Center" IsVisible="{Binding IsOverBudget}" />
+                                                        <Label Grid.Column="1" Text="{Binding Amount}" Style="{StaticResource LabelLarge}" HorizontalTextAlignment="End">
+                                                            <Label.Triggers>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding IsOverBudget}" Value="True">
+                                                                    <Setter Property="TextColor" Value="{t:Theme Alert}" />
+                                                                </DataTrigger>
+                                                            </Label.Triggers>
+                                                        </Label>
+                                                    </Grid>
+                                                </c:TrailingValueLayout>
+                                                <Label Text="{Binding BudgetDetail}" Style="{StaticResource Caption}" IsVisible="{Binding HasBudget}" />
+                                                <Grid Margin="0,2,0,0" HeightRequest="4" BackgroundColor="{t:Theme Hairline}" IsVisible="{Binding HasBudget}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="{Binding ProgressWidth}" />
+                                                        <ColumnDefinition Width="{Binding RemainingWidth}" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <c:PaletteSwatch ColorKey="{Binding ColorKey}" />
+                                                </Grid>
+                                            </VerticalStackLayout>
+                                            <BoxView Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
+                                            <Button Grid.RowSpan="2" Grid.ColumnSpan="2" BackgroundColor="Transparent" Text=""
+                                                    Clicked="OnCategoryBudgetClicked" SemanticProperties.Description="{Binding Description}"
+                                                    SemanticProperties.Hint="Apri la categoria" />
+                                        </Grid>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
-                            <Label Text="Ancora nessuna spesa in questo periodo." Style="{StaticResource BodyMedium}" Margin="0,8,0,0" IsVisible="{Binding Overview.HasNoLatest}" />
                         </VerticalStackLayout>
 
                         <!-- On first run, offer the common categories alongside manual entry in the dock. -->

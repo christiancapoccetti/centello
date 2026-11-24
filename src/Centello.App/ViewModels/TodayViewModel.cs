@@ -15,6 +15,50 @@ public sealed class SuggestedCategoryChip(SuggestedCategory category) : Observab
     public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
 }
 
+public sealed class CategoryBudgetItem
+{
+    public CategoryBudgetItem(CategoryBudgetRow row)
+    {
+        CategoryId = row.CategoryId;
+        Name = row.Name;
+        IconKey = row.IconKey;
+        ColorKey = row.ColorKey;
+
+        var spent = CompactMoney(row.SpentCents);
+        if (row.BudgetCents is not { } budget || row.RemainingCents is not { } remaining)
+        {
+            Amount = spent;
+            Description = $"{Name}, {spent} spesi";
+            return;
+        }
+
+        HasBudget = true;
+        IsOverBudget = remaining < 0;
+        Amount = IsOverBudget
+            ? $"{CompactMoney(-remaining)} oltre budget"
+            : $"{CompactMoney(remaining)} disponibili";
+        BudgetDetail = $"{spent} spesi su {CompactMoney(budget)}";
+        Description = $"{Name}, {BudgetDetail}, {Amount}";
+        var progress = Math.Min(1, (double)row.SpentCents / budget);
+        ProgressWidth = new GridLength(progress, GridUnitType.Star);
+        RemainingWidth = new GridLength(1 - progress, GridUnitType.Star);
+    }
+
+    public Guid CategoryId { get; }
+    public string Name { get; }
+    public string IconKey { get; }
+    public string ColorKey { get; }
+    public string Amount { get; }
+    public string BudgetDetail { get; } = "";
+    public string Description { get; }
+    public bool HasBudget { get; }
+    public bool IsOverBudget { get; }
+    public GridLength ProgressWidth { get; }
+    public GridLength RemainingWidth { get; }
+
+    private static string CompactMoney(long cents) => $"{ItalianFormat.Budget(cents)} €";
+}
+
 public sealed class TodayViewModel : ObservableObject
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -37,10 +81,16 @@ public sealed class TodayViewModel : ObservableObject
                 return;
 
             OnPropertyChanged(nameof(HasOverview));
+            OnPropertyChanged(nameof(BudgetItems));
+            OnPropertyChanged(nameof(HasSpendChart));
             NotifyCaptureAvailability();
         }
     }
     public bool HasOverview => Overview is not null;
+    public IReadOnlyList<CategoryBudgetItem> BudgetItems => Overview is { } overview
+        ? [.. overview.BudgetRows.Select(row => new CategoryBudgetItem(row))]
+        : [];
+    public bool HasSpendChart => Overview is { HasCategories: true, Chart: not null };
     public IReadOnlyList<SuggestedCategoryChip> Suggestions { get; } =
         [.. SuggestedCategories.All.Select(category => new SuggestedCategoryChip(category))];
     public bool CanCreateSuggested => Suggestions.Any(chip => chip.IsSelected);

@@ -73,8 +73,8 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
     /// <summary>The category tile as the Home draws it: a square in the category's ink for the scheme, the glyph in
     /// tile ink at <see cref="CategoryTile.GlyphScale"/> of the size, centred. Only the glyph is antialiased, so the
     /// square's edges stay sharp.</summary>
-    public DayNight Tile(CategoryShortcut shortcut, float sizeDp) =>
-        new(Tile(shortcut, sizeDp, false), Tile(shortcut, sizeDp, true));
+    public DayNight Tile(string iconKey, string colorKey, float sizeDp) =>
+        new(Tile(iconKey, colorKey, sizeDp, false), Tile(iconKey, colorKey, sizeDp, true));
 
     /// <summary>A launcher shortcut's icon as an adaptive bitmap: 108dp, filled edge to edge, with the glyph inside the
     /// 66dp safe circle that every launcher mask keeps. Drawn in the dark scheme, as the launcher icon: a way in is the
@@ -103,15 +103,15 @@ internal sealed class WidgetArt(Context context, IFontManager fonts)
     internal DayNight Pair(float widthDp, float heightDp, Action<ICanvas, RectF, bool> draw) =>
         new(Painted(widthDp, heightDp, false, draw), Painted(widthDp, heightDp, true, draw));
 
-    private AndroidBitmap Tile(CategoryShortcut shortcut, float sizeDp, bool isDark)
+    private AndroidBitmap Tile(string iconKey, string colorKey, float sizeDp, bool isDark)
     {
         var bitmap = NewBitmap(sizeDp, sizeDp);
         using var canvas = new AndroidCanvas(bitmap);
-        using var square = new AndroidPaint { Color = ThemeColors.ResolvePalette(shortcut.ColorKey, isDark).ToPlatform() };
+        using var square = new AndroidPaint { Color = ThemeColors.ResolvePalette(colorKey, isDark).ToPlatform() };
         canvas.DrawRect(0, 0, bitmap.Width, bitmap.Height, square);
         using var glyph = PaintOf(new WidgetTextStyle(Fonts.Icons, (float)Math.Round(sizeDp * CategoryTile.GlyphScale)));
         glyph.Color = ThemeColors.Resolve(ThemeColor.TileInk, isDark).ToPlatform();
-        DrawCentred(canvas, glyph, CategoryIcons.Resolve(shortcut.IconKey).Glyph, bitmap.Width);
+        DrawCentred(canvas, glyph, CategoryIcons.Resolve(iconKey).Glyph, bitmap.Width);
         return bitmap;
     }
 

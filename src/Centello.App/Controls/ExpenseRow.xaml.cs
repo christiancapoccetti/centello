@@ -3,8 +3,7 @@ using Centello.Application;
 namespace Centello.App.Controls;
 
 /// <summary>One expense in a list: the tile of its category, what it is, the detail the list adds and the amount.
-/// A tap opens it. The row binds to its item by name (ExpenseId, Title, Detail, Amount, IconKey, ColorKey,
-/// Description), so the home and the histories draw the same row from their own items.</summary>
+/// A tap opens the expense editor.</summary>
 public partial class ExpenseRow : ContentView
 {
     public static readonly BindableProperty ExpenseIdProperty = BindableProperty.Create(nameof(ExpenseId), typeof(Guid),

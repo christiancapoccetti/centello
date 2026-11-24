@@ -88,27 +88,12 @@ public partial class InsightsPage : ContentPage
         await Shell.Current.GoToAsync(RecapPage.Route(recap.Period));
     }
 
-    // An observation about one expense opens it. One about a category leads to its expenses: the history of the
-    // month with the category as filter, or the category itself when the period is a year.
-    private async void OnInsightTapped(object? sender, EventArgs e)
-    {
-        if (sender is not BindableObject { BindingContext: InsightRow insight })
-            return;
-
-        var route = insight.Target switch
-        {
-            InsightTarget.ExpenseTarget expense => ExpenseEditorPage.Route(expense.ExpenseId),
-            InsightTarget.CategoryTarget { Period.Kind: PeriodKind.Month } category => ExpensesPage.Route(category.Period, category.CategoryId),
-            InsightTarget.CategoryTarget category => CategoryDetailPage.Route(category.CategoryId, category.Period),
-            _ => ""
-        };
-        if (route.Length > 0)
-            await Shell.Current.GoToAsync(route);
-    }
+    private void OnDisclosureClicked(object? sender, EventArgs e) => _viewModel.ToggleCategories();
 
     private async void OnCategoryClicked(object? sender, EventArgs e)
     {
-        if (sender is Button { CommandParameter: InsightCategoryRow category } && _viewModel.Overview is { } overview)
-            await Shell.Current.GoToAsync(CategoryDetailPage.Route(category.CategoryId, overview.Period));
+        if (sender is Button { CommandParameter: InsightCategoryRow { CategoryId: { } categoryId } } &&
+            _viewModel.Overview is { } overview)
+            await Shell.Current.GoToAsync(CategoryDetailPage.Route(categoryId, overview.Period));
     }
 }

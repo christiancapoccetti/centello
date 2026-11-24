@@ -543,7 +543,17 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_chart_one_bar_per_day_with_today_highlighted_and_future_days_as_stubs()
+    public async Task Should_omit_the_chart_in_month_view()
+    {
+        var current = await Overview();
+        var past = await Overview(period: Period.Month(2026, 9));
+
+        Assert.Null(current.Chart);
+        Assert.Null(past.Chart);
+    }
+
+    [Fact]
+    public async Task Should_chart_one_bar_per_day_in_the_glance_with_today_highlighted_and_future_days_as_stubs()
     {
         var category = NewCategory("Spesa");
         var expenses = new[]
@@ -553,7 +563,7 @@ public sealed class HomeOverviewService_should_expected_behavior
             Spend(category, 99_900, new DateOnly(2026, 11, 25))
         };
 
-        var chart = (await Overview([category], expenses)).Chart;
+        var chart = (await Glance([category], expenses)).Chart;
 
         Assert.Equal(30, chart.Bars.Count);
         Assert.All(chart.Bars.Take(18), bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
@@ -562,60 +572,38 @@ public sealed class HomeOverviewService_should_expected_behavior
         Assert.Equal(1.0, chart.Bars[0].Fraction, 6);
         Assert.Equal(2_700d / 7_450, chart.Bars[18].Fraction, 6);
         Assert.Equal(0, chart.Bars[1].Fraction);
-        Assert.Equal("1 nov", chart.StartLabel);
-        Assert.Equal("30 nov", chart.EndLabel);
+        Assert.Equal("1", chart.StartLabel);
+        Assert.Equal("30", chart.EndLabel);
         Assert.True(chart.HasHighlight);
-        Assert.Equal("oggi 27,00 €", chart.HighlightLabel);
+        Assert.Equal("oggi", chart.HighlightLabel);
         Assert.Equal(18.5 / 30, chart.HighlightPosition, 6);
     }
 
     [Fact]
-    public async Task Should_chart_every_day_of_a_past_month_as_past()
+    public async Task Should_draw_one_bar_per_day_of_a_leap_february_in_the_glance()
     {
-        var category = NewCategory("Spesa");
-        var expenses = new[]
-        {
-            Spend(category, 2_000, new DateOnly(2026, 9, 10)),
-            Spend(category, 4_000, new DateOnly(2026, 9, 30))
-        };
-
-        var chart = (await Overview([category], expenses, Period.Month(2026, 9))).Chart;
-
-        Assert.Equal(30, chart.Bars.Count);
-        Assert.All(chart.Bars, bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
-        Assert.Equal(1.0, chart.Bars[29].Fraction, 6);
-        Assert.Equal(0.5, chart.Bars[9].Fraction, 6);
-        Assert.False(chart.HasHighlight);
-        Assert.Equal("", chart.HighlightLabel);
-        Assert.Equal("1 set", chart.StartLabel);
-        Assert.Equal("30 set", chart.EndLabel);
-    }
-
-    [Fact]
-    public async Task Should_draw_one_bar_per_day_of_a_leap_february()
-    {
-        var chart = (await Overview(period: Period.Month(2028, 2))).Chart;
+        var chart = (await Glance(today: new DateOnly(2028, 2, 1))).Chart;
 
         Assert.Equal(29, chart.Bars.Count);
-        Assert.Equal("29 feb", chart.EndLabel);
+        Assert.Equal("29", chart.EndLabel);
     }
 
     [Fact]
-    public async Task Should_scale_the_pace_line_to_the_daily_budget()
+    public async Task Should_scale_the_glance_pace_line_to_the_daily_budget()
     {
         var category = NewCategory("Spesa", budgetCents: 300_000);
         var calm = new[] { Spend(category, 7_500, new DateOnly(2026, 11, 1)) };
         var heavy = new[] { Spend(category, 20_000, new DateOnly(2026, 11, 1)) };
 
-        var belowPace = (await Overview([category], calm)).Chart;
-        var abovePace = (await Overview([category], heavy)).Chart;
+        var belowPace = (await Glance([category], calm)).Chart;
+        var abovePace = (await Glance([category], heavy)).Chart;
 
         Assert.True(belowPace.HasPace);
         Assert.Equal(1.0, belowPace.PaceFraction!.Value, 6);
         Assert.Equal(0.75, belowPace.Bars[0].Fraction, 6);
         Assert.Equal(0.5, abovePace.PaceFraction!.Value, 6);
         Assert.Equal(1.0, abovePace.Bars[0].Fraction, 6);
-        Assert.Equal("media per restare nel budget", belowPace.PaceLabel);
+        Assert.Equal("100 € al giorno", belowPace.PaceLabel);
     }
 
     [Fact]
@@ -623,7 +611,7 @@ public sealed class HomeOverviewService_should_expected_behavior
     {
         var category = NewCategory("Spesa");
 
-        var chart = (await Overview([category], [Spend(category, 1_000, Today)])).Chart;
+        var chart = Assert.IsType<SpendChart>((await Overview([category], [Spend(category, 1_000, Today)], Period.Year(2026))).Chart);
 
         Assert.False(chart.HasPace);
         Assert.Null(chart.PaceFraction);
@@ -633,7 +621,7 @@ public sealed class HomeOverviewService_should_expected_behavior
     [Fact]
     public async Task Should_draw_empty_bars_when_nothing_was_spent()
     {
-        var chart = (await Overview()).Chart;
+        var chart = (await Glance()).Chart;
 
         Assert.All(chart.Bars, bar => Assert.Equal(0, bar.Fraction));
         Assert.Null(chart.PaceFraction);
@@ -651,7 +639,7 @@ public sealed class HomeOverviewService_should_expected_behavior
             Spend(category, 990_000, new DateOnly(2026, 12, 2))
         };
 
-        var chart = (await Overview([category], expenses, Period.Year(2026))).Chart;
+        var chart = Assert.IsType<SpendChart>((await Overview([category], expenses, Period.Year(2026))).Chart);
 
         Assert.Equal(12, chart.Bars.Count);
         Assert.All(chart.Bars.Take(10), bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
@@ -675,8 +663,8 @@ public sealed class HomeOverviewService_should_expected_behavior
             Spend(category, 2_700, Today)
         };
 
-        var chart = (await Overview([category], expenses)).Chart;
-        var year = (await Overview([category], expenses, Period.Year(2026))).Chart;
+        var chart = (await Glance([category], expenses)).Chart;
+        var year = Assert.IsType<SpendChart>((await Overview([category], expenses, Period.Year(2026))).Chart);
 
         Assert.Equal(
             "Spesa giornaliera di novembre 2026. Giorno più alto: 1 novembre, 74,50 €. Oggi: 27,00 €. " +
@@ -691,151 +679,87 @@ public sealed class HomeOverviewService_should_expected_behavior
     [Fact]
     public async Task Should_describe_a_chart_without_spending_or_budget()
     {
-        var past = (await Overview(period: Period.Month(2026, 9))).Chart;
-        var current = (await Overview()).Chart;
+        var past = Assert.IsType<SpendChart>((await Overview(period: Period.Year(2025))).Chart);
+        var current = (await Glance()).Chart;
 
-        Assert.Equal("Spesa giornaliera di settembre 2026. Nessuna spesa registrata.", past.Description);
+        Assert.Equal("Spesa mensile del 2025. Nessuna spesa registrata.", past.Description);
         Assert.Equal("Spesa giornaliera di novembre 2026. Nessuna spesa registrata. Oggi: 0,00 €.", current.Description);
     }
 
     [Fact]
-    public async Task Should_list_the_five_latest_expenses_with_note_or_category_name()
+    public async Task Should_share_budget_rows_between_the_month_overview_and_glance()
     {
-        var food = NewCategory("Spesa", color: "mint", icon: "food");
-        var leisure = NewCategory("Svago", color: "coral", icon: "leisure");
-        var expenses = new[]
+        var food = NewCategory("Alimentari", budgetCents: 80_000, color: "mint", icon: "cart");
+        var fuel = NewCategory("Carburante", budgetCents: 12_000, color: "peri", icon: "fuel");
+        var dining = NewCategory("Ristoranti", budgetCents: 10_000, color: "butter", icon: "food");
+        var bills = NewCategory("Bollette", budgetCents: 0, color: "#176B5B", icon: "rocket");
+        var empty = NewCategory("Viaggi");
+        var archived = NewCategory("Vecchia", budgetCents: 50_000, archived: true);
+        var categories = new[] { archived, bills, dining, empty, fuel, food };
+        var spending = new[]
         {
-            Spend(food, 1_250, Today),
-            Spend(leisure, 1_599, new DateOnly(2026, 11, 18), note: "Netflix", recurringPaymentId: Guid.NewGuid()),
-            Spend(food, 4_000, new DateOnly(2026, 11, 12), note: "Mercato"),
-            Spend(food, 100, new DateOnly(2026, 11, 10)),
-            Spend(food, 200, new DateOnly(2026, 11, 8), recurringPaymentId: Guid.NewGuid()),
-            Spend(food, 300, new DateOnly(2026, 11, 3)),
-            Spend(food, 400, new DateOnly(2026, 11, 1))
+            Spend(food, 55_000, Today),
+            Spend(food, 1_020, new DateOnly(2026, 11, 27)),
+            Spend(fuel, 13_530, Today),
+            Spend(bills, 92_000, Today),
+            Spend(fuel, 1_500, new DateOnly(2026, 10, 31)),
+            Spend(archived, 5_000, Today),
+            new Expense(Guid.NewGuid(), Guid.NewGuid(), new Money(600), Today)
         };
 
-        var overview = await Overview([food, leisure], expenses);
+        var overview = await Overview(categories, spending);
+        var glance = await Glance(categories, spending);
 
-        Assert.True(overview.HasLatest);
-        Assert.False(overview.HasNoLatest);
-        Assert.Equal(["Spesa", "Svago", "Spesa", "Spesa", "Spesa"], overview.Latest.Select(item => item.Title));
         Assert.Equal(
-            ["Oggi", "Ieri · Netflix · automatica", "12 nov · Mercato", "10 nov", "8 nov · automatica"],
-            overview.Latest.Select(item => item.Detail));
+            [
+                new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 56_020, 80_000),
+                new CategoryBudgetRow(fuel.CategoryId, "Carburante", "fuel", "peri", 13_530, 12_000),
+                new CategoryBudgetRow(dining.CategoryId, "Ristoranti", "food", "butter", 0, 10_000),
+                new CategoryBudgetRow(bills.CategoryId, "Bollette", "more", "grey", 92_000, null)
+            ],
+            overview.BudgetRows);
+        Assert.Equal<long?>([23_980, -1_530, 10_000, null], overview.BudgetRows.Select(row => row.RemainingCents));
+        Assert.Equal(overview.BudgetRows, glance.BudgetRows);
         Assert.Equal(
-            ["12,50 €", "15,99 €", "40,00 €", "1,00 €", "2,00 €"],
-            overview.Latest.Select(item => item.Amount));
-        Assert.Equal(new[] { "food", "leisure", "food", "food", "food" }, overview.Latest.Select(item => item.IconKey));
-        Assert.Equal(new[] { "mint", "coral", "mint", "mint", "mint" }, overview.Latest.Select(item => item.ColorKey));
-        Assert.Equal("Svago, Ieri · Netflix · automatica, 15,99 €", overview.Latest[1].Description);
+            [new CategorySegment("grey", 92_000), new CategorySegment("mint", 56_020),
+                new CategorySegment("peri", 13_530), new CategorySegment("grey", 5_600)],
+            overview.Categories.Segments);
     }
 
     [Fact]
-    public async Task Should_say_the_note_or_else_the_tag_after_the_day()
+    public async Task Should_scale_category_budgets_for_a_year_and_keep_a_zero_balance()
     {
-        var food = NewCategory("Spesa");
-        var pizza = new Tag(Guid.NewGuid(), food.CategoryId, "Pizza");
-        var expenses = new[]
+        var food = NewCategory("Alimentari", budgetCents: 800);
+        var dining = NewCategory("Ristoranti", budgetCents: 200);
+        var spending = new[]
         {
-            Spend(food, 1_250, Today),
-            Spend(food, 900, new DateOnly(2026, 11, 18), note: "  ", tagId: pizza.TagId),
-            Spend(food, 500, new DateOnly(2026, 11, 12), note: "Mercato", tagId: pizza.TagId),
-            Spend(food, 400, new DateOnly(2026, 11, 10), tagId: pizza.TagId, recurringPaymentId: Guid.NewGuid())
+            Spend(food, 4_000, new DateOnly(2026, 1, 1)),
+            Spend(food, 5_600, Today),
+            Spend(food, 1_000, new DateOnly(2025, 12, 31))
         };
 
-        var latest = (await Overview([food], expenses, tags: [pizza])).Latest;
+        var overview = await Overview([dining, food], spending, Period.Year(2026));
 
-        Assert.Equal([("Spesa", "Oggi"), ("Spesa", "Ieri · Pizza"), ("Spesa", "12 nov · Mercato"),
-                ("Spesa", "10 nov · Pizza · automatica")],
-            latest.Select(item => (item.Title, item.Detail)));
-        Assert.Equal("Spesa, Oggi, 12,50 €", latest[0].Description);
+        Assert.Equal(
+            [new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 9_600, 9_600),
+                new CategoryBudgetRow(dining.CategoryId, "Ristoranti", "cart", "mint", 0, 2_400)],
+            overview.BudgetRows);
+        Assert.Equal<long?>([0, 2_400], overview.BudgetRows.Select(row => row.RemainingCents));
     }
 
     [Fact]
-    public async Task Should_keep_the_tag_name_of_an_archived_tag_in_the_latest_expenses()
+    public async Task Should_show_only_budgeted_categories_when_the_period_has_no_spending()
     {
-        var food = NewCategory("Spesa");
-        var old = new Tag(Guid.NewGuid(), food.CategoryId, "Vecchio");
-        old.Archive();
+        var food = NewCategory("Alimentari", budgetCents: 80_000);
+        var fuel = NewCategory("Carburante");
+        var previous = new DateOnly(2026, 10, 31);
 
-        var latest = (await Overview([food], [Spend(food, 500, Today, tagId: old.TagId)], tags: [old])).Latest;
+        var overview = await Overview([fuel, food], [Spend(food, 20_000, previous)]);
+        var empty = await Overview([fuel]);
 
-        Assert.Equal("Oggi · Vecchio", latest.Single().Detail);
-    }
-
-    [Fact]
-    public async Task Should_fall_back_to_the_generic_icon_and_color_for_a_missing_category()
-    {
-        var orphan = new Expense(Guid.NewGuid(), Guid.NewGuid(), new Money(500), Today);
-        var legacy = NewCategory("Auto", color: "#176B5B", icon: "rocket");
-        var expenses = new[] { orphan, Spend(legacy, 700, new DateOnly(2026, 11, 18)) };
-
-        var latest = (await Overview([legacy], expenses)).Latest;
-
-        Assert.Equal(new LatestExpense(orphan.ExpenseId, "Categoria non disponibile", "Oggi",
-            "5,00 €", "more", "grey"), latest[0]);
-        Assert.Equal(("more", "grey"), (latest[1].IconKey, latest[1].ColorKey));
-    }
-
-    [Fact]
-    public async Task Should_list_only_expenses_inside_the_period_most_recent_first()
-    {
-        var category = NewCategory("Spesa");
-        var expenses = new[]
-        {
-            Spend(category, 100, new DateOnly(2026, 10, 31)),
-            Spend(category, 200, new DateOnly(2026, 11, 2)),
-            Spend(category, 300, new DateOnly(2026, 11, 3))
-        };
-
-        var latest = (await Overview([category], expenses)).Latest;
-
-        Assert.Equal(["3,00 €", "2,00 €"], latest.Select(item => item.Amount));
-    }
-
-    [Fact]
-    public async Task Should_break_ties_within_a_day_by_expense_id()
-    {
-        var category = NewCategory("Spesa");
-        var first = new Guid("00000000-0000-0000-0000-000000000001");
-        var second = new Guid("00000000-0000-0000-0000-000000000002");
-        var expenses = new[]
-        {
-            Spend(category, 100, Today, expenseId: first),
-            Spend(category, 200, Today, expenseId: second)
-        };
-
-        var latest = (await Overview([category], expenses)).Latest;
-
-        Assert.Equal([second, first], latest.Select(item => item.ExpenseId));
-    }
-
-    [Fact]
-    public async Task Should_list_expenses_entered_in_sequence_newest_first_within_a_day()
-    {
-        var category = NewCategory("Spesa");
-        var categories = new FakeCategoryRepository();
-        categories.Items.Add(category);
-        var expenses = new FakeExpenseRepository();
-        var entered = 0;
-        var service = new ExpenseService(categories, new FakeTagRepository(), expenses,
-            () => Guid.CreateVersion7(new DateTimeOffset(2026, 11, 19, 9, 0, 0, TimeSpan.Zero).AddSeconds(entered++)));
-        foreach (var note in new[] { "primo", "secondo", "terzo" })
-            await service.Create(new SaveExpenseRequest(category.CategoryId, 100, Today, Note: note));
-
-        var overview = await new HomeOverviewService(categories, new FakeTagRepository(), expenses, () => Today).Get();
-
-        Assert.Equal(["Oggi · terzo", "Oggi · secondo", "Oggi · primo"], overview.Value.Latest.Select(item => item.Detail));
-    }
-
-    [Fact]
-    public async Task Should_list_nothing_when_the_period_has_no_expenses()
-    {
-        var overview = await Overview([NewCategory("Spesa")]);
-
-        Assert.Empty(overview.Latest);
-        Assert.False(overview.HasLatest);
-        Assert.True(overview.HasNoLatest);
+        Assert.Equal(new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 0, 80_000),
+            Assert.Single(overview.BudgetRows));
+        Assert.Empty(empty.BudgetRows);
     }
 
     [Fact]
@@ -844,17 +768,10 @@ public sealed class HomeOverviewService_should_expected_behavior
         var failingCategories = new FakeCategoryRepository { Failure = Failed };
         var failingExpenses = new FakeExpenseRepository { Failure = Failed };
 
-        var failingTags = new FakeTagRepository { Failure = Failed };
-
-        var categoryFailure = await new HomeOverviewService(failingCategories, new FakeTagRepository(),
-            new FakeExpenseRepository(), () => Today).Get();
-        var tagFailure = await new HomeOverviewService(new FakeCategoryRepository(), failingTags,
-            new FakeExpenseRepository(), () => Today).Get();
-        var expenseFailure = await new HomeOverviewService(new FakeCategoryRepository(), new FakeTagRepository(),
-            failingExpenses, () => Today).Get();
+        var categoryFailure = await new HomeOverviewService(failingCategories, new FakeExpenseRepository(), () => Today).Get();
+        var expenseFailure = await new HomeOverviewService(new FakeCategoryRepository(), failingExpenses, () => Today).Get();
 
         Assert.Equal(Failed, categoryFailure.Error);
-        Assert.Equal(Failed, tagFailure.Error);
         Assert.Equal(Failed, expenseFailure.Error);
     }
 
@@ -995,22 +912,11 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_not_read_the_tags_for_the_glance()
-    {
-        var service = new HomeOverviewService(new FakeCategoryRepository(), new FakeTagRepository { Failure = Failed },
-            new FakeExpenseRepository(), () => Today);
-
-        var result = await service.Glance();
-
-        Assert.True(result.IsSuccess);
-    }
-
-    [Fact]
     public async Task Should_return_the_repository_failure_for_the_glance()
     {
         var categoryFailure = await new HomeOverviewService(new FakeCategoryRepository { Failure = Failed },
-            new FakeTagRepository(), new FakeExpenseRepository(), () => Today).Glance();
-        var expenseFailure = await new HomeOverviewService(new FakeCategoryRepository(), new FakeTagRepository(),
+            new FakeExpenseRepository(), () => Today).Glance();
+        var expenseFailure = await new HomeOverviewService(new FakeCategoryRepository(),
             new FakeExpenseRepository { Failure = Failed }, () => Today).Glance();
 
         Assert.Equal(Failed, categoryFailure.Error);
@@ -1024,8 +930,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         categoryRepository.Items.AddRange(categories ?? []);
         var expenseRepository = new FakeExpenseRepository();
         expenseRepository.Items.AddRange(expenses ?? []);
-        var service = new HomeOverviewService(categoryRepository, new FakeTagRepository(), expenseRepository,
-            () => today ?? Today);
+        var service = new HomeOverviewService(categoryRepository, expenseRepository, () => today ?? Today);
 
         var result = await service.Glance();
 
@@ -1034,16 +939,13 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     private static async Task<HomeOverview> Overview(IEnumerable<Category>? categories = null,
-        IEnumerable<Expense>? expenses = null, Period? period = null, DateOnly? today = null,
-        IEnumerable<Tag>? tags = null)
+        IEnumerable<Expense>? expenses = null, Period? period = null, DateOnly? today = null)
     {
         var categoryRepository = new FakeCategoryRepository();
         categoryRepository.Items.AddRange(categories ?? []);
         var expenseRepository = new FakeExpenseRepository();
         expenseRepository.Items.AddRange(expenses ?? []);
-        var tagRepository = new FakeTagRepository();
-        tagRepository.Items.AddRange(tags ?? []);
-        var service = new HomeOverviewService(categoryRepository, tagRepository, expenseRepository, () => today ?? Today);
+        var service = new HomeOverviewService(categoryRepository, expenseRepository, () => today ?? Today);
 
         var result = await service.Get(period);
 
@@ -1061,8 +963,6 @@ public sealed class HomeOverviewService_should_expected_behavior
         return category;
     }
 
-    private static Expense Spend(Category category, long cents, DateOnly on, string note = "",
-        Guid? recurringPaymentId = null, Guid? expenseId = null, Guid? tagId = null) =>
-        new(expenseId ?? Guid.NewGuid(), category.CategoryId, new Money(cents), on, tagId, note,
-            recurringPaymentId: recurringPaymentId);
+    private static Expense Spend(Category category, long cents, DateOnly on) =>
+        new(Guid.NewGuid(), category.CategoryId, new Money(cents), on);
 }

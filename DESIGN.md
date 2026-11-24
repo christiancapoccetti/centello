@@ -296,18 +296,18 @@ A graphite-and-warm-white neutral world, one coral accent, and a seven-slot past
 - **Graphite Ground** (`graphite-ground`, light `paper-ground-light`): every page, the shell, the tab bar, bottom sheets, and the backing of labels that sit over chart bars.
 - **Raised Graphite** (`graphite-raised`, light `paper-raised-light`): the one raised tone: split pill, extended FAB, tonal button, menus, info cards, comparison chip, badges.
 - **Selected** (`graphite-selected`, light `paper-selected-light`): the fill under a selected chip, segment or picker cell.
-- **Warm White Ink** (`warm-white-ink`, light `ink-light`): primary text, icons, filled buttons, today's bar, focus and selection rings, and in the Insight charts the previous-period line, the gap marker and the waterfall's end bar.
+- **Warm White Ink** (`warm-white-ink`, light `ink-light`): primary text, icons, filled buttons, today's bar, focus and selection rings, and in Insight the previous-period line, the gap marker, and the prior-share marker.
 - **Mute** (`signal-grey-mute`, light `mute-light`): secondary text, captions, helper text, unselected tabs, field outlines at rest, empty-state glyphs, and the automatic part of the pace chart's bars.
 - **Hairline** (`hairline`, light `hairline-light`): 1dp row dividers, card strokes, future-day stubs, read-only field outlines.
-- **Outline** (`outline`, light `outline-light`): strokes of raised surfaces (pill, FAB, menu, unselected chip), the split pill's divider, the pace chart's budget hairline and the waterfall's connectors.
-- **Chart Bar** (`chart-bar`, light `chart-bar-light`): past days in the spend chart, the pace chart's bars and the waterfall's start bar.
+- **Outline** (`outline`, light `outline-light`): strokes of raised surfaces (pill, FAB, menu, unselected chip), the split pill's divider, and the pace chart's budget hairline.
+- **Chart Bar** (`chart-bar`, light `chart-bar-light`): past days in the spend chart and the pace chart's bars.
 - **Tile Ink** (`tile-ink`, light `tile-ink-light`): the dark glyph on a category tile, in both schemes.
 - **Scrim** (`scrim`): 50% black behind a bottom sheet.
 
 ### Category palette
 Slots, stored by key in `Categories.Color`: coral (Corallo), peri (Pervinca), butter (Burro), mint (Menta), lilac (Lilla), sky (Celeste), and grey (Grigio). The six chromatic slots are a little deeper in the light scheme; grey is the fallback for a missing or unknown key.
 
-**The Category Owns Its Ink Rule.** Palette colours appear only where a category is shown: its tile, its swatch in a key, its segment of the category line, its bars, its fraction bars and its step in the waterfall. The one exception is the recap story, where a card about a category is painted in that category's full-bleed ink (see Recap story). Interface chrome never borrows a palette colour, and a palette colour never carries interface meaning.
+**The Category Owns Its Ink Rule.** Palette colours appear only where a category is shown: its tile, its swatch in a key, its segment of the category line, its budget progress bar, and its share and change bars in Insight. The one exception is the recap story, where a card about a category is painted in that category's full-bleed ink (see Recap story). Interface chrome never borrows a palette colour, and a palette colour never carries interface meaning.
 
 **The App Suggests the Colour Rule.** A new category opens with the chromatic slot the fewest active categories hold (first in palette order on a tie) already selected, and the user may pick any of the six chromatic slots instead. Grey is never offered; it only shows a missing or legacy colour, which an edit keeps until the user picks a palette colour.
 
@@ -324,7 +324,7 @@ Slots, stored by key in `Categories.Color`: coral (Corallo), peri (Pervinca), bu
 ### Hierarchy
 - **Display total** (800, 68sp, line height 1): the month's total on the home, with the euro sign at 38sp after an 18sp space. Negative margins take back Android's font padding.
 - **Display amount entry** (800, 60sp, euro sign at 34sp): the amount field of the expense editor, over a 2dp underline.
-- **Display summary** (800, 48sp, line height 1): the total of an Insight period or a category detail.
+- **Display summary** (800, 48sp, line height 1): the total in a category detail.
 - **Title large** (700, 20sp, 1.25): every page title in its top row (tab pages at the 24dp gutter, pushed pages after the back button) and bottom-sheet titles. There is no larger heading level.
 - **Section title** (700, 18sp): "Ultime spese" and other section heads.
 - **Title medium** (600, 16sp, 1.25): row titles (an expense row's category name).
@@ -373,7 +373,7 @@ Two families that never mix: pills for what you press, and square or barely roun
 - **Container** (12dp): info cards and category picker cells.
 - **Card** (16dp): the bordered surface card.
 - **Sheet** (28dp top corners only): bottom sheets.
-- **Widget** (24dp, or the launcher's own corner on Android 12 and later): the surface of Il mese, Scorciatoie and Il ritmo.
+- **Widget** (24dp, or the launcher's own corner on Android 12 and later): the surface of Il mese, Scorciatoie, Il ritmo, and Budget per categoria.
 
 **The Hard Edge Rule.** Data graphics are drawn with antialiasing off, flat fills and 3dp gaps (2dp between days in a category's bars and between the pace chart's slots). Small values keep a visible minimum (2dp sliver, 4dp future stub) instead of vanishing.
 
@@ -394,11 +394,13 @@ Confident ink pills, no elevation.
 The home's bottom dock: one 60dp raised pill with an outline stroke, "+ Aggiungi spesa" (coral plus, Bold 17sp ink) filling the left, and two 64dp icon segments on the right, each behind a 1dp outline divider: the coral microphone and the coral camera (26sp). Tap the microphone to start recording. The same button shows a stop icon, and the hint "In registrazione · Tocca per fermare" appears above it. Tap again to prepare a draft for review. Recording stops automatically after 20 seconds. Tapping the camera opens a menu above it (the menu surface below, 48dp rows with a 22sp glyph and a SemiBold 16sp label): "Scatta una foto" (Android 13 and later only), "Scegli dalla galleria", "Scegli un PDF". On first run, the plus opens the manual expense editor, where the user can create a category. The microphone and camera require an active category. Once a category is available, tapping either segment with assisted drafts off offers to open Settings. The **Bozze assistite** switch opens a disclosure before enabling assisted drafts.
 
 ### Home screen widgets (signature)
-Four widgets that are the Home on the launcher, in the same flat graphite and the same Archivo.
+Five launcher widgets use the app's flat surfaces and Archivo type.
+
 - **Aggiungi** (resizable in both directions): four shapes chosen by its size and the measured width of its words (`AddWidgetShapes.Of`). 2x1: the coral plus and microphone. 3x1: plus, microphone and camera as icons. 4x1: a raised pill with the coral plus, "Aggiungi spesa" and a divider, then the coral microphone and camera, as Oggi's dock. 4x2: a full-width "Aggiungi spesa" pill over "A voce" and "Da foto".
 - **Scorciatoie** (4x1): the four categories used most in the last 30 days (by count) as tiles with their name, then "Altra" for any other; each opens the editor on that category.
 - **Il mese** (2x2, resizable to 3x2, 2x3 and 3x3): the month (with the year when it fits beside it), the total in the condensed numeral, the remaining budget, a short comparison chip, the category line and, when there is one, the over-budget category. The size the launcher reports sets its shape (`MonthWidgetShapes`): the tightest padding and the smallest total on a 2x2, a larger total when wide. Then the rows that fit are drawn, in this order of loss: the chip goes first, then the alert shrinks from its full sentence to one line cut with an ellipsis, then the category line goes and, last, the alert (the category line comes back when only one of the two fits); the month, the total and the budget sentence always stay.
 - **Il ritmo** (4x2): the full comparison chip, a round coral plus and Oggi's daily chart with its pace line ("27 € al giorno").
+- **Budget per categoria** targets a 3 × 2 launcher grid and resizes in both directions. It shows the current month and as many complete category rows as fit. The first three rows keep compact spacing; extra rows use more vertical room with even spacing. Rows follow the order on Today. Each uses a 24dp category tile. Budgeted rows include a 2dp progress bar and an alert glyph with a negative amount when over budget. When the month has no eligible rows, the widget reads "Nessuna categoria da mostrare". Tap it to open **Oggi**.
 
 Tapping a widget opens the app on the matching screen; an editor opened from a widget returns to the launcher when it is saved or closed. The gallery and the PDF stay inside Oggi.
 
@@ -453,7 +455,7 @@ In portrait, the Shell tab bar sits on the ground with no navigation bar above p
 A pushed list page (Spese, a category's page, Pagamenti regolari, Backup ed export, Ripristina backup, Licenze) draws under the transparent navigation bar: its list scrolls behind the gesture handle and ends above it, never on a hard line. The page takes only the top and side insets (`EdgeToEdgePage`, root grid `EdgeToEdgeRoot`); the bottom inset is taken by the scrolling content, as `ListScroll` on a scroll view and the `ListEnd` footer on a collection, and by what floats over the list, such as the Nuovo pagamento button.
 
 ### Category tile (signature)
-The only place a category's icon and colour become pixels: a square (0 radius) tile in the category's palette ink, with a filled Material Symbols Rounded glyph in tile ink at 58% of the tile size. 36dp in rows, 48dp in the icon picker, 56dp as the editor's preview, 24dp inside chips. In the icon picker an unselected tile is neutral: the raised tone with a Mute glyph, so it reads as an icon on offer. Only the selected tile wears the category's ink, with the tile-ink glyph, inside its ring. The catalog holds 31 icons plus the "Altro" fallback; unknown keys fall back to "more" and grey.
+A square (0 radius) tile in the category's palette ink, with a filled Material Symbols Rounded glyph in tile ink at 58% of the tile size. 36dp in rows, 48dp in the icon picker, 56dp as the editor's preview, 24dp inside chips. In the icon picker an unselected tile is neutral: the raised tone with a Mute glyph, so it reads as an icon on offer. Only the selected tile wears the category's ink, with the tile-ink glyph, inside its ring. The catalog holds 31 icons plus the "Altro" fallback; unknown keys fall back to "more" and grey.
 
 ### Category line (signature)
 A full-width 14dp line under the home total: one flat segment per category, as wide as its share of spending, 3dp gaps, a 2dp minimum. Below it, a key on one line, never wrapped: 10dp swatch and 13sp caption per category, each opening its category. Over-budget categories come first (the furthest over first), then the others by spending; the key shows as many whole items as fit the width and drops the rest whole, never clipping one. A screen reader still hears every category in the line's description.
@@ -461,18 +463,27 @@ A full-width 14dp line under the home total: one flat segment per category, as w
 ### Over-budget mark
 In the home key, an over-budget category gets the filled Error glyph at 14sp in alert before its name, and the name turns alert in SemiBold. In the Categorie list the row gets the same glyph (16sp, alert) before its name, and its accessibility description adds "oltre il budget". On a category's page the budget sentence takes the home wording ("Hai superato il budget di 28,50 € su 150") in SemiBold alert after a 20sp Error glyph. The mark is the glyph plus the colour, not a word.
 
-### Daily spend chart (signature)
-104dp of bars plus 22dp of headroom: past days in chart-bar grey, today in ink, future days as 4dp hairline stubs, a 1.5dp dashed periwinkle pace line (4dp dash, 3dp gap) with its SemiBold 12sp label on a ground backing, and 12sp axis labels (start and end in mute, today's label in bold ink, the end labels giving way when it would touch them).
+### Category budgets on Today
+
+**Per categoria** sits below the spending chart and **Vedi ultime spese**. Budgeted active categories come first, including those with zero spending. Unbudgeted active categories appear when they have spending. Within each group, rows are ordered by spending, highest first. Each row opens the category for the selected period.
+
+A row uses a 36dp category tile and a hairline divider. A budgeted row shows the balance, spending against the limit, and a 4dp progress bar in the category colour. The progress bar caps at the limit. The alert glyph and amount show an overshoot. An unbudgeted row shows the amount spent.
+
+### Yearly spend chart (signature)
+The monthly **Oggi** view has no daily expense chart. In the yearly view, monthly bars show spending across the year. **Il ritmo** keeps the daily chart for the current month: 104dp of bars plus 22dp of headroom, past days in chart-bar grey, today in ink, future days as 4dp hairline stubs, a 1.5dp dashed periwinkle pace line (4dp dash, 3dp gap) with its SemiBold 12sp label on a ground backing, and 12sp axis labels (start and end in mute, today's label in bold ink, the end labels giving way when it would touch them).
 
 ### Pace chart (signature)
-"Spesa accumulata" (for a month or a year), the first chart of Insight. One slot per day (31) or month (12), 148dp of plot plus 22dp of headroom for labels, 2dp between slots. Each past slot is a cumulative bar in chart-bar grey. The automatic part (recurring payments) sits at its foot in mute, under a 2dp ground band, so the two read as separate pieces. Today is an ink bar, future slots are 4dp hairline stubs, and a slot with spending never draws thinner than 2dp.
+The **Andamento** option in Insight shows cumulative spending for the selected month or year. One slot per day (31) or month (12), 148dp of plot plus 22dp of headroom for labels, 2dp between slots. Each past slot is a cumulative bar in chart-bar grey. The automatic part (recurring payments) sits at its foot in mute, under a 2dp ground band, so the two read as separate pieces. Today is an ink bar, future slots are 4dp hairline stubs, and a slot with spending never draws thinner than 2dp.
 
-The previous period is a 2dp dashed ink step line (4dp dash, 3dp gap) on the same scale, with its closing amount in 12sp mute on a ground backing. The budget is a 1dp outline hairline with its 12sp mute label. The gap at today is a 2dp ink marker beside today's slot. It spans the compared total and the spent total, with the euro difference in Bold 13sp ink over a 12sp mute caption. The axis is 12sp: start and end in mute, today in bold ink, the end labels giving way when it would touch them. Below it comes a key of 10dp swatches (a 14dp dashed one for the previous period) and 13sp mute names, each amount in SemiBold ink. No sentence follows the chart.
+The previous period is a 2dp dashed ink step line (4dp dash, 3dp gap) on the same scale, with its closing amount in 12sp mute on a ground backing. The budget is a 1dp outline hairline with its 12sp mute label. The gap at today is a 2dp ink marker beside today's slot. It spans the compared total and the spent total, with the euro difference in Bold 13sp ink over a 12sp mute caption. The axis is 12sp: start and end in mute, today in bold ink, the end labels giving way when it would touch them. Below it comes a key of 10dp swatches (a 14dp dashed one for the previous period) and 13sp mute names, each amount in SemiBold ink.
 
-### Waterfall chart (signature)
-"Da ottobre a novembre" (or "Dal 2025 al 2026"): how the to-date total moved between the compared periods, one column per bar with 3dp between columns, 134dp of plot plus 22dp of headroom. The start total is a chart-bar bar and the end total an ink bar, each with a Bold 12sp ink value and its period name in SemiBold 13sp underneath. Between them, each category that changed by at least 1 € floats as a step in its own ink, from the level before to the level after. Its SemiBold 12sp value sits above a rise or below a fall, and a 24dp category tile sits in the foot row under it. The rest folds into one "Altre categorie" step. A 1dp outline connector crosses each 3dp gap at the shared level, and a step never draws thinner than 2dp.
+### Category comparison in Insight
 
-When the levels are close, the scale does not start at zero and both end bars are cut: a body, a 3dp break and a 3dp base at the foot, so a bar never claims to start at zero. A 12sp mute label under the foot row, aligned to the chart's left edge, names the floor ("Scala da 1.150 €"), and the screen-reader description says it too. It is empty and hidden when the scale starts at zero. No sentence follows the chart.
+Insight opens with a compact date range and total. **Dove sono finiti i soldi?** follows with a headline based on the spending in the selected period. Up to three leading categories show their spending and share. The bar uses the category colour. An ink marker shows the share for the comparable period when that period has spending.
+
+The composition shows up to three category share rows. **Mostra un’altra categoria** or **Mostra altre N categorie** appends the remaining rows in spending order, each with its amount, share bar and previous-period marker when available. **Mostra solo le prime 3** collapses the list. Tapping a named category opens its detail for the selected period.
+
+The lower section switches independently between **Andamento**, which opens by default for the selected period, and **Per categoria**. **Per categoria** shows signed euro changes on horizontal bars with a shared zero marker, ordered by decreasing absolute euro difference. Equal magnitudes keep their prior category order. Increases extend right and decreases extend left.
 
 ### Recap story (signature)
 The full-screen story of a closed month or year ("Il tuo novembre", "Il tuo 2026"), pushed over Insight with no tab bar. It is the one place the palette leaves its tiles: a card about a category fills the whole screen with that category's ink under tile-ink text. Coral never paints a card (coral means "add an expense"), so a coral category's card stays on the graphite ground and keeps its ink in tile and bars.
@@ -482,7 +493,7 @@ The full-screen story of a closed month or year ("Il tuo novembre", "Il tuo 2026
 - **Content:** each card says one thing and appears only when the period has enough to say it; thresholds live in `RecapRules`.
 
 ### Comparison chip
-26dp raised chip after the budget sentence: an arrow glyph (east, north-east or south-east) and a SemiBold label. When spending is lower than last month it takes the positive container and on-positive text.
+26dp raised chip for the month overview widgets: an arrow glyph (east, north-east or south-east) and a SemiBold label. When spending is lower than last month it takes the positive container and on-positive text.
 
 ### Picker cells
 Category grid: four columns of tile and 12sp name in a 76dp cell with 12dp radius; the selected cell takes a 2dp ink ring and the selected fill. Ring cells (icon and colour pickers) reserve 5dp of room (3dp gap and 2dp ring) so choosing never moves the pictures.

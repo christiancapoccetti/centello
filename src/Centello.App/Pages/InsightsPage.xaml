@@ -2,12 +2,27 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:t="clr-namespace:Centello.App.Theming"
+             xmlns:vm="clr-namespace:Centello.App.ViewModels"
              xmlns:c="clr-namespace:Centello.App.Controls"
              xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
              x:Class="Centello.App.Pages.InsightsPage"
              x:Name="RootPage"
              Title="Insight"
              SafeAreaEdges="All">
+    <ContentPage.Resources>
+        <DataTemplate x:Key="CategoryShareRow" x:DataType="vm:InsightCategoryRow">
+            <Grid RowDefinitions="Auto,6" RowSpacing="5" ColumnDefinitions="24,*,Auto,Auto" ColumnSpacing="8" MinimumHeightRequest="48" Padding="0,7,0,6">
+                <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="24" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.Column="1" Text="{Binding Name}" Style="{StaticResource TitleMedium}" VerticalOptions="Center" LineBreakMode="WordWrap" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.Column="2" Text="{Binding Amount}" Style="{StaticResource Caption}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.Column="3" Text="{Binding Share}" Style="{StaticResource LabelLarge}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                <c:InsightShareBar Grid.Row="1" Grid.ColumnSpan="4" Fraction="{Binding ShareFraction}" Marker="{Binding ComparedShare}" ColorKey="{Binding ColorKey}" AutomationProperties.IsInAccessibleTree="False" />
+                <Label Grid.RowSpan="2" Grid.ColumnSpan="4" IsVisible="{Binding IsResidual}" InputTransparent="True" SemanticProperties.Description="{Binding ShareDescription}" />
+                <Button Grid.RowSpan="2" Grid.ColumnSpan="4" BackgroundColor="Transparent" Text="" IsVisible="{Binding CanOpen}" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding ShareDescription}" SemanticProperties.Hint="Apri la categoria" />
+            </Grid>
+        </DataTemplate>
+    </ContentPage.Resources>
+
     <Grid x:Name="PageLayout" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,0">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
@@ -39,24 +54,12 @@
             <VerticalStackLayout x:Name="SummaryBody" Padding="0,0,0,24">
                 <c:InlineError Margin="24,8,24,0" Text="{Binding ErrorMessage}" />
 
-                <VerticalStackLayout x:Name="Spending" IsVisible="{Binding HasSpending}">
-                    <!-- Android keeps the font ascent above a 48sp line and the descent below it. The negative
-                         margins take that room back. -->
-                    <Label Style="{StaticResource SummaryDisplay}" Margin="24,4,24,-8">
+                <VerticalStackLayout x:Name="Spending" IsVisible="{Binding HasReports}">
+                    <Label Style="{StaticResource Caption}" Margin="24,6,24,0">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="{Binding Total}" />
-                                <Span Text="&#160;" FontSize="12" FontAutoScalingEnabled="False" />
-                                <Span Text="€" FontSize="28" FontAutoScalingEnabled="False" />
-                            </FormattedString>
-                        </Label.FormattedText>
-                    </Label>
-                    <Label Style="{StaticResource BodyLarge}" Margin="24,8,24,0">
-                        <Label.FormattedText>
-                            <FormattedString>
-                                <Span Text="{Binding Overview.Summary.Lead}" />
-                                <Span Text="{Binding Overview.Summary.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
-                                <Span Text="{Binding Overview.Summary.Tail}" />
+                                <Span Text="{Binding Range}" />
+                                <Span Text="{Binding Total}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
@@ -79,77 +82,70 @@
                         <Button x:Name="RecapButton" Grid.RowSpan="3" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" Clicked="OnRecapClicked" SemanticProperties.Description="{Binding Recap.Title}" SemanticProperties.Hint="{Binding Recap.Detail}" />
                     </Grid>
 
-                    <VerticalStackLayout x:Name="Reports" IsVisible="{Binding HasSpending}">
-                        <Label Text="{Binding Overview.Pace.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
-                        <c:PaceChartView Margin="24,16,24,0" Chart="{Binding Overview.Pace}" />
+                    <VerticalStackLayout Padding="24,18,24,0">
+                        <Label Text="Dove sono finiti i soldi?" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+                        <Label Style="{StaticResource TitleLarge}" Margin="0,6,0,0">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding Overview.Composition.Statement.Lead}" FontFamily="{x:Static t:Fonts.Regular}" />
+                                    <Span Text="{Binding Overview.Composition.Statement.Emphasis}" />
+                                    <Span Text="{Binding Overview.Composition.Statement.Tail}" FontFamily="{x:Static t:Fonts.Regular}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                        <Label Text="{Binding Overview.Composition.Context}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                        <FlexLayout IsVisible="{Binding HasLeadingCategories}" Wrap="Wrap" AlignItems="Center" Margin="0,14,0,2">
+                            <Label Text="{Binding CurrentShareLabel}" Style="{StaticResource Caption}" Margin="0,0,14,0" />
+                            <BoxView IsVisible="{Binding HasPriorShares}" Color="{t:Theme Ink}" WidthRequest="2" HeightRequest="10" Margin="0,0,5,0" AutomationProperties.IsInAccessibleTree="False" />
+                            <Label IsVisible="{Binding HasPriorShares}" Text="{Binding ComparedShareLabel}" Style="{StaticResource Caption}" />
+                        </FlexLayout>
 
-                        <VerticalStackLayout IsVisible="{Binding Overview.HasWaterfall}">
-                            <Label Text="{Binding Overview.Waterfall.Title}" Style="{StaticResource SectionTitle}" Margin="24,30,24,1" SemanticProperties.HeadingLevel="Level2" />
-                            <c:WaterfallChartView Margin="24,16,24,0" Chart="{Binding Overview.Waterfall}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding LeadingCategories}" BindableLayout.ItemTemplate="{StaticResource CategoryShareRow}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding MoreCategories}" BindableLayout.ItemTemplate="{StaticResource CategoryShareRow}" />
+
+                        <Grid IsVisible="{Binding HasMoreCategories}" Margin="0,8,0,0" ColumnDefinitions="*,24" MinimumHeightRequest="48" RowDefinitions="1,*">
+                            <BoxView Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
+                            <Label Grid.Row="1" Text="{Binding DisclosureTitle}" Style="{StaticResource TitleMedium}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding DisclosureGlyph}" Style="{StaticResource IconGlyph}" TextColor="{t:Theme Mute}" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                            <Button Grid.Row="1" Grid.ColumnSpan="2" BackgroundColor="Transparent" Text="" Clicked="OnDisclosureClicked" SemanticProperties.Description="{Binding DisclosureTitle}" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout x:Name="Reports" IsVisible="{Binding HasReports}" Padding="24,18,24,24">
+                        <BoxView Style="{StaticResource Hairline}" />
+                        <Label Text="{Binding ComparisonTitle}" Style="{StaticResource SectionTitle}" Margin="0,16,0,8" SemanticProperties.HeadingLevel="Level2" />
+                        <c:Segmented Items="Andamento,Per categoria" SelectedIndex="{Binding ChartIndex}" />
+                        <VerticalStackLayout IsVisible="{Binding ShowTrend}" Margin="0,16,0,0">
+                            <Label Text="{Binding Overview.Pace.Title}" Style="{StaticResource TitleMedium}" SemanticProperties.HeadingLevel="Level3" />
+                            <Label Text="{Binding TrendContext}" Style="{StaticResource Caption}" Margin="0,4,0,8" />
+                            <c:PaceChartView Margin="0,12,0,0" Chart="{Binding Overview.Pace}" />
                         </VerticalStackLayout>
-
-                        <Label Text="Da tenere d'occhio" Style="{StaticResource SectionTitle}" Margin="24,22,24,1" IsVisible="{Binding HasInsights}" SemanticProperties.HeadingLevel="Level2" />
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Insights}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="24,0" ColumnDefinitions="24,*" ColumnSpacing="14" RowDefinitions="Auto,1">
-                                        <Label Style="{StaticResource IconGlyph}" Margin="0,15,0,0" Text="{Binding Glyph}" TextColor="{t:Theme Mute}" VerticalOptions="Start" />
-                                        <VerticalStackLayout Grid.Column="1" Padding="0,11,0,0">
-                                            <Label Text="{Binding Title}" Style="{StaticResource TitleMedium}" />
-                                            <Label Text="{Binding Description}" Style="{StaticResource BodyMedium}" />
-                                            <!-- The link ends the row: its padding is the room under it and its touch target. -->
-                                            <c:ActionLink Text="{Binding Action}" Padding="0,8,16,14" HorizontalOptions="Start" Tapped="OnInsightTapped" />
-                                        </VerticalStackLayout>
-                                        <BoxView Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Hairline}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
+                        <VerticalStackLayout IsVisible="{Binding ShowDeltas}" Margin="0,16,0,0">
+                            <Label Text="Dove hai speso di più o di meno?" Style="{StaticResource TitleMedium}" SemanticProperties.HeadingLevel="Level3" />
+                            <Label Style="{StaticResource BodyMedium}" Margin="0,4,0,0">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Overview.Summary.Lead}" />
+                                        <Span Text="{Binding Overview.Summary.Emphasis}" FontFamily="{x:Static t:Fonts.Bold}" TextColor="{t:Theme Ink}" />
+                                        <Span Text="{Binding Overview.Summary.Tail}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Text="{Binding DeltaDetail}" IsVisible="{Binding HasDeltaDetail}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                            <Label Text="La spesa è rimasta uguale in ogni categoria." IsVisible="{Binding HasUnchangedCategories}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                            <VerticalStackLayout Margin="0,8,0,0" BindableLayout.ItemsSource="{Binding Deltas}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:InsightCategoryRow">
+                                        <Grid ColumnDefinitions="1.2*,1.65*,*" ColumnSpacing="8" MinimumHeightRequest="28">
+                                            <Label Text="{Binding Name}" Style="{StaticResource Caption}" VerticalOptions="Center" LineBreakMode="WordWrap" />
+                                            <c:InsightDeltaBar Grid.Column="1" HeightRequest="8" VerticalOptions="Center" ColorKey="{Binding ColorKey}" Fraction="{Binding DeltaFraction}" Zero="{Binding DeltaZero}" AutomationProperties.IsInAccessibleTree="False" />
+                                            <Label Grid.Column="2" Text="{Binding Delta}" Style="{StaticResource LabelLarge}" HorizontalTextAlignment="End" VerticalOptions="Center" LineBreakMode="CharacterWrap" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
-
-                        <Label Text="Per categoria" Style="{StaticResource SectionTitle}" Margin="24,22,24,1" SemanticProperties.HeadingLevel="Level2" />
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Categories}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="24,0" MinimumHeightRequest="64" ColumnDefinitions="36,*,Auto" ColumnSpacing="14" RowDefinitions="*,1">
-                                        <c:CategoryTile IconKey="{Binding IconKey}" ColorKey="{Binding ColorKey}" Size="36" VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
-                                        <c:TrailingValueLayout Grid.Column="1" Margin="0,8">
-                                            <VerticalStackLayout>
-                                                <Label Text="{Binding Name}" Style="{StaticResource TitleMedium}" LineBreakMode="TailTruncation" MaxLines="2" />
-                                                <!-- The bar is the spending against the largest category, the number is the share of the total.
-                                                     What does not fit on the line goes to the next one, so the badge never crowds the amount. -->
-                                                <FlexLayout Wrap="Wrap" AlignItems="Center" Margin="0,2,0,0">
-                                                    <c:FractionBar WidthRequest="96" HeightRequest="4" Margin="0,0,8,0" Fraction="{Binding ShareOfTop}" ColorKey="{Binding ColorKey}" />
-                                                    <Label Text="{Binding Share}" Style="{StaticResource Caption}" Margin="0,0,8,0" VerticalOptions="Center" />
-                                                    <Border Style="{StaticResource Badge}" VerticalOptions="Center">
-                                                        <Border.Triggers>
-                                                            <DataTrigger TargetType="Border" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
-                                                                <Setter Property="BackgroundColor" Value="{t:Theme PositiveContainer}" />
-                                                            </DataTrigger>
-                                                        </Border.Triggers>
-                                                        <Label Text="{Binding Change.Text}" FontFamily="{x:Static t:Fonts.Bold}" FontSize="12" VerticalTextAlignment="Center">
-                                                            <Label.Triggers>
-                                                                <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Lower}">
-                                                                    <Setter Property="TextColor" Value="{t:Theme OnPositiveContainer}" />
-                                                                </DataTrigger>
-                                                                <DataTrigger TargetType="Label" Binding="{Binding Change.Tone}" Value="{x:Static app:InsightChangeTone.Same}">
-                                                                    <Setter Property="TextColor" Value="{t:Theme Mute}" />
-                                                                </DataTrigger>
-                                                            </Label.Triggers>
-                                                        </Label>
-                                                    </Border>
-                                                </FlexLayout>
-                                            </VerticalStackLayout>
-                                            <Label Text="{Binding Amount}" Style="{StaticResource AmountLabel}" />
-                                        </c:TrailingValueLayout>
-                                        <Label Grid.Column="2" Margin="-8,0,-4,0" Style="{StaticResource IconGlyph}" FontSize="20" Text="{x:Static app:MaterialSymbols.ChevronRight}" TextColor="{t:Theme Mute}" />
-                                        <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Hairline}" />
-                                        <Button Grid.RowSpan="2" Grid.ColumnSpan="3" BackgroundColor="Transparent" Text="" CommandParameter="{Binding .}" Clicked="OnCategoryClicked" SemanticProperties.Description="{Binding Description}" SemanticProperties.Hint="Apri la categoria" />
-                                    </Grid>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
-
-                        <Label Text="I tuoi insight vengono elaborati solo su questo dispositivo." Style="{StaticResource Caption}" Margin="24,28,24,8" />
+                        <Label Text="I tuoi insight vengono elaborati solo su questo dispositivo." Style="{StaticResource Caption}" Margin="0,22,0,0" />
                     </VerticalStackLayout>
                 </VerticalStackLayout>
 

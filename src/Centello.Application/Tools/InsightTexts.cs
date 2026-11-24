@@ -1,10 +1,6 @@
+using System.Globalization;
+
 namespace Centello.Application;
-
-public enum InsightChangeTone { Higher, Lower, Same, New }
-
-/// <summary>How the spending of a category moved against the compared period: "+18%", "−47%", "uguale" or, with
-/// nothing to compare, "nuovo".</summary>
-public sealed record InsightChange(string Text, InsightChangeTone Tone);
 
 /// <summary>How Insight words an overview. The period of today is compared to date, so its words name the days or
 /// the months that count and never a whole period that was not compared.</summary>
@@ -28,21 +24,19 @@ public static class InsightTexts
             $" {ComparedTo(period, isToDate)}.");
     }
 
-    /// <summary>"32%"</summary>
-    public static string Share(double fraction) => ItalianFormat.Percent(Percent(fraction));
+    public static string Share(double fraction) => Percent((decimal)fraction);
 
-    public static InsightChange Change(double? change)
+    public static string Delta(long cents) => $"{Signed(cents)}{Money(Math.Abs(cents))}";
+
+    public static string Money(long cents) => $"{ItalianFormat.Budget(cents)} €";
+
+    public static string DateRange(DateOnly from, DateOnly to)
     {
-        if (change is not { } value)
-            return new InsightChange("nuovo", InsightChangeTone.New);
+        if (from == to)
+            return ItalianFormat.LongDate(to);
 
-        var percent = Percent(value);
-        if (percent == 0)
-            return new InsightChange("uguale", InsightChangeTone.Same);
-
-        return value > 0
-            ? new InsightChange($"+{ItalianFormat.Percent(percent)}", InsightChangeTone.Higher)
-            : new InsightChange($"{Minus}{ItalianFormat.Percent(percent)}", InsightChangeTone.Lower);
+        var start = from.Month == to.Month ? from.Day.ToString() : ItalianFormat.LongDate(from);
+        return $"{start}–{ItalianFormat.LongDate(to)}";
     }
 
     /// <summary>"degli stessi giorni di ottobre" for the month of today, "di settembre" for a past month, "dello stesso
@@ -77,19 +71,9 @@ public static class InsightTexts
         ? $"di {ItalianFormat.MonthName(period.Start.Month)}"
         : $"del {period.Start.Year}";
 
-    /// <summary>"Da ottobre a novembre", "Da marzo ad aprile" or "Dal 2025 al 2026": the period before and this one.</summary>
-    internal static string FromTo(Period period) => period.Kind == PeriodKind.Month
-        ? $"Da {ItalianFormat.MonthName(period.Previous().Start.Month)} {ItalianFormat.InPeriod(period)}"
-        : $"Dal {period.Previous().Start.Year} al {period.Start.Year}";
-
     /// <summary>"Ottobre" or "2025": a period as a key item names it.</summary>
     internal static string Name(Period period) => period.Kind == PeriodKind.Month
         ? ItalianFormat.MonthTitle(period.Start.Month)
-        : period.Start.Year.ToString();
-
-    /// <summary>"ott" or "2025": a period under a column of the waterfall.</summary>
-    internal static string Short(Period period) => period.Kind == PeriodKind.Month
-        ? ItalianFormat.ShortMonth(period.Start.Month)
         : period.Start.Year.ToString();
 
     private static string SubjectOf(Period period, bool isToDate)
@@ -100,6 +84,19 @@ public static class InsightTexts
         return isToDate ? "Da gennaio a oggi hai speso" : $"Nel {period.Start.Year} hai speso";
     }
 
-    private static decimal Percent(double fraction) =>
-        (decimal)Math.Round(Math.Abs(fraction) * 100, MidpointRounding.AwayFromZero);
+    private static string Percent(decimal fraction)
+    {
+        var percent = decimal.Round(Math.Abs(fraction) * 100, 1, MidpointRounding.AwayFromZero);
+        if (percent == 0 && fraction != 0)
+            return "<0,1%";
+
+        return percent.ToString("0.#", CultureInfo.InvariantCulture).Replace('.', ',') + "%";
+    }
+
+    private static string Signed(long cents) => cents switch
+    {
+        < 0 => Minus.ToString(),
+        > 0 => "+",
+        _ => ""
+    };
 }
