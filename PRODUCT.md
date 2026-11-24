@@ -48,7 +48,7 @@ Success means people log their expenses, check how much is left in each category
 
 ## Evidence on Hand
 
-- The README covers app features, and DESIGN.md describes the visual system. The original prototype lives in `docs/mockups/centello-prototype.html`. The roadmap lives in GitHub issues.
+- The README covers app features, and DESIGN.md describes the visual system. The original prototype lives in `docs/mockups/centello-prototype.html`. The approved #33 designs cover [Today](mockups/2026-11-24-home-budget-a-grafici.html) and [Insight](mockups/2026-11-24-insight-scroll-c-senza-badge.html). The roadmap lives in GitHub issues.
 - Use verified sources for reviews, testimonials and download counts.
 
 ## Product Principles
