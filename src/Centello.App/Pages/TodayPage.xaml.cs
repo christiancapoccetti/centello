@@ -111,13 +111,22 @@ public partial class TodayPage : ContentPage
     private async void OnPeriodToggled(object? sender, EventArgs e) =>
         await _viewModel.TogglePeriod();
 
-    private async void OnExpenseOpened(object? sender, Guid expenseId) =>
-        await Shell.Current.GoToAsync(ExpenseEditorPage.Route(expenseId));
-
     private async void OnCategoryKeyTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is BindableObject { BindingContext: CategoryKeyItem category } && _viewModel.Overview is { } overview)
-            await Shell.Current.GoToAsync(CategoryDetailPage.Route(category.CategoryId, overview.Period));
+        if (sender is BindableObject { BindingContext: CategoryKeyItem category })
+            await OpenCategory(category.CategoryId);
+    }
+
+    private async void OnCategoryBudgetClicked(object? sender, EventArgs e)
+    {
+        if (sender is BindableObject { BindingContext: CategoryBudgetItem category })
+            await OpenCategory(category.CategoryId);
+    }
+
+    private async Task OpenCategory(Guid categoryId)
+    {
+        if (_viewModel.Overview is { } overview)
+            await Shell.Current.GoToAsync(CategoryDetailPage.Route(categoryId, overview.Period));
     }
 
     private async void OnAllExpensesTapped(object? sender, EventArgs e)
