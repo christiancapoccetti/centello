@@ -28,7 +28,12 @@ public static class ExpenseInterpretationRequestBuilder
         - categoryKey: chiave della categoria che corrisponde chiaramente alla frase. null se nessuna corrisponde o se più categorie sono plausibili. Non indovinare.
         - tagKey: chiave di un tag della categoria scelta, solo se corrisponde chiaramente. Altrimenti null.
         - date: data della spesa nel formato AAAA-MM-GG. Risolvi espressioni come "ieri" o "lunedì scorso" a partire da oggi. null se la frase non indica una data.
-        - note: solo i dettagli che non sono già importo, categoria, tag o data. Altrimenti stringa vuota.
+        - note: riassumi il motivo della spesa in una breve espressione nominale. Ometti i comandi di inserimento, le formule introduttive come "perché ho" e le informazioni già riportate in amount, categoryKey, tagKey o date.
+          Conserva gli altri dettagli utili dettati, comprese le quantità, i nomi propri e il singolare o plurale usato nella frase. Non aggiungere marchi o dettagli non dettati. Se non resta alcun dettaglio, restituisci una stringa vuota.
+
+        Esempi per il campo note
+        "Inserisci 150 eur su lavoro perché ho acquistato la licenza di fatture in cloud" → note: "Licenza Fatture in cloud"
+        "Inserisci 150 eur su lavoro perché ho pagato fattura in cloud" → note: "Pagamento fattura in cloud"
         """;
 
     public static string Document(ExpenseInterpretationCatalog catalog, DateOnly today) => $"""

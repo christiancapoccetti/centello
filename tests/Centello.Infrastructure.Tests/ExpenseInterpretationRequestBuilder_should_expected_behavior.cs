@@ -19,6 +19,16 @@ public sealed class ExpenseInterpretationRequestBuilder_should_expected_behavior
         Assert.Contains("ieri", prompt);
     }
 
+    [Theory]
+    [InlineData("Inserisci 150 eur su lavoro perché ho acquistato la licenza di fatture in cloud", "Licenza Fatture in cloud")]
+    [InlineData("Inserisci 150 eur su lavoro perché ho pagato fattura in cloud", "Pagamento fattura in cloud")]
+    public void Show_how_to_turn_a_dictated_expense_reason_into_a_short_note(string dictation, string note)
+    {
+        var prompt = ExpenseInterpretationRequestBuilder.Voice(Catalog, Today);
+
+        Assert.Contains($"\"{dictation}\" → note: \"{note}\"", prompt);
+    }
+
     [Fact]
     public void Ask_for_the_amount_paid_instead_of_vat_or_change()
     {
