@@ -724,12 +724,13 @@ public sealed class HomeOverviewService_should_expected_behavior
 
         Assert.Equal(
             [
-                new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 56_020, 80_000, 23_980),
-                new CategoryBudgetRow(fuel.CategoryId, "Carburante", "fuel", "peri", 13_530, 12_000, -1_530),
-                new CategoryBudgetRow(dining.CategoryId, "Ristoranti", "food", "butter", 0, 10_000, 10_000),
-                new CategoryBudgetRow(bills.CategoryId, "Bollette", "more", "grey", 92_000, null, null)
+                new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 56_020, 80_000),
+                new CategoryBudgetRow(fuel.CategoryId, "Carburante", "fuel", "peri", 13_530, 12_000),
+                new CategoryBudgetRow(dining.CategoryId, "Ristoranti", "food", "butter", 0, 10_000),
+                new CategoryBudgetRow(bills.CategoryId, "Bollette", "more", "grey", 92_000, null)
             ],
             overview.BudgetRows);
+        Assert.Equal<long?>([23_980, -1_530, 10_000, null], overview.BudgetRows.Select(row => row.RemainingCents));
         Assert.Equal(overview.BudgetRows, glance.BudgetRows);
         Assert.Equal(
             [new CategorySegment("grey", 92_000), new CategorySegment("mint", 56_020),
@@ -752,9 +753,10 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview([dining, food], spending, Period.Year(2026));
 
         Assert.Equal(
-            [new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 9_600, 9_600, 0),
-                new CategoryBudgetRow(dining.CategoryId, "Ristoranti", "cart", "mint", 0, 2_400, 2_400)],
+            [new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 9_600, 9_600),
+                new CategoryBudgetRow(dining.CategoryId, "Ristoranti", "cart", "mint", 0, 2_400)],
             overview.BudgetRows);
+        Assert.Equal<long?>([0, 2_400], overview.BudgetRows.Select(row => row.RemainingCents));
     }
 
     [Fact]
@@ -767,7 +769,7 @@ public sealed class HomeOverviewService_should_expected_behavior
         var overview = await Overview([fuel, food], [Spend(food, 20_000, previous)]);
         var empty = await Overview([fuel]);
 
-        Assert.Equal(new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 0, 80_000, 80_000),
+        Assert.Equal(new CategoryBudgetRow(food.CategoryId, "Alimentari", "cart", "mint", 0, 80_000),
             Assert.Single(overview.BudgetRows));
         Assert.Empty(empty.BudgetRows);
     }

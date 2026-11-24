@@ -84,7 +84,10 @@ public sealed record SpendChart(
 
 /// <summary>An active category's spending and period budget. The remaining amount is signed.</summary>
 public sealed record CategoryBudgetRow(
-    Guid CategoryId, string Name, string IconKey, string ColorKey, long SpentCents, long? BudgetCents, long? RemainingCents);
+    Guid CategoryId, string Name, string IconKey, string ColorKey, long SpentCents, long? BudgetCents)
+{
+    public long? RemainingCents => BudgetCents - SpentCents;
+}
 
 /// <summary>The month of today as the home screen widgets read it: the figures of the home, worded for a small
 /// surface. Strings are Italian.</summary>
@@ -261,7 +264,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
                 var spent = spentByCategory.GetValueOrDefault(category.CategoryId);
                 var budget = PeriodBudget.Of(reading.Period, category.MonthlyBudget);
                 return new CategoryBudgetRow(category.CategoryId, category.Name, CategoryIcons.Resolve(category.Icon).Key,
-                    CategoryPalette.Resolve(category.Color).Key, spent, budget, budget - spent);
+                    CategoryPalette.Resolve(category.Color).Key, spent, budget);
             })
             .Where(row => row.BudgetCents.HasValue || row.SpentCents > 0)
             .OrderByDescending(row => row.BudgetCents.HasValue)
