@@ -82,7 +82,7 @@ public sealed class TodayViewModel : ObservableObject
 
             OnPropertyChanged(nameof(HasOverview));
             OnPropertyChanged(nameof(BudgetItems));
-            OnPropertyChanged(nameof(SpendChartHeading));
+            OnPropertyChanged(nameof(HasSpendChart));
             NotifyCaptureAvailability();
         }
     }
@@ -90,7 +90,7 @@ public sealed class TodayViewModel : ObservableObject
     public IReadOnlyList<CategoryBudgetItem> BudgetItems => Overview is { } overview
         ? [.. overview.BudgetRows.Select(row => new CategoryBudgetItem(row))]
         : [];
-    public string SpendChartHeading => Overview?.Period.Kind == PeriodKind.Year ? "Spesa mensile" : "Spesa giornaliera";
+    public bool HasSpendChart => Overview is { HasCategories: true, Chart: not null };
     public IReadOnlyList<SuggestedCategoryChip> Suggestions { get; } =
         [.. SuggestedCategories.All.Select(category => new SuggestedCategoryChip(category))];
     public bool CanCreateSuggested => Suggestions.Any(chip => chip.IsSelected);

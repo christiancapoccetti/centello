@@ -163,7 +163,10 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
 
         Categories = overview.Categories.Select(ToRow).ToArray();
         LeadingCategories = overview.Composition.Leading.Select(ToRow).ToArray();
-        Deltas = Categories.Where(row => row.Category.DeltaCents is not null and not 0).ToArray();
+        Deltas = Categories
+            .Where(row => row.Category.DeltaCents is not null and not 0)
+            .OrderByDescending(row => Math.Abs(row.Category.DeltaCents!.Value))
+            .ToArray();
         DeltaDetail = DescribeDeltas(Deltas);
         OnPropertyChanged("");
     }
@@ -174,19 +177,15 @@ public sealed class InsightsViewModel(IServiceScopeFactory scopeFactory) : Obser
 
     private static string DescribeDeltas(IReadOnlyList<InsightCategoryRow> rows)
     {
-        var largest = rows
-            .OrderByDescending(row => Math.Abs(row.Category.DeltaCents!.Value))
-            .Take(2)
-            .ToArray();
-        if (largest.Length < 2)
+        if (rows.Count < 2)
             return "";
 
-        var first = largest[0];
+        var first = rows[0];
         var delta = first.Category.DeltaCents!.Value;
-        if (!first.CanOpen || Math.Abs(delta) == Math.Abs(largest[1].Category.DeltaCents!.Value))
+        if (!first.CanOpen || Math.Abs(delta) == Math.Abs(rows[1].Category.DeltaCents!.Value))
             return "";
 
-        var rest = rows.Where(row => row != first).Sum(row => row.Category.DeltaCents!.Value);
+        var rest = rows.Skip(1).Sum(row => row.Category.DeltaCents!.Value);
         return $"In {first.Name} hai speso {ChangePhrase(delta)}. Nelle altre categorie, {ChangePhrase(rest)}.";
     }
 

@@ -543,7 +543,17 @@ public sealed class HomeOverviewService_should_expected_behavior
     }
 
     [Fact]
-    public async Task Should_chart_one_bar_per_day_with_today_highlighted_and_future_days_as_stubs()
+    public async Task Should_omit_the_chart_in_month_view()
+    {
+        var current = await Overview();
+        var past = await Overview(period: Period.Month(2026, 9));
+
+        Assert.Null(current.Chart);
+        Assert.Null(past.Chart);
+    }
+
+    [Fact]
+    public async Task Should_chart_one_bar_per_day_in_the_glance_with_today_highlighted_and_future_days_as_stubs()
     {
         var category = NewCategory("Spesa");
         var expenses = new[]
@@ -553,7 +563,7 @@ public sealed class HomeOverviewService_should_expected_behavior
             Spend(category, 99_900, new DateOnly(2026, 11, 25))
         };
 
-        var chart = (await Overview([category], expenses)).Chart;
+        var chart = (await Glance([category], expenses)).Chart;
 
         Assert.Equal(30, chart.Bars.Count);
         Assert.All(chart.Bars.Take(18), bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
@@ -562,60 +572,38 @@ public sealed class HomeOverviewService_should_expected_behavior
         Assert.Equal(1.0, chart.Bars[0].Fraction, 6);
         Assert.Equal(2_700d / 7_450, chart.Bars[18].Fraction, 6);
         Assert.Equal(0, chart.Bars[1].Fraction);
-        Assert.Equal("1 nov", chart.StartLabel);
-        Assert.Equal("30 nov", chart.EndLabel);
+        Assert.Equal("1", chart.StartLabel);
+        Assert.Equal("30", chart.EndLabel);
         Assert.True(chart.HasHighlight);
-        Assert.Equal("oggi 27,00 €", chart.HighlightLabel);
+        Assert.Equal("oggi", chart.HighlightLabel);
         Assert.Equal(18.5 / 30, chart.HighlightPosition, 6);
     }
 
     [Fact]
-    public async Task Should_chart_every_day_of_a_past_month_as_past()
+    public async Task Should_draw_one_bar_per_day_of_a_leap_february_in_the_glance()
     {
-        var category = NewCategory("Spesa");
-        var expenses = new[]
-        {
-            Spend(category, 2_000, new DateOnly(2026, 9, 10)),
-            Spend(category, 4_000, new DateOnly(2026, 9, 30))
-        };
-
-        var chart = (await Overview([category], expenses, Period.Month(2026, 9))).Chart;
-
-        Assert.Equal(30, chart.Bars.Count);
-        Assert.All(chart.Bars, bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
-        Assert.Equal(1.0, chart.Bars[29].Fraction, 6);
-        Assert.Equal(0.5, chart.Bars[9].Fraction, 6);
-        Assert.False(chart.HasHighlight);
-        Assert.Equal("", chart.HighlightLabel);
-        Assert.Equal("1 set", chart.StartLabel);
-        Assert.Equal("30 set", chart.EndLabel);
-    }
-
-    [Fact]
-    public async Task Should_draw_one_bar_per_day_of_a_leap_february()
-    {
-        var chart = (await Overview(period: Period.Month(2028, 2))).Chart;
+        var chart = (await Glance(today: new DateOnly(2028, 2, 1))).Chart;
 
         Assert.Equal(29, chart.Bars.Count);
-        Assert.Equal("29 feb", chart.EndLabel);
+        Assert.Equal("29", chart.EndLabel);
     }
 
     [Fact]
-    public async Task Should_scale_the_pace_line_to_the_daily_budget()
+    public async Task Should_scale_the_glance_pace_line_to_the_daily_budget()
     {
         var category = NewCategory("Spesa", budgetCents: 300_000);
         var calm = new[] { Spend(category, 7_500, new DateOnly(2026, 11, 1)) };
         var heavy = new[] { Spend(category, 20_000, new DateOnly(2026, 11, 1)) };
 
-        var belowPace = (await Overview([category], calm)).Chart;
-        var abovePace = (await Overview([category], heavy)).Chart;
+        var belowPace = (await Glance([category], calm)).Chart;
+        var abovePace = (await Glance([category], heavy)).Chart;
 
         Assert.True(belowPace.HasPace);
         Assert.Equal(1.0, belowPace.PaceFraction!.Value, 6);
         Assert.Equal(0.75, belowPace.Bars[0].Fraction, 6);
         Assert.Equal(0.5, abovePace.PaceFraction!.Value, 6);
         Assert.Equal(1.0, abovePace.Bars[0].Fraction, 6);
-        Assert.Equal("media per restare nel budget", belowPace.PaceLabel);
+        Assert.Equal("100 € al giorno", belowPace.PaceLabel);
     }
 
     [Fact]
@@ -623,7 +611,7 @@ public sealed class HomeOverviewService_should_expected_behavior
     {
         var category = NewCategory("Spesa");
 
-        var chart = (await Overview([category], [Spend(category, 1_000, Today)])).Chart;
+        var chart = Assert.IsType<SpendChart>((await Overview([category], [Spend(category, 1_000, Today)], Period.Year(2026))).Chart);
 
         Assert.False(chart.HasPace);
         Assert.Null(chart.PaceFraction);
@@ -633,7 +621,7 @@ public sealed class HomeOverviewService_should_expected_behavior
     [Fact]
     public async Task Should_draw_empty_bars_when_nothing_was_spent()
     {
-        var chart = (await Overview()).Chart;
+        var chart = (await Glance()).Chart;
 
         Assert.All(chart.Bars, bar => Assert.Equal(0, bar.Fraction));
         Assert.Null(chart.PaceFraction);
@@ -651,7 +639,7 @@ public sealed class HomeOverviewService_should_expected_behavior
             Spend(category, 990_000, new DateOnly(2026, 12, 2))
         };
 
-        var chart = (await Overview([category], expenses, Period.Year(2026))).Chart;
+        var chart = Assert.IsType<SpendChart>((await Overview([category], expenses, Period.Year(2026))).Chart);
 
         Assert.Equal(12, chart.Bars.Count);
         Assert.All(chart.Bars.Take(10), bar => Assert.Equal(SpendBarKind.Past, bar.Kind));
@@ -675,8 +663,8 @@ public sealed class HomeOverviewService_should_expected_behavior
             Spend(category, 2_700, Today)
         };
 
-        var chart = (await Overview([category], expenses)).Chart;
-        var year = (await Overview([category], expenses, Period.Year(2026))).Chart;
+        var chart = (await Glance([category], expenses)).Chart;
+        var year = Assert.IsType<SpendChart>((await Overview([category], expenses, Period.Year(2026))).Chart);
 
         Assert.Equal(
             "Spesa giornaliera di novembre 2026. Giorno più alto: 1 novembre, 74,50 €. Oggi: 27,00 €. " +
@@ -691,10 +679,10 @@ public sealed class HomeOverviewService_should_expected_behavior
     [Fact]
     public async Task Should_describe_a_chart_without_spending_or_budget()
     {
-        var past = (await Overview(period: Period.Month(2026, 9))).Chart;
-        var current = (await Overview()).Chart;
+        var past = Assert.IsType<SpendChart>((await Overview(period: Period.Year(2025))).Chart);
+        var current = (await Glance()).Chart;
 
-        Assert.Equal("Spesa giornaliera di settembre 2026. Nessuna spesa registrata.", past.Description);
+        Assert.Equal("Spesa mensile del 2025. Nessuna spesa registrata.", past.Description);
         Assert.Equal("Spesa giornaliera di novembre 2026. Nessuna spesa registrata. Oggi: 0,00 €.", current.Description);
     }
 

@@ -10,7 +10,7 @@ public sealed record HomeOverview(
     BudgetSummary Budget,
     PeriodComparison? Comparison,
     CategoryLine Categories,
-    SpendChart Chart,
+    SpendChart? Chart,               // annual overview only
     IReadOnlyList<CategoryBudgetRow> BudgetRows,
     bool HasCategories)
 {
@@ -98,7 +98,7 @@ public sealed record MonthGlance(
     PeriodComparison? Comparison,          // Il mese shows Short, Il ritmo shows Text
     IReadOnlyList<CategorySegment> Segments,
     string OverBudget,                     // "Ristoranti oltre il budget", the furthest over; "" when none is
-    SpendChart Chart,                      // the home's bars and pace, with the widget's labels
+    SpendChart Chart,                      // daily bars and pace for the widget
     IReadOnlyList<CategoryBudgetRow> BudgetRows,
     string Description)                    // the whole summary for a screen reader
 {
@@ -168,7 +168,7 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
                 ? NothingYet(reading.Period)
                 : Summarize(reading.Spent, reading.Budget, " di budget"),
             Compare(reading.Period, reading.Window, reading.Expenses), Line(reading.Spent, budgetRows),
-            Chart(reading, HomeLabels(reading.Period, reading.Today)),
+            reading.Period.Kind == PeriodKind.Year ? Chart(reading, YearLabels(reading.Today)) : null,
             budgetRows, reading.Categories.Count > 0);
     }
 
@@ -315,17 +315,10 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
             DescribeChart(reading.Period, buckets.Cents, buckets.Current, pace), labels.Pace(pace));
     }
 
-    private static ChartLabels HomeLabels(Period period, DateOnly today)
-    {
-        var isMonth = period.Kind == PeriodKind.Month;
-        return new ChartLabels(
-            pace => pace.HasValue ? PaceLabelText : "",
-            isMonth ? ItalianFormat.ShortDate(period.Start) : ItalianFormat.ShortMonth(1),
-            isMonth ? ItalianFormat.ShortDate(period.End) : ItalianFormat.ShortMonth(12),
-            cents => isMonth
-                ? $"oggi {ItalianFormat.Money(cents)}"
-                : $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(cents)}");
-    }
+    private static ChartLabels YearLabels(DateOnly today) => new(
+        pace => pace.HasValue ? PaceLabelText : "",
+        ItalianFormat.ShortMonth(1), ItalianFormat.ShortMonth(12),
+        cents => $"{ItalianFormat.ShortMonth(today.Month)} {ItalianFormat.Money(cents)}");
 
     private static ChartLabels GlanceLabels(Period period) => new(
         pace => pace is { } perDay ? $"{ItalianFormat.WholeEuros((long)Math.Round(perDay, MidpointRounding.AwayFromZero))} € al giorno" : "",

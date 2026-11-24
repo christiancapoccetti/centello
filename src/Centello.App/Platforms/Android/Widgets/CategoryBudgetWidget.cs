@@ -16,7 +16,6 @@ public sealed class CategoryBudgetWidget : CentelloWidgetProvider
     // These dimensions follow widget_category_budget.xml and widget_category_budget_row.xml.
     private const int FrameDp = 2 * (8 + 10);
     private const int HeaderDp = 20 + 6;
-    private const int RowDp = 38;
     private const int TileDp = 24;
     private const int TileGapDp = 8;
     private const int AlertDp = 14;
@@ -46,7 +45,7 @@ public sealed class CategoryBudgetWidget : CentelloWidgetProvider
         var rows = month.BudgetRows;
         var empty = rows.Count == 0;
         var width = Math.Max(0, size.WidthDp - FrameDp);
-        var visibleRows = Math.Max(0, (size.HeightDp - FrameDp - HeaderDp) / RowDp);
+        var visibleRows = CategoryBudgetWidgetLayout.RowCapacity(size.HeightDp - FrameDp - HeaderDp);
         var views = new RemoteViews(frame.Context.PackageName, Resource.Layout.widget_category_budget);
         views.SetImageViewBitmap(Resource.Id.budget_title, frame.Art.Text($"Budget · {month.Month}", TitleStyle, width));
         views.SetViewVisibility(Resource.Id.budget_empty, empty ? ViewStates.Visible : ViewStates.Gone);

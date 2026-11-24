@@ -94,8 +94,8 @@
                         </BindableLayout.ItemTemplate>
                     </c:OneLineLayout>
 
-                    <VerticalStackLayout Margin="0,12,0,0" IsVisible="{Binding Overview.HasCategories}">
-                        <Label Text="{Binding SpendChartHeading}" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+                    <VerticalStackLayout Margin="0,12,0,0" IsVisible="{Binding HasSpendChart}">
+                        <Label Text="Spesa mensile" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
                         <c:DailySpendChartView Chart="{Binding Overview.Chart}" />
                     </VerticalStackLayout>
 

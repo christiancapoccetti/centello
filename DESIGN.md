@@ -400,7 +400,7 @@ Five launcher widgets use the app's flat surfaces and Archivo type.
 - **Scorciatoie** (4x1): the four categories used most in the last 30 days (by count) as tiles with their name, then "Altra" for any other; each opens the editor on that category.
 - **Il mese** (2x2, resizable to 3x2, 2x3 and 3x3): the month (with the year when it fits beside it), the total in the condensed numeral, the remaining budget, a short comparison chip, the category line and, when there is one, the over-budget category. The size the launcher reports sets its shape (`MonthWidgetShapes`): the tightest padding and the smallest total on a 2x2, a larger total when wide. Then the rows that fit are drawn, in this order of loss: the chip goes first, then the alert shrinks from its full sentence to one line cut with an ellipsis, then the category line goes and, last, the alert (the category line comes back when only one of the two fits); the month, the total and the budget sentence always stay.
 - **Il ritmo** (4x2): the full comparison chip, a round coral plus and Oggi's daily chart with its pace line ("27 € al giorno").
-- **Budget per categoria** targets a 3 × 2 launcher grid and resizes in both directions. It shows the current month and as many complete category rows as fit. Rows follow the order on Today. Each uses a 24dp category tile. Budgeted rows include a 2dp progress bar and an alert glyph with a negative amount when over budget. When the month has no eligible rows, the widget reads "Nessuna categoria da mostrare". Tap it to open **Oggi**.
+- **Budget per categoria** targets a 3 × 2 launcher grid and resizes in both directions. It shows the current month and as many complete category rows as fit. The first three rows keep compact spacing; extra rows use more vertical room with even spacing. Rows follow the order on Today. Each uses a 24dp category tile. Budgeted rows include a 2dp progress bar and an alert glyph with a negative amount when over budget. When the month has no eligible rows, the widget reads "Nessuna categoria da mostrare". Tap it to open **Oggi**.
 
 Tapping a widget opens the app on the matching screen; an editor opened from a widget returns to the launcher when it is saved or closed. The gallery and the PDF stay inside Oggi.
 
@@ -469,8 +469,8 @@ In the home key, an over-budget category gets the filled Error glyph at 14sp in 
 
 A row uses a 36dp category tile and a hairline divider. A budgeted row shows the balance, spending against the limit, and a 4dp progress bar in the category colour. The progress bar caps at the limit. The alert glyph and amount show an overshoot. An unbudgeted row shows the amount spent.
 
-### Daily spend chart (signature)
-104dp of bars plus 22dp of headroom: past days in chart-bar grey, today in ink, future days as 4dp hairline stubs, a 1.5dp dashed periwinkle pace line (4dp dash, 3dp gap) with its SemiBold 12sp label on a ground backing, and 12sp axis labels (start and end in mute, today's label in bold ink, the end labels giving way when it would touch them).
+### Yearly spend chart (signature)
+The monthly **Oggi** view has no daily expense chart. In the yearly view, monthly bars show spending across the year. **Il ritmo** keeps the daily chart for the current month: 104dp of bars plus 22dp of headroom, past days in chart-bar grey, today in ink, future days as 4dp hairline stubs, a 1.5dp dashed periwinkle pace line (4dp dash, 3dp gap) with its SemiBold 12sp label on a ground backing, and 12sp axis labels (start and end in mute, today's label in bold ink, the end labels giving way when it would touch them).
 
 ### Pace chart (signature)
 The **Andamento** option in Insight shows cumulative spending for the selected month or year. One slot per day (31) or month (12), 148dp of plot plus 22dp of headroom for labels, 2dp between slots. Each past slot is a cumulative bar in chart-bar grey. The automatic part (recurring payments) sits at its foot in mute, under a 2dp ground band, so the two read as separate pieces. Today is an ink bar, future slots are 4dp hairline stubs, and a slot with spending never draws thinner than 2dp.
@@ -483,7 +483,7 @@ Insight opens with a compact date range and total. **Dove sono finiti i soldi?**
 
 **Vedi tutte le categorie** expands a table with the amounts for both periods and the signed euro difference. The table includes categories with spending only in the previous period. Category rows with a detail page open that page for the selected period.
 
-The lower section switches between **Andamento**, which opens by default for the selected period, and **Per categoria**. **Per categoria** shows signed euro changes on horizontal bars with a shared zero marker. Increases extend right and decreases extend left.
+The lower section switches between **Andamento**, which opens by default for the selected period, and **Per categoria**. **Per categoria** shows signed euro changes on horizontal bars with a shared zero marker, ordered by decreasing absolute euro difference; equal magnitudes keep their prior category order. Increases extend right and decreases extend left. The leading composition above retains its existing order.
 
 ### Recap story (signature)
 The full-screen story of a closed month or year ("Il tuo novembre", "Il tuo 2026"), pushed over Insight with no tab bar. It is the one place the palette leaves its tiles: a card about a category fills the whole screen with that category's ink under tile-ink text. Coral never paints a card (coral means "add an expense"), so a coral category's card stays on the graphite ground and keeps its ink in tile and bars.
