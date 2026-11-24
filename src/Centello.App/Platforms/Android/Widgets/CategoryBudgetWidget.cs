@@ -23,7 +23,7 @@ public sealed class CategoryBudgetWidget : CentelloWidgetProvider
     private const int AlertGapDp = 3;
     private const int AmountGapDp = 6;
     private const int BarDp = 2;
-    private const string Empty = "Nessuna spesa nel mese";
+    private const string Empty = "Nessuna categoria da mostrare";
 
     private static readonly DayNightSlot Tile = new(Resource.Id.budget_tile, Resource.Id.budget_tile_day, Resource.Id.budget_tile_night);
     private static readonly DayNightSlot Bar = new(Resource.Id.budget_progress, Resource.Id.budget_progress_day, Resource.Id.budget_progress_night);
