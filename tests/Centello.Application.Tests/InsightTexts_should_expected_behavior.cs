@@ -78,20 +78,32 @@ public sealed class InsightTexts_should_expected_behavior
     }
 
     [Theory]
-    [InlineData(0.324, "32%")]
-    [InlineData(0.325, "33%")]
+    [InlineData(0.655, "65,5%")]
+    [InlineData(0.1579, "15,8%")]
+    [InlineData(0.0001, "<0,1%")]
     [InlineData(1, "100%")]
     [InlineData(0, "0%")]
-    public void Should_write_a_share_as_a_whole_percentage(double fraction, string expected) =>
+    public void Should_write_a_share_with_up_to_one_decimal(double fraction, string expected) =>
         Assert.Equal(expected, InsightTexts.Share(fraction));
 
     [Fact]
-    public void Should_badge_how_a_category_moved()
+    public void Should_show_exact_signed_euros_and_variations()
     {
-        Assert.Equal(new InsightChange("+18%", InsightChangeTone.Higher), InsightTexts.Change(0.18));
-        Assert.Equal(new InsightChange("+2999999900%", InsightChangeTone.Higher), InsightTexts.Change(29_999_999));
-        Assert.Equal(new InsightChange("−47%", InsightChangeTone.Lower), InsightTexts.Change(-0.47));
-        Assert.Equal(new InsightChange("uguale", InsightChangeTone.Same), InsightTexts.Change(0.004));
-        Assert.Equal(new InsightChange("nuovo", InsightChangeTone.New), InsightTexts.Change(null));
+        Assert.Equal($"+160,01{Nbsp}€", InsightTexts.Delta(16_001));
+        Assert.Equal($"−25{Nbsp}€", InsightTexts.Delta(-2_500));
+        Assert.Equal("+40%", InsightTexts.Variation(56_000, 40_000));
+        Assert.Equal("−15,6%", InsightTexts.Variation(13_500, 16_000));
+        Assert.Equal("−100%", InsightTexts.Variation(0, 6_800));
+        Assert.Equal("0%", InsightTexts.Variation(6_800, 6_800));
+        Assert.Equal("Nuovo", InsightTexts.Variation(6_800, 0));
+        Assert.Equal("—", InsightTexts.Variation(6_800, null));
+    }
+
+    [Fact]
+    public void Should_show_compact_month_and_year_ranges()
+    {
+        Assert.Equal("1 novembre", InsightTexts.DateRange(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 1)));
+        Assert.Equal("1–24 novembre", InsightTexts.DateRange(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 24)));
+        Assert.Equal("1 gennaio–24 novembre", InsightTexts.DateRange(new DateOnly(2026, 1, 1), new DateOnly(2026, 11, 24)));
     }
 }
