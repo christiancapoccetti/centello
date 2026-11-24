@@ -388,7 +388,7 @@ public partial class TodayPage : ContentPage
     private async void OnInactiveCaptureClicked(object? sender, EventArgs e)
     {
         var openSettings = await DisplayAlertAsync(
-            "Bozze assistite",
+            "Inserimento spese con l’AI",
             DraftErrors.ConsentRequired.Message,
             "Apri impostazioni",
             "Annulla");

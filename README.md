@@ -167,7 +167,7 @@ The signed bundle is `src/Centello.App/bin/Release/net10.0-android/it.christianc
 
 ## Assisted expense drafts
 
-In **Impostazioni → Voce, foto e PDF**, turn on **Bozze assistite**, review the disclosure and select **Acconsento**. Turn off the same switch to stop new assisted requests. If you update from a version that used OpenAI, enable assisted drafts again. Manual entry works offline and without Firebase configuration.
+In **Impostazioni → Voce, foto e PDF**, turn on **Inserimento spese con l’AI**, review the disclosure and select **Acconsento**. Turn off the same switch to stop new assisted requests. If you update from a version that used OpenAI, enable assisted drafts again. Manual entry works offline and without Firebase configuration.
 
 - **Voice.** Tap the microphone on **Oggi** to start recording. The button shows a stop icon and the hint **In registrazione · Tocca per fermare**. Tap it again to prepare a draft for review, or wait for recording to stop automatically at 20 seconds. The launcher panel also stops at a second tap or after 20 seconds. Select **Annulla**, press Back, or leave the panel to cancel.
 - **Photo or PDF.** On **Oggi**, tap the camera and select **Scatta una foto** (Android 13 and later), **Scegli dalla galleria**, or **Scegli un PDF**. Centello re-encodes photos as JPEG at up to 1,600 pixels on the longest side and strips photo metadata. PDFs are limited to 5 MiB and 1,000 pages. Centello also checks the encoded request size before sending.

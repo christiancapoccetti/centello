@@ -39,7 +39,7 @@ Use this guide to prepare the Centello listing and closed test for the existing 
 > **Scegli come gestire i dati**
 > • L'inserimento a mano funziona offline. Centello salva le spese sul dispositivo.
 > • Puoi creare un file di backup ed esportare le spese in CSV. Android gestisce il backup automatico e il trasferimento su un altro dispositivo.
-> • Se attivi le bozze assistite, Centello invia a Google il contenuto scelto per preparare una spesa da controllare e salvare. Puoi sempre inserire una spesa a mano.
+> • Se attivi l’inserimento spese con l’AI, Centello invia a Google il contenuto scelto per preparare una spesa da controllare e salvare. Puoi sempre inserire una spesa a mano.
 > • Centello è senza account, pubblicità o tracciamento.
 
 Use the 512 px icon in `docs/brand/icona-512.png`, a 1024 × 500 feature graphic, and at least two phone screenshots with synthetic data.
@@ -68,10 +68,10 @@ The app interface is in Italian. Use only made-up expenses and documents for the
 
 Use an internet-connected Android device with the Play-distributed build. The Google account used to install and review the build needs access to the selected test track. Assisted entry requires the Play-recognized, licensed installation. The reviewer needs neither a Centello account nor a personal API key. Verify the full reviewer path from a fresh Play install before submitting. [Play app access requirements](https://support.google.com/googleplay/android-developer/answer/15748846)
 
-1. In **Impostazioni → Voce, foto e PDF**, turn on **Bozze assistite**, read the disclosure, and tap **Acconsento**.
+1. In **Impostazioni → Voce, foto e PDF**, turn on **Inserimento spese con l’AI**, read the disclosure, and tap **Acconsento**.
 2. In **Oggi**, tap the microphone and say «ieri dodici euro e cinquanta di pizza». Grant microphone permission if prompted. Tap the stop button to prepare the draft, or wait for recording to stop automatically after 20 seconds. Check that the draft shows €12.50 and yesterday’s date.
 3. Create a gallery image and PDF of the synthetic receipt in the ledger below. From the camera menu in **Oggi**, use **Scegli dalla galleria** and **Scegli un PDF** to review both drafts. On Android 13 or later, try **Scatta una foto** with a working camera.
-4. Close the editor without saving. Confirm that the expense count is unchanged. Turn off **Bozze assistite** and verify that manual entry still works.
+4. Close the editor without saving. Confirm that the expense count is unchanged. Turn off **Inserimento spese con l’AI** and verify that manual entry still works.
 
 ## Firebase operator checklist
 

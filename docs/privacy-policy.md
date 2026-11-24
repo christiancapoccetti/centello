@@ -20,7 +20,7 @@ Centello stores your expense records, categories, tags, budgets, and recurring p
 
 ## Optional entry with Firebase AI Logic
 
-In versions that use Firebase AI Logic, turn on **Bozze assistite** under **Impostazioni → Voce, foto e PDF** and select **Acconsento**. Centello uses your chosen input to prepare an expense draft for your review. It sends the following data over HTTPS when you use the feature.
+In versions that use Firebase AI Logic, turn on **Inserimento spese con l’AI** under **Impostazioni → Voce, foto e PDF** and select **Acconsento**. Centello uses your chosen input to prepare an expense draft for your review. It sends the following data over HTTPS when you use the feature.
 
 | Action | What Centello sends to Google |
 | --- | --- |
@@ -34,7 +34,7 @@ Centello holds the recording in memory. Photo and PDF pickers can create tempora
 
 Google uses Firebase App Check to verify requests. On the Play version, App Check uses Play Integrity, which uses app, installation, and device signals for that verification. Google processes draft content through Firebase AI Logic and the Gemini Developer API. Google's paid-service terms exclude prompts and responses from product improvement and describe limited retention for abuse detection and legal requirements. See Google's documentation for the applicable terms and handling of data. [Firebase AI Logic data governance](https://firebase.google.com/docs/ai-logic/data-governance) · [Gemini API terms](https://ai.google.dev/gemini-api/terms) · [Play Integrity data disclosure](https://developer.android.com/google/play/integrity/terms)
 
-Turn off **Bozze assistite** to stop new assisted requests. Requests already sent remain subject to Google's terms. For privacy questions about the processing of assisted drafts, use the developer contact above.
+Turn off **Inserimento spese con l’AI** to stop new assisted requests. Requests already sent remain subject to Google's terms. For privacy questions about the processing of assisted drafts, use the developer contact above.
 
 ## Earlier versions with OpenAI
 

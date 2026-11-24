@@ -78,7 +78,7 @@ public partial class SettingsPage : ContentPage
         try
         {
             if (e.Value && !await _confirmation.Ask(
-                "Attivare le bozze assistite?",
+                "Attivare l’inserimento spese con l’AI?",
                 DraftConsent.Disclosure,
                 "Acconsento",
                 "Annulla"))
