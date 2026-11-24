@@ -70,8 +70,9 @@ Use an internet-connected Android device with the Play-distributed build. The Go
 
 1. In **Impostazioni → Voce, foto e PDF**, turn on **Inserimento spese con l’AI**, read the disclosure, and tap **Acconsento**.
 2. In **Oggi**, tap the microphone and say «ieri dodici euro e cinquanta di pizza». Grant microphone permission if prompted. Tap the stop button to prepare the draft, or wait for recording to stop automatically after 20 seconds. Check that the draft shows €12.50 and yesterday’s date.
-3. Create a gallery image and PDF of the synthetic receipt in the ledger below. From the camera menu in **Oggi**, use **Scegli dalla galleria** and **Scegli un PDF** to review both drafts. On Android 13 or later, try **Scatta una foto** with a working camera.
-4. Close the editor without saving. Confirm that the expense count is unchanged. Turn off **Inserimento spese con l’AI** and verify that manual entry still works.
+3. Discard the draft and use a test category named **Lavoro**. Say «Inserisci 150 euro su lavoro perché ho acquistato la licenza di fatture in cloud». Check that **Nota** contains a short note such as «Licenza Fatture in cloud». Edit the note and discard the draft.
+4. Create a gallery image and PDF of the synthetic receipt in the ledger below. From the camera menu in **Oggi**, use **Scegli dalla galleria** and **Scegli un PDF** to review both drafts. On Android 13 or later, try **Scatta una foto** with a working camera.
+5. Close the editor without saving. Confirm that the expense count is unchanged. Turn off **Inserimento spese con l’AI** and verify that manual entry still works.
 
 ## Firebase operator checklist
 
