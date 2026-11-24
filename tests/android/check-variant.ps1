@@ -47,7 +47,7 @@ $widgets = @($app.receiver | Where-Object {
     $_.SelectSingleNode("meta-data[@*[local-name()='name']='android.appwidget.provider']")
 })
 $labels = @($widgets | ForEach-Object { $_.GetAttribute('label', $android) })
-foreach ($widget in 'Aggiungi spesa', 'Il mese', 'Il ritmo', 'Scorciatoie') {
+foreach ($widget in 'Aggiungi spesa', 'Il mese', 'Il ritmo', 'Scorciatoie', 'Budget per categoria') {
     if ($labels -cnotcontains "$prefix$widget") {
         throw "Missing widget label '$prefix$widget'"
     }
