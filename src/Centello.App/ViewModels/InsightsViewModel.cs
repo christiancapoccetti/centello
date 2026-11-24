@@ -1,4 +1,5 @@
 using Centello.Application;
+using Centello.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centello.App.ViewModels;
