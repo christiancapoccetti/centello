@@ -82,7 +82,6 @@ public sealed record SpendChart(
     public bool HasHighlight => HighlightLabel.HasValue();
 }
 
-/// <summary>An active category's spending and period budget. The remaining amount is signed.</summary>
 public sealed record CategoryBudgetRow(
     Guid CategoryId, string Name, string IconKey, string ColorKey, long SpentCents, long? BudgetCents)
 {
@@ -274,7 +273,6 @@ public sealed class HomeOverviewService(ICategoryRepository categories, IExpense
             .AsReadOnly();
     }
 
-    // Archived or missing categories fold into a grey segment so the line agrees with the headline total.
     private static CategoryLine Line(long spent, IReadOnlyList<CategoryBudgetRow> budgetRows)
     {
         if (spent == 0)

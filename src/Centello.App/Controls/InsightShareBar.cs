@@ -2,7 +2,6 @@ using Centello.App.Theming;
 
 namespace Centello.App.Controls;
 
-/// <summary>A category's share of current spending with a marker for its share in the previous period.</summary>
 public sealed class InsightShareBar : ThemedDrawingView
 {
     public static readonly BindableProperty FractionProperty = BindableProperty.Create(nameof(Fraction), typeof(double),
