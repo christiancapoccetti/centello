@@ -175,16 +175,10 @@
 
         <Border x:Name="CaptureDock" Grid.Row="2" Margin="24,12" Style="{StaticResource SplitPill}" local:SnackbarAnchor.IsAnchor="True">
             <Grid x:Name="CaptureButtons" ColumnDefinitions="*,1,64,1,64">
-                <!-- The plus is a span of the words, so with a large font they wrap together inside what the two icon
-                     segments leave, and never reach them. -->
-                <Label Margin="8,0" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontFamily="{x:Static t:Fonts.Bold}" FontSize="17" AutomationProperties.IsInAccessibleTree="False">
-                    <Label.FormattedText>
-                        <FormattedString>
-                            <Span Text="{x:Static app:MaterialSymbols.Add}" FontFamily="{x:Static t:Fonts.Icons}" FontSize="24" FontAutoScalingEnabled="False" TextColor="{t:Theme Accent}" />
-                            <Span Text="&#160;&#160;Aggiungi spesa" />
-                        </FormattedString>
-                    </Label.FormattedText>
-                </Label>
+                <Grid Margin="8,0" HorizontalOptions="Center" ColumnDefinitions="Auto,*" ColumnSpacing="8" InputTransparent="True" AutomationProperties.ExcludedWithChildren="True">
+                    <Label Text="{x:Static app:MaterialSymbols.Add}" Style="{StaticResource IconGlyph}" TextColor="{t:Theme Accent}" />
+                    <Label Grid.Column="1" Text="Aggiungi spesa" FontFamily="{x:Static t:Fonts.Bold}" FontSize="17" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" LineBreakMode="WordWrap" />
+                </Grid>
                 <Button BackgroundColor="Transparent" Text="" Clicked="OnAddExpenseClicked" SemanticProperties.Description="Aggiungi spesa" />
                 <BoxView Grid.Column="1" Color="{t:Theme Outline}" />
                 <Border Grid.Column="2" IsVisible="{Binding Capture.IsListening}" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="17" HeightRequest="17" BackgroundColor="{t:Theme Accent}" StrokeThickness="0" StrokeShape="RoundRectangle 2" />
