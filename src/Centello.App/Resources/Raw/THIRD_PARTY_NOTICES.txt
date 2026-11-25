@@ -73,7 +73,17 @@ Copyright Google LLC and Firebase contributors.
 License: Apache License 2.0.
 https://github.com/firebase/firebase-android-sdk
 
-Google Play services Base and Basement (18.9.0), Tasks (18.4.0), and Firebase Auth Interop (18.0.0)
+Firebase Remote Config (24.0.1), Firebase Installations (20.0.0), Firebase A/B Testing (24.0.0), and Firebase Encoders (18.0.0, JSON 19.0.0)
+Includes Firebase Remote Config and Installations interoperability libraries.
+Copyright Google LLC and Firebase contributors.
+License: Apache License 2.0.
+https://github.com/firebase/firebase-android-sdk
+
+BouncyCastle.Cryptography (2.6.2)
+Copyright (c) 2000-2025 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org).
+License: Bouncy Castle MIT License.
+
+Google Play services Base and Basement (18.9.0), Tasks (18.4.0), Firebase Auth Interop (18.0.0), and Firebase Measurement Connector (18.0.0)
 Copyright Google LLC.
 License: Android Software Development Kit License.
 https://developer.android.com/studio/terms
@@ -131,6 +141,23 @@ Copyright Google LLC.
 License: Apache License 2.0.
 https://github.com/google/material-design-icons
 Modified by Centello: reduced to the icons the app uses.
+
+-----------------------------------------------------------
+BOUNCY CASTLE MIT LICENSE
+-----------------------------------------------------------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sub license, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions: The above copyright notice and this
+permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 -----------------------------------------------------------
 MIT License

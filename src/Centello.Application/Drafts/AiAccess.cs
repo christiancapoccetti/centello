@@ -43,6 +43,9 @@ public sealed class AiAccess
     private long _realtimeRevision;
     private bool _wasInvitationRevoked;
     private bool _listeningForUpdates;
+    private bool _changePending;
+
+    public event Action? Changed;
 
     public AiAccess(IAiAccessStore store, IAiRemoteConfig remote, IAiInviteVerifier verifier, TimeProvider clock)
     {
@@ -77,6 +80,20 @@ public sealed class AiAccess
         }
     }
 
+    public bool IsInvitationVerified
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return HasFreshSettings() && _settings is { } settings
+                    && ReadState() is { } state && state.Invitation.HasValue()
+                    && Verify(state.Invitation) is { IsSuccess: true } verification
+                    && !settings.RevokedInviteIds.Contains(verification.Value);
+            }
+        }
+    }
+
     public int TrialsRemaining
     {
         get
@@ -108,7 +125,7 @@ public sealed class AiAccess
     {
         lock (_stateLock)
         {
-            _verifiedAt = null;
+            SetVerification(null);
             // A response requested before this foreground session cannot authorize access in it.
             _pendingFetch = null;
             var force = ReadState() is { } state && state.Invitation.HasValue();
@@ -162,23 +179,37 @@ public sealed class AiAccess
             if (grant.IsFailure)
                 return Result<ExpenseDraft>.Failure(grant.Error);
 
-            cancellationToken.ThrowIfCancellationRequested();
-            var result = await interpret();
+            Task<Result<ExpenseDraft>> pending;
+            lock (_stateLock)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (grant.Value.HasValue())
+                {
+                    var status = CheckInvitedDraft(grant.Value);
+                    if (status.IsFailure)
+                        return Result<ExpenseDraft>.Failure(status.Error);
+                }
+
+                pending = interpret();
+            }
+
+            var result = await pending;
             if (result.IsFailure)
                 return result;
 
             lock (_stateLock)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var state = ReadState();
-
                 if (grant.Value.HasValue())
-                    return FinishInvitedDraft(result, grant.Value, state);
+                {
+                    var status = CheckInvitedDraft(grant.Value);
+                    return status.IsSuccess ? result : Result<ExpenseDraft>.Failure(status.Error);
+                }
 
                 if (!HasUsableFields(result.Value))
                     return result;
 
-                return state is not null && WriteState(state with { Used = state.Used + 1 })
+                return ReadState() is { Used: < TrialLimit } state && WriteState(state with { Used = state.Used + 1 })
                     ? result
                     : Result<ExpenseDraft>.Failure(DraftErrors.Unavailable);
             }
@@ -236,17 +267,17 @@ public sealed class AiAccess
     private static Result<string> TrialGrant(AiAccessState state) =>
         state.Used < TrialLimit ? Result<string>.Success("") : Result<string>.Failure(DraftErrors.TrialExhausted);
 
-    private Result<ExpenseDraft> FinishInvitedDraft(Result<ExpenseDraft> result, string inviteId, AiAccessState? state)
+    private Result CheckInvitedDraft(string inviteId)
     {
         if (_settings?.RevokedInviteIds.Contains(inviteId) == true)
-            return Result<ExpenseDraft>.Failure(DraftErrors.InviteRevoked);
+            return Result.Failure(DraftErrors.InviteRevoked);
 
-        if (!HasFreshSettings() || state is null || state.Invitation.IsEmpty())
-            return Result<ExpenseDraft>.Failure(DraftErrors.InviteVerificationUnavailable);
+        if (!HasFreshSettings() || ReadState() is not { } state || state.Invitation.IsEmpty())
+            return Result.Failure(DraftErrors.InviteVerificationUnavailable);
 
         return Verify(state.Invitation) is { IsSuccess: true } verification && verification.Value == inviteId
-            ? result
-            : Result<ExpenseDraft>.Failure(DraftErrors.InviteVerificationUnavailable);
+            ? Result.Success()
+            : Result.Failure(DraftErrors.InviteVerificationUnavailable);
     }
 
     private static bool HasUsableFields(ExpenseDraft draft) =>
@@ -270,7 +301,7 @@ public sealed class AiAccess
             return pending.Completion.Task;
 
         if (force)
-            _verifiedAt = null;
+            SetVerification(null);
 
         var request = new FetchRequest(force, _realtimeRevision);
         _pendingFetch = request;
@@ -301,20 +332,28 @@ public sealed class AiAccess
 
                 if (request.Force && settings is not null && _settings is { } current)
                 {
-                    _verifiedAt = _clock.GetTimestamp();
-                    RemoveRevokedInvitation(current);
-                    if (ReadState() is { } state && state.Invitation.HasValue())
+                    if (request.RealtimeDenials.Count != 0 || request.RealtimeRevision != _realtimeRevision)
                     {
-                        var verified = Verify(state.Invitation);
-                        ListenForUpdates(verified.IsSuccess && !current.RevokedInviteIds.Contains(verified.Value));
+                        // An overlapping response may have observed a revocation absent from the other snapshot.
+                        current = current with
+                        {
+                            RevokedInviteIds = current.RevokedInviteIds.Concat(settings.RevokedInviteIds)
+                                .Concat(request.RealtimeDenials)
+                                .ToFrozenSet(StringComparer.Ordinal)
+                        };
+                        _settings = current;
                     }
-                    else
-                    {
-                        ListenForUpdates(false);
-                    }
+
+                    SetVerification(_clock.GetTimestamp());
+                    ObserveInvitation(current);
                 }
                 else if (request.Force)
+                {
+                    if (settings is not null)
+                        ObserveInvitation(settings);
+
                     ListenForUpdates(false);
+                }
             }
         }
 
@@ -329,12 +368,15 @@ public sealed class AiAccess
             SetSettings(ValidateSettings(settings));
             if (_settings is null)
             {
-                _verifiedAt = null;
+                SetVerification(null);
                 ListenForUpdates(false);
                 return;
             }
 
-            RemoveRevokedInvitation(_settings);
+            if (_pendingFetch is { Force: true } request)
+                request.RealtimeDenials.UnionWith(_settings.RevokedInviteIds);
+
+            ObserveInvitation(_settings);
         }
     }
 
@@ -350,17 +392,46 @@ public sealed class AiAccess
     private void SetSettings(AiRemoteSettings? settings)
     {
         _settings = settings;
-        if (settings is not null)
-            _surveyUrl = settings.SurveyUrl;
-    }
-
-    private void RemoveRevokedInvitation(AiRemoteSettings settings)
-    {
-        if (settings.RevokedInviteIds.Count == 0 || ReadState() is not { } state || state.Invitation.IsEmpty())
+        if (settings is null || settings.SurveyUrl == _surveyUrl)
             return;
 
-        if (Verify(state.Invitation) is { IsSuccess: true } verified && settings.RevokedInviteIds.Contains(verified.Value))
+        _surveyUrl = settings.SurveyUrl;
+        NotifyChanged();
+    }
+
+    private void SetVerification(long? verifiedAt)
+    {
+        var wasFresh = HasFreshSettings();
+        _verifiedAt = verifiedAt;
+        if (wasFresh != HasFreshSettings() && ReadState() is { } state && state.Invitation.HasValue())
+            NotifyChanged();
+    }
+
+    private void ObserveInvitation(AiRemoteSettings settings)
+    {
+        if (ReadState() is not { } state || state.Invitation.IsEmpty())
+        {
+            ListenForUpdates(false);
+            return;
+        }
+
+        var verified = Verify(state.Invitation);
+        if (verified.IsFailure)
+        {
+            ListenForUpdates(false);
+            return;
+        }
+
+        if (settings.RevokedInviteIds.Contains(verified.Value))
+        {
+            ListenForUpdates(false);
+            NotifyChanged();
             ClearInvitation(state);
+            return;
+        }
+
+        if (HasFreshSettings())
+            ListenForUpdates(true);
     }
 
     private bool ClearInvitation(AiAccessState state)
@@ -391,12 +462,33 @@ public sealed class AiAccess
         try
         {
             _store.Write(state);
+            NotifyChanged();
             return true;
         }
         catch (IOException)
         {
             return false;
         }
+    }
+
+    // Coalesce mutations from the same operation and let observers read the finished state.
+    private void NotifyChanged()
+    {
+        if (_changePending || Changed is null)
+            return;
+
+        _changePending = true;
+        _ = Task.Run(() =>
+        {
+            Action? changed;
+            lock (_stateLock)
+            {
+                _changePending = false;
+                changed = Changed;
+            }
+
+            changed?.Invoke();
+        });
     }
 
     private static AiRemoteSettings? ValidateSettings(AiRemoteSettings? settings)
@@ -425,5 +517,6 @@ public sealed class AiAccess
     private sealed record FetchRequest(bool Force, long RealtimeRevision)
     {
         public TaskCompletionSource Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public HashSet<string> RealtimeDenials { get; } = new(StringComparer.Ordinal);
     }
 }

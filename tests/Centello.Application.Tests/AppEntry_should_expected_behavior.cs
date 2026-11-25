@@ -15,6 +15,7 @@ public sealed class AppEntry_should_expected_behavior
         { new AppEntry.Screen.NewExpense(CategoryId), "centello://expense/new?category=3f2c9a52-6d1e-4b7a-9c58-0e1d2a3b4c5d" },
         { new AppEntry.Screen.Draft(), "centello://expense/draft" },
         { new AppEntry.Screen.Settings(), "centello://settings" },
+        { new AppEntry.Screen.AiInvite(), "centello://settings/ai-invite" },
         { new AppEntry.Screen.Recap(Period.Month(2026, 11)), "centello://recap?year=2026&month=11" },
         { new AppEntry.Screen.Recap(Period.Year(2026)), "centello://recap?year=2026" },
         { new AppEntry.Panel.VoicePanel(), "centello://panel/voice" },
@@ -56,6 +57,7 @@ public sealed class AppEntry_should_expected_behavior
     [InlineData("centello://expense/new", true)]
     [InlineData("centello://expense/draft", false)]
     [InlineData("centello://settings", false)]
+    [InlineData("centello://settings/ai-invite", false)]
     [InlineData("centello://recap?year=2026&month=11", false)]
     [InlineData("centello://panel/voice", true)]
     [InlineData("centello://panel/photo", true)]

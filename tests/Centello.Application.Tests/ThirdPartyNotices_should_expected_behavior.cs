@@ -89,7 +89,9 @@ public sealed class ThirdPartyNotices_should_expected_behavior
                 "ThreeTenBP (code in the Kotlin standard library)", "Boost math functions (code in the Kotlin standard library)",
                 "JSpecify and JSR 305 annotations",
                 "Firebase AI Logic (18.2.0), Firebase App Check (20.1.0), Firebase Common, Components and Annotations",
-                "Google Play services Base and Basement (18.9.0), Tasks (18.4.0), and Firebase Auth Interop (18.0.0)",
+                "Firebase Remote Config (24.0.1), Firebase Installations (20.0.0), Firebase A/B Testing (24.0.0), and Firebase Encoders (18.0.0, JSON 19.0.0)",
+                "BouncyCastle.Cryptography (2.6.2)",
+                "Google Play services Base and Basement (18.9.0), Tasks (18.4.0), Firebase Auth Interop (18.0.0), and Firebase Measurement Connector (18.0.0)",
                 "Google Play Integrity (1.4.0, Play variant)", "Google Play Core Common (2.0.4, Play variant)",
                 "Ktor (3.2.4)", "OkHttp (4.12.0) and Okio (3.12.0)", "javax.inject (1)",
                 "SLF4J API and NOP provider (2.0.17)", "Reactive Streams (1.0.4)", "Archivo fonts (Regular, SemiBold, Bold, Condensed ExtraBold)",
@@ -98,11 +100,16 @@ public sealed class ThirdPartyNotices_should_expected_behavior
         Assert.Equal(
             ["MIT License", "Pubblico dominio", "Apache License 2.0", "Apache License 2.0", "BSD 2-Clause License", "Apache License 2.0",
                 "MIT License", "Apache License 2.0", "BSD-3-Clause (Protobuf Lite)", "Apache License 2.0", "BSD-3-Clause (ThreeTenBP)",
-                "Boost Software License 1.0", "Apache License 2.0", "Apache License 2.0", "Android Software Development Kit License",
+                "Boost Software License 1.0", "Apache License 2.0", "Apache License 2.0", "Apache License 2.0", "Bouncy Castle MIT License",
+                "Android Software Development Kit License",
                 "Play Integrity API Terms of Service", "Play Core Software Development Kit Terms of Service", "Apache License 2.0",
                 "Apache License 2.0", "Apache License 2.0", "MIT License", "MIT No Attribution", "SIL Open Font License 1.1", "Apache License 2.0"],
             components.Select(component => component.License));
         Assert.Contains("Permission is hereby granted, free of charge", components[0].Text);
+        var bouncyCastle = Assert.Single(components, component => component.Name == "BouncyCastle.Cryptography (2.6.2)");
+        Assert.Contains("Copyright (c) 2000-2025 The Legion of the Bouncy Castle Inc.", bouncyCastle.Text);
+        Assert.Contains("in all copies or substantial portions of the Software.", bouncyCastle.Text);
+        Assert.Contains("OF OR IN CONNECTION WITH THE SOFTWARE", bouncyCastle.Text);
         Assert.DoesNotContain("\nPermission is hereby granted", components[1].Text);
         Assert.Contains("Redistributions in binary form must reproduce the above copyright notice", components[4].Text);
         Assert.Contains("DISCLAIMER THE FONT SOFTWARE IS PROVIDED", Assert.Single(components, component => component.License == "SIL Open Font License 1.1").Text);

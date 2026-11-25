@@ -20,6 +20,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(LicensesPage), typeof(LicensesPage));
         Routing.RegisterRoute(nameof(BackupPage), typeof(BackupPage));
         Routing.RegisterRoute(nameof(RestorePage), typeof(RestorePage));
+        Routing.RegisterRoute(nameof(AiInvitePage), typeof(AiInvitePage));
         var tabs = new TabBar();
         ContentPage[] pages = [todayPage, insightsPage, categoriesPage, settingsPage];
         ShellContent[] destinations =

@@ -86,6 +86,7 @@ public sealed class AiAccess_should_expected_behavior
         Assert.Equal(_store.InstallationId, _verifier.InstallationIdSeen);
         Assert.Equal(new AiAccessState(5, Invitation), _store.State);
         Assert.True(_remote.ListenerEnabled);
+        Assert.True(_access.IsInvitationVerified);
         Assert.True((await _access.Check()).IsSuccess);
     }
 
@@ -98,6 +99,7 @@ public sealed class AiAccess_should_expected_behavior
         _remote.Response = response.Task;
 
         var foreground = _access.BeginSession();
+        Assert.False(_access.IsInvitationVerified);
         var first = _access.Check();
         using var canceled = new CancellationTokenSource();
         var second = _access.Check(canceled.Token);
@@ -123,6 +125,7 @@ public sealed class AiAccess_should_expected_behavior
         _remote.Publish(new AiRemoteSettings("", new HashSet<string> { InviteId }));
 
         Assert.False(_access.HasInvitation);
+        Assert.False(_access.IsInvitationVerified);
         Assert.True(_access.WasInvitationRevoked);
         Assert.False(_remote.ListenerEnabled);
         Assert.Equal(new AiAccessState(4, ""), _store.State);
@@ -149,6 +152,51 @@ public sealed class AiAccess_should_expected_behavior
     }
 
     [Fact]
+    public async Task Keep_a_forced_fetch_revocation_even_if_a_realtime_update_arrives_during_the_fetch()
+    {
+        _store.State = new AiAccessState(4, Invitation);
+        Assert.True((await _access.Check()).IsSuccess);
+        var response = new TaskCompletionSource<AiRemoteSettings?>();
+        _remote.Response = response.Task;
+        var refresh = _access.BeginSession();
+
+        _remote.Publish(new AiRemoteSettings("https://forms.gle/newer", new HashSet<string>()));
+        response.SetResult(new AiRemoteSettings("https://forms.gle/older", new HashSet<string> { InviteId }));
+        await refresh;
+
+        Assert.False(_access.HasInvitation);
+        Assert.True(_access.WasInvitationRevoked);
+        Assert.Equal("https://forms.gle/newer", _access.SurveyUrl);
+        Assert.Equal(new AiAccessState(4, ""), _store.State);
+    }
+
+    [Fact]
+    public async Task Keep_a_forced_fetch_denial_for_an_invite_being_redeemed()
+    {
+        var response = new TaskCompletionSource<AiRemoteSettings?>();
+        _remote.Response = response.Task;
+        var redeem = _access.Redeem(Invitation);
+
+        _remote.Publish(new AiRemoteSettings("", new HashSet<string>()));
+        response.SetResult(new AiRemoteSettings("", new HashSet<string> { InviteId }));
+
+        Assert.Equal(DraftErrors.InviteRevoked, (await redeem).Error);
+        Assert.False(_access.HasInvitation);
+    }
+
+    [Fact]
+    public async Task Notify_observers_when_the_survey_changes()
+    {
+        var changed = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _access.Changed += () => changed.TrySetResult(_access.SurveyUrl);
+        _remote.Settings = new AiRemoteSettings("https://forms.gle/newer", new HashSet<string>());
+
+        await _access.BeginSession();
+
+        Assert.Equal("https://forms.gle/newer", await changed.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+    }
+
+    [Fact]
     public async Task Reject_a_malformed_revocation_snapshot()
     {
         _store.State = new AiAccessState(4, Invitation);
@@ -156,6 +204,38 @@ public sealed class AiAccess_should_expected_behavior
 
         Assert.Equal(DraftErrors.InviteVerificationUnavailable, (await _access.Check()).Error);
         Assert.Equal(new AiAccessState(4, Invitation), _store.State);
+    }
+
+    [Fact]
+    public async Task Stop_listening_and_reverify_on_a_malformed_realtime_update()
+    {
+        _store.State = new AiAccessState(4, Invitation);
+        Assert.True((await _access.Check()).IsSuccess);
+
+        _remote.Publish(null);
+
+        Assert.False(_remote.ListenerEnabled);
+        Assert.Equal(DraftErrors.InviteVerificationUnavailable, (await _access.Check()).Error);
+        Assert.Equal([true, true], _remote.Requests);
+        Assert.Equal(new AiAccessState(4, Invitation), _store.State);
+    }
+
+    [Fact]
+    public async Task Ignore_a_fetch_started_before_the_current_foreground_session()
+    {
+        _store.State = new AiAccessState(4, Invitation);
+        var previousResponse = new TaskCompletionSource<AiRemoteSettings?>();
+        _remote.Response = previousResponse.Task;
+        var previous = _access.BeginSession();
+        _remote.Response = null;
+        _remote.Settings = null;
+        await _access.BeginSession();
+
+        previousResponse.SetResult(new AiRemoteSettings("", new HashSet<string>()));
+        await previous;
+
+        Assert.False(_remote.ListenerEnabled);
+        Assert.Equal(DraftErrors.InviteVerificationUnavailable, (await _access.Check()).Error);
     }
 }
 

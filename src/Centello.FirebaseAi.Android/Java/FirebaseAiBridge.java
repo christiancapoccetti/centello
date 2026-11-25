@@ -3,7 +3,6 @@ package centello.firebaseai;
 import android.content.Context;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
 import com.google.firebase.ai.FirebaseAI;
 import com.google.firebase.ai.java.GenerativeModelFutures;
 import com.google.firebase.ai.type.Content;
@@ -58,24 +57,12 @@ public final class FirebaseAiBridge {
             return model;
         }
 
-        FirebaseOptions options = new FirebaseOptions.Builder()
-                .setApplicationId(applicationId)
-                .setApiKey(apiKey)
-                .setProjectId(projectId)
-                .setGcmSenderId(senderId)
-                .build();
-
-        FirebaseApp app = FirebaseApp.initializeApp(context, options);
-        try {
-            AppCheckProvider.install(FirebaseAppCheck.getInstance(app));
-            FirebaseAI ai = FirebaseAI.getInstance(app, GenerativeBackend.googleAI(), true);
-            model = GenerativeModelFutures.from(ai.generativeModel(
-                    MODEL, generationConfig(), null, null, null, null, new RequestOptions(REQUEST_TIMEOUT_MS)));
-            return model;
-        } catch (RuntimeException error) {
-            app.delete();
-            throw error;
-        }
+        FirebaseApp app = CentelloFirebaseApp.get(context, applicationId, apiKey, projectId, senderId);
+        AppCheckProvider.install(FirebaseAppCheck.getInstance(app));
+        FirebaseAI ai = FirebaseAI.getInstance(app, GenerativeBackend.googleAI(), true);
+        model = GenerativeModelFutures.from(ai.generativeModel(
+                MODEL, generationConfig(), null, null, null, null, new RequestOptions(REQUEST_TIMEOUT_MS)));
+        return model;
     }
 
     private static GenerationConfig generationConfig() {

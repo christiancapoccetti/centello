@@ -19,8 +19,10 @@
     <Compile Include="..\..\src\Centello.App\Controls\BrowseScrollOffset.cs" Link="BrowseScrollOffset.cs" />
     <Compile Include="..\..\src\Centello.App\Controls\PhoneLandscapeSize.cs" Link="PhoneLandscapeSize.cs" />
     <Compile Include="..\..\src\Centello.App\Controls\Recap\SpendingMapPanels.cs" Link="SpendingMapPanels.cs" />
+    <Compile Include="..\..\src\Centello.App\Platforms\Android\Firebase\FirebaseAiSettings.cs" Link="FirebaseAiSettings.cs" />
     <Compile Include="..\..\src\Centello.App\Platforms\Android\Widgets\CategoryBudgetWidgetLayout.cs" Link="CategoryBudgetWidgetLayout.cs" />
     <Compile Include="..\..\src\Centello.App\ViewModels\InsightsViewModel.cs" Link="InsightsViewModel.cs" />
+    <Compile Include="..\..\src\Centello.App\ViewModels\AiInviteViewModel.cs" Link="AiInviteViewModel.cs" />
     <Compile Include="..\..\src\Centello.App\ViewModels\ObservableObject.cs" Link="ObservableObject.cs" />
   </ItemGroup>
 

@@ -65,6 +65,7 @@ public sealed class AppEntryRouter(IConfirmation confirmation, InsightsViewModel
             ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(categoryId: expense.CategoryId, fromOutside: true)}", true),
         AppEntry.Screen.Draft => ($"//{nameof(TodayPage)}/{ExpenseEditorPage.Route(fromOutside: true)}", true),
         AppEntry.Screen.Settings => ($"//{nameof(SettingsPage)}", false),
+        AppEntry.Screen.AiInvite => (AiInvitePage.Route, false),
         AppEntry.Screen.Recap recap => ($"//{nameof(InsightsPage)}/{RecapPage.Route(recap.Period)}", false),
         _ => throw new UnreachableException()
     };

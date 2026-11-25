@@ -84,6 +84,7 @@ jobs:
       - name: Sign and verify the Play bundle
         if: steps.previous.outputs.id == ''
         env:
+          CENTELLO_INVITE_PUBLIC_KEY: ${{ vars.CENTELLO_INVITE_PUBLIC_KEY }}
           FIREBASE_ANDROID_PLAY_CONFIG_BASE64: ${{ secrets.FIREBASE_ANDROID_PLAY_CONFIG_BASE64 }}
           PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
           PLAY_UPLOAD_PASSWORD: ${{ secrets.PLAY_UPLOAD_PASSWORD }}

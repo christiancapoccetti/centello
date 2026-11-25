@@ -320,4 +320,28 @@ public sealed class ExpenseDraftService_should_expected_behavior
         Assert.True((await _service.PrepareFromDocument(Jpeg)).IsSuccess);
         Assert.Equal(4, _aiStore.State.Used);
     }
+
+    [Fact]
+    public async Task Withhold_an_inflight_draft_when_its_invite_is_revoked()
+    {
+        const string inviteId = "a1b2c3d4e5f600000000000000000000";
+        _aiStore.State = new AiAccessState(4, "invitation");
+        _verifier.Valid["invitation"] = inviteId;
+        _interpreter.Draft = new ExpenseDraft(1_000, null, null, null, "", DraftSource.Photo, "");
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var complete = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _interpreter.OnInterpret = started.SetResult;
+        _interpreter.Gate = complete.Task;
+
+        var inFlight = _service.PrepareFromDocument(Jpeg);
+        await started.Task;
+        _remote.Publish(new AiRemoteSettings("", new HashSet<string> { inviteId }));
+        complete.SetResult();
+
+        Assert.Equal(DraftErrors.InviteRevoked, (await inFlight).Error);
+        Assert.Equal(new AiAccessState(4, ""), _aiStore.State);
+        _interpreter.OnInterpret = null;
+        Assert.True((await _service.PrepareFromDocument(Jpeg)).IsSuccess);
+        Assert.Equal(5, _aiStore.State.Used);
+    }
 }

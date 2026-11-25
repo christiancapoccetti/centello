@@ -11,21 +11,24 @@ public partial class TodayPage : ContentPage
     private readonly PhoneLandscapeTrigger _landscapeTrigger;
     private readonly BrowseScrollAnchor _scrollAnchor;
     private readonly ExpenseDraftService _drafts;
+    private readonly AiAccess _aiAccess;
     private readonly DraftConsent _draftConsent;
     private readonly PhotoPicker _photos;
     private readonly ISnackbar _snackbar;
     private readonly Func<Dictation> _createDictation;
     private readonly IDispatcherTimer _speechLimit;
+    private CancellationTokenSource? _preflight;
     private CancellationTokenSource? _reading;
     private Dictation? _speech;
     private Window? _window;
 
-    public TodayPage(TodayViewModel viewModel, ExpenseDraftService drafts, DraftConsent draftConsent, PhotoPicker photos,
+    public TodayPage(TodayViewModel viewModel, ExpenseDraftService drafts, AiAccess aiAccess, DraftConsent draftConsent, PhotoPicker photos,
         ISnackbar snackbar, Func<Dictation> createDictation)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _drafts = drafts;
+        _aiAccess = aiAccess;
         _draftConsent = draftConsent;
         _photos = photos;
         _snackbar = snackbar;
@@ -85,17 +88,30 @@ public partial class TodayPage : ContentPage
             _window = null;
         }
 
+        CancelPreflight();
+        CloseAccessSheet();
         CancelReading();
         await CancelSpeech();
     }
 
-    private async void OnWindowStopped(object? sender, EventArgs e) => await CancelSpeech();
+    private async void OnWindowStopped(object? sender, EventArgs e)
+    {
+        CancelPreflight();
+        await CancelSpeech();
+    }
 
     protected override bool OnBackButtonPressed()
     {
-        if (_viewModel.Capture.IsIdle && _speech is null)
+        if (AccessSheet.IsVisible)
+        {
+            CloseAccessSheet();
+            return true;
+        }
+
+        if (_viewModel.Capture.IsIdle && _speech is null && _preflight is null)
             return base.OnBackButtonPressed();
 
+        CancelPreflight();
         _ = CancelSpeech();
         CancelReading();
         _viewModel.Capture = _viewModel.Capture.Close();
@@ -166,7 +182,7 @@ public partial class TodayPage : ContentPage
             return;
         }
 
-        if (!_viewModel.IsCaptureAvailable || !_viewModel.Capture.IsIdle)
+        if (!_viewModel.IsCaptureAvailable || !_viewModel.Capture.IsIdle || !await CheckCapture(DraftSource.Voice))
             return;
 
         var speech = _createDictation();
@@ -190,7 +206,7 @@ public partial class TodayPage : ContentPage
 
         _speech = null;
         if (speech.State is PanelState.Failed failed)
-            _viewModel.Capture = _viewModel.Capture.Read(DraftSource.Voice).Fail(failed.Error);
+            ShowCaptureFailure(DraftSource.Voice, failed.Error);
         else if (speech.State is PanelState.NeedsConsent)
             _viewModel.HasDraftConsent = false;
     }
@@ -213,7 +229,7 @@ public partial class TodayPage : ContentPage
 
         if (speech.State is PanelState.Failed failed)
         {
-            _viewModel.Capture = _viewModel.Capture.Fail(failed.Error);
+            ShowCaptureFailure(DraftSource.Voice, failed.Error);
             return;
         }
 
@@ -244,9 +260,9 @@ public partial class TodayPage : ContentPage
             : status;
     }
 
-    private void OnCameraClicked(object? sender, EventArgs e)
+    private async void OnCameraClicked(object? sender, EventArgs e)
     {
-        if (_speech is null)
+        if (_speech is null && _viewModel.Capture.IsIdle && await CheckCapture(DraftSource.Photo))
             _viewModel.Capture = _viewModel.Capture.ChoosePhoto();
     }
 
@@ -273,10 +289,11 @@ public partial class TodayPage : ContentPage
 
     private async Task ReadDocument(DraftSource source, Func<Task<Result<byte[]?>>> take)
     {
-        if (!_viewModel.Capture.IsChoosingPhoto)
+        var menu = _viewModel.Capture;
+        if (!menu.IsChoosingPhoto || !await CheckCapture(source) || !ReferenceEquals(_viewModel.Capture, menu))
             return;
 
-        var picking = _viewModel.Capture.Pick(source);
+        var picking = menu.Pick(source);
         _viewModel.Capture = picking;
         var location = Shell.Current.CurrentState.Location;
         Result<byte[]?> picked;
@@ -317,7 +334,7 @@ public partial class TodayPage : ContentPage
     private async Task ReadDraft(Func<CancellationToken, Task<Result<ExpenseDraft>>> prepare, Error failure)
     {
         var capture = _viewModel.Capture;
-        if (!capture.IsReading)
+        if (!capture.IsReading || capture.Source is not { } source)
             return;
 
         using var reading = new CancellationTokenSource();
@@ -330,7 +347,7 @@ public partial class TodayPage : ContentPage
 
             if (draft.IsFailure)
             {
-                _viewModel.Capture = _viewModel.Capture.Fail(draft.Error);
+                ShowCaptureFailure(source, draft.Error);
                 return;
             }
 
@@ -386,6 +403,130 @@ public partial class TodayPage : ContentPage
 
         _reading?.Cancel();
         _viewModel.Capture = _viewModel.Capture.Finish();
+    }
+
+    private async Task<bool> CheckCapture(DraftSource source)
+    {
+        if (_preflight is not null || AccessSheet.IsVisible)
+            return false;
+
+        using var preflight = new CancellationTokenSource();
+        _preflight = preflight;
+        try
+        {
+            var access = await _drafts.CheckCapture(preflight.Token);
+            if (preflight.IsCancellationRequested)
+                return false;
+
+            if (access.IsFailure)
+                ShowCaptureFailure(source, access.Error);
+
+            return access.IsSuccess;
+        }
+        catch (OperationCanceledException) when (preflight.IsCancellationRequested)
+        {
+            return false;
+        }
+        finally
+        {
+            if (ReferenceEquals(_preflight, preflight))
+                _preflight = null;
+        }
+    }
+
+    private void CancelPreflight()
+    {
+        _preflight?.Cancel();
+        _preflight = null;
+    }
+
+    private void ShowCaptureFailure(DraftSource source, Error error)
+    {
+        if (error == DraftErrors.ConsentRequired)
+        {
+            _viewModel.HasDraftConsent = false;
+            _viewModel.Capture = DraftCapture.Idle;
+            return;
+        }
+
+        if (PanelFaces.AccessFailure(error, _aiAccess.SurveyUrl) is not { } blocked)
+        {
+            _viewModel.Capture = _viewModel.Capture.Read(source).Fail(error);
+            return;
+        }
+
+        _viewModel.Capture = DraftCapture.Idle;
+        AccessSheet.BindingContext = blocked;
+        AccessSheet.IsVisible = true;
+        if (blocked.IsTrialExhausted)
+        {
+            _aiAccess.Changed += OnAiAccessChanged;
+            RefreshSurvey();
+        }
+
+        SetBackgroundAccessibility(excluded: true);
+        SemanticScreenReader.Default.Announce(blocked.Title);
+    }
+
+    private void CloseAccessSheet()
+    {
+        _aiAccess.Changed -= OnAiAccessChanged;
+        AccessSheet.IsVisible = false;
+        AccessSheet.BindingContext = null;
+        SetBackgroundAccessibility(excluded: false);
+    }
+
+    private void OnAiAccessChanged() => Dispatcher.Dispatch(RefreshSurvey);
+
+    private void RefreshSurvey()
+    {
+        if (!AccessSheet.IsVisible || AccessSheet.BindingContext is not PanelFace.AccessBlocked { IsTrialExhausted: true } blocked)
+            return;
+
+        var surveyUrl = _aiAccess.SurveyUrl;
+        if (surveyUrl != blocked.SurveyUrl)
+            AccessSheet.BindingContext = PanelFaces.AccessFailure(DraftErrors.TrialExhausted, surveyUrl);
+    }
+
+    private void SetBackgroundAccessibility(bool excluded)
+    {
+        AutomationProperties.SetExcludedWithChildren(PeriodHeader, excluded);
+        AutomationProperties.SetExcludedWithChildren(TodayOverview, excluded);
+        AutomationProperties.SetExcludedWithChildren(TodayActivity, excluded);
+        AutomationProperties.SetExcludedWithChildren(CaptureDock, excluded);
+    }
+
+    private void OnAccessSheetDismissed(object? sender, EventArgs e) => CloseAccessSheet();
+
+    private async void OnAccessManualClicked(object? sender, EventArgs e)
+    {
+        CloseAccessSheet();
+        await Shell.Current.GoToAsync(ExpenseEditorPage.Route());
+    }
+
+    private async void OnAccessInviteClicked(object? sender, EventArgs e)
+    {
+        CloseAccessSheet();
+        await Shell.Current.GoToAsync(AiInvitePage.Route);
+    }
+
+    private async void OnSurveyClicked(object? sender, EventArgs e)
+    {
+        if (AccessSheet.BindingContext is not PanelFace.AccessBlocked { CanOpenSurvey: true }
+            || !Uri.TryCreate(_aiAccess.SurveyUrl, UriKind.Absolute, out var survey))
+            return;
+
+        try
+        {
+            if (await Browser.Default.OpenAsync(survey, BrowserLaunchMode.External))
+                return;
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(exception);
+        }
+
+        _snackbar.Show("Non è stato possibile aprire il browser");
     }
 
     private void OnCloseCaptureClicked(object? sender, EventArgs e)

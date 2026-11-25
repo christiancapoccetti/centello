@@ -20,6 +20,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CategoriesPage>();
         services.AddSingleton<SettingsViewModel>();
         services.AddTransient<SettingsPage>();
+        services.AddTransient<AiInviteViewModel>();
+        services.AddTransient<AiInvitePage>();
         services.AddTransient<LicensesViewModel>();
         services.AddTransient<LicensesPage>();
         services.AddTransient<BackupViewModel>();
@@ -32,6 +34,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDraftConsentStore, PreferencesDraftConsentStore>();
         services.AddSingleton<IInternetAccess, MauiInternetAccess>();
         services.AddSingleton<PhotoPicker>();
+        services.AddAiAccessPlatform();
+        services.AddAiInviteVerification();
 #if ANDROID
         services.AddSingleton<IFirebaseGeneration, FirebaseGeneration>();
         services.AddSingleton<IPdfPageCounter, AndroidPdfPageCounter>();

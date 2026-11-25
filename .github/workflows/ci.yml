@@ -77,6 +77,8 @@ jobs:
           signing=$(mktemp -d)
           trap 'rm -rf -- "$signing"' EXIT
           export PLAY_UPLOAD_KEYSTORE="$signing/upload.jks"
+          export CENTELLO_INVITE_PUBLIC_KEY
+          CENTELLO_INVITE_PUBLIC_KEY=$(node -e "const k=require('node:crypto').generateKeyPairSync('ed25519').publicKey.export({format:'jwk'});process.stdout.write(Buffer.from(k.x,'base64url').toString('base64'))")
           export PLAY_UPLOAD_PASSWORD_FILE="$signing/password"
           printf '%s' 'centello-ci-key' > "$PLAY_UPLOAD_PASSWORD_FILE"
           keytool -genkeypair -storetype JKS -keystore "$PLAY_UPLOAD_KEYSTORE" \

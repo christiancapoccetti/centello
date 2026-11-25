@@ -98,6 +98,47 @@ public sealed class PanelFaces_should_expected_behavior
         Assert.Equal(new PanelFace.Message("Lettura della foto", PhotoErrors.CameraDenied.Message, PanelAction.Retry), face);
     }
 
+    [Theory]
+    [MemberData(nameof(Sources))]
+    public void Show_a_manual_entry_path_when_ai_is_unavailable(DraftSource source)
+    {
+        var face = PanelFaces.Of(source, new PanelState.Failed(DraftErrors.Unavailable));
+
+        var blocked = Assert.IsType<PanelFace.AccessBlocked>(face);
+        Assert.Equal("L’AI non è disponibile", blocked.Title);
+        Assert.Contains("inserire la spesa a mano", blocked.Lead);
+        Assert.False(blocked.IsTrialExhausted);
+        Assert.False(blocked.CanOpenSurvey);
+        Assert.False(blocked.CanRedeem);
+    }
+
+    [Theory]
+    [InlineData("https://forms.gle/example", true)]
+    [InlineData("", false)]
+    public void Show_a_survey_for_exhausted_trials_only_when_a_link_is_available(string surveyUrl, bool showsSurvey)
+    {
+        var face = PanelFaces.Of(DraftSource.Voice, new PanelState.Failed(DraftErrors.TrialExhausted), surveyUrl);
+
+        var blocked = Assert.IsType<PanelFace.AccessBlocked>(face);
+        Assert.Equal("Hai usato le 5 prove gratuite", blocked.Title);
+        Assert.True(blocked.IsTrialExhausted);
+        Assert.Equal(surveyUrl, blocked.SurveyUrl);
+        Assert.Equal(showsSurvey, blocked.CanOpenSurvey);
+        Assert.True(blocked.CanRedeem);
+    }
+
+    [Fact]
+    public void Explain_an_invitation_verification_failure_without_showing_the_survey()
+    {
+        var face = PanelFaces.Of(DraftSource.Photo, new PanelState.Failed(DraftErrors.InviteVerificationUnavailable),
+            "https://forms.gle/example");
+
+        var blocked = Assert.IsType<PanelFace.AccessBlocked>(face);
+        Assert.Equal(DraftErrors.InviteVerificationUnavailable.Message, blocked.Lead);
+        Assert.False(blocked.CanOpenSurvey);
+        Assert.False(blocked.CanRedeem);
+    }
+
     [Fact]
     public void Read_the_photo_with_the_privacy_note()
     {
