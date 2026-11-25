@@ -68,7 +68,7 @@ The app interface is in Italian. Use only made-up expenses and documents for the
 
 Use an internet-connected Android device with the Play-distributed build. The Google account used to install and review the build needs access to the selected test track. Assisted entry requires the Play-recognized, licensed installation. The reviewer needs neither a Centello account nor a personal API key. Verify the full reviewer path from a fresh Play install before submitting. [Play app access requirements](https://support.google.com/googleplay/android-developer/answer/15748846)
 
-1. In **Impostazioni → Voce, foto e PDF**, turn on **Inserimento spese con l’AI**, read the disclosure, and tap **Acconsento**.
+1. In **Impostazioni → Voce, foto e PDF**, turn on **Inserimento spese con l’AI**, read the disclosure, and tap **Acconsento**. A fresh installation has five trial drafts, enough for these steps and the optional camera check. If you need more on the same installation, follow the invitation procedure below.
 2. In **Oggi**, tap the microphone and say «ieri dodici euro e cinquanta di pizza». Grant microphone permission if prompted. Tap the stop button to prepare the draft, or wait for recording to stop automatically after 20 seconds. Check that the draft shows €12.50 and yesterday’s date.
 3. Discard the draft and use a test category named **Lavoro**. Say «Inserisci 150 euro su lavoro perché ho acquistato la licenza di fatture in cloud». Check that **Nota** contains a short note such as «Licenza Fatture in cloud». Edit the note and discard the draft.
 4. Create a gallery image and PDF of the synthetic receipt in the ledger below. From the camera menu in **Oggi**, use **Scegli dalla galleria** and **Scegli un PDF** to review both drafts. On Android 13 or later, try **Scatta una foto** with a working camera.
@@ -84,9 +84,22 @@ Use an internet-connected Android device with the Play-distributed build. The Go
 - [ ] Keep app and operator records to aggregate counts, token usage, status, latency and costs. If enabling Firebase AI monitoring, first exclude prompt and response logs in the `_Default` sink using `resource.type="firebasevertexai.googleapis.com/Model"` and check other sinks and exports. Use one synthetic request to verify content stays out of Cloud Logging, retained traces and dashboards. Review access and retention before accepting live traffic. [Firebase AI monitoring](https://firebase.google.com/docs/ai-logic/monitoring)
 - [ ] Test a clean Play install and an update from the OpenAI build. Check manual entry offline, decline consent, and confirm no assisted request or App Check attestation before consent. Check consent withdrawal, cancellation, blocked input, access denied, quota limits and timeouts. Confirm failures preserve existing data and that no request content or credentials enter app or CI logs. Confirm the published policy covers both versions while both are distributed.
 
+### Issue and revoke AI invitations
+
+1. Run `node tools/Centello.Invites/invites.mjs init` once and enter a passphrase. The tool prints the Base64 Ed25519 public key. Set it as the `CENTELLO_INVITE_PUBLIC_KEY` variable in the GitHub environment `play-closed-beta` before building the Play release.
+2. In the applicable Firebase project, open **Remote Config**. Set `revoked_invite_ids` to a JSON array. Start with `[]`. For `ai_interest_form_url`, use an HTTPS Google Forms link on `forms.gle` or under `docs.google.com/forms/`. Leave the URL blank to hide the form. Publish both parameters before testing redemption.
+3. Ask the tester to share the installation ID from **Impostazioni → Voce, foto e PDF → Attiva un invito**. Run `node tools/Centello.Invites/invites.mjs issue <installation-id> "<local-label>"`. Send the printed code to the tester for that installation. The label stays in the local issuer records.
+4. Run `node tools/Centello.Invites/invites.mjs list` to find the invite ID. To revoke it, run `node tools/Centello.Invites/invites.mjs revoke <invite-id>`. Append that ID as a string to the existing `revoked_invite_ids` array and publish the update. The command records revocation locally. The published array controls access on devices.
+
+Keep the issuer directory and its backup outside Git and CI. The issuer uses `CENTELLO_INVITE_HOME` when set. On Windows, the default is `%LOCALAPPDATA%/Centello/Invites`. Back up the encrypted `issuer.pkcs8.pem`, the labeled `issued` records, and the `revoked` markers. Keep the passphrase separately from the backup.
+
+Enable the Firebase Remote Config Realtime API in the same project. If you restrict the Android API key, allow the Firebase Remote Config, Firebase Remote Config Realtime and Firebase Installations APIs. [Firebase API key restrictions](https://firebase.google.com/docs/projects/api-keys)
+
+Centello requires a fresh Remote Config response at redemption and when an invited installation returns to the foreground. If verification reaches 12 hours, the next draft request requires another refresh. The app listens for published updates during invited use. Ordinary Remote Config fetches use a 12-hour minimum interval. If verification fails, use manual entry. Once Centello confirms revocation, it clears the invitation and allows any remaining trial drafts.
+
 ### Live acceptance ledger
 
-Six synthetic fixtures are planned. Status at handoff is **0 real attempts**. Attestation, fixture outcomes, latency, tokens and cost await a live operator run. Synthetic build configuration and automated tests cannot populate this ledger.
+Six synthetic fixtures are planned. Redeem a test invitation on the installation that runs the full set. Status at handoff is **0 real attempts**. Attestation, fixture outcomes, latency, tokens and cost await a live operator run. Synthetic build configuration and automated tests cannot populate this ledger.
 
 | Fixture | Synthetic input and expected result | Live attempts / delivered |
 | --- | --- | --- |
@@ -111,7 +124,7 @@ Apply the Data safety definitions to every version still distributed under this 
 | Photos and videos → Photos | A receipt, invoice, or payment image the user takes or selects. |
 | Files and docs | The PDF the user selects, including its contents. |
 | App activity → Other user-generated content | Active category and tag names and today's date. Earlier OpenAI builds also send the expense transcript in a separate request. |
-| Device or other IDs | Assess Firebase App Check and Play Integrity app, installation and device signals using the SDK disclosures and signed-build traffic. |
+| Device or other IDs | Remote Config uses a Firebase installation ID. Assess this identifier and the Firebase App Check and Play Integrity signals using the SDK disclosures and signed-build traffic. The Centello installation ID used for invitations is shared only when the user chooses to send it. |
 | Financial info → Purchase history | Purchases and transactions described in voice input or in receipts, invoices, and payment screenshots. |
 | Financial info → Other financial info | Other financial details in the submitted material, such as amounts due on invoices or bills. |
 
@@ -123,7 +136,7 @@ Check typical receipts, invoices, and payment screenshots for additional types t
 - **Encryption in transit.** The provider calls use HTTPS. Verify the current form’s encryption answer across all flows included in the declaration.
 - **Cloud backup and migration.** Android transfers the database and its working journal through Google backup or device-to-device migration under the user's system settings. Centello has no app-operated backup endpoint. The app’s Android backup rules exclude the consent preference, earlier OpenAI key, and cache. Verify how Play treats each system-managed transport on the submitted build before finalizing the form. [Android Auto Backup](https://developer.android.com/identity/data/autobackup)
 - **Export, cache, and reminders.** Download exports stay on the device unless the user moves or shares them. On Android 8 and 9, an explicit choice in the Android share sheet can send a file to another app. Assess that flow under Play's user-initiated sharing exception. Temporary picker and export cache copies and Android's local recap and payment reminders make no network requests.
-- **Deletion.** Users can delete expenses, clear local app data, or uninstall. Copies in Download, cloud backups, and on other devices have separate controls. Turning off assisted drafts stops new Firebase requests. In earlier OpenAI builds, removing the key stops new requests. Follow the privacy policy for request retention and deletion. Centello has no app account to delete. Answer any separate deletion-request question based on the services and data in scope. [Centello privacy policy](privacy-policy.md)
+- **Deletion.** Users can delete expenses, clear local app data, or uninstall. Copies in Download, cloud backups, and on other devices have separate controls. Turning off assisted drafts stops new Gemini requests. Firebase Remote Config continues fetching access settings when the app opens. In earlier OpenAI builds, removing the key stops new requests. Follow the privacy policy for request retention and deletion. Centello has no app account to delete. Answer any separate deletion-request question based on the services and data in scope. [Centello privacy policy](privacy-policy.md)
 
 ## Before submission
 

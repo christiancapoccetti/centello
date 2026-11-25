@@ -18,6 +18,12 @@ If you contact the developer, the developer uses your contact details and messag
 
 Centello stores your expense records, categories, tags, budgets, and recurring payments in a database on your phone. The expense records can include amounts, dates, notes, and purchase history. Centello uses this information to show your expenses, reports, budgets, and widgets. Android stores app settings on your phone.
 
+## AI trials and invitations
+
+On versions with AI trials, Centello keeps an installation ID, the number of successful trial drafts, and any redeemed invitation on your phone. Android backup and device transfer exclude these records. If you ask for an invite, you can choose to share that installation ID with the issuer, who keeps an issuance record to manage and revoke the invitation.
+
+Centello uses Firebase Remote Config to download the interest form link and published revocation list. Firebase Installations supplies Google with an installation identifier for that service. If you open the optional interest form, your browser connects to Google Forms. The form operator receives the information you choose to submit.
+
 ## Optional entry with Firebase AI Logic
 
 In versions that use Firebase AI Logic, turn on **Inserimento spese con l’AI** under **Impostazioni → Voce, foto e PDF** and select **Acconsento**. Centello uses your chosen input to prepare an expense draft for your review. It sends the following data over HTTPS when you use the feature.
