@@ -15,6 +15,9 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
         services.AddSingleton<IPdfPageCounter, StubPdfPageCounter>();
         services.AddSingleton<ISpeechRecorder, SilentSpeechRecorder>();
         services.AddSingleton<IInternetAccess, AlwaysOnlineInternetAccess>();
+        services.AddSingleton<IAiAccessStore, AccessStore>();
+        services.AddSingleton<IAiRemoteConfig, RemoteConfig>();
+        services.AddSingleton<IAiInviteVerifier>(new AiInviteVerifier(""));
         services.AddSingleton<IRecurringPaymentReminder, NoOpRecurringPaymentReminder>();
         return services.BuildServiceProvider();
     }
@@ -101,6 +104,22 @@ public sealed class ServiceCollectionExtensions_should_expected_behavior
     private sealed class AlwaysOnlineInternetAccess : IInternetAccess
     {
         public bool IsAvailable => true;
+    }
+
+    private sealed class AccessStore : IAiAccessStore
+    {
+        public string InstallationId => new('2', 32);
+        private AiAccessState _state = new(0, "");
+        public AiAccessState Read() => _state;
+        public void Write(AiAccessState state) => _state = state;
+    }
+
+    private sealed class RemoteConfig : IAiRemoteConfig
+    {
+        public event Action<AiRemoteSettings?>? Updated { add { } remove { } }
+        public void SetRealtimeUpdates(bool enabled) { }
+        public Task<AiRemoteSettings?> Fetch(bool force, CancellationToken cancellationToken) =>
+            Task.FromResult<AiRemoteSettings?>(null);
     }
 
     private sealed class SilentSpeechRecorder : ISpeechRecorder

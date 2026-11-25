@@ -3,12 +3,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centello.App.ViewModels;
 
-public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, DraftConsent draftConsent,
+public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, DraftConsent draftConsent, AiAccess aiAccess,
     RecapNoticeAutomation recapNotices, IRecapNoticeSettings recapNoticeSettings, IRecapNoticeBoard recapNoticeBoard,
     INotificationPermission notificationPermission) : ObservableObject
 {
     private string _recurringSummary = "";
     private bool _draftsEnabled;
+    private string _aiInviteTitle = "Attiva un invito";
+    private string _aiInviteDetail = "";
     private bool _recapNoticeOn;
     private string _recapNoticeDetail = "";
     private bool _recapNoticeBlocked;
@@ -20,6 +22,8 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, DraftCo
     public string RecurringSummary { get => _recurringSummary; private set => SetProperty(ref _recurringSummary, value); }
     public string VersionText => $"Versione {AppInfo.Current.VersionString}";
     public bool DraftsEnabled { get => _draftsEnabled; private set => SetProperty(ref _draftsEnabled, value); }
+    public string AiInviteTitle { get => _aiInviteTitle; private set => SetProperty(ref _aiInviteTitle, value); }
+    public string AiInviteDetail { get => _aiInviteDetail; private set => SetProperty(ref _aiInviteDetail, value); }
 
     public void SetDraftsEnabled(bool enabled)
     {
@@ -38,15 +42,40 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, DraftCo
         RefreshRecapNotice();
     }
 
-    public async Task Load()
+    public Task Load()
     {
         RefreshRecapNotice();
         DraftsEnabled = draftConsent.IsEnabled;
+        RefreshAiAccess();
+        return RefreshPayments();
+    }
+
+    private async Task RefreshPayments()
+    {
         using var scope = scopeFactory.CreateScope();
         var list = await scope.ServiceProvider.GetRequiredService<RecurringPaymentListService>().Get();
         // The row keeps its last words when the list cannot be read: the payments page says what went wrong.
         if (list.IsSuccess)
             RecurringSummary = list.Value.ActiveSummary;
+    }
+
+    public void RefreshAiAccess()
+    {
+        if (aiAccess.HasInvitation)
+        {
+            AiInviteTitle = "Invito AI";
+            AiInviteDetail = aiAccess.IsInvitationVerified ? "Invito attivo" : DraftErrors.InviteVerificationUnavailable.Message;
+            return;
+        }
+
+        AiInviteTitle = "Attiva un invito";
+        var trials = aiAccess.TrialsRemaining switch
+        {
+            0 => "Prove gratuite esaurite",
+            1 => "1 prova gratuita rimasta",
+            var remaining => $"{remaining} prove gratuite rimaste"
+        };
+        AiInviteDetail = aiAccess.WasInvitationRevoked ? $"Invito revocato · {trials}" : trials;
     }
 
     public void RefreshRecapNotice()

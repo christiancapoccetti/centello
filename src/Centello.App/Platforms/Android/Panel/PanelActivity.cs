@@ -34,10 +34,16 @@ public sealed class PanelActivity : AppCompatActivity
     private Dictation? _dictation;
     private PanelSheet? _sheet;
     private AppEntryRouter? _router;
+    private AiAccess? _access;
+    private CancellationTokenSource? _preflight;
+    private (AppEntry.Panel? Entry, bool Restored)? _pendingEntry;
+    private (DraftSource Source, string SurveyUrl)? _blockedTrial;
+    private bool _postResumed;
 
     protected override async void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        _pendingEntry = (EntryOf(Intent), savedInstanceState is not null);
         if (IPlatformApplication.Current?.Services is not { } services)
         {
             Finish();
@@ -61,6 +67,8 @@ public sealed class PanelActivity : AppCompatActivity
         _services = services;
         _sheet = sheet;
         _router = services.GetRequiredService<AppEntryRouter>();
+        _access = services.GetRequiredService<AiAccess>();
+        _access.Changed += OnAiAccessChanged;
         SetContentView(sheet.Root);
         ApplySystemBars(IsDark(Resources.Configuration!));
 
@@ -69,7 +77,7 @@ public sealed class PanelActivity : AppCompatActivity
         sheet.Dismissed += Dismiss;
         OnBackPressedDispatcher.AddCallback(this, new BackToDismiss(Dismiss));
 
-        Start(EntryOf(Intent), restored: savedInstanceState is not null);
+        StartPendingEntry();
         Run(Tick);
     }
 
@@ -78,8 +86,20 @@ public sealed class PanelActivity : AppCompatActivity
     {
         base.OnNewIntent(intent);
         Intent = intent;
-        if (_sheet is not null)
-            Start(EntryOf(intent), restored: false);
+        _pendingEntry = (EntryOf(intent), false);
+    }
+
+    protected override void OnPostResume()
+    {
+        base.OnPostResume();
+        _postResumed = true;
+        StartPendingEntry();
+    }
+
+    protected override void OnPause()
+    {
+        _postResumed = false;
+        base.OnPause();
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -106,9 +126,11 @@ public sealed class PanelActivity : AppCompatActivity
 
     protected override void OnDestroy()
     {
+        if (_access is { } access)
+            access.Changed -= OnAiAccessChanged;
+
         _ticking.Cancel();
-        if (_capture is { } capture)
-            capture.Changed -= OnChanged;
+        Release();
 
         base.OnDestroy();
     }
@@ -117,6 +139,16 @@ public sealed class PanelActivity : AppCompatActivity
 
     private static bool IsDark(Configuration configuration) =>
         (configuration.UiMode & UiMode.NightMask) == UiMode.NightYes;
+
+    private void StartPendingEntry()
+    {
+        // On foreground entry, the process observer invalidates the previous session before post-resume.
+        if (!_postResumed || _sheet is null || _pendingEntry is not { } pending || IsFinishing || IsDestroyed)
+            return;
+
+        _pendingEntry = null;
+        Run(() => Start(pending.Entry, pending.Restored));
+    }
 
     private void ApplySystemBars(bool isDark)
     {
@@ -127,7 +159,7 @@ public sealed class PanelActivity : AppCompatActivity
         controller.AppearanceLightNavigationBars = !isDark;
     }
 
-    private void Start(AppEntry.Panel? entry, bool restored)
+    private async Task Start(AppEntry.Panel? entry, bool restored)
     {
         Release();
         if (entry is null || _services is null)
@@ -144,17 +176,53 @@ public sealed class PanelActivity : AppCompatActivity
         _capture = capture;
         _dictation = capture as Dictation;
         capture.Changed += OnChanged;
-        _sheet?.Show(PanelFaces.Of(capture.Source, capture.State));
-        Run(restored ? capture.Restore : capture.Begin);
+        _sheet?.Show(new PanelFace.Hidden());
+        await CheckAndBegin(capture, restored ? capture.Restore : capture.Begin);
     }
 
     private void Release()
     {
+        _blockedTrial = null;
+        _preflight?.Cancel();
+        _preflight = null;
         if (_capture is not { } capture)
             return;
 
+        _capture = null;
+        _dictation = null;
         capture.Changed -= OnChanged;
         Run(capture.Cancel);
+    }
+
+    private async Task CheckAndBegin(IPanelCapture capture, Func<Task> begin)
+    {
+        if (_services is not { } services || _preflight is not null)
+            return;
+
+        using var preflight = new CancellationTokenSource();
+        _preflight = preflight;
+        try
+        {
+            var access = await services.GetRequiredService<ExpenseDraftService>().CheckCapture(preflight.Token);
+            if (preflight.IsCancellationRequested || IsFinishing || !ReferenceEquals(_capture, capture))
+                return;
+
+            if (access.IsFailure)
+            {
+                ShowFace(capture.Source, access.Error == DraftErrors.ConsentRequired
+                    ? new PanelState.NeedsConsent()
+                    : new PanelState.Failed(access.Error));
+                return;
+            }
+
+            ShowFace(capture.Source, capture.State);
+            await begin();
+        }
+        finally
+        {
+            if (ReferenceEquals(_preflight, preflight))
+                _preflight = null;
+        }
     }
 
     private void OnChanged(object? sender, PanelState state)
@@ -170,27 +238,75 @@ public sealed class PanelActivity : AppCompatActivity
                 return;
         }
 
-        if (_capture is { } capture)
-            _sheet?.Show(PanelFaces.Of(capture.Source, state));
+        if (sender is IPanelCapture capture)
+            ShowFace(capture.Source, state);
     }
+
+    private void ShowFace(DraftSource source, PanelState state)
+    {
+        var surveyUrl = "";
+        _blockedTrial = null;
+        if (state is PanelState.Failed failed && failed.Error == DraftErrors.TrialExhausted)
+        {
+            surveyUrl = _access?.SurveyUrl ?? "";
+            _blockedTrial = (source, surveyUrl);
+        }
+
+        _sheet?.Show(PanelFaces.Of(source, state, surveyUrl));
+    }
+
+    private void OnAiAccessChanged() => MainThread.BeginInvokeOnMainThread(() =>
+    {
+        if (_blockedTrial is not { } blocked || IsFinishing || IsDestroyed || blocked.SurveyUrl == _access?.SurveyUrl)
+            return;
+
+        ShowFace(blocked.Source, new PanelState.Failed(DraftErrors.TrialExhausted));
+    });
 
     private void OnActionTapped(PanelAction action)
     {
-        if (action == PanelAction.OpenSettings)
+        switch (action)
         {
-            OpenApp(new AppEntry.Screen.Settings());
+            case PanelAction.OpenSettings:
+                OpenApp(new AppEntry.Screen.Settings());
+                break;
+            case PanelAction.OpenManual:
+                OpenApp(new AppEntry.Screen.NewExpense(null));
+                break;
+            case PanelAction.OpenInvitation:
+                OpenApp(new AppEntry.Screen.AiInvite());
+                break;
+            case PanelAction.OpenSurvey:
+                Run(OpenSurvey);
+                break;
+            case PanelAction.Retry when _capture is { } capture:
+                Run(() => CheckAndBegin(capture, capture.Retry));
+                break;
+        }
+    }
+
+    private async Task OpenSurvey()
+    {
+        var url = _access?.SurveyUrl;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var survey))
             return;
+
+        try
+        {
+            if (await Browser.Default.OpenAsync(survey, BrowserLaunchMode.External))
+                return;
+        }
+        catch (Exception exception)
+        {
+            Android.Util.Log.Warn(nameof(PanelActivity), exception.ToString());
         }
 
-        if (_capture is { } capture)
-            Run(capture.Retry);
+        Android.Widget.Toast.MakeText(this, "Non è stato possibile aprire il browser", Android.Widget.ToastLength.Short)?.Show();
     }
 
     private void Dismiss()
     {
-        if (_capture is { } capture)
-            Run(capture.Cancel);
-
+        Release();
         Finish();
     }
 

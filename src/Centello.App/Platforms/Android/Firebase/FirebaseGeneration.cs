@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Centello.Application;
 using Centello.FirebaseAi.Android;
 
@@ -6,9 +5,6 @@ namespace Centello.App;
 
 public sealed class FirebaseGeneration : IFirebaseGeneration
 {
-    private const string ConfigAsset = "firebase-android.json";
-    private static readonly Lazy<FirebaseOptions?> Options = new(ReadOptions);
-
     public async Task<Result<FirebaseGenerationResponse>> Generate(
         string prompt,
         string mediaType,
@@ -18,7 +14,7 @@ public sealed class FirebaseGeneration : IFirebaseGeneration
         if (cancellationToken.IsCancellationRequested)
             return Result<FirebaseGenerationResponse>.Failure(DraftErrors.Canceled);
 
-        var options = Options.Value;
+        var options = FirebaseAndroidOptions.Current;
         if (options is null)
             return Result<FirebaseGenerationResponse>.Failure(DraftErrors.Unavailable);
 
@@ -49,30 +45,6 @@ public sealed class FirebaseGeneration : IFirebaseGeneration
 
         return await callback.Task.ConfigureAwait(false);
     }
-
-    private static FirebaseOptions? ReadOptions()
-    {
-        try
-        {
-            using var stream = global::Android.App.Application.Context.Assets!.Open(ConfigAsset);
-            using var document = JsonDocument.Parse(stream);
-            var root = document.RootElement;
-
-            return root.TryGetProperty("applicationId", out var id) && id.GetString() is { Length: > 0 } appId
-                   && root.TryGetProperty("apiKey", out var key) && key.GetString() is { Length: > 0 } apiKey
-                   && root.TryGetProperty("projectId", out var project) && project.GetString() is { Length: > 0 } projectId
-                   && root.TryGetProperty("gcmSenderId", out var sender) && sender.GetString() is { Length: > 0 } senderId
-                ? new FirebaseOptions(appId, apiKey, projectId, senderId)
-                : null;
-        }
-        catch (Exception exception) when (exception is IOException or Java.IO.IOException
-                                          or JsonException or InvalidOperationException)
-        {
-            return null;
-        }
-    }
-
-    private sealed record FirebaseOptions(string ApplicationId, string ApiKey, string ProjectId, string SenderId);
 
     private sealed class GenerationCallback : Java.Lang.Object, IFirebaseAiCallback
     {

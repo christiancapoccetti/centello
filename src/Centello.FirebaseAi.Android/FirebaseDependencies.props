@@ -13,6 +13,7 @@
     <AndroidMavenLibrary Include="com.google.android.gms:play-services-base" Version="18.9.0" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.google.android.gms:play-services-basement" Version="18.9.0" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.google.android.gms:play-services-tasks" Version="18.4.0" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-abt" Version="24.0.0" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.google.firebase:firebase-ai" Version="18.2.0" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.google.firebase:firebase-ai-ondevice-interop" Version="16.0.0-beta08" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.google.firebase:firebase-annotations" Version="18.0.0" Repository="Google" Bind="false" />
@@ -21,6 +22,13 @@
     <AndroidMavenLibrary Include="com.google.firebase:firebase-auth-interop" Version="18.0.0" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.google.firebase:firebase-common" Version="23.0.0" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.google.firebase:firebase-components" Version="20.0.0" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-config" Version="24.0.1" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-config-interop" Version="17.0.0" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-encoders" Version="18.0.0" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-encoders-json" Version="19.0.0" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-installations" Version="20.0.0" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-installations-interop" Version="18.0.0" Repository="Google" Bind="false" />
+    <AndroidMavenLibrary Include="com.google.firebase:firebase-measurement-connector" Version="18.0.0" Repository="Google" Bind="false" />
     <AndroidMavenLibrary Include="com.squareup.okhttp3:okhttp" Version="4.12.0" Repository="Central" Bind="false" />
     <AndroidMavenLibrary Include="com.squareup.okhttp3:okhttp-sse" Version="4.12.0" Repository="Central" Bind="false" />
     <AndroidMavenLibrary Include="com.squareup.okio:okio-jvm" Version="3.12.0" Repository="Central" Bind="false" />
@@ -44,8 +52,8 @@
     <AndroidMavenLibrary Include="javax.inject:javax.inject" Version="1" Repository="Central" Bind="false" />
     <AndroidMavenLibrary Include="org.jetbrains.kotlin:kotlin-android-extensions-runtime" Version="1.9.22" Repository="Central" Bind="false" />
     <AndroidMavenLibrary Include="org.jetbrains.kotlin:kotlin-parcelize-runtime" Version="1.9.22" Repository="Central" Bind="false" />
-    <AndroidMavenLibrary Include="org.jetbrains.kotlin:kotlin-stdlib-jdk7" Version="1.8.21" Repository="Central" Bind="false" />
-    <AndroidMavenLibrary Include="org.jetbrains.kotlin:kotlin-stdlib-jdk8" Version="1.8.21" Repository="Central" Bind="false" />
+    <AndroidMavenLibrary Include="org.jetbrains.kotlin:kotlin-stdlib-jdk7" Version="2.1.21" Repository="Central" Bind="false" />
+    <AndroidMavenLibrary Include="org.jetbrains.kotlin:kotlin-stdlib-jdk8" Version="2.1.21" Repository="Central" Bind="false" />
     <AndroidMavenLibrary Include="org.jetbrains.kotlinx:kotlinx-coroutines-play-services" Version="1.10.2" Repository="Central" Bind="false" />
     <AndroidMavenLibrary Include="org.jetbrains.kotlinx:kotlinx-coroutines-reactive" Version="1.10.2" Repository="Central" Bind="false" />
     <AndroidMavenLibrary Include="org.jetbrains.kotlinx:kotlinx-coroutines-slf4j" Version="1.10.2" Repository="Central" Bind="false" />

@@ -8,15 +8,29 @@ public sealed class ExpenseDraftService(
     IInternetAccess internet,
     DraftConsent consent,
     IPdfPageCounter pdfPages,
-    IServiceScopeFactory scopeFactory)
+    IServiceScopeFactory scopeFactory,
+    AiAccess access)
 {
-    public async Task<Result> StartListening(CancellationToken cancellationToken = default)
+    public async Task<Result> CheckCapture(CancellationToken cancellationToken = default)
     {
         if (!consent.IsEnabled)
             return Result.Failure(DraftErrors.ConsentRequired);
 
+        var eligibility = await access.Check(cancellationToken);
+        if (eligibility.IsFailure)
+            return eligibility;
+
         if (!internet.IsAvailable)
             return Result.Failure(DraftErrors.NoInternet);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> StartListening(CancellationToken cancellationToken = default)
+    {
+        var eligibility = await CheckCapture(cancellationToken);
+        if (eligibility.IsFailure)
+            return eligibility;
 
         return await recorder.Start(cancellationToken);
     }
@@ -31,17 +45,12 @@ public sealed class ExpenseDraftService(
         if (audio.IsFailure)
             return Result<ExpenseDraft>.Failure(audio.Error);
 
-        if (!consent.IsEnabled)
-            return Result<ExpenseDraft>.Failure(DraftErrors.ConsentRequired);
+        var eligibility = await CheckCapture(cancellationToken);
+        if (eligibility.IsFailure)
+            return Result<ExpenseDraft>.Failure(eligibility.Error);
 
-        if (!internet.IsAvailable)
-            return Result<ExpenseDraft>.Failure(DraftErrors.NoInternet);
-
-        var categories = await LoadCategories(cancellationToken);
-        if (categories.IsFailure)
-            return Result<ExpenseDraft>.Failure(categories.Error);
-
-        return await interpreter.Interpret(audio.Value, categories.Value, Today(), cancellationToken);
+        return await Prepare(
+            categories => interpreter.Interpret(audio.Value, categories, Today(), cancellationToken), cancellationToken);
     }
 
     public async Task<Result<ExpenseDraft>> PrepareFromDocument(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
@@ -50,11 +59,9 @@ public sealed class ExpenseDraftService(
         if (document.IsFailure)
             return Result<ExpenseDraft>.Failure(document.Error);
 
-        if (!consent.IsEnabled)
-            return Result<ExpenseDraft>.Failure(DraftErrors.ConsentRequired);
-
-        if (!internet.IsAvailable)
-            return Result<ExpenseDraft>.Failure(DraftErrors.NoInternet);
+        var eligibility = await CheckCapture(cancellationToken);
+        if (eligibility.IsFailure)
+            return Result<ExpenseDraft>.Failure(eligibility.Error);
 
         if (document.Value.IsPdf)
         {
@@ -66,11 +73,29 @@ public sealed class ExpenseDraftService(
                 return Result<ExpenseDraft>.Failure(DraftErrors.PdfTooManyPages);
         }
 
+        return await Prepare(
+            categories => interpreter.Interpret(document.Value, categories, Today(), cancellationToken), cancellationToken);
+    }
+
+    private async Task<Result<ExpenseDraft>> Prepare(Func<IReadOnlyList<DraftCategory>, Task<Result<ExpenseDraft>>> interpret,
+        CancellationToken cancellationToken)
+    {
         var categories = await LoadCategories(cancellationToken);
         if (categories.IsFailure)
             return Result<ExpenseDraft>.Failure(categories.Error);
 
-        return await interpreter.Interpret(document.Value, categories.Value, Today(), cancellationToken);
+        return await access.Prepare(Interpret, cancellationToken);
+
+        async Task<Result<ExpenseDraft>> Interpret()
+        {
+            if (!consent.IsEnabled)
+                return Result<ExpenseDraft>.Failure(DraftErrors.ConsentRequired);
+
+            if (!internet.IsAvailable)
+                return Result<ExpenseDraft>.Failure(DraftErrors.NoInternet);
+
+            return await interpret(categories.Value);
+        }
     }
 
     private async Task<Result<IReadOnlyList<DraftCategory>>> LoadCategories(CancellationToken cancellationToken)

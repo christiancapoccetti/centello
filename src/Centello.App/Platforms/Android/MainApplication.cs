@@ -1,5 +1,6 @@
 using Android.App;
 using Android.Runtime;
+using AndroidX.Lifecycle;
 
 namespace Centello.App;
 
@@ -12,4 +13,10 @@ public class MainApplication : Microsoft.Maui.MauiApplication
 	}
 
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+
+	public override void OnCreate()
+	{
+		base.OnCreate();
+		ProcessLifecycleOwner.Get().Lifecycle.AddObserver(new AiAccessForegroundObserver(IPlatformApplication.Current!.Services));
+	}
 }

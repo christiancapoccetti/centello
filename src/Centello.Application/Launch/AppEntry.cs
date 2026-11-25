@@ -27,6 +27,7 @@ public abstract record AppEntry
         Screen.NewExpense => $"{Scheme}://expense/new",
         Screen.Draft => $"{Scheme}://expense/draft",
         Screen.Settings => $"{Scheme}://settings",
+        Screen.AiInvite => $"{Scheme}://settings/ai-invite",
         Screen.Recap { Period: var period } => RecapLink(period),
         Panel.VoicePanel => $"{Scheme}://panel/voice",
         Panel.PhotoPanel => $"{Scheme}://panel/photo",
@@ -48,6 +49,7 @@ public abstract record AppEntry
             "expense/new" => new Screen.NewExpense(CategoryOf(uri)),
             "expense/draft" => new Screen.Draft(),
             "settings" => new Screen.Settings(),
+            "settings/ai-invite" => new Screen.AiInvite(),
             "recap" => RecapOf(uri),
             "panel/voice" => new Panel.VoicePanel(),
             "panel/photo" => new Panel.PhotoPanel(),
@@ -96,6 +98,8 @@ public abstract record AppEntry
         public sealed record Draft : Screen;
 
         public sealed record Settings : Screen;
+
+        public sealed record AiInvite : Screen;
 
         /// <summary>The story of a month or a year, opened over Insight on that period.</summary>
         public sealed record Recap(Period Period) : Screen;

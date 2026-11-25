@@ -27,6 +27,9 @@
                         <Setter TargetName="CaptureButtons" Property="Grid.ColumnDefinitions" Value="*,1,48,1,48" />
                         <Setter TargetName="PhotoMenu" Property="Border.Margin" Value="16,0,16,72" />
                         <Setter TargetName="PhotoMenu" Property="Border.HorizontalOptions" Value="Start" />
+                        <Setter TargetName="AccessCard" Property="Border.HorizontalOptions" Value="End" />
+                        <Setter TargetName="AccessCard" Property="Border.MaximumWidthRequest" Value="420" />
+                        <Setter TargetName="AccessCard" Property="Border.Margin" Value="0,8,12,0" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="Portrait">
@@ -38,7 +41,7 @@
         </VisualStateManager.VisualStateGroups>
 
 
-        <c:PeriodSwitcher Grid.ColumnSpan="2" Margin="24,0,8,0" MinimumHeightRequest="56" VerticalOptions="Center" IsPageTitle="True" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
+        <c:PeriodSwitcher x:Name="PeriodHeader" Grid.ColumnSpan="2" Margin="24,0,8,0" MinimumHeightRequest="56" VerticalOptions="Center" IsPageTitle="True" Period="{Binding Overview.Period}" HasNext="{Binding Overview.Navigation.HasNext}" PreviousTapped="OnPreviousTapped" NextTapped="OnNextTapped" ToggleTapped="OnPeriodToggled" />
 
         <ScrollView x:Name="TodayOverview" Grid.Row="1">
             <VerticalStackLayout x:Name="OverviewBody" Padding="24,0,24,24">
@@ -246,6 +249,34 @@
                     </HorizontalStackLayout>
                     <Button Text="Chiudi" Clicked="OnCloseCaptureClicked" IsEnabled="{Binding Capture.HasError}" Style="{StaticResource TextActionButton}" />
                 </VerticalStackLayout>
+            </Border>
+        </Grid>
+        <Grid x:Name="AccessSheet" Grid.RowSpan="3" Grid.ColumnSpan="2" IsVisible="False">
+            <BoxView Color="{t:Theme Scrim}" AutomationProperties.IsInAccessibleTree="False">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAccessSheetDismissed" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+            <Border x:Name="AccessCard" VerticalOptions="End" BackgroundColor="{t:Theme Ground}" Stroke="{t:Theme Hairline}" StrokeShape="RoundRectangle 28,28,0,0">
+                <ScrollView VerticalScrollBarVisibility="Never">
+                    <VerticalStackLayout Padding="24,36,24,16" Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding Title}" Style="{StaticResource TitleLarge}" FontSize="26" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
+                            <Button Grid.Column="1" Margin="8,0,0,0" VerticalOptions="Start" Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.Close}" SemanticProperties.Description="Chiudi" IsVisible="{Binding IsTrialExhausted}" Clicked="OnAccessSheetDismissed" />
+                        </Grid>
+                        <Label Text="{Binding Lead}" Style="{StaticResource BodyMedium}" Margin="0,0,0,8" />
+                        <Button Text="Rispondi al sondaggio" Style="{StaticResource FilledButton}" IsVisible="{Binding CanOpenSurvey}" Clicked="OnSurveyClicked" />
+                        <Button Text="Inserisci a mano" Style="{StaticResource FilledButton}" Clicked="OnAccessManualClicked">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CanOpenSurvey}" Value="True">
+                                    <Setter Property="Style" Value="{StaticResource OutlinedButton}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Ho un codice invito" Style="{StaticResource TextActionButton}" IsVisible="{Binding CanRedeem}" Clicked="OnAccessInviteClicked" />
+                        <Button Text="Chiudi" Style="{StaticResource TextActionButton}" IsVisible="{Binding ShowsClose}" Clicked="OnAccessSheetDismissed" />
+                    </VerticalStackLayout>
+                </ScrollView>
             </Border>
         </Grid>
     </Grid>

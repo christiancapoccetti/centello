@@ -8,15 +8,18 @@ public partial class SettingsPage : ContentPage
     private const string PrivacyPolicyUrl = "https://christiancapoccetti.github.io/centello/privacy-policy.html";
 
     private readonly SettingsViewModel _viewModel;
+    private readonly AiAccess _aiAccess;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
     private Window? _settingsWindow;
     private bool _changingDraftConsent;
+    private bool _isVisible;
 
-    public SettingsPage(SettingsViewModel viewModel, IConfirmation confirmation, ISnackbar snackbar)
+    public SettingsPage(SettingsViewModel viewModel, AiAccess aiAccess, IConfirmation confirmation, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _aiAccess = aiAccess;
         _confirmation = confirmation;
         _snackbar = snackbar;
         BindingContext = viewModel;
@@ -25,6 +28,8 @@ public partial class SettingsPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _isVisible = true;
+        _aiAccess.Changed += OnAiAccessChanged;
         _settingsWindow = Window;
         if (_settingsWindow is not null)
             _settingsWindow.Activated += OnWindowActivated;
@@ -34,6 +39,8 @@ public partial class SettingsPage : ContentPage
 
     protected override void OnDisappearing()
     {
+        _isVisible = false;
+        _aiAccess.Changed -= OnAiAccessChanged;
         if (_settingsWindow is not null)
             _settingsWindow.Activated -= OnWindowActivated;
 
@@ -41,7 +48,17 @@ public partial class SettingsPage : ContentPage
         base.OnDisappearing();
     }
 
-    private void OnWindowActivated(object? sender, EventArgs e) => _viewModel.RefreshRecapNotice();
+    private void OnWindowActivated(object? sender, EventArgs e)
+    {
+        _viewModel.RefreshRecapNotice();
+        _viewModel.RefreshAiAccess();
+    }
+
+    private void OnAiAccessChanged() => Dispatcher.Dispatch(() =>
+    {
+        if (_isVisible)
+            _viewModel.RefreshAiAccess();
+    });
 
     private async void OnRecurringPaymentsTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(RecurringPaymentsPage));
@@ -51,6 +68,9 @@ public partial class SettingsPage : ContentPage
 
     private async void OnLicensesTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(LicensesPage));
+
+    private async void OnAiInviteTapped(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(nameof(AiInvitePage));
 
     private async void OnPrivacyPolicyTapped(object? sender, EventArgs e)
     {

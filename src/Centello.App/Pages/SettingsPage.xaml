@@ -50,6 +50,7 @@
                     <Label x:Name="SecondaryHeading" Text="Voce, foto e PDF" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Mic}" Title="Inserimento spese con l’AI" Detail="Detta una spesa o scegli una foto o un PDF" IsOn="{Binding DraftsEnabled, Mode=OneWay}" Kind="Toggle" Toggled="OnDraftConsentToggled" />
                     <c:NoteRow Margin="24,12,24,0" Glyph="{x:Static app:MaterialSymbols.Cloud}" Text="Per preparare la bozza, Centello invia a Google tramite Firebase AI Logic il contenuto scelto, i nomi delle categorie e dei tag attivi e la data di oggi. Puoi sempre inserire una spesa a mano." />
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.ConfirmationNumber}" Title="{Binding AiInviteTitle}" Detail="{Binding AiInviteDetail}" Kind="Navigation" Tapped="OnAiInviteTapped" />
 
                     <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Info}" Title="{Binding VersionText}" />

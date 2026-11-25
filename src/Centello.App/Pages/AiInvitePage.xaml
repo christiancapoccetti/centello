@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Centello.App.Controls"
+             xmlns:t="clr-namespace:Centello.App.Theming"
+             xmlns:app="clr-namespace:Centello.Application;assembly=Centello.Application"
+             xmlns:local="clr-namespace:Centello.App"
+             x:Class="Centello.App.Pages.AiInvitePage"
+             x:Name="RootPage"
+             Title="{Binding Title}"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             SafeAreaEdges="All">
+    <Grid RowDefinitions="56,*">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <c:PhoneLandscapeTrigger Page="{x:Reference RootPage}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Property="RowDefinitions" Value="48,*" />
+                        <Setter TargetName="Form" Property="c:PhoneLandscapeForm.IsSplit" Value="True" />
+                        <Setter TargetName="HeaderRule" Property="BoxView.IsVisible" Value="True" />
+                        <Setter TargetName="SectionDivider" Property="BoxView.IsVisible" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Portrait">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="True" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid Padding="4,0" ColumnDefinitions="48,*" ColumnSpacing="4">
+            <Button Style="{StaticResource IconGlyphButton}" Text="{x:Static app:MaterialSymbols.ArrowBack}" Clicked="OnBackClicked" SemanticProperties.Description="Indietro" />
+            <Label Grid.Column="1" Margin="4,0,0,0" Text="{Binding Title}" Style="{StaticResource TitleLarge}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+        <BoxView x:Name="HeaderRule" Style="{StaticResource Hairline}" VerticalOptions="End" InputTransparent="True" IsVisible="False" />
+
+        <c:PhoneLandscapeForm x:Name="Form" Grid.Row="1" local:SnackbarAnchor.IsAnchor="True">
+            <c:PhoneLandscapeForm.Primary>
+                <VerticalStackLayout Padding="24,24,24,0" Spacing="22">
+                    <VerticalStackLayout IsVisible="{Binding ShowForm}" Spacing="10">
+                        <Label Text="Condividi il tuo ID" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+                        <Label Text="Invialo a chi ti offre l’accesso. Riceverai un codice per questo telefono." Style="{StaticResource BodyLarge}" />
+                        <Label Text="{Binding InstallationId}" IsVisible="{Binding HasInstallationId}" FontSize="22" FontFamily="{x:Static t:Fonts.Bold}" LineBreakMode="CharacterWrap" Margin="0,4" />
+                        <Button Text="Condividi ID" Style="{StaticResource OutlinedButton}" IsVisible="{Binding HasInstallationId}" IsEnabled="{Binding CanShare}" Clicked="OnShareClicked" HorizontalOptions="Start" />
+                        <c:InlineError Text="{Binding InstallationIdError}" />
+                        <BoxView x:Name="SectionDivider" Style="{StaticResource Hairline}" Margin="0,14,0,0" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout IsVisible="{Binding IsActive}" Spacing="10">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Style="{StaticResource IconGlyph}" Text="{x:Static app:MaterialSymbols.CheckCircle}" />
+                            <Label Text="Invito attivo" Style="{StaticResource SectionTitle}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
+                        </HorizontalStackLayout>
+                        <Label Text="Puoi usare voce, foto e PDF senza consumare le prove gratuite. L’invito è valido su questo telefono, senza scadenza." Style="{StaticResource BodyLarge}" />
+                        <Button Text="Torna a Oggi" Style="{StaticResource FilledButton}" Clicked="OnTodayClicked" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </c:PhoneLandscapeForm.Primary>
+            <c:PhoneLandscapeForm.Secondary>
+                <VerticalStackLayout Padding="24,24,24,0" Spacing="10" IsVisible="{Binding ShowForm}">
+                    <Label Text="Codice di invito" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+                    <Border BackgroundColor="{t:Theme SurfaceRaised}" Stroke="{t:Theme Outline}" StrokeShape="RoundRectangle 4" Padding="8,2">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding HasInputError}" Value="True">
+                                <Setter Property="Stroke" Value="{t:Theme Alert}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Editor Text="{Binding Code}" Placeholder="Incolla il codice ricevuto" MinimumHeightRequest="76" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" IsEnabled="{Binding CanEdit}" SemanticProperties.Description="Codice di invito" />
+                    </Border>
+                    <c:InlineError Text="{Binding ErrorMessage}" />
+                    <c:IndeterminateBar IsVisible="{Binding IsBusy}" />
+                    <Button Text="{Binding ActivateText}" Style="{StaticResource FilledButton}" IsEnabled="{Binding CanActivate}" Clicked="OnActivateClicked">
+                        <Button.Triggers>
+                            <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.38" />
+                            </Trigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Text="Inserisci a mano" Style="{StaticResource TextActionButton}" IsVisible="{Binding HasError}" Clicked="OnManualClicked" />
+                </VerticalStackLayout>
+            </c:PhoneLandscapeForm.Secondary>
+        </c:PhoneLandscapeForm>
+    </Grid>
+</ContentPage>

@@ -61,7 +61,9 @@ test('stages only the matching Android client and SDK fields', context => {
     projectId: 'centello-fixture',
     gcmSenderId: '987654321098',
   });
-  assert.equal(statSync(result.output).mode & 0o777, 0o600);
+  // Windows uses ACLs. The Linux release runner enforces the POSIX mode.
+  if (process.platform !== 'win32')
+    assert.equal(statSync(result.output).mode & 0o777, 0o600);
 });
 
 test('stages dev configuration from the separate dev secret', context => {

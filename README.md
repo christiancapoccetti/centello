@@ -135,7 +135,8 @@ Google Play receives a signed Android App Bundle (AAB); Play App Signing re-sign
    ```
 
 8. Add `FIREBASE_ANDROID_PLAY_CONFIG_BASE64` as a secret in `play-closed-beta`. Use the one-line Base64 encoding of the Play project’s Android `google-services.json`. See the [Firebase operator checklist](docs/play-console.md#firebase-operator-checklist).
-9. Protect release tags matching `v*` with a repository ruleset: restrict tag creation to trusted release maintainers, and prevent updates and deletion. Only a trusted publisher should create and publish releases for verified commits on `main`.
+9. Set the `CENTELLO_INVITE_PUBLIC_KEY` Actions secret in `play-closed-beta` to the public key from the [invitation issuer](docs/play-console.md#issue-and-revoke-ai-invitations).
+10. Protect release tags matching `v*` with a repository ruleset: restrict tag creation to trusted release maintainers, and prevent updates and deletion. Only a trusted publisher should create and publish releases for verified commits on `main`.
 
 ### Publish a closed-testing release
 
@@ -152,6 +153,7 @@ $env:PLAY_UPLOAD_KEYSTORE = "$HOME\keys\play-upload.jks"
 $env:PLAY_UPLOAD_PASSWORD_FILE = Read-Host "Path to the private upload password file"
 $playConfig = Read-Host "Path to Play google-services.json"
 $env:FIREBASE_ANDROID_PLAY_CONFIG_BASE64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($playConfig))
+$env:CENTELLO_INVITE_PUBLIC_KEY = "<public key printed by the invitation issuer>"
 $stage = Join-Path ([IO.Path]::GetTempPath()) ("centello-firebase-" + [guid]::NewGuid() + ".json")
 try {
     node .github/scripts/stage-firebase-config.mjs play $stage
@@ -169,6 +171,10 @@ The signed bundle is `src/Centello.App/bin/Release/net10.0-android/it.christianc
 ## Assisted expense drafts
 
 In **Impostazioni → Voce, foto e PDF**, turn on **Inserimento spese con l’AI**, review the disclosure and select **Acconsento**. Turn off the same switch to stop new assisted requests. If you update from a version that used OpenAI, enable assisted drafts again. Manual entry works offline and without Firebase configuration.
+
+Each installation can generate five trial drafts across voice, photo, and PDF. A successful draft with usable fields counts even if you discard it in the editor. Failed or canceled requests and drafts with no usable fields leave the count unchanged.
+
+To continue after the trial, use **Attiva un invito** in the same settings section. Share the installation ID with the issuer and enter the code you receive. If the app cannot verify your invite, you can enter the expense by hand. After revocation, you can use any remaining trial drafts.
 
 - **Voice.** Tap the microphone on **Oggi** to start recording. The button shows a stop icon and the hint **In registrazione · Tocca per fermare**. Tap it again to prepare a draft for review, or wait for recording to stop automatically at 20 seconds. The launcher panel also stops at a second tap or after 20 seconds. Select **Annulla**, press Back, or leave the panel to cancel.
 - **Photo or PDF.** On **Oggi**, tap the camera and select **Scatta una foto** (Android 13 and later), **Scegli dalla galleria**, or **Scegli un PDF**. Centello re-encodes photos as JPEG at up to 1,600 pixels on the longest side and strips photo metadata. PDFs are limited to 5 MiB and 1,000 pages. Centello also checks the encoded request size before sending.

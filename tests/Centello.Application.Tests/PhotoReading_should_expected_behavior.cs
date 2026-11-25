@@ -275,7 +275,8 @@ public sealed class PhotoReading_should_expected_behavior
             new FakeInternetAccess(),
             new DraftConsent(_consentStore),
             new FakePdfPageCounter(),
-            scopes);
+            scopes,
+            new AiAccess(new FakeAiAccessStore(), new FakeAiRemoteConfig(), new FakeAiInviteVerifier(), TimeProvider.System));
         var reading = new PhotoReading(drafts, new DraftConsent(_consentStore), _camera);
         reading.Changed += (_, state) => _changes.Add(state);
         return reading;
