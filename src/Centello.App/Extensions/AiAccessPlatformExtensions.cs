@@ -7,6 +7,7 @@ public static class AiAccessPlatformExtensions
 {
     public static IServiceCollection AddAiAccessPlatform(this IServiceCollection services)
     {
+        services.AddSingleton<FeedbackForm>();
 #if ANDROID
         services.AddSingleton<IAiAccessStore, AndroidAiAccessStore>();
         services.AddSingleton<IAiRemoteConfig, FirebaseAiRemoteConfig>();

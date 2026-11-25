@@ -9,17 +9,19 @@ public partial class SettingsPage : ContentPage
 
     private readonly SettingsViewModel _viewModel;
     private readonly AiAccess _aiAccess;
+    private readonly FeedbackForm _feedbackForm;
     private readonly IConfirmation _confirmation;
     private readonly ISnackbar _snackbar;
     private Window? _settingsWindow;
     private bool _changingDraftConsent;
     private bool _isVisible;
 
-    public SettingsPage(SettingsViewModel viewModel, AiAccess aiAccess, IConfirmation confirmation, ISnackbar snackbar)
+    public SettingsPage(SettingsViewModel viewModel, AiAccess aiAccess, FeedbackForm feedbackForm, IConfirmation confirmation, ISnackbar snackbar)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _aiAccess = aiAccess;
+        _feedbackForm = feedbackForm;
         _confirmation = confirmation;
         _snackbar = snackbar;
         BindingContext = viewModel;
@@ -29,6 +31,8 @@ public partial class SettingsPage : ContentPage
     {
         base.OnAppearing();
         _isVisible = true;
+        _feedbackForm.Changed += OnFeedbackChanged;
+        _viewModel.RefreshFeedback();
         _aiAccess.Changed += OnAiAccessChanged;
         _settingsWindow = Window;
         if (_settingsWindow is not null)
@@ -40,6 +44,7 @@ public partial class SettingsPage : ContentPage
     protected override void OnDisappearing()
     {
         _isVisible = false;
+        _feedbackForm.Changed -= OnFeedbackChanged;
         _aiAccess.Changed -= OnAiAccessChanged;
         if (_settingsWindow is not null)
             _settingsWindow.Activated -= OnWindowActivated;
@@ -53,6 +58,8 @@ public partial class SettingsPage : ContentPage
         _viewModel.RefreshRecapNotice();
         _viewModel.RefreshAiAccess();
     }
+
+    private void OnFeedbackChanged() => Dispatcher.Dispatch(_viewModel.RefreshFeedback);
 
     private void OnAiAccessChanged() => Dispatcher.Dispatch(() =>
     {
@@ -72,11 +79,21 @@ public partial class SettingsPage : ContentPage
     private async void OnAiInviteTapped(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync(nameof(AiInvitePage));
 
-    private async void OnPrivacyPolicyTapped(object? sender, EventArgs e)
+    private async void OnFeedbackTapped(object? sender, EventArgs e)
+    {
+        if (_viewModel.FeedbackUrl is { } url)
+            await OpenLink(url);
+    }
+
+    private async void OnPrivacyPolicyTapped(object? sender, EventArgs e) =>
+        await OpenLink(new Uri(PrivacyPolicyUrl));
+
+    private async Task OpenLink(Uri url)
     {
         try
         {
-            await Launcher.Default.OpenAsync(new Uri(PrivacyPolicyUrl));
+            if (!await Launcher.Default.OpenAsync(url))
+                _snackbar.Show("Non è stato possibile aprire il browser");
         }
         catch
         {

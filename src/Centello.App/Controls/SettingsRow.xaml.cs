@@ -52,7 +52,8 @@ public partial class SettingsRow : ContentView
     private void Apply()
     {
         DetailLabel.IsVisible = Detail.HasValue();
-        Arrow.IsVisible = Kind == SettingsRowKind.Navigation;
+        Arrow.IsVisible = Kind is SettingsRowKind.Navigation or SettingsRowKind.ExternalLink;
+        Arrow.Text = Kind == SettingsRowKind.ExternalLink ? MaterialSymbols.OpenInNew : MaterialSymbols.ChevronRight;
         Switcher.IsVisible = Kind == SettingsRowKind.Toggle;
         Switcher.IsToggled = IsOn;
         Tap.IsVisible = Kind != SettingsRowKind.Info;
@@ -61,7 +62,12 @@ public partial class SettingsRow : ContentView
         SemanticProperties.SetDescription(Tap, string.Join(", ", new[] { Title, StateWord(), Detail }
             .Where(part => part.HasValue())
             .Distinct()));
-        SemanticProperties.SetHint(Tap, Kind == SettingsRowKind.Navigation ? "Apri" : "");
+        SemanticProperties.SetHint(Tap, Kind switch
+        {
+            SettingsRowKind.Navigation => "Apri",
+            SettingsRowKind.ExternalLink => "Si apre nel browser",
+            _ => ""
+        });
     }
 
     private string StateWord() => Kind != SettingsRowKind.Toggle ? "" : IsOn ? "Attivo" : "Spento";

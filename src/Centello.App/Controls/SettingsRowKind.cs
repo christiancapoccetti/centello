@@ -6,5 +6,6 @@ public enum SettingsRowKind
     Info,
     Action,
     Navigation,
-    Toggle
+    Toggle,
+    ExternalLink
 }

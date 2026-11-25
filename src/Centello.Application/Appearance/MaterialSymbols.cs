@@ -18,6 +18,7 @@ public static class MaterialSymbols
     public const string CalendarMonth = "\uEBCC";
     public const string CalendarToday = "\uE935";
     public const string Category = "\uE574";
+    public const string Chat = "\uE0B7";
     public const string Check = "\uE5CA";
     public const string CheckCircle = "\uE86C";
     public const string Checkroom = "\uF19E";

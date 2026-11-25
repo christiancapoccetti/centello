@@ -40,6 +40,10 @@ public final class FirebaseRemoteConfigBridge {
         return new FirebaseRemoteConfigBridge(FirebaseRemoteConfig.getInstance(app));
     }
 
+    public String getFeedbackFormUrl() {
+        return config.getString("feedback_form_url");
+    }
+
     public void listen(FirebaseRemoteConfigCallback updates) {
         if (registration != null) {
             return;

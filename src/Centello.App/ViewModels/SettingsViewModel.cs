@@ -5,7 +5,7 @@ namespace Centello.App.ViewModels;
 
 public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, DraftConsent draftConsent, AiAccess aiAccess,
     RecapNoticeAutomation recapNotices, IRecapNoticeSettings recapNoticeSettings, IRecapNoticeBoard recapNoticeBoard,
-    INotificationPermission notificationPermission) : ObservableObject
+    INotificationPermission notificationPermission, FeedbackForm feedbackForm) : ObservableObject
 {
     private string _recurringSummary = "";
     private bool _draftsEnabled;
@@ -21,6 +21,10 @@ public sealed class SettingsViewModel(IServiceScopeFactory scopeFactory, DraftCo
     public bool RecapNoticeBlocked { get => _recapNoticeBlocked; private set => SetProperty(ref _recapNoticeBlocked, value); }
     public string RecurringSummary { get => _recurringSummary; private set => SetProperty(ref _recurringSummary, value); }
     public string VersionText => $"Versione {AppInfo.Current.VersionString}";
+    public Uri? FeedbackUrl => feedbackForm.Url;
+    public bool HasFeedbackForm => FeedbackUrl is not null;
+    public void RefreshFeedback() => OnPropertyChanged(nameof(HasFeedbackForm));
+
     public bool DraftsEnabled { get => _draftsEnabled; private set => SetProperty(ref _draftsEnabled, value); }
     public string AiInviteTitle { get => _aiInviteTitle; private set => SetProperty(ref _aiInviteTitle, value); }
     public string AiInviteDetail { get => _aiInviteDetail; private set => SetProperty(ref _aiInviteDetail, value); }
