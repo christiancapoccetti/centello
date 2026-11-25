@@ -113,14 +113,17 @@ public sealed class PanelFaces_should_expected_behavior
     }
 
     [Theory]
-    [InlineData("https://forms.gle/example", true)]
-    [InlineData("", false)]
-    public void Show_a_survey_for_exhausted_trials_only_when_a_link_is_available(string surveyUrl, bool showsSurvey)
+    [InlineData("https://forms.gle/example", true,
+        "Creare una bozza da voce, foto o PDF ha un costo. Stiamo valutando un piano mensile: ti interesserebbe? Con due domande puoi dirci se lo useresti e quanto spenderesti.")]
+    [InlineData("", false, "Creare una bozza da voce, foto o PDF ha un costo.")]
+    public void Show_a_survey_for_exhausted_trials_only_when_a_link_is_available(string surveyUrl, bool showsSurvey,
+        string explanation)
     {
         var face = PanelFaces.Of(DraftSource.Voice, new PanelState.Failed(DraftErrors.TrialExhausted), surveyUrl);
 
         var blocked = Assert.IsType<PanelFace.AccessBlocked>(face);
         Assert.Equal("Hai usato le 5 prove gratuite", blocked.Title);
+        Assert.Equal(explanation + "\n\nPuoi sempre inserire le spese a mano gratuitamente.", blocked.Lead);
         Assert.True(blocked.IsTrialExhausted);
         Assert.Equal(surveyUrl, blocked.SurveyUrl);
         Assert.Equal(showsSurvey, blocked.CanOpenSurvey);

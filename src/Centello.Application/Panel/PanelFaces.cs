@@ -68,11 +68,14 @@ public static class PanelFaces
     {
         if (error == DraftErrors.TrialExhausted)
         {
+            var explanation = "Creare una bozza da voce, foto o PDF ha un costo.";
+            if (surveyUrl.Length > 0)
+                explanation += " Stiamo valutando un piano mensile: ti interesserebbe?"
+                    + " Con due domande puoi dirci se lo useresti e quanto spenderesti.";
+
             return new PanelFace.AccessBlocked(
                 "Hai usato le 5 prove gratuite",
-                surveyUrl.Length > 0
-                    ? "Ti piacerebbe continuare a usare voce, foto e PDF? Dicci cosa ne pensi in due domande."
-                    : "Puoi inserire la spesa a mano o attivare un invito per continuare a usare voce, foto e PDF.",
+                explanation + "\n\nPuoi sempre inserire le spese a mano gratuitamente.",
                 surveyUrl,
                 CanRedeem: true,
                 IsTrialExhausted: true);

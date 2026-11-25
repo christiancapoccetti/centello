@@ -5,6 +5,7 @@ namespace Centello.App;
 
 internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
 {
+    private const string Tag = "CentelloRemoteConfig";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(8);
     private readonly SemaphoreSlim _fetchGate = new(1);
     private readonly object _bridgeGate = new();
@@ -27,6 +28,7 @@ internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            global::Android.Util.Log.Warn(Tag, $"Managed fetch deadline exceeded (force={force}).");
             return null;
         }
     }
@@ -49,15 +51,18 @@ internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
 
             var bridge = GetBridge();
             if (bridge is null)
+            {
+                global::Android.Util.Log.Warn(Tag, "Firebase options or Remote Config bridge unavailable.");
                 return null;
+            }
 
             var completion = new TaskCompletionSource<AiRemoteSettings?>(TaskCreationOptions.RunContinuationsAsynchronously);
             bridge.Fetch(force, new SettingsCallback(settings => completion.TrySetResult(settings)));
             return await completion.Task.ConfigureAwait(false);
         }
-        catch (Java.Lang.Exception exception)
+        catch (Exception exception)
         {
-            global::Android.Util.Log.Warn("Centello", $"Remote Config failed: {exception.Class?.SimpleName}");
+            global::Android.Util.Log.Warn(Tag, $"Managed fetch failed: {exception.GetType().Name}");
             return null;
         }
         finally
@@ -97,9 +102,9 @@ internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
                 else
                     _bridge.StopListening();
             }
-            catch (Java.Lang.Exception exception)
+            catch (Exception exception)
             {
-                global::Android.Util.Log.Warn("Centello", $"Remote Config listener failed: {exception.Class?.SimpleName}");
+                global::Android.Util.Log.Warn(Tag, $"Managed listener failed: {exception.GetType().Name}");
             }
         }
     }
@@ -112,7 +117,11 @@ internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
 
     private sealed class SettingsCallback(Action<AiRemoteSettings?> publish) : Java.Lang.Object, IFirebaseRemoteConfigCallback
     {
-        public void OnSettings(string? surveyUrl, string? revokedInviteIds) =>
-            publish(FirebaseAiSettings.Parse(surveyUrl, revokedInviteIds));
+        public void OnSettings(string? surveyUrl, string? revokedInviteIds)
+        {
+            var settings = FirebaseAiSettings.Parse(surveyUrl, revokedInviteIds);
+            global::Android.Util.Log.Info(Tag, $"Managed settings received: valid={settings is not null}.");
+            publish(settings);
+        }
     }
 }

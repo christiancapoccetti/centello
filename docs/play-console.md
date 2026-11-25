@@ -95,7 +95,7 @@ Keep the issuer directory outside Git and CI. The issuer uses `CENTELLO_INVITE_H
 
 Enable the Firebase Remote Config Realtime API in the same project. If you restrict the Android API key, allow the Firebase Remote Config, Firebase Remote Config Realtime and Firebase Installations APIs. [Firebase API key restrictions](https://firebase.google.com/docs/projects/api-keys)
 
-Centello requires a fresh Remote Config response at redemption and when an invited installation returns to the foreground. If verification reaches 12 hours, the next draft request requires another refresh. The app listens for published updates during invited use. Ordinary Remote Config fetches use a 12-hour minimum interval. If verification fails, use manual entry. Once Centello confirms revocation, it clears the invitation and allows any remaining trial drafts.
+Centello requires a fresh Remote Config response at redemption and when an invited installation returns to the foreground. If verification reaches 12 hours, the next draft request requires another refresh. The app listens for published updates during invited use. Ordinary Remote Config fetches use a 12-hour minimum interval. If the cached template lacks both access parameters, Centello forces one refresh per app process to pick up a template published after the first install. A form URL explicitly published as blank keeps the form hidden. If verification fails, use manual entry. Once Centello confirms revocation, it clears the invitation and allows any remaining trial drafts.
 
 ### Live acceptance ledger
 
