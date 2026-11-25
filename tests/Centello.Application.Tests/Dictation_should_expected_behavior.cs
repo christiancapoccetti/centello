@@ -29,7 +29,8 @@ public sealed class Dictation_should_expected_behavior
             new FakeInternetAccess(),
             new DraftConsent(_consentStore),
             new FakePdfPageCounter(),
-            scopes);
+            scopes,
+            new AiAccess(new FakeAiAccessStore(), new FakeAiRemoteConfig(), new FakeAiInviteVerifier(), _clock));
         _interpreter.Draft = new ExpenseDraft(10_000, null, null, null, "", DraftSource.Voice, "cento euro carburante");
         _dictation = new Dictation(drafts, new DraftConsent(_consentStore), _microphone, _clock);
         _dictation.Changed += (_, state) => _changes.Add(state);

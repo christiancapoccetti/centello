@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ExpenseExportService>();
         services.AddSingleton<RecurringPaymentAutomation>();
         services.AddSingleton<DraftConsent>();
+        services.AddSingleton<AiAccess>();
         services.AddSingleton<ExpenseDraftService>();
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<Dictation>();
