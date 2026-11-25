@@ -22,7 +22,7 @@ Centello stores your expense records, categories, tags, budgets, and recurring p
 
 On versions with AI trials, each Centello installation can generate five successful trial drafts across voice, photo, and PDF. A successful draft with usable fields counts even if you discard it. Centello keeps the trial count, its own installation ID, and any redeemed invitation on your phone. Android backup and device transfer exclude these access records.
 
-When you open or return to Centello, the app checks Firebase Remote Config for the interest form link and revocation list, even with assisted entry turned off. It can also check when you redeem or use an invitation. Google uses a separate Firebase installation identifier for Remote Config. Centello's shareable installation ID, trial count, and invitation code stay out of these requests.
+When you open or return to Centello, the app checks Firebase Remote Config for the feedback and interest-form links and the revocation list, even with assisted entry turned off. It can also check when you redeem or use an invitation. Google uses a separate Firebase installation identifier for Remote Config. Centello's shareable installation ID, trial count, and invitation code stay out of these requests.
 
 If you request an invitation, you can share Centello's installation ID with the issuer. The issuer keeps a local record of that ID, the invite ID, and a label, and may keep a copy of the signed code. These records help the issuer identify your invitation if it needs to be revoked. The published revocation list contains the IDs of revoked invitations.
 
@@ -74,7 +74,7 @@ OpenAI processes the requests under the terms that apply to your API account. Ce
 - **Microphone.** Centello uses it to record an expense you dictate.
 - **Camera.** Centello uses it when you choose to take a photo of an expense. Android's pickers give Centello access to the photo or PDF you select.
 - **Notifications.** Centello posts local recap and recurring payment notifications. For one recorded payment, the notification shows its note or, if the note is empty, its category name. For multiple payments, it shows the count. Tap the notification to open **Oggi**. You can control recap reminders in **Impostazioni** and notification display in Android settings.
-- **Internet and network state.** Centello uses these for Firebase Remote Config and for optional assisted entry with Google, or with OpenAI in earlier versions. If you open this policy or the interest form from the app, your browser loads it separately.
+- **Internet and network state.** Centello uses these for Firebase Remote Config and for optional assisted entry with Google, or with OpenAI in earlier versions. If you open this policy, the feedback form, or the interest form from the app, your browser loads it separately.
 - **Run at startup.** Centello uses Android's startup signal to reschedule local reminders after a restart.
 
 ## Retention, deletion, and rights

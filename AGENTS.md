@@ -55,4 +55,4 @@ Coding guidelines for Centello. Project-local agent instructions override or ext
 
 - Never push to `master` or `main` unless the user explicitly asks for that push; otherwise all changes go through the project's normal branch and review workflow, and pushing is done by the user.
 - Keep commit messages and pull request descriptions focused on the change. Omit attribution trailers and session links.
-- Keep local plans and tool-specific working files out of commits. Use `.git/info/exclude` for these files.
+- Keep new design proposals, mockup assets, and implementation plans local, including during the Feature workflow. The root `mockups/` and `plans/` directories are ignored. Never force-add these artifacts. Use `.git/info/exclude` for other local tool-specific files.

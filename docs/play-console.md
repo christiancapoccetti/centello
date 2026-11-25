@@ -87,7 +87,7 @@ Use an internet-connected Android device with the Play-distributed build. The Go
 ### Issue and revoke AI invitations
 
 1. Run `node tools/Centello.Invites/invites.mjs init-env` once in a private operator environment. It creates `issuer.env` and prints the Base64 Ed25519 public key. Store that public value in the GitHub Actions environment secret `CENTELLO_INVITE_PUBLIC_KEY` under `play-closed-beta`. The signed app embeds the public key. For a passphrase-encrypted PEM, use `init` instead.
-2. In the applicable Firebase project, open **Remote Config**. Set `revoked_invite_ids` to a JSON array. Start with `[]`. For `ai_interest_form_url`, use an HTTPS Google Forms link on `forms.gle` or under `docs.google.com/forms/`. Leave the URL blank to hide the form. Publish both parameters before testing redemption.
+2. In the applicable Firebase project, open **Remote Config**. Set `revoked_invite_ids` to a JSON array. Start with `[]`. For `ai_interest_form_url`, use an HTTPS Google Forms link on `forms.gle` or under `docs.google.com/forms/`. For `feedback_form_url`, use the HTTPS destination for **Impostazioni → Feedback veloce**; an empty value hides that row. The app accepts only absolute HTTPS URLs. Publish the parameters before testing redemption and Settings.
 3. Ask the tester to share the installation ID from **Impostazioni → Voce, foto e PDF → Attiva un invito**. Run `node tools/Centello.Invites/invites.mjs issue <installation-id> "<local-label>"`. Send the printed code to the tester for that installation. The label stays in the local issuer records.
 4. Run `node tools/Centello.Invites/invites.mjs list` to find the invite ID. To revoke it, run `node tools/Centello.Invites/invites.mjs revoke <invite-id>`. Append that ID as a string to the existing `revoked_invite_ids` array and publish the update. The command records revocation locally. The published array controls access on devices.
 
@@ -96,6 +96,8 @@ Keep the issuer directory outside Git and CI. The issuer uses `CENTELLO_INVITE_H
 Enable the Firebase Remote Config Realtime API in the same project. If you restrict the Android API key, allow the Firebase Remote Config, Firebase Remote Config Realtime and Firebase Installations APIs. [Firebase API key restrictions](https://firebase.google.com/docs/projects/api-keys)
 
 Centello requires a fresh Remote Config response at redemption and when an invited installation returns to the foreground. If verification reaches 12 hours, the next draft request requires another refresh. The app listens for published updates during invited use. Ordinary Remote Config fetches use a 12-hour minimum interval. If the cached template lacks both access parameters, Centello forces one refresh per app process to pick up a template published after the first install. A form URL explicitly published as blank keeps the form hidden. If verification fails, use manual entry. Once Centello confirms revocation, it clears the invitation and allows any remaining trial drafts.
+
+The Settings feedback row uses the independently configured `feedback_form_url` value from the same Remote Config client. It is visible only when the activated value is a valid absolute HTTPS URL and opens that destination in the device browser. Removing the value hides the row; a failed refresh keeps the last activated value.
 
 ### Live acceptance ledger
 

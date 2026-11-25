@@ -53,6 +53,7 @@
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.ConfirmationNumber}" Title="{Binding AiInviteTitle}" Detail="{Binding AiInviteDetail}" Kind="Navigation" Tapped="OnAiInviteTapped" />
 
                     <Label Text="Informazioni" Style="{StaticResource SectionTitle}" Margin="24,24,24,2" SemanticProperties.HeadingLevel="Level2" />
+                    <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Chat}" Title="Feedback veloce" Detail="Scrivi due righe su Google Moduli." Kind="ExternalLink" IsVisible="{Binding HasFeedbackForm}" Tapped="OnFeedbackTapped" />
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Info}" Title="{Binding VersionText}" />
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Description}" Title="Licenze" Detail="Centello e componenti open source" Kind="Navigation" Tapped="OnLicensesTapped" />
                     <c:SettingsRow Glyph="{x:Static app:MaterialSymbols.Visibility}" Title="Informativa sulla privacy" Detail="Si apre nel browser" Kind="Action" Tapped="OnPrivacyPolicyTapped" />

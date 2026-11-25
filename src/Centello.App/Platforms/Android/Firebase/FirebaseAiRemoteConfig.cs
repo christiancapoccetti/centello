@@ -3,7 +3,7 @@ using Centello.FirebaseAi.Android;
 
 namespace Centello.App;
 
-internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
+internal sealed class FirebaseAiRemoteConfig(FeedbackForm feedbackForm) : IAiRemoteConfig
 {
     private const string Tag = "CentelloRemoteConfig";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(8);
@@ -56,9 +56,12 @@ internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
                 return null;
             }
 
+            feedbackForm.Apply(bridge.FeedbackFormUrl);
             var completion = new TaskCompletionSource<AiRemoteSettings?>(TaskCreationOptions.RunContinuationsAsynchronously);
             bridge.Fetch(force, new SettingsCallback(settings => completion.TrySetResult(settings)));
-            return await completion.Task.ConfigureAwait(false);
+            var settings = await completion.Task.ConfigureAwait(false);
+            feedbackForm.Apply(bridge.FeedbackFormUrl);
+            return settings;
         }
         catch (Exception exception)
         {
@@ -111,6 +114,9 @@ internal sealed class FirebaseAiRemoteConfig : IAiRemoteConfig
 
     private void PublishUpdate(AiRemoteSettings? settings)
     {
+        if (_bridge is { } bridge)
+            feedbackForm.Apply(bridge.FeedbackFormUrl);
+
         if (_listen)
             Updated?.Invoke(settings);
     }
