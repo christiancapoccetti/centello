@@ -135,7 +135,7 @@ Google Play receives a signed Android App Bundle (AAB); Play App Signing re-sign
    ```
 
 8. Add `FIREBASE_ANDROID_PLAY_CONFIG_BASE64` as a secret in `play-closed-beta`. Use the one-line Base64 encoding of the Play project’s Android `google-services.json`. See the [Firebase operator checklist](docs/play-console.md#firebase-operator-checklist).
-9. Set the `CENTELLO_INVITE_PUBLIC_KEY` variable in `play-closed-beta` to the public key from the [invitation issuer](docs/play-console.md#issue-and-revoke-ai-invitations).
+9. Set the `CENTELLO_INVITE_PUBLIC_KEY` Actions secret in `play-closed-beta` to the public key from the [invitation issuer](docs/play-console.md#issue-and-revoke-ai-invitations).
 10. Protect release tags matching `v*` with a repository ruleset: restrict tag creation to trusted release maintainers, and prevent updates and deletion. Only a trusted publisher should create and publish releases for verified commits on `main`.
 
 ### Publish a closed-testing release

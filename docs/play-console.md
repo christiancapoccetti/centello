@@ -86,12 +86,12 @@ Use an internet-connected Android device with the Play-distributed build. The Go
 
 ### Issue and revoke AI invitations
 
-1. Run `node tools/Centello.Invites/invites.mjs init` once and enter a passphrase. The tool prints the Base64 Ed25519 public key. Set it as the `CENTELLO_INVITE_PUBLIC_KEY` variable in the GitHub environment `play-closed-beta` before building the Play release.
+1. Run `node tools/Centello.Invites/invites.mjs init-env` once in a private operator environment. It creates `issuer.env` and prints the Base64 Ed25519 public key. Store that public value in the GitHub Actions environment secret `CENTELLO_INVITE_PUBLIC_KEY` under `play-closed-beta`. The signed app embeds the public key. For a passphrase-encrypted PEM, use `init` instead.
 2. In the applicable Firebase project, open **Remote Config**. Set `revoked_invite_ids` to a JSON array. Start with `[]`. For `ai_interest_form_url`, use an HTTPS Google Forms link on `forms.gle` or under `docs.google.com/forms/`. Leave the URL blank to hide the form. Publish both parameters before testing redemption.
 3. Ask the tester to share the installation ID from **Impostazioni → Voce, foto e PDF → Attiva un invito**. Run `node tools/Centello.Invites/invites.mjs issue <installation-id> "<local-label>"`. Send the printed code to the tester for that installation. The label stays in the local issuer records.
 4. Run `node tools/Centello.Invites/invites.mjs list` to find the invite ID. To revoke it, run `node tools/Centello.Invites/invites.mjs revoke <invite-id>`. Append that ID as a string to the existing `revoked_invite_ids` array and publish the update. The command records revocation locally. The published array controls access on devices.
 
-Keep the issuer directory and its backup outside Git and CI. The issuer uses `CENTELLO_INVITE_HOME` when set. On Windows, the default is `%LOCALAPPDATA%/Centello/Invites`. Back up the encrypted `issuer.pkcs8.pem`, the labeled `issued` records, and the `revoked` markers. Keep the passphrase separately from the backup.
+Keep the issuer directory outside Git and CI. The issuer uses `CENTELLO_INVITE_HOME` when set. On Windows, the default is `%LOCALAPPDATA%/Centello/Invites`. The portable `issuer.env` contains the signing key and grants the ability to issue invitations. Restrict read access to the operator and keep a backup in an encrypted volume, together with the `issued` and `revoked` records. For a PEM issuer, back up `issuer.pkcs8.pem` and keep its passphrase separately.
 
 Enable the Firebase Remote Config Realtime API in the same project. If you restrict the Android API key, allow the Firebase Remote Config, Firebase Remote Config Realtime and Firebase Installations APIs. [Firebase API key restrictions](https://firebase.google.com/docs/projects/api-keys)
 
