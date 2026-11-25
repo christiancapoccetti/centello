@@ -439,5 +439,6 @@ FodyWeavers.xsd
 
 # Local design tools, working plans, and private files
 /.impeccable/
+/mockups/
 /plans/
 /private/
