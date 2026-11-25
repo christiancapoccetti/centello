@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Feedback veloce · Impostazioni di Centello</title>
+  <link rel="stylesheet" href="2026-11-25-ai-invites-assets/preview.css">
+  <style>
+    body { display:grid; grid-template-columns:1fr; }
+    .phone { height:auto; min-height:0; --line:#2a2c2f; }
+    header, section { padding:0 24px; }
+    header h1 { font-size:20px; margin:16px 0; }
+    section { padding-top:12px; padding-bottom:12px; }
+    section h2 { font-size:18px !important; margin-bottom:2px; }
+    .setting { display:grid; grid-template-columns:36px 1fr auto; align-items:center; gap:14px;
+      min-height:64px; padding:10px 0; border-bottom:1px solid var(--line); color:inherit; text-decoration:none; }
+    .setting strong { font-weight:650; display:block; line-height:1.3; }
+    .setting small { display:block; color:var(--muted); font-size:13px; line-height:1.4; }
+    .setting[hidden] { display:none; }
+    a:hover, a:focus-visible { background:var(--raised); }
+    a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .out { color:var(--muted); font-size:19px; }
+    footer { margin-top:16px; padding:12px 0 24px; display:flex; justify-content:space-around; border-top:1px solid var(--line); }
+    footer span { text-align:center; color:var(--muted); font-size:12px; }
+    footer i { display:block; margin-bottom:4px; }
+    footer .active { color:var(--ink); font-weight:bold; }
+    footer .active i { color:var(--accent); }
+    @media(max-width:700px) {
+      .phone { width:100%; min-height:100dvh; }
+      footer { margin-top:auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage"><article class="phone" aria-label="Impostazioni di Centello">
+    <div class="status" aria-hidden="true">09:41 <span class="system-status"><i></i><b></b></span></div>
+    <header><h1>Impostazioni</h1></header>
+    <section aria-labelledby="information">
+      <h2 id="information">Informazioni</h2>
+      <a class="setting" id="feedback" target="_blank" rel="noopener noreferrer" hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-6 4V5a2 2 0 0 1 2-2Z"/><path stroke="var(--bg)" stroke-width="2" stroke-linecap="round" d="M7 8h10M7 13h6"/></svg>
+        <span><strong>Feedback veloce</strong><small>Scrivi due righe su Google Moduli.</small></span>
+        <i class="icon out" aria-hidden="true">&#xe89e;</i>
+      </a>
+      <div class="setting"><i class="icon" aria-hidden="true">&#xe88e;</i><strong>Versione 1.2</strong></div>
+      <div class="setting"><i class="icon" aria-hidden="true">&#xe873;</i><span><strong>Licenze</strong><small>Centello e componenti open source</small></span><i class="icon out" aria-hidden="true">&#xe5cc;</i></div>
+      <div class="setting"><i class="icon" aria-hidden="true">&#xe8f4;</i><span><strong>Informativa sulla privacy</strong><small>Si apre nel browser</small></span></div>
+    </section>
+    <footer aria-label="Schede di Centello">
+      <span><i class="icon" aria-hidden="true">&#xe88a;</i>Oggi</span>
+      <span><i class="icon" aria-hidden="true">&#xe26b;</i>Insight</span>
+      <span><i class="icon" aria-hidden="true">&#xe574;</i>Categorie</span>
+      <span class="active" aria-current="page"><i class="icon" aria-hidden="true">&#xe8b8;</i>Impostazioni</span>
+    </footer>
+    <div class="gesture" aria-hidden="true"></div>
+  </article></main>
+  <!-- Sample activated Firebase Remote Config values for the offline design preview. -->
+  <script type="application/json" id="remote-config">{"feedback_form_url":"https://forms.example/centello/feedback"}</script>
+  <script>
+    const { feedback_form_url } = JSON.parse(document.getElementById('remote-config').textContent);
+    if (typeof feedback_form_url === 'string' && /^https:\/\//i.test(feedback_form_url) && URL.canParse(feedback_form_url)) {
+      const feedback = document.getElementById('feedback');
+      feedback.href = feedback_form_url;
+      feedback.hidden = false;
+    }
+  </script>
+</body>
+</html>
