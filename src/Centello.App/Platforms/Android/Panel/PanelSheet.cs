@@ -56,12 +56,12 @@ internal sealed class PanelSheet
     private readonly LinearLayout _actions;
     private readonly TextView _cancel;
     private readonly TextView _primary;
-    private readonly View _handle;
     private readonly LinearLayout _accessActions;
     private readonly TextView _survey;
     private readonly TextView _manual;
     private readonly TextView _invitation;
     private readonly TextView _closeAccess;
+    private readonly TextView _closeTrial;
     private bool _isDark;
     private bool _landscape;
     private AndroidX.Core.Graphics.Insets? _insets;
@@ -79,6 +79,22 @@ internal sealed class PanelSheet
         _title = Text(20, Fonts.Bold);
         _title.SetLineSpacing(0, 1.25f);
         _title.AccessibilityLiveRegion = AccessibilityLiveRegion.Polite;
+        _closeTrial = new global::Android.Widget.Button(context)
+        {
+            Text = MaterialSymbols.Close,
+            Typeface = _fonts.GetTypeface(Microsoft.Maui.Font.OfSize(Fonts.Icons, 24)),
+            ContentDescription = "Chiudi",
+            Gravity = GravityFlags.Center,
+            Background = null,
+            StateListAnimator = null
+        };
+        _closeTrial.SetTextSize(ComplexUnitType.Dip, 24);
+        _closeTrial.SetIncludeFontPadding(false);
+        _closeTrial.SetPadding(0, 0, 0, 0);
+        _closeTrial.Click += (_, _) => Dismissed?.Invoke();
+        var titleRow = new LinearLayout(context) { Orientation = Orientation.Horizontal };
+        titleRow.AddView(_title, new LinearLayout.LayoutParams(0, Wrap, 1) { Gravity = GravityFlags.CenterVertical });
+        titleRow.AddView(_closeTrial, new LinearLayout.LayoutParams(Dp(Target), Dp(Target)) { LeftMargin = Dp(8) });
         _lead = Text(15, Fonts.Regular);
         _lead.SetLineSpacing(0, 1.35f);
 
@@ -137,7 +153,6 @@ internal sealed class PanelSheet
         _actions.AddView(new View(context), new LinearLayout.LayoutParams(0, 1, 1));
         _actions.AddView(_primary, new LinearLayout.LayoutParams(Wrap, Dp(Target)));
 
-        _handle = new View(context) { ImportantForAccessibility = ImportantForAccessibility.No };
         _accessActions = new LinearLayout(context) { Orientation = Orientation.Vertical };
         _survey = AddAccessAction("Rispondi al sondaggio", PanelAction.OpenSurvey);
         _manual = AddAccessAction("Inserisci a mano", PanelAction.OpenManual);
@@ -146,12 +161,7 @@ internal sealed class PanelSheet
 
         _sheet = new LinearLayout(context) { Orientation = Orientation.Vertical, Clickable = true };
         _sheet.SetPadding(Dp(Gutter), Dp(Gutter), Dp(Gutter), Dp(4));
-        _sheet.AddView(_handle, new LinearLayout.LayoutParams(Dp(38), Dp(4))
-        {
-            Gravity = GravityFlags.CenterHorizontal,
-            BottomMargin = Dp(20)
-        });
-        _sheet.AddView(_title);
+        _sheet.AddView(titleRow, new LinearLayout.LayoutParams(Match, Wrap));
         _sheet.AddView(_lead, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(6) });
         _sheet.AddView(_timeRow, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(22) });
         _sheet.AddView(_talk, new LinearLayout.LayoutParams(Match, Wrap) { TopMargin = Dp(26) });
@@ -212,7 +222,7 @@ internal sealed class PanelSheet
             BottomMargin = _landscape ? insetBottom : 0
         };
         var isAccessBlocked = _face is PanelFace.AccessBlocked;
-        var topPadding = isAccessBlocked ? 12 : _landscape ? 16 : Gutter;
+        var topPadding = isAccessBlocked ? 36 : _landscape ? 16 : Gutter;
         var bottomPadding = isAccessBlocked ? 16 : 4;
         _sheet.SetPadding(Dp(Gutter), Dp(topPadding), Dp(Gutter), Dp(bottomPadding) + (_landscape ? 0 : insetBottom));
     }
@@ -233,9 +243,9 @@ internal sealed class PanelSheet
         _scrim.Visibility = visibility;
         _viewport.Visibility = visibility;
         var isAccessBlocked = _face is PanelFace.AccessBlocked;
-        _handle.Visibility = Visibility(isAccessBlocked);
         _actions.Visibility = Visibility(!isAccessBlocked);
         _accessActions.Visibility = Visibility(isAccessBlocked);
+        _closeTrial.Visibility = Visibility(_face is PanelFace.AccessBlocked { IsTrialExhausted: true });
         _title.SetTextSize(ComplexUnitType.Sp, isAccessBlocked ? 26 : 20);
         var isReading = _face is PanelFace.Reading;
         if (isReading)
@@ -396,7 +406,6 @@ internal sealed class PanelSheet
     private void PaintAccessActions(PanelFace.AccessBlocked blocked)
     {
         var radius = Dp(Target) / 2f;
-        _handle.Background = Shape(ThemeColor.Outline, radius: Dp(2));
         _survey.SetTextColor(Resolve(ThemeColor.Ground));
         _survey.Background = Shape(ThemeColor.Ink, radius);
         _survey.Foreground = Ripple(Shape(ThemeColor.Ink, radius));
@@ -411,6 +420,8 @@ internal sealed class PanelSheet
         _invitation.Foreground = Ripple(Shape(ThemeColor.Ink, radius));
         _closeAccess.SetTextColor(Resolve(ThemeColor.Ink));
         _closeAccess.Foreground = Ripple(Shape(ThemeColor.Ink, radius));
+        _closeTrial.SetTextColor(Resolve(ThemeColor.Ink));
+        _closeTrial.Foreground = Ripple(Shape(ThemeColor.Ink, radius));
     }
 
     private TextView Text(double size, string font, ComplexUnitType unit = ComplexUnitType.Sp)
