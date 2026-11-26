@@ -87,6 +87,12 @@ jobs:
           export FirebaseAndroidConfigFile="$signing/firebase.json"
           node .github/scripts/stage-firebase-config.mjs play "$FirebaseAndroidConfigFile" --synthetic
           bash .github/scripts/build-play-bundle.sh "$signing/app.aab" 3 1.2.0
+          analyzer="$ANDROID_HOME/cmdline-tools/latest/bin/android"
+          if [[ ! -x "$analyzer" ]]; then
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "cmdline-tools;22.0"
+            analyzer="$ANDROID_HOME/cmdline-tools/22.0/bin/android"
+          fi
+          "$analyzer" --no-metrics analyze "$signing/app.aab" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Offer release of the verified main commit
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

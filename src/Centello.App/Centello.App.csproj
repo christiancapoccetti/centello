@@ -31,6 +31,8 @@
   <!-- Both signing inputs are paths. The password file also works with the AAB signer. -->
   <PropertyGroup Condition="'$(PlayRelease)' == 'true'">
     <AndroidPackageFormats>aab</AndroidPackageFormats>
+    <AndroidLinkTool>r8</AndroidLinkTool>
+    <AndroidR8ObfuscationMode>private-members</AndroidR8ObfuscationMode>
     <AndroidKeyStore>true</AndroidKeyStore>
     <AndroidSigningKeyStore>$(PLAY_UPLOAD_KEYSTORE)</AndroidSigningKeyStore>
     <AndroidSigningKeyAlias>upload</AndroidSigningKeyAlias>
